@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Chi-square goodness of fit prep reading</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script type="text/javascript" src="chisq.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Chi-square goodness of fit - prep. reading</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#freqs">Frequencies of categorical levels</a></p>
+      <p><a href="#chisquare_gof">Chi-square goodness of fit</a></p>
+      <p><a href="#resids">Standardized residuals</a></p>
+      <p><a href="#power">Sample size and power</a></p>
+      <p><a href="#assumptions">Standardized residuals</a></p>
+      <p><a href="#sources_expected">Sources of expected values</a></p>
+      <p><a href="#binomial">The binomial distribution</a></p>
+      <p><a href="#lack_independence">Trials not independent </a></p>
+      <p><a href="#next_activity">Next up</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="freqs">Frequencies of levels of a categorical
+        variable</h2>
+      <p> When we encountered categorical variables in two sample t-tests or
+        ANOVA they were the treatment groups we wanted to compare - for example,
+        the heart rates of lobsters were compared between GABA-treated and
+        control groups, which we represented as a variable "Treatment" with
+        levels "GABA" and "Control. In a t-test or ANOVA the categorical
+        variable is a <strong>predictor</strong> variables - it is the variable
+        we experimentally set, so that we can measure another variable (such as
+        heart rate) as a <strong>response</strong>. </p>
+      <p>However, it is possible for response variables to be categorical as
+        well. We summarize categorical variables by counting up <strong>frequencies</strong>
+        of occurrence of each level, which gives us a set of counts that we can
+        analyze. </p>
+      <p>Today we will focus here on frequencies of just a single categorical
+        variable at a time, and we will ask how the distribution of frequencies
+        compares with some hypothetical sets of frequencies of interest. In this
+        sense the question we'll ask is like a one-sample t-test, in which we
+        hypothesized a population mean (such as body temperature of 98.6
+        degrees) and then compared the mean of some data on body temperatures to
+        the hypothetical population value. With categorical frequencies we will
+        need to specify a different hypothetical value for each categorical
+        level.</p>
+      <p> Imagine you are interested in studying the distribution of head
+        injuries in high school athletes participating in various sports in the
+        United States. Data showing the number of concussions are in the table
+        below.</p>
+      <div style="clear: both; bottom-margin: 10px">
+        <div style="float: left; padding: 10px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Sport</th>
+                <th>Concussions</th>
+              </tr>
+              <tr>
+                <td>Basketball</td>
+                <td>9,572</td>
+              </tr>
+              <tr>
+                <td>Football</td>
+                <td>62,353</td>
+              </tr>
+              <tr>
+                <td>Lacrosse</td>
+                <td>3,508</td>
+              </tr>
+              <tr>
+                <td>Soccer</td>
+                <td>22,955</td>
+              </tr>
+              <tr>
+                <td>Baseball</td>
+                <td>2,579</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p>It is clear from this table that football players get the most
+            concussions by far, and baseball players get the fewest. It seems
+            that football is the most dangerous and baseball is the least
+            dangerous sport based on these numbers. But, is it valid to draw a
+            conclusion by just comparing the numbers of concussions between the
+            sports?</p>
+          <p>The problem with direct comparisons like this is that it's likely
+            that a different number of students participate in each sport. It's
+            possible that more students participate in football than other
+            sports, in which case we would expect more concussions for football
+            players, even if the chances of a concussion are the same on a
+            per-student basis.</p>
+        </div>
+      </div>
+      <p style="clear:both">To make a more reasonable assessment, we need a
+        baseline that gives an idea of how many concussions to expect if all of
+        the sports are equally dangerous. One way to do this is to use data on
+        number of participants - if sports are all equally dangerous then we
+        would expect concussions to be in proportion to the number of
+        participants.</p>
+      <div style="margin-bottom: 10px">
+        <div style="float: left; margin-right: 10px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Sport</th>
+                <th>Concussions</th>
+                <th>Students participating</th>
+              </tr>
+              <tr>
+                <td>Basketball</td>
+                <td>9,572</td>
+                <td>76,015</td>
+              </tr>
+              <tr>
+                <td>Football</td>
+                <td>62,353</td>
+                <td>103,921</td>
+              </tr>
+              <tr>
+                <td>Lacrosse</td>
+                <td>3,508</td>
+                <td>13,396</td>
+              </tr>
+              <tr>
+                <td>Soccer</td>
+                <td>22,955</td>
+                <td>89,798</td>
+              </tr>
+              <tr>
+                <td>Baseball</td>
+                <td>2,579</td>
+                <td>42,977</td>
+              </tr>
+              <tr>
+                <td>Totals</td>
+                <td>100,967</td>
+                <td>326,107</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p> You'll see now that the numbers of concussions could very easily
+            be influenced by the number of students participating in each sport,
+            because the numbers of participants vary greatly. Football does
+            indeed have the most participants, and the two seemingly safe sports
+            (lacrosse and baseball) have fewer.</p>
+          <p> So, at least some of the variation in concussions seems to be due
+            to differences in participation rates. However, we don't expect the
+            number of concussions to equal the number of participants, because
+            the totals are different. First, we need to calculate the number of
+            concussions we would <strong>expect</strong> given the numbers of
+            students participating in each sport.</p>
+          <p></p>
+        </div>
+      </div>
+      <br style="clear:both">
+      <div style="clear:both; margin-bottom: 10px">
+        <div style="float:left; margin-right: 10px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Sport</th>
+                <th>Concussions</th>
+                <th>Proportion of students participating</th>
+              </tr>
+              <tr>
+                <td>Basketball</td>
+                <td>9,572</td>
+                <td><span style="color: gray">(76,015/326,107 =)</span><br>
+                  <strong>0.233</strong></td>
+              </tr>
+              <tr>
+                <td>Football</td>
+                <td>62,353</td>
+                <td><span style="color: gray">(103,921/326,107 =)</span><br>
+                  <strong>0.319</strong></td>
+              </tr>
+              <tr>
+                <td>Lacrosse</td>
+                <td>3,508</td>
+                <td><span style="color: gray">(13,396/326,107 =)</span><br>
+                  <strong>0.041</strong></td>
+              </tr>
+              <tr>
+                <td>Soccer</td>
+                <td>22,955</td>
+                <td><span style="color: gray">(89,798/326,107 =)</span><br>
+                  <strong>0.275</strong></td>
+              </tr>
+              <tr>
+                <td>Baseball</td>
+                <td>2,579</td>
+                <td><span style="color: gray">(42,977/326,107 =)</span><br>
+                  <strong>0.132</strong></td>
+              </tr>
+              <tr>
+                <td>Totals</td>
+                <td>100,967</td>
+                <td>1</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The first step in calculating the expected frequencies of concussions
+          is to convert the frequencies of participants to <strong>relative
+            frequencies</strong>. If you recall, relative frequencies are
+          proportions of the total number of observations. The relative
+          frequencies for each sport are shown to the left (Proportion of
+          students participating), which are calculate by dividing the number of
+          participants in each sport by the total participants. </p>
+        <p>These proportions tell us the rate at which we would expect
+          concussions to occur, if each sport is equally dangerous and
+          concussions are in proportion to participation. In other words, if all
+          the sports were equally dangerous we would expect 23.3% of concussions
+          to occur in basketball players, 31.9% to occur in football players,
+          etc.</p>
+      </div>
+      <br style="clear:both">
+      <div style="clear:both">
+        <div style="float: left; margin-right: 10px; margin-bottom: 10px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Sport</th>
+                <th>Concussions</th>
+                <th>Proportion of students <br>
+                  participating</th>
+                <th>Expected number of concussions</th>
+              </tr>
+              <tr>
+                <td>Basketball</td>
+                <td>9,572</td>
+                <td>0.233</td>
+                <td><span style="color: gray">(0.233 x 100,967 = )</span> <strong>23,525.3</strong></td>
+              </tr>
+              <tr>
+                <td>Football</td>
+                <td>62,353</td>
+                <td>0.319</td>
+                <td><span style="color: gray">(0.319 x 100,967 = )</span> <strong>32,208.5</strong></td>
+              </tr>
+              <tr>
+                <td>Lacrosse</td>
+                <td>3,508</td>
+                <td>0.041</td>
+                <td><span style="color: gray">(0.041 x 100,967 = )</span><strong>
+                    4,139.6</strong></td>
+              </tr>
+              <tr>
+                <td>Soccer</td>
+                <td>22,955</td>
+                <td>0.275</td>
+                <td><span style="color: gray">(0.275 x 100,967 = )</span><strong>
+                    27,765.9</strong></td>
+              </tr>
+              <tr>
+                <td>Baseball</td>
+                <td>2,579</td>
+                <td>0.132</td>
+                <td><span style="color: gray">(0.132 x 100,967 = )</span><strong>
+                    13,327.7</strong></td>
+              </tr>
+              <tr>
+                <td>Totals</td>
+                <td>100,967</td>
+                <td>1</td>
+                <td>100,967</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Now we can calculate the <strong>expected frequency</strong> of
+          concussions by multiplying the total number of concussions (100,967)
+          by the proportion of students participating in each sport. For
+          example, since 23.3% of the 100,967 concussions are expected to occur
+          in basketball players, the expected frequency is 0.233 x 100,967 =
+          23,525.3. Expected frequencies for all of the sports are shown in
+          boldface, with the calculations in gray.</p>
+      </div>
+      <p style="clear: both">You'll see that the total is the same for the
+        observed number of concussions and for the expected number of
+        concussions, so now we have numbers that we can appropriately compare
+        against each other.<strong></strong></p>
+      <p>The frequency of concussions and their expected frequencies are shown
+        below, with observed numbers of concussions in blue, and the expected
+        number in red. It certainly looks like football is more dangerous than
+        the other sports, as it's the only sport in which the observed frequency
+        is greater than expected.</p>
+      <h3>The null hypothesis</h3>
+      <div id="wrapper_div" style="float: left; border: solid black 4px; margin-right: 10px; width: 500px;">
+        <div id="chart_div" style="width: 500; height: 400px;"></div>
+        <button type="button" id="just_randomize" onclick="updateChart1()">Randomize</button><button
+          type="button" id="reset" onclick="drawChart1()">Reset</button> </div>
+      <p>But before we jump to conclusion we have to remember that these data
+        are a sample from a population, and the frequencies are subject to
+        random variation. We need to know these frequencies are affected by
+        random variation to understand the <strong>null hypothesis</strong> we
+        will use. The graph to the left will simulate the frequencies of
+        concussions that we would expect if concussions were proportional to
+        participation rates, subject to random sampling.</p>
+      <p>If you push the "randomize" button a new set of 100,967 concussions are
+        selected, with the probability of occurring in each type of sport being
+        equal to the proportion of students participating.</p>
+      <p>The first thing you'll see is the obvious change from observed
+        frequencies - the new "observed" numbers that you generated at random
+        match very closely to the expected numbers of concussions. But, there
+        are slight differences still between observed and expected numbers due
+        to random sampling. If you click the "Randomize" button repeatedly (and
+        watch the bar heights closely) you'll see that the blue bars change very
+        slightly each time as a new "observed" sample is selected. Note also
+        that the red expected numbers are always the same, because each
+        randomization uses the same total number of concussions.</p>
+      <p>Random distributions of concussions in proportion to the frequency of
+        participants is a <strong>null hypothesis</strong> for these data. Null
+        hypotheses are always hypotheses of no effect - if there is no effect of
+        being in one sport or another, then the frequency of concussions should
+        be in proportion to the frequency of participants. To evaluate the
+        chances that the distribution of concussions is just a random sample
+        from a population in which all of the sports are equally dangerous, we
+        need a way to quantify how much difference there is between the set of
+        observed frequencies and the set of expected frequencies, and then
+        calculate a probability of the observed difference occurring by random
+        chance.</p>
+      <p>The statistical test we will use to evaluate this null hypothesis is
+        called a <strong>Chi-square goodness of fit test</strong>.</p>
+      <h2 class="part" id="chisquare_gof" style="clear:both">Chi-square goodness
+        of fit tests</h2>
+      <p>Chi-square goodness of fit tests are used to compare the match between
+        observed frequencies and values expected given some process that is
+        hypothesized to be producing them. We can express our null hypothesis
+        that our observed data are in proportion to expected frequencies
+        symbolically as: </p>
+      <p> Ho: Observed = Expected</p>
+      <p>Although we don't have Greek letters to remind us, this is still a
+        hypothesis about a population - we're hypothesizing that at the
+        population level the distribution of concussions is equal to the
+        expected rates. If the null hypothesis is true, any difference between
+        observed and expected is just due to random sampling variation. </p>
+      <p>To test a null hypothesis, we need a) an observed test statistic
+        calculated from our data, and b) a sampling distribution that tells us
+        what a large number of randomly generated test statistics would look
+        like if the null hypothesis is true.</p>
+      <h3>Test statistic</h3>
+      <p>We will use the Pearson Chi-square test statistic to measure the amount
+        of difference between observed and expected numbers. The formula is:</p>
+      <p> <img src="chisq_formula.jpg" style="width: 105px; height: 41px;" alt="Chisq formula"></p>
+      <p>where O refers to the observed number of concussions for a sport, and E
+        refers to the expected number. The (O-E)<sup>2</sup>/E quantity is
+        calculated for each sport, then summed (Σ) across sports to give us our
+        observed chi-square value. The standard symbol for a Chi-squared test
+        statistic is lower case Greek chi (χ) squared. </p>
+      <p>If you look at the formula, it should be clear that the statistic is
+        measuring the amount of difference between observed and expected
+        frequencies. You can tell this from the formula if you notice:</p>
+      <ul>
+        <li>If there is an exact match between the observed data and the
+          expected values, then all of the O-E differences will be 0, and the
+          Chi-square statistic will be 0. Since expected values have to be
+          positive, and squared differences have to be positive, negative values
+          aren't possible, and 0 is the smallest possible value for χ<sup>2</sup>.</li>
+        <li>As the observed frequencies diverge from expected values, the O-E's
+          get bigger, and the Chi-square statistic will increase in size.</li>
+        <li>The squared differences are being divided by expected values - this
+          means that the amount of difference between observed and expected is
+          relative to the expected numbers. Thus, the Chi-square statistic
+          measures relative amounts of difference between observed and expected,
+          not absolute amounts of difference.</li>
+      </ul>
+      <p>We calculate the chi-square value for the concussion data like so: </p>
+      <div style="clear:both">
+        <div style="float:left; margin-right: 10px; margin-bottom: 10px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Sport</th>
+                <th>Concussions</th>
+                <th>Expected number of concussions</th>
+                <th>(O-E)<sup>2</sup>/E</th>
+              </tr>
+              <tr>
+                <td>Basketball</td>
+                <td>9,572</td>
+                <td>23,535.3</td>
+                <td>8,276</td>
+              </tr>
+              <tr>
+                <td>Football</td>
+                <td>62,353</td>
+                <td>32,208.5</td>
+                <td>28,212</td>
+              </tr>
+              <tr>
+                <td>Lacrosse</td>
+                <td>3,508</td>
+                <td>4,139.6</td>
+                <td>96</td>
+              </tr>
+              <tr>
+                <td>Soccer</td>
+                <td>22,955</td>
+                <td>27,765.9</td>
+                <td>833</td>
+              </tr>
+              <tr>
+                <td>Baseball</td>
+                <td>2,579</td>
+                <td>13,327.7</td>
+                <td>8669</td>
+              </tr>
+              <tr>
+                <td>Totals</td>
+                <td>100,967</td>
+                <td>100,697</td>
+                <td><em><b>χ<sup>2</sup> = 46,086</b></em></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p>The sum of the (O-E)<sup>2</sup>/E values is shown in bold italics,
+            and this is our observed Chi-square test statistic.</p>
+        </div>
+      </div>
+      <h3 style=" clear:both">Sampling distribution</h3>
+      <p style="clear:both">Now we need a sampling distribution to compare this
+        test statistic to so that we can obtain a p-value. Remember, sampling
+        distributions are probability distributions that mathematically model
+        randomly sampling from a population. In this case, the random sampling
+        we are modeling is illustrated in the graph above when you hit the
+        "Randomize" button - the random samples assume that the null is true,
+        and that concussions are in proportion to participation rates, but
+        random chance makes the observed frequencies differ somewhat from these
+        expected proportions. If we calculated a Chi-square statistic for each
+        of the random samples generated, the distribution of these statistics
+        would follow a <strong>Chi-square distribution</strong>. We can thus
+        use the Chi-square probability distribution as a mathematical model of
+        random sampling for our null hypothesis test.</p>
+      <p>A Chi-square distribution is shown in the graph below, with the
+        rejection region for a Chi-square GOF test shaded red - just like with
+        the other tests we've learned we use an alpha level of 0.05, so the area
+        under the curve in the rejection region is 0.05. Since the Chi-square
+        statistic uses squared differences it will always be positive, and since
+        we are interested in whether deviations are large enough to be
+        considered non-random we are only interested in the upper end of the
+        curve. The critical value is the lower end of the rejection region, and
+        is reported below the degrees of freedom setting.</p>
+      <div id="wrapper_div3" style="float: left; border: solid black 4px; margin-right: 10px; width: 400px;">
+        <div id="chart_div3" style="width: 400; height: 300px;"></div>
+        <p>Enter d.f. (categories - 1): <input id="chisq_df" value="4" onchange="drawChart3()"
+            style="width: 50px" min="1" type="number"></p>
+        <p>Critical value = <span id="chi_crit">9.488</span></p>
+      </div>
+      <p>The shape of a Chi-square distribution depends on degrees of freedom.
+        We are comparing observed to expected frequencies for <em>five sports</em>,
+        so degrees of freedom is related to the number of sports, not the number
+        of athletes. In a Chi-square goodness of fit test degrees of freedom
+        equals the number of categories - 1. We have five sports, so there 5 - 1
+        = 4 degrees of freedom for these data.</p>
+      <p>The graph to the left is set initially to 4 degrees of freedom so you
+        can see the distribution we will use for this analysis of concussion
+        rates. The critical value for 4 degrees of freedom is Chi-square =
+        9.488, so we would reject the null with any Chi-square value greater
+        than that.</p>
+      <p>You can change the degrees of freedom for the graph so you can see how
+        the shape of the Chi-square distribution and location of the critical
+        value changes. If you increase degrees of freedom the curve shifts to
+        the right (note that the x-axis scale changes to keep the curve on the
+        graph). This shift right reflects the fact that we're summing squared
+        differences across categories, and with each additional categories there
+        is an additional squared difference to add to the Chi-square statistic.
+        Small differences become very unlikely as the number of categories
+        increases, and a perfect match (Chi-square = 0) has a probability of 0.
+      </p>
+      <p>Decreasing degrees of freedom shifts the curve back to the left,
+        because small numbers of categories provide few opportunities for
+        differences to accumulate. If you set degrees of freedom to 1 you'll see
+        that large differences become very unlikely, and small differences are
+        so common that the curve becomes asymptotic with the y-axis. This means
+        that at 1 df the most probable amount of random difference is 0, with
+        differences quickly becoming less probable as they increase in size. </p>
+      <p>At df = 2 the curve isn't an asymptote, but it increases at low numbers
+        until it intersects the y-axis at p = 0.5. </p>
+      <p>At df = 3 or above the curve goes through the origin (0,0) and becomes
+        a right-skewed curve with a single mode near a χ<sup>2</sup> value of 1,
+        meaning that differences of 0 become impossible, and Chi-square values
+        of around 1 become the most likely.</p>
+      <h3>p-value</h3>
+      <p>Now that we have the correct Chi-square distribution identified we can
+        calculate a p-value. The observed chi-square statistic is 46,086, and
+        the area under the Chi-square distribution with 4 degrees of freedom
+        from 46,086 to infinity is...tiny. If we use MINITAB or Excel to do the
+        calculation we will get a p-value like 1 x 10<sup>-16</sup>, which is
+        the smallest decimal number that it can produce.&nbsp; Based on this
+        p-value we would <strong>reject</strong> the null, and conclude that
+        the observed data aren't equal to expected, and therefore concussions
+        are not in proportion to participation rates.</p>
+      <p>We now have reason to think that some sports are more dangerous than
+        others, but the null hypothesis is about a match between observed and
+        expected frequencies collectively, and rejecting the hypothesis doesn't
+        tell us which sports produce significantly more or less concussions than
+        expected. We will address that question next.<span style="font-family: &quot;Crimson Text&quot;,serif;"><br>
+        </span></p>
+      <h2 class="part" id="resids">Which sport is most dangerous?</h2>
+      <p>We can get an idea of which sport is most dangerous just by comparing
+        the observed and expected values - football is the only sport in this
+        set that has more concussions than expected. However, comparing the
+        amount of difference between observed and expected values between the
+        sports is complicated by the fact that the expected numbers are really
+        different among the sports. Lacrosse has an expected value of 4139.6
+        concussions, so it isn't possible for lacrosse to be under its expected
+        value by more than 4139.6. Both baseball and basketball are below their
+        expected values by more than this, but there are many more students that
+        participate in these sports, and they have much higher expected values
+        to begin with. If we wanted to know whether lacrosse was more or less
+        safe than baseball or basketball we would need to account for the
+        differences in numbers of participants.</p>
+      <p>We can correct for this difference in expected value by calculating <strong>standardized
+          residuals</strong> that give us a relative amount of difference from
+        expected that can be compared between the sports. We encountered
+        residuals when we learned about regression analysis - residuals are
+        differences between observed and predicted values. Standardizing means
+        to convert the difference into standard deviation units, like a z-score.
+        A standardized residual in a Chi-square GOF analysis is calculated as:</p>
+      <p> <img style="width: 59px; height: 41px;" alt="Standardized residual" src="std_resid.jpg"></p>
+      <p> The structure is like the chi-square formula, but we are only
+        calculating a value for one sport at a time, and instead of squaring the
+        differences (which ensures we will always have positive chi-square
+        values) we use the raw difference in the numerator and divide by the
+        square root of the expected - standardized residuals thus have a sign
+        that indicate whether the observed value was above (+) or below (-)
+        expected. Standardized residuals are approximately normally distributed,
+        so a standardized residual that exceeds -2 or 2 indicates an observed
+        value that is significantly different from expected. The standardized
+        residuals are here:</p>
+      <div style="clear:both">
+        <div style="float:left; margin-right:10px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Sport</th>
+                <th>Concussions</th>
+                <th>Expected number of concussions</th>
+                <th>Std. Resid.</th>
+              </tr>
+              <tr>
+                <td>Basketball</td>
+                <td>9,572</td>
+                <td>23,535.3</td>
+                <td>-91</td>
+              </tr>
+              <tr>
+                <td>Football</td>
+                <td>62,353</td>
+                <td>32,208.5</td>
+                <td>168</td>
+              </tr>
+              <tr>
+                <td>Lacrosse</td>
+                <td>3,508</td>
+                <td>4,139.6</td>
+                <td>-10</td>
+              </tr>
+              <tr>
+                <td>Soccer</td>
+                <td>22,955</td>
+                <td>27,765.9</td>
+                <td>-29</td>
+              </tr>
+              <tr>
+                <td>Baseball</td>
+                <td>2,579</td>
+                <td>13,327.7</td>
+                <td>-93</td>
+              </tr>
+              <tr>
+                <td>Totals</td>
+                <td>100,967</td>
+                <td>100,697</td>
+                <td><br>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p>All of the standardized residuals are below -2 or above 2, so all
+            would be considered significantly different from expected. Football
+            is by far the sport most likely to lead to a concussion - the
+            observed number of concussions is 168 standard deviations above the
+            expected value. The least likely to produce a concussion is baseball
+            (it has the negative standardized residual with the biggest absolute
+            value), but basketball is only 2 standard deviations closer to its
+            expected value - only slightly more dangerous than baseball. Soccer
+            is next, followed by lacrosse.</p>
+        </div>
+      </div>
+      <h3 class="part" id="power" style="clear:both">Effects of sample size on
+        power of a Chi-square test</h3>
+      <p>The number of data points isn't used explicitly anywhere in the
+        Chi-square goodness of fit test. This is very different than the other
+        tests we used, in which degrees of freedom were based on the number of
+        data points, and larger sample sizes had obvious effects on the power of
+        the test. It might seem almost unfair to collect over 100,000 data
+        points and still only have 4 degrees of freedom, but fear not - having a
+        bigger sample size does in fact increase our power to detect differences
+        from expected values.</p>
+      <p>We will see how this is true by revisiting the simulation of the null
+        hypothesis we saw above, but this time we have the ability to set the
+        sample size. As before, we can randomize the data at the sample size we
+        select, and each time we will see the results of the Chi-square goodness
+        of fit test.</p>
+      <div id="wrapper_div2" style="float: left; border: solid black 4px; margin-right: 10px; width: 500px;">
+        <div id="chart_div2" style="width: 500; height: 400px;"></div>
+        <p align="center">Chi-square = <span id="chisq_value"></span>, p = <span
+            id="chisq_p"></span></p>
+        <p>Enter a total number of concussions</p>
+        <input id="tot_concussions" value="100967" onchange="updateChart2()" style="width: 75px"
+          type="number"> <button type="button" id="randomize" onclick="updateChart2()">Randomize
+          at this n</button> </div>
+      <p>We will just work with randomly generated data this time - since the
+        "observed" frequencies are being randomly generated assuming that
+        concussion rates are the same for all sports, the null hypothesis is
+        true in all of these simulations.</p>
+      <p>We can only be certain that our results show a real, non-random
+        difference if it's bigger than the differences that chance can produce.
+        Because of this, if our design allows for large differences to occur by
+        chance, we would need even bigger differences in our observed data
+        before we could conclude that there is a real, non-random difference.
+        Which is to say, big chance differences mean lower statistical power,
+        and small chance differences mean high statistical power.</p>
+      <p>To start, leave the sample size at the default and click on the
+        "Randomize at this n" button several times. Note that about once every
+        20 times you click the button you get a p value less than 0.05, which is
+        what we expect when the null hypothesis is true (the p-value will turn
+        red when it is less than 0.05). But, also note that the relative
+        differences between the bars are very small - each time you hit the
+        "Randomize at this n" button a new set of random data is produced, but
+        the heights of the bars are always very close together. Pay particularly
+        close attention to the amount of difference you see when you do get a p
+        &lt; 0.05 - this is the amount of difference needed to reject the null,
+        and the observed bars are still pretty close to the expected bars <em>even
+          when we reject the null</em>.</p>
+      <p>Now, set the sample size to 1000. You will see that there are larger
+        differences in the heights of the bars with each new random draw. You
+        will still get about 1 in 20 p-values less than 0.05, but when you get
+        them the amount of relative difference between the heights of the bars
+        will be bigger than you saw at a sample size of 100,967. This means that
+        you need a larger relative difference between observed and expected to
+        reject the null at a sample size of 1000 than you needed at a sample
+        size of 100,967.</p>
+      <p>Drop the sample size again to 100, and it will be even more clear that
+        there are pretty big relative differences between observed and expected
+        when p-values are less than 0.05. You need pretty big relative
+        differences at a sample size of 100 to reject the null.</p>
+      <p>Hopefully you can see that at big sample sizes small relative
+        differences between observed and expected can be statistically
+        significant - the Chi-square test becomes more sensitive to small
+        differences at big sample sizes, even though the degrees of freedom are
+        the same for all sample sizes.</p>
+      <p></p>
+      <h2 class="part" id="assumptions">Assumptions</h2>
+      <p>Chi-square goodness of fit tests are used on frequencies of categorical
+        data, and do not have any assumptions about the distribution of the
+        data. It is assumed that the data values are independent, and are from a
+        random sample of the population. Independence in count data like this
+        means that one athlete's concussion doesn't make it any more or less
+        likely that any other athlete will get a concussion (as you'll see in
+        the bees and hummingbirds as pollinators example we are sometimes
+        interested in detection a violation of this assumption as a research
+        question).</p>
+      <p>The Chi-square test statistic we use is more correctly called Pearson's
+        Chi-square test statistic, and it only follows the Chi-square
+        distribution at fairly large sample sizes. The problem is related to the
+        fact that the expected values are continuous numbers, but the data are
+        discrete counts. There will inevitably be some amount of mismatch
+        between observed and expected because of this, which adds some error to
+        the test.</p>
+      <p>The problem is small and can be ignored when sample sizes are big
+        enough that the expected values are fairly large, but at small sample
+        sizes the error can be quite large. For example, if we have an expected
+        value of 0.1, the two closest counts possible are 0 and 1. If the count
+        was 0, the contribution to the Chi-square statistic would be (0-0.1)<sup>2</sup>/0.1
+        = 0.1 - a very small addition to Chi-square. But, if the count was the
+        second closest possible, the contribution becomes (1-0.1)<sup>2</sup>/0.1
+        = 8.1 - a much bigger addition to Chi-square for a small amount of
+        difference.</p>
+      <p>To avoid problems with mismatches between the variable type for the
+        data and for the expected values, the Pearson Chi-square statistic
+        should only be used if:</p>
+      <ul>
+        <li>No expected values are below 1</li>
+        <li>No more than 20% of expected values are less than 5</li>
+      </ul>
+      <p>With 5 categories, only 1 could have an expected value less than 5 (but
+        it would still need to be greater than 1).</p>
+      <h2 class="part" id="sources_expected">Interpretation of results depends
+        on the source of expected values</h2>
+      <p>When we test for goodness of fit, we are assessing how well a model
+        matches our data. The proportional model we've been working with so far
+        says that there is a rate per observation that is the same for every
+        category. In the concussion example, the concussion rate is the same for
+        every student, regardless of the sport. If this is true, then the
+        numbers of concussions should be proportional to the number of
+        participants, because every sport is equally risky.</p>
+      <p>The basic framework for interpreting a goodness of fit test is the
+        same, regardless of what model we use to produce expected frequencies:</p>
+      <ul>
+        <li>If we find a good match between observed frequencies and the
+          expected frequencies produced by a model, we conclude that <em>the
+            data have the properties of the model</em> - if concussions were in
+          proportion to participation, we would conclude that every sport is
+          equally risky. </li>
+        <li>If the data don't match the model predictions, we conclude that the
+          data <em>do not have the properties of the model</em> - we rejected
+          the null, and found that football has a much greater chance of
+          producing concussions than baseball.</li>
+      </ul>
+      <p>However, there will be circumstances in which proportionality is not
+        the correct model. We will look at a couple of examples in which we
+        derive expected values from a theoretical distribution.</p>
+      <h3 class="part" id="binomial">The binomial distribution</h3>
+      <table style="width: 100%">
+        <tbody>
+          <tr>
+            <td> <img title="Observed" alt="Observed" src="observed_kids.jpg" hspace="10"
+                align="left">
+              <p>Imagine we found 1000 families of 4 kids, and counted up how
+                many boys were in each of them. If we then counted up the
+                frequencies of each number of boys we might get a distribution
+                of frequencies like the one on the left. The x-axis gives the
+                number of boys counted (which in a family of 4 could be 0, 1, 2,
+                3, or 4 boys), and the y-axis is the number of families that had
+                each number of boys.</p>
+              <p>We know some things about sex determination, and based on the
+                fact that when sperm cells are formed there are an equal number
+                of Y and X chromosomes available it's reasonable to think that
+                the probability of having a boy is 1/2. We would expect based on
+                this that two boys would be the most common number, which is
+                what we see here. But, how many times would we expect 1 boy, or
+                3? Or 0 or 4? With a probability of 0.5 that each child will be
+                a boy it seems that having 1 or 3 would be more likely than
+                having 0 or 4, but how much more likely?</p>
+              <p>In addition to needing a way to predict how many families would
+                have each of the possible number of boys, we also could be wrong
+                in our expectation that the probability of each child being a
+                boy is 0.5 is wrong - certainly, the overall proportion of boys
+                may be different from 1/2 if Y sperm are either better or worse
+                at fertilizing eggs. Or, it could be that boys have higher or
+                lower survival rates than girls.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>We need something other than the proportional model for data like
+        these, and the <strong>binomial probability distribution</strong> is a
+        much better choice. The binomial distribution allows us take what we
+        know about the probability of a "success" on a single "trial" and
+        predict the probability of obtaining x successes out of k trials.</p>
+      <p>For example, if we want to know the probability of x males (successes)
+        in a family of 4 kids (trials) given that the probability of a male is
+        1/2, we can calculate this probability using the binomial distribution.</p>
+      <p>The formula for calculating binomial probabilities looks complicated,
+        but is actually relatively simple:</p>
+      <p><img src="binom_formula.jpg" name="graphics15" alt="formula" width="180"
+          height="44" align="bottom" border="0"></p>
+      <p>In this equation, k is the number of trials - k is the family size for
+        our data, which is 4. The number of "successes" is x - in our example x
+        is the number of male births (note: "trials" and "successes" are
+        traditional terminology for the binomial distribution, and are not meant
+        to imply that male births are "successes" and female births are
+        "failures"). The probability of a male child for each birth is p - in
+        our example, we set p to 0.5. The probability of a female birth is 1-p,
+        and k-x is the number of females in the family. We need to include (1-p)
+        and k-x because in order to have (for example) two males out of four
+        births we also have to have two females. </p>
+      <p>We are expecting that 2 males out of 4 births will be the most common
+        when p = 0.5, and according to the binomial distribution the probability
+        of 2 boys out of 4 kids is:</p>
+      <p><img src="binom_formula2.jpg" name="graphics16" alt="binom with numbers"
+          width="197" height="44" align="bottom" border="0"></p>
+      <p>which you can confirm for yourself equals 0.38.</p>
+      <p>You can think of this formula as being made up of two parts. The part
+        on the right, with the probabilities raised to exponents, gives the
+        probability of a single family of four having two boys and two girls.
+        This outcome can occur in many different ways (you can have a boy and a
+        boy and a girl and a girl, or a boy and a girl and a boy and a girl,
+        etc.), and to get the overall probability of getting two boys and two
+        girls, we have to add up all the different ways this family composition
+        can occur. The part on the left, with the factorials, calculates the
+        number of different ways to get two boys in a family of four. The
+        product of the two, then, gives the overall probability of getting two
+        boys in a family of four.</p>
+      <div id="wrapper_div4" style="float: left; border: solid black 4px; margin-right: 10px; margin-bottom: 10px; width: 500px;">
+        <div id="chart_div4" style="width: 500; height: 400px;"></div>
+        <p>Enter a probability of a boy <input id="boy_prob" value="0.5" step="0.01"
+            min="0" max="1" onchange="drawChart4()" style="width: 50px" type="number"></p>
+        <p>Enter a family size <input id="fam_size" value="4" min="1" onchange="drawChart4()"
+            style="width: 50px" type="number"></p>
+        <p id="test"></p>
+      </div>
+      <p>If you do this probability calculation once for each number of males
+        from 0 to 4, you get probabilities as shown in the graph to the left.</p>
+      <p>The initial graph uses a probability of p = 0.5, and it shows a
+        symmetrical distribution of probabilities around 2.</p>
+      <p>We will continue to use p = 0.5 for this example, but this actually
+        isn't quite correct, especially as we age. Men have shorter life
+        expectancies than women, such that in the U.S. there are only 82 males
+        per 100 female for people between 65 and 69 years old. This is equal to
+        a probability of male of p = 82/(82+100) = 0.45. Think of this as being
+        the probability of randomly selecting a single person between 65 and 69
+        years old who is a male. You can see how this value of p affects the
+        shape of the distribution.</p>
+      <p>Between the ages of 95 and 99 there are only 26 males per 100 females.
+        This translates into a probability of p = 26/(26+100) = 0.206 - check
+        how this value of p changes the distribution.</p>
+      <p>If you change the family size you'll see that as long as p is set to
+        0.5 you get a symmetrical distribution. Large numbers for family size
+        make the distribution more bell-shaped, to the point of appearing nearly
+        normal when the family size gets really large.</p>
+      <p>If you set the probability to 0.5 and the family size to 4 the graph
+        will match the binomial probabilities used in the next step.</p>
+      <p style="position: block; clear:both">Multiplying the binomial
+        probabilities by the total number of families counted converts them to
+        expected numbers of families that would have 0, 1, 2, 3, or 4 boys.</p>
+      <p><img alt="Chisquare" src="chisq_kids.jpg" hspace="10" align="left">The
+        Frequency column are the counts of numbers of families with each number
+        of boys - it is the observed data. The binomial probabilities are
+        calculated using the binomial formula, and are the same as in the graph
+        above. The binomial expected column has the probabilities multiplied by
+        the total number of families, which is 1000.</p>
+      <p>The Chi-square value is the (O-E)<sup>2</sup>/E calculated for each
+        number of males, then summed.</p>
+      <p>Degrees of freedom are number of levels, which is 5, minus 1.</p>
+      <p>The p-value comes from comparing the calculated Chi-square value to a
+        Chi-square distribution with 4 degrees of freedom. You can see the
+        p-value is greater than 0.05, so we would conclude the observed
+        frequencies match the binomial expected frequencies.</p>
+      <h3 style=" clear: both">Conclusions to draw from a non-significant
+        Chi-square GOF with binomial expected values</h3>
+      <p style="clear: both">Remember, when we get a non-significant Chi-square
+        test, we conclude that the data has the properties of the model that
+        produced the expected frequencies. The important properties of the
+        binomial distribution are:</p>
+      <ul>
+        <li>There is a single parameter, p, that applies to every trial - if the
+          proportion of boys is p = 0.5, then every child has a probability of
+          0.5 of being a boy.</li>
+        <li>The trials are independent - that is, if one child is a boy, it has
+          no effect on whether any other child in the family is a boy, like coin
+          tosses. If some fathers are more likely to produce male offspring and
+          others are more likely to produce female offspring then the sexes of
+          offspring wouldn't be independent, and the binomial wouldn't predict
+          the distribution of numbers of boys well.</li>
+      </ul>
+      <p style="clear: both">With a non-significant Chi-square test for these
+        data, we would conclude that the probability of male children is 1/2,
+        and that the sexes of children in families are independent of one
+        another.</p>
+      <h2 class="part" id="lack_independence">Lack of independence among trials</h2>
+      <p>We can use a mismatch between our observed data and expected
+        frequencies from the binomial to indicate that events were not
+        independent, and lack of independence of events can be of interest to us
+        scientifically. For an example of this approach, consider the apple.</p>
+      <p><img src="lab4_binom_normal_prelab2_html_28d5aaae.jpg" name="graphics19"
+          width="337" hspace="13" height="186" align="left" border="0">Apples
+        are the reproductive system of an apple tree, and apple seeds only
+        develop when they are fertilized by pollen. </p>
+      <p>Apple pollen has to be carried from flower to flower by animals. For
+        this example, we will stipulate that there are only two different types
+        of potential pollinators for apples, bees and hummingbirds. Both animals
+        pick up pollen while they feed on nectar from one flower and deliver it
+        to the carpels of the next flower on which they feed. Bees are smaller
+        than hummingbirds, and when bees visit an apple flower we might expect
+        that it's possible for them to pollinate just a single carpel without
+        pollinating any other. If this is true, the probability that any single
+        carpel is pollinated should be unaffected by any other, each one like a
+        flip of a coin. </p>
+      <p>The binomial distribution is based on the assumption that each event is
+        independent, and thus bee pollination might be modeled well by the
+        binomial. In contrast, because hummingbirds are much larger than bees,
+        we would expect they will frequently touch all of the carpels at once
+        when they visit a flower, or alternatively they may skip flowers
+        entirely. Hummingbirds, then, may exhibit "all or nothing" patterns of
+        pollination, in which pollination is not independent among the carpels
+        (more like tossing five coins all taped together, with heads on the same
+        side). This lack of independence would make hummingbird pollination a
+        poor match to the binomial distribution. If this is true, then the
+        distribution of apples with each possible number of pollinated seeds
+        could look something like this:</p>
+      <div style="clear:both; margin-bottom: 10px">
+        <div style="float: left; margin-right: 10px">
+          <table class="tableLarge">
+            <thead>
+              <tr>
+                <th><br>
+                </th>
+                <th colspan="2">Apples with X seeds pollinated</th>
+              </tr>
+              <tr>
+                <th>Number of seeds pollinated</th>
+                <th>Bees</th>
+                <th>Hummingbirds</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>0</td>
+                <td><i>0</i></td>
+                <td><i>15</i></td>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td><i>1</i></td>
+                <td><i>6</i></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td><i>7</i></td>
+                <td><i>4</i></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td><i>15</i></td>
+                <td><i>3</i></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td><i>27</i></td>
+                <td><i>11</i></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td><i>25</i></td>
+                <td><i>36</i></td>
+              </tr>
+              <tr>
+                <td>Totals</td>
+                <td><i>75</i></td>
+                <td><i>75</i></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p>To see how the binomial distribution compares to these numbers we
+            need to know the probability that a single seed will be pollinated
+            (p), and the total number of seeds in an apple (5). We can't assume
+            that the probability of a seed being pollinated is 0.5, so we need
+            to calculate it from our data.</p>
+          <p>To calculate p we just need to know the total number of seeds
+            pollinated, and divide that by the total number of seeds possible
+            across all the apples. The denominator is easy - there are 75 apples
+            with 5 possible seeds each, which gives us 375 total seeds that
+            could have been pollinated. </p>
+          <p>To calculate the total number of pollinated seeds from our table of
+            frequencies, we need to: 1) multiply the number of seeds that were
+            pollinated by the number apples with that number of seeds pollinated
+            in the apples in that row of the table, then 2) sum the number of
+            seeds pollinated across all the rows to get the total number of
+            seeds pollinated across all the apples.</p>
+        </div>
+      </div>
+      <br style="clear:both">
+      <p style="clear:both">For the bee data, we get:</p>
+      <div style="clear:both">
+        <div style="float: left; margin-right: 10px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Number of seeds pollinated</th>
+                <th>Apples with X seeds pollinated</th>
+                <th>Seeds pollinated</th>
+              </tr>
+              <tr>
+                <td>0</td>
+                <td>0</td>
+                <td>0 x 0 = 0</td>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>1</td>
+                <td>1 x 1 = 1</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>7</td>
+                <td>2 x 7 = 14</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>15</td>
+                <td>3 x 15 = 45</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>27</td>
+                <td>4 x 27 = 108</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>25</td>
+                <td>5 x 25 = 125</td>
+              </tr>
+              <tr>
+                <td>Total seeds pollinated</td>
+                <td><br>
+                </td>
+                <td><em><strong><em></em>293</strong></em></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p>So, the overall probability of a single seed being pollinated by a
+            bee is 293/375 = 0.781.</p>
+        </div>
+      </div>
+      <br style="clear:both">
+      <p style="clear:both">Repeating this calculation with the hummingbird data
+        gives us:</p>
+      <div style="clear:both">
+        <div style="float: left; margin-right: 10px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Number of seeds pollinated</th>
+                <th>Apples with X seeds pollinated</th>
+                <th>Seeds pollinated</th>
+              </tr>
+              <tr>
+                <td>0</td>
+                <td>15</td>
+                <td>0</td>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>6</td>
+                <td>6</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>4</td>
+                <td>8</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>3</td>
+                <td>9</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>11</td>
+                <td>44</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>36</td>
+                <td>180</td>
+              </tr>
+              <tr>
+                <td>Total seeds pollinated</td>
+                <td><br>
+                  <br>
+                </td>
+                <td><em><strong>247</strong></em></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p>The overall probability of a single seed being pollinated by
+            hummingbirds 247/375 = 0.659.</p>
+        </div>
+      </div>
+      <br style="clear:both">
+      <p>Now that we have probabilities that a single seed will be pollinated,
+        we can calculate the probabilities of each number of seeds pollinated
+        out of the five found in an apple. For bees, the probability that an
+        apple would have all five seeds pollinated would be:</p>
+      <p><img src="prob_five_seeds_bee.jpg" name="graphics21" width="369" height="54"
+          border="0"></p>
+      <p>With this probability of 5 seeds pollinated the expected number of
+        apples with 5 seeds pollinated is 0.29 x 75 = 21.79 apples - pretty
+        close to the observed number of 25. </p>
+      <p>For hummingbirds, the probability of five seeds in an apple would be:</p>
+      <p><img src="prob_five_seeds_hb.jpg" name="graphics20" width="370" height="54"
+          border="0"></p>
+      <p>which, out of 75 apples, would be 0.12 x 75 = 9.32 apples - well below
+        the observed number of 36.</p>
+      <table style="width: 100%">
+        <tbody>
+          <tr>
+            <td>
+              <p><img src="lab4_binom_normal_prelab2_html_1ceb3b62.png" name="graphics22"
+                  width="487" hspace="10" height="266" align="left" border="0">If
+                we do this calculation for all of the possible number of seeds
+                pollinated, from 0 to 5, we get this set of expected values. You
+                can see that the binomial distribution does a good job of
+                predicting the expected distribution of seeds for bees.</p>
+            </td>
+          </tr>
+          <tr>
+            <td><br>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p><img src="lab4_binom_normal_prelab2_html_31452c5d.png" style="border: 0px solid ; width: 488px; height: 270px;"
+                  alt="Hummingbird" name="graphics23" hspace="10" align="left">The
+                prediction is not very good for hummingbirds. Since we used the
+                probability that a seed was pollinated that we calculated from
+                the data, the mismatch can't be due to using the wrong
+                probability in our calculation. Instead, it is some other
+                characteristic of the binomial that doesn't represent
+                hummingbird pollination well.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Before we jump to conclusions, though, we should check what the
+        Chi-square goodness of fit test says about how well the predicted
+        numbers match the observed.</p>
+      <p>To do this, we just need to calculate a Chi-square value for the
+        observed and expected numbers. First, for the bees:</p>
+      <div style="clear:both">
+        <div style="float:left; margin-right:10px; width: 800px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Number of seeds pollinated</th>
+                <th>Apples with X seeds pollinated (observed)</th>
+                <th>Binomial probability</th>
+                <th>Expected number of apples (prob x total apples)</th>
+                <th>(O-E)<sup>2</sup>/E</th>
+              </tr>
+              <tr>
+                <td>0</td>
+                <td>0</td>
+                <td>0.0005</td>
+                <td>0.038</td>
+                <td>0.038</td>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>1</td>
+                <td>0.0090</td>
+                <td>0.675</td>
+                <td>0.156</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>7</td>
+                <td>0.0640</td>
+                <td>4.808</td>
+                <td>1.000</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>15</td>
+                <td>0.2285<br>
+                </td>
+                <td>17.138</td>
+                <td>0.267</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>27</td>
+                <td>0.4074<br>
+                </td>
+                <td>30.555</td>
+                <td>0.414</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>25</td>
+                <td>0.2906</td>
+                <td>21.795</td>
+                <td>0.471</td>
+              </tr>
+              <tr>
+                <td>Totals</td>
+                <td>75</td>
+                <td>1</td>
+                <td><br>
+                </td>
+                <td><em><strong><em><b>χ<sup>2</sup> = </b></em>2.345</strong></em></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p>The Chi-square value is 2.345 for these data, which is the sum of
+            the (O-E)<sup>2</sup>/E for each number of seeds pollinated. There
+            are 6 different numbers of seeds, which gives us a degrees of
+            freedom of 6-1 = 5. The probability of a Chi-square value of 2.345
+            if the null hypothesis is true is 0.7996 (which you can get from
+            Excel or MINITAB). We would retain the null hypothesis that observed
+            = expected, and find that the bee data fit the binomial distribution
+            well.</p>
+        </div>
+      </div>
+      <br style="clear:both">
+      <p>Now the hummingbirds:</p>
+      <div style="clear:both">
+        <div style="float:left; margin-right: 10px; width: 800px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Number of seeds pollinated</th>
+                <th>Apples with X seeds pollinated (observed)</th>
+                <th>Binomial probability</th>
+                <th>Expected number of apples (prob x total apples)</th>
+                <th>(O-E)<sup>2</sup>/E</th>
+              </tr>
+              <tr>
+                <td>0</td>
+                <td>15</td>
+                <td>0.0046</td>
+                <td>0.345</td>
+                <td>622.519</td>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>6</td>
+                <td>0.0446</td>
+                <td>3.345</td>
+                <td>2.107</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>4</td>
+                <td>0.1722</td>
+                <td>12.915</td>
+                <td>6.154</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>3</td>
+                <td>0.3328</td>
+                <td>24.960</td>
+                <td>19.321</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>11</td>
+                <td>0.3216</td>
+                <td>24.120</td>
+                <td>7.137</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>36</td>
+                <td>0.1243</td>
+                <td>9.322</td>
+                <td>76.341</td>
+              </tr>
+              <tr>
+                <td>Totals</td>
+                <td>75</td>
+                <td>1</td>
+                <td><br>
+                </td>
+                <td><em><strong><em><b>χ<sup>2</sup> = </b></em>733.578</strong></em></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p> The probability of a Chi-square value of 733.578 with 5 degrees of
+            freedom is 2.69 x 10<sup>-156</sup>. We reject the null, and find
+            that the hummingbird data do not fit the binomial distribution well.</p>
+        </div>
+      </div>
+      <br style="clear:both">
+      <p>What can we conclude from this exercise? </p>
+      <p>The bee data fits the binomial well, so we can conclude that bee
+        pollination has the properties assumed by the binomial distribution.
+        Specifically, the binomial distribution is based on the assumption that
+        events are independent of one another, so our good fit to the binomial
+        gives us support for the hypothesis that bees pollinate carpels
+        independently of one another. </p>
+      <p>For the hummingbirds, the binomial is clearly a lousy model for the
+        distribution of number of seeds pollinated in apples. The poor fit of
+        the hummingbird data to the binomial distribution, along with the large
+        number of 5 seeds and 0 seeds pollinated, supports our hypothesis that
+        hummingbirds tend to either pollinate all of the carpels or none of them
+        when they visit apple flowers.</p>
+      <p>So, the take-home points about the binomial are:</p>
+      <ul>
+        <li>Make sure you use expected values that accurately represent what
+          your data would look like if they were randomly distributed among the
+          categories - equal numbers or simple proportionality are not always to
+          be expected.</li>
+        <li>Fit or lack of fit to a model, like the binomial distribution, gives
+          you some additional insight into the processes that generated the
+          data. Good fit to a model is evidence that the data have the same
+          properties as the model, and a poor fit to the model is evidence that
+          the data do not share one or more of the model's properties.</li>
+      </ul>
+      <h2 class="part" id="next_activity">Next activity</h2>
+      <p>In the next activity we will practice using Chi-square goodness of fit
+        testing using data on numbers of boys in families by birth order, and by
+        doing the analysis of apple pollination using MINITAB.</p>
+      <ul>
+      </ul>
+    </div>
+  </body>
+</html>

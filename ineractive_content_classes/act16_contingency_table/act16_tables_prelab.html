@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Contingency tables prep reading</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script type="text/javascript" src="contingency.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Contingency tables - prep. reading</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#two_cats">Relationships between categorical variables</a></p>
+      <p><a href="#handedness">Handedness</a></p>
+      <p><a href="#contingency_tables">Contingency tables</a></p>
+      <p><a href="#expecteds">Expected frequencies</a></p>
+      <p><a href="#test_stat">Test statistic and p-value</a></p>
+      <p><a href="#preg_testing">Pregnancy test example</a></p>
+      <p><a href="#next_activity">Next up</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="two_cats">Relationships between categorical variables</h2>
+      <p> Although it may not have always been obvious, with the exception of
+        the one-sample t-test all of the procedures we have studied so far have
+        been designed to study relationships between two variables. To
+        summarize:</p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th>Analysis</th>
+            <th>Predictor</th>
+            <th>Response</th>
+            <th>Example</th>
+          </tr>
+          <tr>
+            <td>Regression</td>
+            <td>Numeric</td>
+            <td>Numeric</td>
+            <td>Number of correct characters as a function of distance to the
+              board</td>
+          </tr>
+          <tr>
+            <td>ANOVA</td>
+            <td>Categorical</td>
+            <td>Numeric</td>
+            <td>Sizes of cuckoo eggs as a function of&nbsp;host species</td>
+          </tr>
+          <tr>
+            <td>Two-sample t-test</td>
+            <td>Categorical</td>
+            <td>Numeric</td>
+            <td>Survival duration as a function of lung cancer cell type</td>
+          </tr>
+          <tr>
+            <td>Contingency tables</td>
+            <td>Categorical</td>
+            <td>Categorical</td>
+            <td>Relationship between handedness and time period</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>In each case the null hypothesis tells us what to expect if there is no
+        relationship between the predictor and the response variables - we
+        express this as a hypothesis of slope = 0 for regression, and as equal
+        means across the categories of the grouping variable for ANOVA and
+        t-tests. The same basic approach applies to the case in which both
+        variables are categorical, but we will be using a method called <strong>contingency
+          table analysis</strong> to assess these relationships.</p>
+      <h2 class="part" id="handedness">Example - handedness through the ages</h2>
+      <p> <img style="width: 450px; height: 226px; float: left;" alt="handprint"
+          src="handprint.jpg" vspace="5" hspace="5" align="left">You've probably
+        seen pictures of hand prints on cave walls made by prehistoric artists,
+        like the one on the left side of this image. Cave paintings of these
+        kinds are found in a variety of places, including Australia, South
+        America, and Indonesia, and hand prints from these areas date from the
+        Neolithic (approximately 8500 BC) to modern times. Hand prints found in
+        western European caves are even older, dating to the upper Paleolithic
+        (about 10,000 BC). </p>
+      <p>The cave prints are negative images, in that the pigment surrounds the
+        hand, and the space covered by the hand itself is blank. They are made
+        by placing the palm of one hand on the cave wall and then blowing
+        pigment through a straw to trace the hand onto the surface surrounding
+        it. The position of the thumb makes it clear whether the print is of a
+        right or left hand.</p>
+      <p>Two researchers (C. Faurie and M. Raymond, Biology Letters, 2003,
+        271:S43-S45) were interested in using the hand prints to assess whether
+        handedness rates have changed between the Paleolithic period and modern
+        times. They compiled data on hand prints in cave walls from France and
+        Spain that dated to the Paleolithic period, and out of 343 hand prints
+        they found 264 left hands, and 79 right hands. They then wanted to
+        compare the frequencies from that single sample to handedness rates in
+        modern people. How might they proceed?</p>
+      <table style="width: 100%" border="0">
+        <tbody>
+          <tr>
+            <td>
+              <p>We know how to use a Chi-square goodness of fit analysis to
+                compare observed frequencies to expected frequencies. We know
+                that in modern times left handedness is approximately 10% of the
+                population globally, which means that right handedness is 90%
+                (we'll ignore the ambidextrous to keep things simple). </p>
+              <p>When people make a hand print with this method, they usually
+                holds the straw with their dominant hand and put their
+                non-dominant hand on the cave wall to serve as the template. So,
+                if we put 10% of the 343 total hand prints into the Expected
+                column for right hands (which are made by left-handed people),
+                and the other 90% into the Expected column for left hands (made
+                by right-handed people), we have what we need to do a goodness
+                of fit test.</p>
+            </td>
+            <td>
+              <table class="tableLarge">
+                <tbody>
+                  <tr>
+                    <th>Hand </th>
+                    <th>Paleolithic</th>
+                    <th>Modern handedness rates</th>
+                    <th>Expected (from modern rates)</th>
+                  </tr>
+                  <tr>
+                    <td>Right</td>
+                    <td>79</td>
+                    <td>0.1</td>
+                    <td>34.3</td>
+                  </tr>
+                  <tr>
+                    <td>Left</td>
+                    <td>264</td>
+                    <td>0.9</td>
+                    <td>308.73</td>
+                  </tr>
+                  <tr>
+                    <td>Total</td>
+                    <td>343</td>
+                    <td><br>
+                    </td>
+                    <td><br>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>We could then calculate the Chi-square test statistic as:</p>
+      <p>χ<sup>2</sup> = (79-34.3)<sup>2</sup>/34.4 + (264-308.7)<sup>2</sup>/264
+        = 64.7</p>
+      <p>The area under the curve from 64.7 to infinity for a Chi-square
+        distribution with 2-1 = 1 degrees of freedom is tiny, p = 8.6 x 10<sup>-16</sup>.
+        With a p-value this small we can confidently reject the null hypothesis
+        that observed handedness rates from the Paleolithic are the same as
+        rates from modern times.</p>
+      <p>But, there is a problem with this approach.</p>
+      <p>The 90% right, 10% left handed numbers are generalizations that are
+        based on which hand people use for common tasks like writing. However,
+        it turns out that handedness depends on the task. It is not uncommon for
+        people who write with their left hands to do other tasks right-handed
+        (and vice versa for right-handed people), so the rates for writing may
+        not be reliable indicators of rates for other tasks. Given this, it's
+        important to assess handedness rates for a particular task, and general
+        numbers may not predict the handedness rate for something like making
+        negative hand prints on cave walls. Unsurprisingly, there are no
+        generally accepted rates from modern human populations for this task.</p>
+      <h2 class="part" id="contingency_tables">Contingency table tests of
+        association</h2>
+      <p>To solve the problem of not knowing the expected rates for modern hand
+        prints, Faurie and Raymond generated their own data for modern
+        populations. They gave 179 university students paper, pigment, and
+        straws and asked them to make a negative hand print, but let the
+        students choose for themselves which hand to use to hold the straw and
+        which to use for the negative impression. They then counted the number
+        of right and left hand prints the students made.</p>
+      <div style="float: right">
+        <table class="tableLarge">
+          <tbody>
+            <tr>
+              <th><br>
+              </th>
+              <th colspan="2">Period</th>
+              <th><br>
+              </th>
+            </tr>
+            <tr>
+              <th>Print type</th>
+              <th>Paleolithic</th>
+              <th>Modern</th>
+              <th>Row total</th>
+            </tr>
+            <tr>
+              <td>Right</td>
+              <td>79</td>
+              <td>41</td>
+              <td>120</td>
+            </tr>
+            <tr>
+              <td>Left</td>
+              <td>264</td>
+              <td>138</td>
+              <td>402</td>
+            </tr>
+            <tr>
+              <td>Column total</td>
+              <td>343</td>
+              <td>179</td>
+              <td>522</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The data on negative hands for either Paleolithic or present-day are
+        presented here. This kind of table is called a <strong>contingency
+          table</strong>. It is used to summarize cases in which we have a set
+        of observations (hand prints) that are measured on two different
+        categorical variables. The first categorical variable is the Period, and
+        we have two different possible levels - Paleolithic or Modern. The
+        second categorical variable is Print type, and we have two levels for
+        that variable as well - Right or Left.</p>
+      <p>Everywhere a Period level intersects with a Print type level we have a
+        <strong>cell</strong> in the table, which holds the number of hands that
+        were counted with that combination. For example, the combination
+        Paleolithic/Right occurred 79 times, and Modern/Right occurred 41 times.</p>
+      <p>The row and column totals are <strong>marginal</strong> totals, which
+        give the total number of prints for the row or column they occupy -
+        there were a total of 120 Right hands from both periods, and there were
+        179 Modern hand prints of both print types.</p>
+      <div style="float:right">
+        <table class="tableLarge">
+          <tbody>
+            <tr>
+              <th><br>
+              </th>
+              <th colspan="2">Period</th>
+            </tr>
+            <tr>
+              <th>Print type</th>
+              <th>Paleolithic</th>
+              <th>Modern</th>
+            </tr>
+            <tr>
+              <td>Right</td>
+              <td>0.230</td>
+              <td>0.229</td>
+            </tr>
+            <tr>
+              <td>Left</td>
+              <td>0.770</td>
+              <td>0.771</td>
+            </tr>
+            <tr>
+              <td>Column total</td>
+              <td>1</td>
+              <td>1</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>What we want to know is whether the distribution of right and left hand
+        prints is different between the two periods. We can't just compare
+        directly, because there are different numbers of prints in samples from
+        each period (343 total for Paleolithic, 179 for Modern), but even if we
+        express the numbers as relative frequencies like the table to the right,
+        the proportions of each period's prints that are right or left are very
+        similar, but not identical. We want to know if the distribution of print
+        types <strong>depends</strong> on the period.</p>
+      <p>And how do we test for dependencies between variables? We come up with
+        a null hypothesis of a lack of dependency and test that. Another way of
+        saying "lack of dependence" is <strong>independence</strong>. The null
+        hypothesis for our analysis is that print types are independent of
+        period. When we are working with two variables that are sampled at
+        random, and we are looking for dependency between them, the test is
+        called a Chi-square contingency table <strong>test of association</strong>.</p>
+      <p>We will need to compare the observed frequencies of right and left
+        hands for each period against a set of expected frequencies to test this
+        null hypothesis, so just like with goodness of fit testing our null
+        hypothesis can be expressed as:</p>
+      <p>H<sub>o</sub>: Observed frequency = Expected frequency</p>
+      <p> </p>
+      <p>Think for a moment about how using a second sample of data from Modern
+        times instead of known rates changes the analysis. When the information
+        we have about modern handedness rates comes from a sample of data
+        instead of known rates we can no longer use a Chi-square goodness of fit
+        test. We need a different method of coming up with expected frequencies
+        to compare with the observed frequencies in all four of the cells.</p>
+      <p>By the way, before we move on to the new method for analyzing
+        contingency tables, what about that Modern sample? How could we know if
+        handedness for making hand prints is the same as the 90% R, 10% L rate
+        mentioned above? <a href="javascript:ReverseDisplay('modern_times')">Click
+          here to see if you're right.</a> </p>
+      <div id="modern_times" style="display:none;">
+        <p style="border-style:solid;padding:10px;"> We could do the same
+          comparison as we did for the Paleolithic sample - with 179 modern hand
+          prints, we would expect 17.9 to be right hands, and 161.1 to be left
+          hands. The χ2 statistic is then (41-17.9)<sup>2</sup> + (138 - 161.1)<sup>2</sup>
+          = 33.12. With 1 degrees of freedom the p-value is 8.6 x 10<sup>-9</sup>.
+          <br>
+          <br>
+          So, even the modern hand prints do not have the same frequencies as
+          expected based on handedness for writing. We really need to have a
+          sample of modern hand prints, the 90/10 split is not accurate for
+          either Paleolithic or Modern samples</p>
+      </div>
+      <h3 class="part" id="expecteds">Expected values</h3>
+      <div style="clear: both">
+        <div style="float: right; margin-left: 10px">
+          <p>Table 1: Raw data for coin <br>
+            flipping experiment</p>
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>COIN 1</th>
+                <th>COIN 2</th>
+              </tr>
+              <tr>
+                <td>Heads</td>
+                <td>Heads</td>
+              </tr>
+              <tr>
+                <td>Tails</td>
+                <td>Heads</td>
+              </tr>
+              <tr>
+                <td>Heads</td>
+                <td>Tails</td>
+              </tr>
+              <tr>
+                <td>Tails</td>
+                <td>Tails</td>
+              </tr>
+              <tr>
+                <td>...</td>
+                <td>...</td>
+              </tr>
+              <tr>
+                <td>Heads</td>
+                <td>Heads</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>To understand where the expected values come from in a contingency
+          table analysis, let's start with a simple example. Imagine that we are
+          tossing two coins at the same time, and observing how often they land
+          with each of the possible combinations of heads and tails - heads,
+          heads; heads, tails; tails, heads; tails, tails. The data that we
+          would collect would look like Table 1.</p>
+        <p>The question is, does the distribution of heads or tails we observe
+          for Coin 1 depend on the distribution of heads or tails we observe for
+          Coin 2?</p>
+        <p>Given what we know about coin tossing we can be pretty sure that the
+          coins are independent - a heads on one coin doesn't make it more or
+          less likely you'll get a heads on the other. If this is the case, then
+          roughly 50% of the heads flipped for Coin 1 will be accompanied by
+          heads on Coin 2, and the other 50% will be accompanied by tails on
+          Coin 2. <br>
+        </p>
+      </div>
+      <div style="clear: both; padding-top: 20px">
+        <div style="float: right; margin-left: 10px">
+          <p>Table 2: Contingency table <br>
+            of outcomes for Coin 1 and Coin 2</p>
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th><br>
+                </th>
+                <th colspan="2">Coin 1</th>
+                <th><br>
+                </th>
+              </tr>
+              <tr>
+                <th>Coin 2</th>
+                <th>Heads</th>
+                <th>Tails</th>
+                <th>Total</th>
+              </tr>
+              <tr>
+                <td>Heads</td>
+                <td>25</td>
+                <td>25</td>
+                <td>50</td>
+              </tr>
+              <tr>
+                <td>Tails</td>
+                <td>25</td>
+                <td>25</td>
+                <td>50</td>
+              </tr>
+              <tr>
+                <td>Total</td>
+                <td>50</td>
+                <td>50</td>
+                <td>100</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Once we have flipped our pair of coins many times (say, 100 times -
+          the ellipses in Table 1 represent the other 95 tosses) we could
+          summarize the data into a contingency table, like in Table 2.</p>
+        <p>Because this is an illustration rather than an actual experimental
+          result, the numbers in the table were selected to match our
+          expectation exactly. The marginal column totals for Coin 1 show that
+          out of 100 total flips we got exactly 50 heads and 50 tails, and the
+          marginal row totals show the same result for Coin 2. Furthermore,
+          since we don't expect that flipping one coin is going to have any
+          effect on the outcome for another, half of the time when we flip a
+          Heads on Coin 1 we should flip a Heads on Coin 2, and half of the time
+          we should flip a Tails on Coin 2 - consequently, in the body of the
+          table in which each combination of outcomes for Coin 1 and Coin 2 are
+          shown, all of the counts are equal to 25.</p>
+      </div>
+      <div style="clear:both; padding-top: 20px">
+        <div style="float: right; margin-left: 10px">
+          <p> Table 3: Marginal probabilities.</p>
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th><br>
+                </th>
+                <th colspan="2">Coin 1</th>
+                <th><br>
+                </th>
+              </tr>
+              <tr>
+                <th>Coin 2</th>
+                <th>Heads</th>
+                <th>Tails</th>
+                <th>Total</th>
+              </tr>
+              <tr>
+                <td>Heads</td>
+                <td>0.5 x 0.5 = 0.25<br>
+                </td>
+                <td>0.5 x 0.5 = 0.25<br>
+                </td>
+                <td><strong>0.50</strong></td>
+              </tr>
+              <tr>
+                <td>Tails</td>
+                <td>0.5 x 0.5 = 0.25<br>
+                </td>
+                <td>0.5 x 0.5 = 0.25<br>
+                </td>
+                <td><strong>0.50</strong></td>
+              </tr>
+              <tr>
+                <td>Total</td>
+                <td><strong>0.50</strong></td>
+                <td><strong>0.50</strong></td>
+                <td>1.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>We can convert the marginal totals into marginal probabilities by by
+          dividing marginal total by the total number of flips, which was 100.
+          The marginal probabilities are in Table 3, in the row and column
+          margins, in boldface.</p>
+        <p> If you recall from the first couple of weeks of class, we can
+          calculate the "and" probabilities for the combinations of Coin 1 and
+          Coin 2 outcomes in the body of the table using these marginal
+          probabilities. For example, the probability of flipping a Heads on
+          Coin 1 is 0.5, and half of those will be accompanied by a Heads for
+          Coin 2, such that the probability of a Heads on both coins is 0.5×0.5
+          = 0.25.</p>
+        <p>At least, this method of calculating joint probabilities works <strong><em>only
+              if the two variables are independent</em></strong>.</p>
+      </div>
+      <div style="clear: both; padding-top: 20px">
+        <div style="float: right; margin-left: 10px">
+          <p>Table 4: Expected frequencies</p>
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th><br>
+                </th>
+                <th colspan="2">Coin 1</th>
+                <th><br>
+                </th>
+              </tr>
+              <tr>
+                <th>Coin 2</th>
+                <th>Heads</th>
+                <th>Tails</th>
+                <th>Total</th>
+              </tr>
+              <tr>
+                <td>Heads</td>
+                <td>0.25 x 100 = 25<br>
+                </td>
+                <td>0.5 x 0.5 = 0.25<br>
+                </td>
+                <td>50</td>
+              </tr>
+              <tr>
+                <td>Tails</td>
+                <td>0.25 x 100 = 25<br>
+                </td>
+                <td>0.5 x 0.5 = 0.25<br>
+                </td>
+                <td>50</td>
+              </tr>
+              <tr>
+                <td>Total</td>
+                <td>50</td>
+                <td>50</td>
+                <td>100</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p>We can now convert the joint probabilities in the cells from Table 3
+        into expected frequencies in Table 4 - simply multiply the joint
+        probabilities by the total number of coin tosses (100) to get the
+        expected number of times the each combination will occur, <em><strong>if
+            the null hypothesis of independence between Coin 1 and Coin 2 is
+            true</strong></em>. </p>
+      <p>Thus, we have expected frequencies derived from the data in the table,
+        without reference to some known sets of proportions.</p>
+      <p>Note that a shortcut to this set of calculations is to recognize that
+        we we are calculating (50/100) x (50/100) x 100, which is equal to (50 x
+        50)/100 - this is row total multiplied by column total divided by grand
+        total, (rc)/t.</p>
+      <br>
+      <br>
+      <br>
+      <div style="clear: both; padding-top: 10px; padding: 10px">
+        <div id="wrapper_div" style="float: left; border: solid black 4px; margin-right: 10px; margin-bottom: 10px; width: 1000px;">
+          <div id="chart_div" style="width: 50%; height: 400px; float: left"></div>
+          <div id="table_wrapper" style="width: 45%; float: right; margin-bottom: 30px">
+            <p style="font-style: italic; font-size: 1em">Contingency table</p>
+            <p style="font-style: italic; font-size: 0.75em">Cells are "Observed
+              freq. (Expected freq.)"</p>
+            <div id="table_div"></div>
+            <p style="font-style: italic; font-size: 0.75em">Expected is (row
+              total)(column total)/(grand total)</p>
+            <p>Chi-square = <span id="chisq_stat"></span>, p = <span id="p_value"></span></p>
+          </div>
+          <div id="output_div" style="width: 45%; margin-left: auto">
+            <p>Enter number of tosses: <input id="tot_tosses" value="100" onchange="drawChart()"
+                style="width: 50px" type="number"><button type="button" id="randomize"
+                onclick="drawChart()">Randomize this n</button></p>
+          </div>
+        </div>
+        <p>Table 4 is a little too perfect to illustrate reality, though, in
+          that every row and column total perfectly matches the outcome we
+          expect from tossing coins. Marginal totals will usually not be so
+          perfect. Having marginal totals that are different doesn't change the
+          calculations at all, but it does mean that expected frequencies will
+          not all be the same in most contingency tables.</p>
+        <p>The graph to the left shows how this approach to generating expected
+          frequencies works when coins are actually tossed. We may expect 50
+          heads and 50 tails with 100 tosses, but random chance produces numbers
+          different than this. The heights of the red and blue bars show the
+          outcome of tossing two coins the number of times specified (100
+          initially), and the black dots are the expected frequencies based on
+          the marginal totals.</p>
+        <p>The expected frequencies are based on the null hypothesis of
+          independence between the two coins. Just like with all of the analyses
+          we're learned, the null hypothesis is expressed as an exact expected
+          outcome at a population level, but random sampling gives us data that
+          doesn't perfectly match the expected outcome, even when the null
+          hypothesis is true. You will see that even though Coin 1 and Coin 2
+          frequencies are generated independently, the observed numbers are
+          usually at least a little different from expected values.</p>
+        <p> The observed values change at random because they represent the
+          data, which is subject to random variation. The expected values are
+          generated from the observed data, and since the marginal totals are
+          changing the expected values will change as well. Pay attention to the
+          relative difference between the two expected values for the sets of
+          two bars - the relative difference between the red and blue bars will
+          be the same for Heads on Coin 2 and Tails on Coin 2 each time you get
+          a new outcome.</p>
+        <p>About once every 20 tosses the difference between observed and
+          expected is large enough to get a p-value less than 0.05, as we expect
+          when the null hypothesis is true.</p>
+      </div>
+      <h3 class="part" id="test_stat" style="clear: both">Test statistic,
+        p-value</h3>
+      <p>At this point we are ready to make a comparison between the observed
+        number of combinations of Coin 1 and Coin 2 outcomes (Table 2) and the
+        expected frequencies in Table 4.</p>
+      <p>We use the same Chi-square test statistic value for this analysis - it
+        is the sum of squared differences between observed and expected divided
+        by expected, across all of the cells in the table. Since the observed
+        perfectly matches the expected in this first example, the calculation
+        is:</p>
+      <p>χ<sup>2</sup> = (25-25)<sup>2</sup>/25 + (25-25)<sup>2</sup>/25 +
+        (25-25)<sup>2</sup>/25 + (25-25)<sup>2</sup>/25 = 0</p>
+      <p>The degrees of freedom for the test is equal to the number of rows - 1
+        multiplied by the number of columns - 1:</p>
+      <p>d.f. = (r-1)(c-1) = (2-1)(2-1) = 1</p>
+      <p>Since the entire curve falls above a Chi-square value of 0, the p-value
+        is p = 1.</p>
+      <h3>Non-independent coins</h3>
+      <div style="clear: both">
+        <div style="float:right; margin-left: 10px">
+          <p>Table 5: A very <br>
+            non-independent pair of coins.</p>
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th><br>
+                </th>
+                <th colspan="2">Coin 1</th>
+                <th><br>
+                </th>
+              </tr>
+              <tr>
+                <th>Coin 2</th>
+                <th>Heads</th>
+                <th>Tails</th>
+                <th>Total</th>
+              </tr>
+              <tr>
+                <td>Heads</td>
+                <td>50</td>
+                <td>0</td>
+                <td>50</td>
+              </tr>
+              <tr>
+                <td>Tails</td>
+                <td>0</td>
+                <td>50</td>
+                <td>50</td>
+              </tr>
+              <tr>
+                <td>Total</td>
+                <td>50</td>
+                <td>50</td>
+                <td>100</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>At this point we've seen how independent variables look, but what
+          about variables that are not independent? </p>
+        <p>A simple way of illustrating dependence between two coins is to
+          attach them to a piece of tape so that when we flip them they must
+          always both land the same side up. The table would look like Table 5.</p>
+      </div>
+      <p> You can see that the marginal totals are all exactly the same as Table
+        2 above, so taping the coins together hasn't changed the marginal
+        probabilities at all - there is still a p of 0.5 that either side will
+        land up for each coin. But,&nbsp;taping them together now prevents mixes
+        of heads and tails from occurring, which changes the combinations of
+        heads and tails observed in the table cells. Now, instead of having 25
+        of each combination (as we expect for independent coins) we now have 50
+        Heads/Heads and 50 Tails/Tails, and none in the other combinations. The
+        difference between what we observed and what we expect if the coins are
+        independent will be the basis for deciding whether the coins show a
+        significant lack of independence.</p>
+      <p>Since the marginal totals haven't changed the expected frequencies are
+        exactly the same as in Table 4 - thus, (rc)/t is still (50x50)/100 = 25
+        for every cell. </p>
+      <p>The Chi-square test would look like this:</p>
+      <p>χ<sup>2</sup> = (25-50)<sup>2</sup>/25 + (25-0)<sup>2</sup>/25 +
+        (25-50)<sup>2</sup>/25 + (25-0)<sup>2</sup>/25 = 100</p>
+      <p>With (2-1)(2-1) = 1 degrees of freedom the p-value is p = 1.5 x 10<sup>-23</sup>.
+        Thus, observed does not equal expected, and the outcome on Coin 1
+        depends on the outcome on Coin 2.</p>
+      <h2>Chi-square test of association for handedness through the ages</h2>
+      <p>Now that we know what independent variables and dependent variables
+        look like, let's return now to our data on handedness. We have a
+        contingency table of right and left handed prints from Paleolithic and
+        Modern samples. We want to know if the print type depends on period.</p>
+      <div style="clear: both; padding-top: 5px; margin-bottom: 10px">
+        <div style="float: left;margin-right: 20px">
+          <p>Observed frequencies - data</p>
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th><br>
+                </th>
+                <th colspan="2">Period</th>
+                <th><br>
+                </th>
+              </tr>
+              <tr>
+                <th>Print type</th>
+                <th>Paleolithic</th>
+                <th>Modern</th>
+                <th>Row total</th>
+              </tr>
+              <tr>
+                <td>Right</td>
+                <td>79</td>
+                <td>41</td>
+                <td>120</td>
+              </tr>
+              <tr>
+                <td>Left</td>
+                <td>264</td>
+                <td>138</td>
+                <td>402</td>
+              </tr>
+              <tr>
+                <td>Column total</td>
+                <td>343</td>
+                <td>179</td>
+                <td>522</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="display: inline-block">
+          <p>Expected frequencies - (rc)/t</p>
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th><br>
+                </th>
+                <th colspan="2">Period</th>
+                <th><br>
+                </th>
+              </tr>
+              <tr>
+                <th>Print type</th>
+                <th>Paleolithic</th>
+                <th>Modern</th>
+                <th>Row total</th>
+              </tr>
+              <tr>
+                <td>Right</td>
+                <td>78.9</td>
+                <td>41.1</td>
+                <td>120</td>
+              </tr>
+              <tr>
+                <td>Left</td>
+                <td>264.1</td>
+                <td>137.9</td>
+                <td>402</td>
+              </tr>
+              <tr>
+                <td>Column total</td>
+                <td>343</td>
+                <td>179</td>
+                <td>522</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p style="clear: both">The sum of [(O-E)<sup>2</sup>/E] is our observed
+        Chi-square, which is: </p>
+      <p>χ<sup>2</sup> = 0.00008+0.00028+0.00016+0.00054 = 0.00106</p>
+      <p>The p-value, with df = (2-1)(2-1) = 1 is p = 0.974. Based on this
+        analysis we retain the null - handedness is independent of period, and
+        the rate of left and right handed prints is the same between the
+        periods.</p>
+      <p></p>
+      <h2 class="part" id="preg_testing">Example: pregnancy testing</h2>
+      <p>Pregnancy tests that are available over the counter measure the amount
+        of a hormone, called "human chorionic gonadotropin" or hCG, that is
+        produced by the placenta during pregnancy. Over the counter tests are
+        urine tests, and since the amount of hCG in urine varies substantially
+        between pregnant women, and also increases in amount as the placenta
+        grows in size over time, they are a useful early indicator of pregnancy.
+        However, urine tests are less accurate than the blood tests done by
+        physicians, and some amount of error is expected in these urine tests.
+        Tests are "positive" if hCG is detected in any amount, and "negative" if
+        it is not. If we were to test the accuracy of home pregnancy test, we
+        could have physicians identify women as either being pregnant or not
+        based on a blood test, and then give our home pregnancy test to equal
+        numbers of women in each pregnancy status group (pregnant or not). The
+        data might look something like this:</p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th><br>
+            </th>
+            <th colspan="2">Pregnancy status</th>
+            <th><br>
+            </th>
+          </tr>
+          <tr>
+            <th>HPT result</th>
+            <th>Pregnant</th>
+            <th>Not pregnant</th>
+            <th>Total</th>
+          </tr>
+          <tr>
+            <td>Positive</td>
+            <td>95</td>
+            <td>50</td>
+            <td>145</td>
+          </tr>
+          <tr>
+            <td>Negative</td>
+            <td>5</td>
+            <td>50</td>
+            <td>55</td>
+          </tr>
+          <tr>
+            <td>Total</td>
+            <td>100</td>
+            <td>100</td>
+            <td>200</td>
+          </tr>
+        </tbody>
+      </table>
+      <p> The first question we would want to answer is, "Is there an
+        association between the results of the HPT and the pregnancy status of
+        the patient?". If the home pregnancy test is working well, there should
+        be an association, and specifically, we should see combinations that
+        indicate agreement between the HPT results and the actual pregnancy
+        status of women occurring more often than expected.</p>
+      <p>Because we used an equal number of pregnant and non-pregnant women,
+        this is called a <strong>test of heterogeneity</strong>. If instead of
+        experimentally setting the number of women in each group we had simply
+        randomly sampled women from the population and observed their pregnancy
+        status, we would be conducting a <strong>test of association</strong>,
+        like the hand print data.</p>
+      <p>First, we need expected numbers: </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th><br>
+            </th>
+            <th colspan="2">Pregnancy status</th>
+            <th><br>
+            </th>
+          </tr>
+          <tr>
+            <th>HPT result</th>
+            <th>Pregnant</th>
+            <th>Not pregnant</th>
+            <th>Total</th>
+          </tr>
+          <tr>
+            <td>Positive</td>
+            <td>145×100/200 = 72.5</td>
+            <td>145×100/200 = 72.5</td>
+            <td>145</td>
+          </tr>
+          <tr>
+            <td>Negative</td>
+            <td>55×100/200 = 27.5</td>
+            <td>55×100/200 = 27.5</td>
+            <td>55</td>
+          </tr>
+          <tr>
+            <td>Total</td>
+            <td>100</td>
+            <td>100</td>
+            <td>200</td>
+          </tr>
+        </tbody>
+      </table>
+      <p> Next, we need an observed Chi-square value: </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th><br>
+            </th>
+            <th colspan="2">Pregnancy status</th>
+          </tr>
+          <tr>
+            <th>HPT result</th>
+            <th>Pregnant</th>
+            <th>Not preg.</th>
+          </tr>
+          <tr>
+            <td>Positive</td>
+            <td>(95-72.5)<sup>2</sup>/72.5 = 6.98</td>
+            <td>(50-72.5)<sup>2</sup>/72.5 = 6.98</td>
+          </tr>
+          <tr>
+            <td>Negative</td>
+            <td>(5-27.5)<sup>2</sup>/27.5 = 18.41</td>
+            <td>(50-27.5)<sup>2</sup>/27.5 = 18.41</td>
+          </tr>
+        </tbody>
+      </table>
+      <p> χ<sup>2</sup> = 6.98 + 6.98 + 18.41 + 18.41 = 50.78 </p>
+      <p>Finally, we need a probability for this observed Chi-square value. The
+        probability of this Chi-square value with (2-1)(2-1) = 1 df is p &lt;
+        0.001 - clearly, there is an association between the HPT results and the
+        actual pregnancy status of women. </p>
+      <h3>Interpreting a significant Chi-square contingency table</h3>
+      <p>Just as we needed to follow up a significant ANOVA with a Tukey's
+        procedure to find out which means were different, we have not yet
+        identified which cells in the table are responsible for the significant
+        Chi-square test. The next question we would like to answer is, which
+        combinations of pregnancy status and HPT results are different from what
+        we would expect by chance? We can address this question by calculating
+        the "standardized residual" for each cell, which is simply (Observed -
+        Expected)/sqrt(Expected).</p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th><br>
+            </th>
+            <th colspan="2">Pregnancy status</th>
+          </tr>
+          <tr>
+            <th>HPT result</th>
+            <th>Pregnant</th>
+            <th>Not preg.</th>
+          </tr>
+          <tr>
+            <td>Positive</td>
+            <td>(95-72.5)/8.51 = <span style="font-weight: bold;">2.64</span></td>
+            <td>(50-72.5)/8.51 = <span style="font-weight: bold;">-2.64</span></td>
+          </tr>
+          <tr>
+            <td>Negative</td>
+            <td>(5-27.5)/5.24 = <span style="font-weight: bold;">-4.29</span></td>
+            <td>(50-27.5)/5.24 = <span style="font-weight: bold;">4.29</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <p> Standardized residuals are approximately normally distributed, and so
+        absolute values greater than 2 indicate a significant deviation from
+        expected. Positive standardized residuals greater than 2 are
+        significantly greater than expected, and negative standardized residuals
+        less than -2 are significantly lower than expected. You can see that
+        pregnant women had positive HPT tests significantly more often than
+        expected, and women that were not pregnant had negative HPT results
+        significantly more often than expected - this is good, because both
+        outcomes are consistent with an effective home pregnancy test. Because
+        this was a test of heterogeneity&nbsp;the standardized residuals have
+        equal magnitudes within the rows.&nbsp; With a test of association the
+        standardized residuals can be different in every cell, and there could
+        be only a single cell that's different from expected.</p>
+      <h2>Assumptions of Chi-square contingency tables</h2>
+      <p>Although the expected frequencies are obtained in a different way than
+        Chi-square goodness of fit testing, we still use a Pearson's Chi-square
+        test statistic. The assumptions are thus the same - independent
+        observations, random sampling, and adequate sample size (no expected
+        frequencies less than 1, no more than 20% less than 5).</p>
+      <p> </p>
+      <h2 class="part" id="next_activity">Next activity</h2>
+      <p> For this week's lab we will be analyzing data from the sinking of the
+        Titanic. We will test whether there is an association between whether
+        passengers survived or not, based on their sex, age, and class.</p>
+    </div>
+  </body>
+</html>

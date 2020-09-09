@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Randomization testing activity</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script type="text/javascript" src="rand_test.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Randomization tests and nonparametrics activity</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="act11_rand_test_nonpar.html#intro">Introduction</a></p>
+      <p><a href="act11_rand_test_nonpar.html#randtest">Randomization testing</a></p>
+      <p><a href="act11_rand_test_nonpar.html#mann_whitney">Mann-Whitney U test</a></p>
+      <p><a href="act11_rand_test_nonpar.html#challenge">Challenge question</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="intro">Introduction</h2>
+      <p>Today we are going to re-visit the lung cancer survival data, but
+        instead of log-transforming our troubles away we're going to try using a
+        Mann-Whitney U-test and a randomization test to analyze the data
+        instead. All three of these are supposed to be alternative ways of
+        testing whether there is a difference in survival time between groups,
+        but each addresses the question in a different way. We will see at the
+        end whether they all arrive at the same conclusions.</p>
+      <p>The randomization test will take more time to do, and you will need to
+        wait for a class data set to finish it. Do your part of generating the
+        class data set, and enter your data into the class database first. You
+        can then work on the Mann-Whitney U-test while you're waiting for the
+        rest of the class data.</p>
+      <h2 class="part" id="randtest">Randomization testing</h2>
+      <p>We will re-visit the lung cancer survival time data for patients with
+        small cell or large cell cancers that we worked with last time to see
+        how randomization tests can be used to test for differences between
+        means, even when the data aren't normal.</p>
+      <p>Under the null hypothesis, the survival times are the same for small
+        and large-cell cancers - the cell type grouping is a distinction without
+        a difference. If the null is true, the 94.4 week difference between
+        large and small cell cancer mean survival times we observed should be
+        easy to generate if we randomly shuffle the data between the groups.
+        This random shuffling of data mimics the process of drawing two samples
+        repeatedly from a population, such that there is only one population
+        mean that is the same for both samples. The differences between the
+        means of randomly shuffled groups are used as our sampling distribution,
+        in place of the t-distribution. </p>
+      <div id="wrapper_div1" style="float: left; border: solid black 4px; width: 600px; padding: 10px; margin-right: 20px">
+        <div id="table_div" style="float:left"></div>
+        <div id="controls_div" style="float: right">
+          <p><button id="rand_sort" onclick="randSort()">Randomize</button></p>
+          <p><button id="reset_data" onclick="resetTable()">Reset</button></p>
+          <p>Large mean = <span id="large_mean"></span></p>
+          <p>Small mean = <span id="small_mean"></span></p>
+          <p>Difference = <span id="diff"></span> </p>
+          <br>
+          <br>
+          <p>Number of random shuffles = <span id="shuffles"></span></p>
+          <p>Number exceeding 94.4 = <span id="exceeds"></span></p>
+          <p> p-value = <span id="pval"></span> </p>
+        </div>
+      </div>
+      <p>The app to the left shows the cancer survival data in the table -
+        initially the groups are correctly assigned, and the large mean, small
+        mean, and difference between them are all equal to their observed
+        values. The difference between means is our <strong>test statistic</strong>
+        for this test - it is the measure of difference we are using to test if
+        the difference between population means is 0. The difference is
+        highlighted in red because any difference between means that we generate
+        with an absolute value of 94.4 or larger will show in red, and will add
+        to the "Number exceeding 94.4" count. Under the null hypothesis the
+        observed difference of 94.4 is a randomly generated difference, so it is
+        being added both as one of the random shuffles, and is treated as one of
+        the random shuffles exceeding 94.4 - consequently, the "Number of random
+        shuffles" and "Number exceeding 94.4" both read 1.</p>
+      <p>The p-value is just the number of random shuffles exceeding 94.4
+        divided by the total number of random shuffles generated, with 1 added
+        to the numerator and denominator for the observed data. Before you start
+        generating random shuffles there is just the observed data in both the
+        numerator and denominator, and p-value starts at a value of 1.</p>
+      <p>Now that you understand what the app is showing you, you can use it to
+        see how randomization testing works.<br>
+      </p>
+      <p>1. <strong>Hit "Randomize" once to generate your first random shuffle</strong>.
+        When you hit the "Randomize" button the labels for cancer type are
+        randomly shuffled, while the survival times stay in place, which has the
+        effect of randomly assigning the data values to new groups. The means
+        for the new groups are calculated, and the resulting difference between
+        them is reported. If the difference is not as big as the observed
+        difference of 94.4 the difference turns black (which is very likely what
+        happened). The number of random shuffles increases to 2, but the number
+        exceeding 94.4 remains at 1, so the p-value is now 0.5.</p>
+      <p>If you hit "Randomize" again a few times you'll see that the p-value
+        declines each time you get a random shuffle with differences between
+        means less than 94.4.</p>
+      <p>2. <strong>Continue to hit "Randomize" until p is less than 0.05</strong>.
+        Since the denominator of our p-value calculation is the number of random
+        shuffles we generate, it will take at least a count of 20 random
+        shuffles (which is actually the observed data plus 19 random
+        differences) for p to equal 0.05. When the number of random shuffles
+        counter hits 21 the p will be less than 0.05 (unless you get a rare
+        difference greater than 94.4, in which case it will take an extra
+        shuffle).</p>
+      <p>3. <strong>Continue to hit "Randomize" until p is less than 0.01</strong>.
+        Record how many random shuffles it took, and how many differences
+        exceeded 94.4 on your worksheet.</p>
+      <p>4. Clicking buttons is fun and all, but it would get tedious to do this
+        enough times to get a p-value that is 1 in 10,000 (0.0001), so I
+        generated 10,000 differences for you. Download <a href="large_small_differences.mtw">this
+          MINITAB worksheet</a>, which contains 10,000 random random differences
+        between randomly shuffled groups. Make a histogram of the differences,
+        and you will see that it resembles a bell-shaped sampling distribution
+        of test statistics, much like a t-distribution.</p>
+      <p>5. To see how many of the 10,000 differences exceed 94.4 do the
+        following:</p>
+      <ul>
+        <li> Open the MINITAB calculator.</li>
+        <li>Enter "Exceeds" in the "Store result in variable" box.</li>
+        <li>In the expression box enter: abs("Differences") &gt;= 94.4</li>
+        <li>Click "OK" to execute the expression and put the results in the
+          "Exceeds" column.</li>
+      </ul>
+      <p> This expression calculates the absolute value of each difference
+        (abs()), and compares each to 94.4. If the value is greater than or
+        equal to 94.4 the expression returns a 1, and if it is less than 94.4 it
+        returns a 0.</p>
+      <p>Now, to count up how many of the differences exceeded 94.4 you just
+        need to sum up the Exceeds column. Do this with "Display descriptives",
+        using "Exceeds" as the "Variable", and include only the "Sum" as a
+        statistic to display. </p>
+      <p>Note that you could get a sum of the number of differences that exceed
+        94.4 in a single step using the calculator - you could use the
+        expression:</p>
+      <p>sum(abs("Differences") &gt;= 94.4)</p>
+      <p>which would compare the absolute values of the differences to 94.4, and
+        then sum them before reporting the result in the "Exceeds" column. This
+        is more compact, but it's easier to see what is happening if you do the
+        calculation in two steps.</p>
+      <p>Answer the questions on your worksheet about randomization testing.</p>
+      <h2 class="part" id="mann_whitney"> Mann-Whitney U test</h2>
+      <p> The last analysis we'll do on these data is to compare the medians
+        between the two groups using a Mann-Whitney U-test. Mann-Whitney U tests
+        don't require that the data are normally distributed, but the
+        distributions should be the same between the groups. Since the
+        distributions are both right-skewed, we can apply this test to our
+        survival data.</p>
+      <p>You can use <a href="lung_cancer_survival_unstacked.MTW">this file</a>
+        for the analysis, which is the same survival data again but organized in
+        an "unstacked" manner, with a column for each cell type. MINITAB can by
+        a funny beast at times, and it isn't always consistent in its approach
+        from one test type to the next - since we're making a comparison between
+        two independent samples we should be able to used stacked data, with a
+        column of measured data and a column of group identifiers (like we did
+        for two-sample t-tests), but MINITAB doesn't want that here. Other than
+        the organization, these are the same data as you analyzed using a log
+        transformation in the previous activity, and that you just analyzed
+        using a randomization test.</p>
+      <p> 1. To run the test, select "Stat" → "Nonparametrics" → "<a href="mann_whitney.jpg">Mann-Whitney</a>".</p>
+      <p> 2. In the form that pops up, put "large cell survival" into the first
+        sample box, and "small cell survival" into the second. Leave the
+        confidence level at 95% and the alternative as "not equal", and click
+        OK.</p>
+      <p>The output gives median survival times for each group (Greek "eta"
+        symbols represent the population median), and an "Estimation for
+        difference", which is reported to be 89.5. Given the labeling it seems
+        as though this should just be the difference in medians between the
+        groups, but it isn't - instead, MINITAB calculates differences between
+        all possible pairs of data points for small and large-cell survival
+        times, and then reports the median of these differences as the point
+        estimate.</p>
+      <p>There are two reported results of the null hypothesis test - the first
+        is labeled "Not adjusted for ties", and the second is labeled "Adjusted
+        for ties". Ties refer to data values that are the same, and that have
+        the same rank. The first result, not adjusted for ties, uses the W
+        statistic to calculate a p-value based on a normal approximation (we
+        talked about this in lecture - if the sample sizes are over 30 this is
+        the preferred approach). The second option, which adjusts for ties, uses
+        the Mann-Whitney U distribution for the p-value (which is preferred when
+        the sample sizes are less than 30). We have over 30 in one group, but
+        under 30 in the other, so we should prefer the adjusted for ties
+        approach. In this instance the results are identical regardless of which
+        we choose, so it doesn't matter which we report, but you should
+        understand the differences between them so you can pick the correct one
+        when the medians are not the same.</p>
+      <p> 3. Answer the questions on your assignment sheet pertaining to the
+        test results.</p>
+      <h2 class="part" id="challenge">Challenge Question</h2>
+      <p>Many species come into breeding condition only under particular
+        circumstances. Many are seasonal breeders, and during non-breeding
+        seasons females will be non-receptive, and males will often be
+        non-agressive towards each other. Cichlid fish become reproductively
+        active due to social interactions, in that males will increase
+        reproductive hormone levels (such as "gonadotropin releasing hormone",
+        or GnRH) when they are in the presence of other males.</p>
+      <p> To test whether the presence of other males affects levels of GnRH,
+        researchers placed males in tanks by themselves, making them
+        non-territorial, or in the presence of other males, making them
+        territorial. They they measured the GnRH levels in territorial and
+        non-territorial males. The data are <a href="gnrh_cichlids_data.MTW">here</a>
+        in the first two columns, Territorial status and GnRH level.</p>
+      <p>1. Test for HOV using an F-test. Do you have HOV?</p>
+      <p>2. Test for normality. Do you pass the normality test?</p>
+      <p>3. Why might you want to avoid doing a two-sample t-test on these data?
+        Note that the sample sizes are not identical between the two groups.</p>
+      <p>The researchers decided to do a randomization test to compare mean GnRH
+        levels between the groups. The differences between randomly re-grouped
+        GnRH levels are given in column "Rand diffs". The differences are sorted
+        from smallest to largest.</p>
+      <p>4. What is the observed difference between means?</p>
+      <p>5. How many of the random differences exceeded the observed difference
+        (that is, how many absolute values of random differences were greater
+        than or equal to the absolute value of the observed difference)?</p>
+      <p>6. What is the p-value for this test?</p>
+      <p>7. Was this a one-tailed or two-tailed test?</p>
+      <p>8. Now, conduct a Mann-Whitney U test for the same data. Report the
+        difference in medians, the W test statistic, and the p-value.</p>
+      <p>9. What conclusion can you draw from this test regarding the effect of
+        territoriality on GnRH levels in male cichlids? Do the two different
+        non-parametric tests lead to the same conclusion?</p>
+    </div>
+  </body>
+</html>

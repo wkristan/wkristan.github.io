@@ -1,0 +1,194 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <title>Genetic drift simulation - step 2</title>
+    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=134ae931858ad4f10a389adca6344aa26&amp;authkey=ASR5vVPOI7J_r9TVaDmWs2M"
+      rel="stylesheet" type="text/css">
+    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=13fc6f0fc4e7a40cfb28e8d5414ce9679&authkey=AeebrenPYCL2zysCC2bsZiw"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Genetic drift simulation - steps 3 and 4</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Intro</a></p>
+      <p><a href="#big_pop">Double pop size</a></p>
+      <p><a href="#immigration">Immigration</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="intro">Next steps<br>
+      </h2>
+      <p>As you are working through the models, start thinking about how the
+        model is working, and whether our modelling decisions make the model a
+        realistic representation of a population. Ask yourself questions such
+        as:</p>
+      <ul>
+        <li>
+          <p>Is population size really going to stay exactly the same in a real
+            population? If not, why are we keeping it constant in our models?</p>
+        </li>
+        <li>
+          <p>Is the way we are selecting males and females to breed realistic?
+            Can you think of cases in a broadcast spawner when every male and
+            every female in the population are <span style="font-style: italic; font-weight: bold;">not</span>
+            equally likely to mate?</p>
+        </li>
+        <li>
+          <p>Is the way we are simulating fertilization (by randomly selecting
+            one allele from each parent) introducing any problems?</p>
+          <p> </p>
+        </li>
+        <li>
+          <p>There is no natural selection in these models, only drift. How
+            might the results be different for genes that are subject to natural
+            selection?</p>
+        </li>
+      </ul>
+      <p>You can address questions like this in the Discussion when you're
+        talking about potential problems with the model, or limitations on what
+        we can learn from it.</p>
+      <p> </p>
+      <h2 class="part" id="big_pop">First variation: Double the population size</h2>
+      <p> Genetic drift is a random sampling process, and random sampling tends
+        to have the largest effects at small sample sizes. We might expect that
+        if we have more individuals in the population it will take longer for an
+        allele to go to fixation on average, and we'll have more runs that don't
+        go to fixation at all. We'll test this by doubling the population size
+        from 100 to 200.</p>
+      <p> </p>
+      <p> Save your drift_sim_n100_time_to_fixation spreadsheet as a new file,
+        called "<span style="font-weight: bold;">drift_sim_n200</span>". <span
+          style="color: red;">MAKE SURE YOU SAVE AS A MACRO ENABLED WORKSHEET,
+          OR YOUR MACROS WILL BE LOST</span>. We will now modify the simulation
+        by increasing the population size to 100 males and 100 females each.</p>
+      <p> </p>
+      <h3>Start with the Simulation sheet.</h3>
+      <p> 1.Copy and paste the male and female parent generation alleles below
+        the current set of 50. This will double the size of the population, but
+        the frequencies of all the genotypes will be the same as before.</p>
+      <p> 2. Extend the ID numbers to 100.</p>
+      <p> </p>
+      <p> 3. Increase the number of Breeder male and females to 100 each. In
+        addition to increasing the rows to 100, make sure you update the
+        randbetween() function to select from all 100 of the males and females.</p>
+      <p> </p>
+      <p> 4. Increase the number of Offspring males to 100 (the increase in
+        female offspring will be done by the program).</p>
+      <p> </p>
+      <h3>Statistics sheet</h3>
+      <p> Check all the formulas. If they point to a cell range in Simulation,
+        adjust them to the new ranges (they should go to 104 instead of 54, and
+        are based on 200 individuals with 400 alleles, instead of 100
+        individuals with 200 alleles). Check heterozygosity for all 100
+        individuals, and base the heterozygosity calculation on all 200 of them.</p>
+      <p> </p>
+      <h3>Results sheet</h3>
+      <p> There are no formulas, only results recorded by the program. Nothing
+        to change here.</p>
+      <p> </p>
+      <h3>Original sheet</h3>
+      <p> Copy the new Parent Population to the Original sheet.</p>
+      <p> </p>
+      <p>Change the program to reflect the new ranges - you want all 100 rows to
+        be used when setting the parent population back to initial conditions at
+        the end of a run.</p>
+      <h3>Macro</h3>
+      <p> Open the macro and check each cell reference to either the Simulation
+        or Original sheets to make sure they're still accurate. None of the cell
+        ranges will change in Statistics or Results, so you don't need to change
+        those.</p>
+      <p> </p>
+      <h3>Debug</h3>
+      <p> Put a break at the first line of code after Next i. Step through the
+        "i" loop a couple of times to make sure everything is working, then run
+        until it hits the break and step through to make sure the "j" loop
+        commands work as well. Do this at least twice through the "j" loop.</p>
+      <p> </p>
+      <h3>Run the program, and interpret the results<br>
+      </h3>
+      <p> It should be ready to go, so run it. When it's done you should see
+        that the average amount of time to fixation is longer, and more runs
+        will not have gone to fixation than before.</p>
+      <p> </p>
+      <p> Since there are more rows in the sheet all the recalculations will
+        take a little longer, and a larger number of the 100 runs will need to
+        run for all 500 generations. This simulation may take a little longer to
+        complete than the first one (watch the status bar - as long as it's
+        increasing you're fine).</p>
+      <h2 class="part" id="immigration">Second variation: immigration</h2>
+      <p> When an individual moves to a new population, it brings its genes
+        along with it. Migrants can restore lost alleles, and may be able to
+        prevent alleles from going to fixation in the first place by increasing
+        the frequencies of rare alleles.</p>
+      <p> </p>
+      <p> We can simulate a single immigrant entering the population each
+        generation by setting one of the individuals in our population to be
+        selected from a different, genetically diverse population each
+        generation. This isn't hard to do - we just need to have our 50th male
+        come from a different population - but we have to decide where to to it.
+        If we introduce the immigrating male to the parental population,then
+        it's possible he won't breed each year, since we randomly select the
+        breeding individuals from the parental population. If we introduce the
+        male to the set of breeders, then we can guarantee he'll breed each
+        generation. The latter should have a larger effect on the gene pool.
+        Bear in mind that by doing this we are modeling the effects of a single
+        immigrant that breeds each generation - it may take multiple actual
+        migrants into the population to have the effect of always adding to the
+        breeding pool. A question for another day, perhaps.</p>
+      <p> </p>
+      <p> 1. For this modification, start with your
+        drift_sim_n100_time_to_fixation file. Save it as "<span style="font-weight: bold;">drift_sim_n100_immigration</span>"
+        (<span style="color: red;">macro enabled - don't forget!</span>).</p>
+      <p> </p>
+      <p> 2. In sheet "Simulation", change the last row of male Breeders to
+        simulate a migrant entering the pool of breeders. We will assume that
+        the migrant comes from a large, outbred, genetically diverse population
+        that has all five of the alleles originally present in our population,
+        and at equal frequencies. </p>
+      <p>So, for the last male breeder, instead of randomly selecting a male
+        from the parent population, change its "lookup()" functions in J54 and
+        K54 to:</p>
+      <p> </p>
+      <p class="Excel"> =choose(randbetween(1,5), "A", "B", "C", "D", "E")</p>
+      <p> </p>
+      <p> The randbetween() function will generate a random integer number
+        between 1 and 5, and then the choose() function will use that number to
+        select from the set of five alleles. Since each allele is equally likely
+        to be selected, this will simulate an immigrant entering the population
+        from a source population in which the alleles have equal frequencies.</p>
+      <p> </p>
+      <p> Write the label "immigrant" to cell I54.</p>
+      <p> </p>
+      <p> The rest of the simulation should be the same - this male will produce
+        offspring like all the rest. Bear in mind that although we are
+        simulating just one immigrant into the population, the way we simulate
+        breeding will mean that this male will always have two offspring (one
+        male and one female) each generation.</p>
+      <p> </p>
+      <p> 3. Run the program. Since there is no need to change the macro, you
+        can simply run the program at this point.</p>
+      <p> </p>
+      <p> In the end, you should find that the time to fixation increases, and
+        fewer (if any) populations will go to fixation at all. </p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p>4. Summarize the results, as you did for the other simulations.</p>
+      <h2 id="assignment" class="part">Assignment</h2>
+      <p>And with that, you're done with the simulations for the genetic drift
+        project. Upload your models to the course web site. The final exam will
+        be based on these models, so be sure to keep a copy for yourself as
+        well, and be sure you understand what you did! Come see me if you are
+        unclear about genetic drift, how this exercise simulated the process, or
+        what your results show.</p>
+      <br>
+      <br>
+    </div>
+  </body>
+</html>

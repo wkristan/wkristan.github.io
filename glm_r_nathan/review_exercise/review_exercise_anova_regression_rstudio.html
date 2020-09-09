@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>One-way ANOVA and simple linear regression</title>
+    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=02a5532ccf4574e49ae6e245b4a118252&amp;authkey=AcYXNyrvFGWnmf6cbl1qQQ4&amp;e=f074ce706b1a46e087699fac19af1f3b"
+      rel="stylesheet" type="text/css">
+    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=04e5dfc4b7ee64a7dbacb487cddde06a0&authkey=AdStuSX7RsXlg4QXZtzjDfw&e=a774ebf4dc7c4aaabc6617d3eaadee0a"></script>
+  </head>
+  <body dir="ltr" lang="en-US">
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Basic stats review, and intro to R</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#anova">One-way analysis of variance (ANOVA)</a></p>
+      <p><a href="#regression">Simple linear regression</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <p>Our next review exercise will focus on ANOVA and simple linear
+        regression. As we will be learning shortly, ANOVA and regression seem to
+        be two distinct types of analysis, one that compares means between two
+        or more groups and one that uses a straight line to model the
+        relationship between two numeric variables, but in fact they are both
+        special cases of the same <strong>linear model</strong>. The only hint
+        of this underlying sameness from what you know already is that both
+        ANOVA and regression use an ANOVA table to assess statistical
+        significance. Both use a predictor variable (a categorical variable
+        indicating groups in ANOVA, and the numeric variable that is
+        experimentally set in regression) to explain variation in the response.
+        Variation in the response is partitioned into a component that is
+        explained by the predictor, and a component that is unexplained,
+        individual random variation. Comparison of the amount of variation
+        explained to the amount of variation unexplained, in the form of an F
+        ratio, is the basis for assessing statistical significance. An ANOVA
+        table compiles all the information needed to do the calculations
+        required to do the F-test.</p>
+      <h2 id="anova" class="part">One-way ANOVA</h2>
+      <p>Cyanobacteria are low-quality food for zooplankton, such as Daphnia.
+        However, over time it is expected that Daphnia living in water bodies
+        that have high levels of cyanobacteria will evolve resistance to their
+        toxins, so that they can take advantage of an otherwise abundant food
+        source. Hairston and colleagues (1999) tested this hypothesis
+        experimentally by measuring the rate of weight gain in Daphnia fed on
+        cyanobacteria, using individuals that came from lakes with high, medium,
+        or low densities of cyanobacteria. Weight gain rate is used as an
+        indication of resistance to cyanobacteria toxins.</p>
+      <p>The data we need for this exercise are in the same Excel sheet that you
+        used last time.</p>
+      <p>1. Start RStudio, and create a new project called "review2". Then,
+        import the worksheet "anova" into a data set called "anova". </p>
+      <p>2. We are going to make a graph of the data, but strangely enough there
+        is not a graph type in "base" R that plots means and error bars. To make
+        this kind of graph we will need to load a contributed add-on package
+        called gplots, which has a function called plotmeans() that will make
+        the graph we need.</p>
+      <p>The gplots package has already been installed, but it isn't loaded for
+        use. To load the package, switch to the Packages tab (in the same tab
+        panel as Files and Help), and find the gplots package. Check the box
+        next to it, and it will be loaded for use (you will see confirmation in
+        the Console that gplots has been "attached" for use. You'll also see
+        that it a command called lowess is masked - this means that gplots has a
+        command with the same name as one that is already loaded, and thus the
+        one in gplots will now be used instead. We won't use the lowess()
+        command, so this is not a problem for us).</p>
+      <p>3. To make the plot, use the command:</p>
+      <p class="rcmd">plotmeans(resistance ~ cyandensity, data = anova)</p>
+      <p>The sample sizes reported on the graph overlap the bars, so let's get
+        rid of them:</p>
+      <p class="rcmd">plotmeans(resistance ~ cyandensity, n.label = F, data =
+        anova)</p>
+      <p>4. We need to fix the order of the levels of cyandensity on the graph -
+        they are in alphabetical order, which doesn't match the actual order of
+        the levels.</p>
+      <p>Currently, cyandensity is an unordered <strong>factor</strong>, which
+        is R's data type for a variable that is used for grouping. When you look
+        at the data set all you see is the labels for each cyandensity level,
+        but in addition to these text labels a factor also has a number that
+        identifies them that R does not display by default. In an unordered
+        factor these numbers are assigned to the levels alphabetically, and
+        their ordering is never used in data analysis (they are used for other
+        purposes, such as picking colors on plots). When we have a factor that
+        is ordinal like this one, we need to make an ordered factor, which
+        assigns the underlying numbering to match the order of the labels. To do
+        this use the command:</p>
+      <p class="rcmd">ordered(anova$cyandensity, levels=c("low","med","high"))</p>
+      <p>You will see in the console that the labels are reported, and their
+        ordering is shown below as Levels: low &lt; med &lt; high, indicating
+        that the order matches the labels, rather than being in alphabetical
+        order.</p>
+      <p>To assign this ordered factor back into the cyandensity variable,
+        thereby replacing the unordered factor with an ordered factor, recall
+        the command and change it to:</p>
+      <p class="rcmd">anova$cyandensity &lt;- ordered(anova$cyandensity,
+        levels=c("low","med","high"))</p>
+      <p>If you make the graph again (using the same command - recall it and hit
+        enter) you'll see the levels are now in the correct order.</p>
+      <p>5. Check your normality assumption and HOV assumption.</p>
+      <p>6. Now you can conduct the ANOVA. Because R is object-oriented we will
+        be doing this analysis in two stages - first, the ANOVA model is
+        calculated, and once that is done the ANOVA table is obtained as a
+        summary of the fitted model. To fit the model, use:</p>
+      <p class="rcmd">aov(resistance ~ cyandensity, data = anova)</p>
+      <p>This will dump some output to the screen, but you won't recognize it as
+        an ANOVA. Recall the command and assign this fitted model to an object
+        called daphnia.aov.</p>
+      <p>Next, to get the ANOVA table, do a summary on daphnia.aov:</p>
+      <p class="rcmd">summary(daphnia.aov)</p>
+      <p>To get Tukey post-hoc comparisons use the command:</p>
+      <p class="rcmd"> TukeyHSD(daphnia.aov)</p>
+      <p>7. To interpret an ANOVA properly it's important to have means and some
+        measure of sampling variation (standard error, or a 95% confidence
+        interval). R does not have a built-in function for making the summary
+        table we would like, but since R is a programming language it's possible
+        to put R commands into a <strong>script</strong> (which is just another
+        name for a simple program) that defines a new function that does what we
+        want. I have bundled several commands that we will use during the
+        semester into a <strong>library</strong>, which is what R calls add-on
+        packages that extend R's capabilities. The library is called "biol531",
+        and can be loaded either by checking the box next to its entry in the
+        Packages tab.</p>
+      <p>To use the new function, use the command:</p>
+      <p class="rcmd">summarySE(anova, measurevar = "resistance", groups =
+        "cyandensity")</p>
+      <p>The command takes the name of a data set (which we called anova), a
+        measured variable, and one or more grouping variables. You will see a
+        table that gives the three levels of cyandensity with means, standard
+        deviations (sd), sample sizes (n), standard errors (se) and the lower
+        and upper limits of the 95% confidence interval for the means.</p>
+      <ul>
+      </ul>
+      <p>8. Answer the questions on your worksheet. </p>
+      <h2 id="regression" class="part">Regression</h2>
+      <p>The worksheet "regression" has some (instructor generated) data on
+        environmental temperature, abdomen temperature, and thorax temperature
+        in winter moths. Winter moths are ectotherms that live in cold climates,
+        yet are able to fly in the winter months by using a "pre-flight warmup"
+        in which they move their wings to generate heat in their flight muscles.
+        The high temperatures allow them to sustain the high rates of energy use
+        that are needed to power flight. Because the heat is generated locally
+        in the thorax, we expect that the temperature in other parts of the body
+        that are far from the thorax (such as the abdomen) would not warm up,
+        and should more closely match ambient temperature.</p>
+      <p>1. Import the sheet "regression" into an R dataset called "regression".</p>
+      <p>2. We would like to make a graph of the data with the regression line,
+        but we need to run the regression first - this is a bit of a departure,
+        in that we'll do the analysis first before looking at the data, but only
+        so that we can make a suitable graph. We won't try to interpret the
+        regression until we're sure the data follow a straight line relationship
+        on the graph.</p>
+      <p>One of the things that R Studio makes easy to do is to compile all of
+        the commands we use into a script file so we can repeat the analysis
+        later. It also makes it easier to fix mistakes, since we can just edit
+        commands that didn't work and re-issue them.</p>
+      <p>So, make a new script, and into it write:</p>
+      <p class="rcmd">lm(Abdomen.temp ~ Env.temp, data = regression) -&gt;
+        abdomen.lm</p>
+      <p> With your cursor positioned someplace on this line, hit the "Run"
+        button, and you will see a new object called abdomen.lm added to your
+        environment. This is the "fitted model" for the relationship between
+        abdomen temperature and environmental temperature.</p>
+      <p>Repeat this procedure with thorax temperature:</p>
+      <p class="rcmd">lm(Thorax.temp ~ Env.temp, data = regression) -&gt;
+        thorax.lm</p>
+      <p>We will build the plot we want in several lines - the first will plot
+        abdomen temperature against environmental temperature using red-filled
+        circles as plot symbols:</p>
+      <p class="rcmd">plot(Abdomen.temp ~ Env.temp, data = regression, pch = 21,
+        bg = "red") </p>
+      <p>The pch argument is short for "plot character", and character number 21
+        is a filled circle. The bg argument sets the color for the background of
+        the plot character.</p>
+      <p>To add the points for thorax temperature write the command:</p>
+      <p class="rcmd">points(Thorax.temp~Env.temp, data = regression, pch = 21,
+        bg = "green") </p>
+      <p>Now we can add the lines using the abline() command, which extracts the
+        slope and intercept from a fitted model and uses them to plot a line on
+        the current graph. Add the lines:</p>
+      <p class="rcmd">abline(abdomen.lm, col = "red")</p>
+      <p class="rcmd">abline(thorax.lm, col = "green")</p>
+      <p>and run each one. You should now have a red line through the red dots
+        and a green line through the green dots.</p>
+      <p>To add a legend identifying which data set is which use the legend()
+        command:</p>
+      <p class="rcmd">legend(60,50,c("Abdomen","Thorax"), pch=21, pt.bg =
+        c("red","green")) </p>
+      <p>Based on this graph you'll see that abdomen temperature increases with
+        environmental temperature, but thorax temperature doesn't seem to. We
+        can get the ANOVA tables for these regressions to confirm that our
+        impressions from the graph are correct in the next step.</p>
+      <p>2. You already have the fitted models, but you still need to get the
+        ANOVA tables, as well as the r<sup>2</sup> and regression equation for
+        each model.</p>
+      <p>The ANOVA table is obtained with the command:</p>
+      <p class="rcmd">anova(abdomen.lm)</p>
+      <p>You can do the same with thorax.lm to get its ANOVA table. You'll see
+        that (as we thought) abdomen temperature increases significantly with
+        environmental temperature but thorax temperature does not.</p>
+      <p>We do not yet have the r<sup>2</sup> and regression equation, which we
+        can get using the summary() command - try this on each fitted model. The
+        output for abdomen looks like this:</p>
+      <p class="rout">Call: <br>
+        lm(formula = Abdomen.temp ~ Env.temp, data = regression) <br>
+        &nbsp;<br>
+        Residuals: <br>
+        &nbsp;&nbsp;&nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1Q&nbsp;&nbsp; Median&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        3Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Max&nbsp; <br>
+        -1.16297 -0.57980&nbsp; 0.03181&nbsp; 0.61661&nbsp; 1.04760&nbsp; <br>
+        &nbsp;<br>
+        Coefficients: <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        (Intercept) -0.31194&nbsp;&nbsp;&nbsp; 0.96637&nbsp;
+        -0.323&nbsp;&nbsp;&nbsp; 0.755&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Env.temp&nbsp;&nbsp;&nbsp;&nbsp; 1.01080&nbsp;&nbsp;&nbsp; 0.01775&nbsp;
+        56.931 1.01e-11 *** <br>
+        --- <br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1 <br>
+        &nbsp;<br>
+        Residual standard error: 0.8063 on 8 degrees of freedom <br>
+        Multiple R-squared:&nbsp; 0.9975,&nbsp;&nbsp;&nbsp; Adjusted
+        R-squared:&nbsp; 0.9972&nbsp; <br>
+        F-statistic:&nbsp; 3241 on 1 and 8 DF,&nbsp; p-value: 1.006e-11</p>
+      <p> You'll find the r<sup>2</sup> labeled "Multiple R-squared" - ignore
+        adjusted r2 for now, we'll learn about it later. The regression equation
+        is not assembled for you, but the estimates of the slope and intercept
+        coefficient are presented - intercept is labeled as such, and slope is
+        named for the predictor variable. The regression equation is thus:</p>
+      <p>Abdomen.temp = -0.31194 + 1.01080 Env.temp</p>
+      <p>The coefficients are each reported with tests of the hypothesis that
+        they are equal to 0 - you'll see that the test of the slope has a
+        p-value that is equal to that in the ANOVA table - it is highly
+        statistically significant. The intercept is not different from zero.
+        This tells us that the slope is very close to 1, and the intercept is
+        not significantly different from 0.</p>
+      <p>You can look at the estimates for thorax temperature and put together
+        the regression equation for that model.</p>
+      <h2 id="assignment" class="part">Quit and save</h2>
+      <p>That's it! Don't forget to save when you quit. Answer the questions on
+        your worksheet based on your analysis.</p>
+      <p><br>
+      </p>
+    </div>
+  </body>
+</html>

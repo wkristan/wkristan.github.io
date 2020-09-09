@@ -1,0 +1,477 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Multiple regression</title>
+    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=02a5532ccf4574e49ae6e245b4a118252&amp;authkey=AcYXNyrvFGWnmf6cbl1qQQ4&amp;e=4170fc6099b74d3f94a7fdaade97010e"
+      rel="stylesheet" type="text/css">
+    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=04e5dfc4b7ee64a7dbacb487cddde06a0&authkey=AdStuSX7RsXlg4QXZtzjDfw&e=f5861611192540a4b0c28483e9e5baf0"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Multiple regression</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#case1">Multiple regression enhances relationship</a></p>
+      <p><a href="#case2">Multiple regression reduces relationship</a></p>
+      <p><a href="#case3">Correlated predictors</a></p>
+    </div>
+    <div id="content" class="rout">
+      <p class="part" id="intro">Multiple regression is an extension of simple
+        linear regression that uses more than one predictor to model a single
+        response variable. As you learned in the lecture preceding this
+        exercise, using two predictors fits a plane through the dependent
+        variable, and each new predictor adds another dimension to the surface
+        (beyond two predictors it becomes difficult to visualize the surface,
+        but the process is fundamentally the same above three dimensions). The
+        equation for a multiple regression is a simple extension of the linear
+        regression equation, in which a new product of a slope coefficient and
+        variable is added for each additional predictor:</p>
+      <p><img src="mult_predictors_html_m7b6e68f6.gif" name="Object1" width="193"
+          hspace="8" height="20" align="middle" border="0"></p>
+      <p>The statistical output associated with a multiple regression is also
+        similar to simple linear regression output, but with some exceptions
+        that we'll explore today. <br>
+      </p>
+      <p>We will use data from <a href="http://www.gapminder.org/world/#$majorMode=chart$is;shi=t;ly=2003;lb=f;il=t;fs=11;al=30;stl=t;st=t;nsl=t;se=t$wst;tts=C$ts;sp=5.59290322580644;ti=2012$zpv;v=0$inc_x;mmid=XCOORDS;iid=phAwcNAVuyj1jiMAkmq1iMg;by=ind$inc_y;mmid=YCOORDS;iid=phAwcNAVuyj2tPLxKvvnNPA;by=ind$inc_s;uniValue=8.21;iid=phAwcNAVuyj0XOoBL_n5tAQ;by=ind$inc_c;uniValue=255;gid=CATID0;by=grp$map_x;scale=log;dataMin=283;dataMax=110808$map_y;scale=lin;dataMin=18;dataMax=87$map_s;sma=49;smi=2.65$cd;bd=0$inds=;example=75">gapminder.org</a>
+        to explore how multiple regression can be used to either enhance
+        significant relationships (i.e. statistically eliminating statistical
+        noise caused by a nuisance variable), or to avoid spurious effects of a
+        confounding variable. We will also explore how correlations between
+        predictor variables can affect interpretation of our results.</p>
+      <p>Start a new project for today's exercise in R Studio (call the folder
+        "multreg"), and start a new R script for your commands. The data set we
+        will use today is <a href="gapminder.xlsx">here</a>. Download and
+        import the file into R Studio - call the data set "gapminder".</p>
+      <blockquote>
+        <p>Before we go on, a couple of points about multiple regression data.</p>
+        <p> </p>
+        <p> Data organization: Data should be in a "multivariate" arrangement.
+          Each row is an individual observation (a different country, in this
+          case), and each column will be a variable measured on the observation,
+          either the response variable or one of the predictors.</p>
+        <p> Missing data: Any missing numbers for any of the variables cause the
+          entire row to be dropped from the analysis. For example, Afghanistan
+          was not included in this data set because per-capita gross domestic
+          product and HIV infection rate were missing. You will see that using
+          multiple predictors can have some tremendous benefits, but one cost is
+          that it is very important that every measurement is collected for
+          every variable. Having to drop some of your hard work because you
+          forgot to record one variable is heartbreaking, don't let this happen
+          to you.</p>
+      </blockquote>
+      <p>The first column in the data set is Country. Rather than being a
+        variable for analysis, this is meant to be a label for the row, which
+        will be used to label graphs in later steps. To set the row labels, use
+        the command:</p>
+      <p class="rcmd">rownames(gapminder) &lt;- gapminder$Country</p>
+      <p>The variables included in the data set are: </p>
+      <ul>
+        <li>Life expectancy - this is the average lifespan expected at birth.
+          Infant mortality is included in this measure. Life expectancy will be
+          the response variable for all of our analyses.</li>
+        <li>Log of Population density - log of the number of people per unit
+          area. This is at measured at the level of the entire country -
+          population size divided by the area of the country.</li>
+        <li>Log of Per Capita GDP - gross domestic product divided by population
+          size, then log transformed.</li>
+        <li>Cholesterol - total cholesterol in blood of men in mmol/L.
+          Standardized for differences in age distribution.<br>
+        </li>
+        <li>Tuberculosis rate - all forms of TB, existing cases per 100,000
+          people in the population.</li>
+        <li>Maternal mortality - maternal deaths per live birth, multiplied by
+          100,000 (so, maternal mortality ratio per 100,000 live births).</li>
+        <li>Babies per woman - children per woman in the population, including
+          women who do not have children.</li>
+        <li>Crude birth rate - births per 1000 people in the population, men and
+          women, with children and without.<br>
+        </li>
+      </ul>
+      <p> Log transformation means that the numbers are (natural) logs of each
+        measurement. To use regression we need the relationship between life
+        expectancy and each of the predictors to be linear, and log
+        transformation can change a curvilinear relationship into a linear one.
+        We'll learn more about transformations when we talk about assumptions of
+        GLM later this semester, but for now just bear in mind that the units
+        are on a natural log scale for these variables - the minimum logGDP of
+        4.539 is e<sup>4.539</sup> = $93.60 per person, and the maximum of
+        10.940 is e<sup>10.940</sup> = $56,387 dollars per person. </p>
+      <p>To get an idea of the patterns in the data set, produce a scatterplot
+        matrix of all of the variables with the command:</p>
+      <p class="rcmd">pairs(gapminder[,-1])</p>
+      <p>This will give you a matrix of scatter plots with the names of the
+        variables on the main diagonal. If you click the "Zoom" button above the
+        plot it will pop out into its own window, which you can resize to full
+        screen so you can see better.</p>
+      <p>The names label the x-axis if you project up or down, and label the
+        y-axis if you project left or right. This means that every pair of
+        variables is plotted twice, but with the x-variable and y-variable
+        switched.</p>
+      <p>Copy and paste this graph into a Word file, and make a mental note of
+        which ones seem to have strong relationships with life expectancy (the
+        dependent variable we will use today), and which <em> predictors</em>
+        seem to be highly correlated with one another.</p>
+      <p>Okay, time to run some regressions. </p>
+      <h2 class="part" id="case1">Case 1: Multiple regression may enhance the
+        significance of relationships between variables.</h2>
+      <p> I won't be telling you what to name your models as you work through
+        the instructions, but do get into the habit of using a sensible naming
+        convention so you can keep track of what they are. For example,
+        LinearModel.1 is a poor choice compared with life.pop.gdp.lm - the
+        latter indicates which variables are included, and that the object is a
+        fitted linear model rather than a data set. </p>
+      <p>1. Do a linear model of Life.expectancy (response) on logPop.Density
+        (predictor). Record the regression coefficient and p-value on your
+        worksheet. With just one predictor, this is a simple linear regression.</p>
+      <p>Also record the statistics for the "omnibus" test of the model - this
+        is reported below the coefficients, starting with "Residual standard
+        error:". We are primarily interested in the explained variation (the
+        Multiple R-squared), and the hypothesis test, which is based on the
+        F-statistic, numerator and denominator degrees of freedom, and p-value.</p>
+      <p>You'll see there is a positive relationship between life expectancy and
+        population density. However, we might expect other factors to affect
+        life expectancy, in addition to the density of the population. Wealth is
+        expected to affect life expectancy as well, because wealthier countries
+        are able to afford better health care, better sanitation, and better
+        nutrition, all of which should have positive effects on life expectancy.
+        So, two countries with identical population densities are likely to have
+        different life expectancies if one is wealthier than the other, and this
+        variation due to wealth will add scatter around the line if we only use
+        population density as a predictor. We can see what happens to the slope
+        and the p-value for logPop.Density when we add logGDP as a predictor.</p>
+      <p>2. Do a linear model of Life.expectancy on logPop.Density and logGDP.
+        Since this analysis uses more than one predictor it is a "multiple
+        regression", and all you need to do is to include both logPop.Density
+        and logGDP in the model with a + in between them, like so:</p>
+      <p class="rcmd">lm(Life.expectancy ~ logPop.Density + logGDP, data =
+        gapminder)</p>
+      <p>Assign this model to an object, and use summary() to obtain
+        coefficients and the results of the omnibus test for your worksheet.</p>
+      <p>You should see that including logGDP made the p-value for
+        logPop.Density smaller, but also made the slope smaller. Slopes in
+        multiple regression are partial relationships, meaning they are based on
+        the collective effects of the predictors on the response. All else being
+        equal, a bigger slope will generate a smaller p-value than a smaller
+        slope, but in this case the reduction in the size of the slope due to
+        including logGDP was more than made up for by the reduction in residual
+        sums of squares. You can see the R<sup>2</sup> went way up when logGDP
+        was added, which means that we explained a lot more variation in life
+        expectancy when we included it - when logGDP was not included, all of
+        that variation due to logGDP was treated as random, unexplained
+        variation, and was left in the residual SS. Since we're comparing
+        explained variation to unexplained variation in our ANOVA table, if we
+        leave some variation in the residual term that could have been explained
+        by another predictor the p-value for the test of the variables included
+        will be bigger. Thus, leaving logGDP out made the p-value on the test of
+        logPop.Density go up. </p>
+      <p> </p>
+      <p>3. To visualize what is happening, we will make a 3-D graph of
+        Life.expectancy, logPop.Density, and logGDP. The function we need is in
+        the library "car" (short for "companion to applied regression"), which
+        you can load now with:</p>
+      <p class="rcmd">library(car)</p>
+      <p>The command for the 3D plot is called scatter3d(), and it has several
+        arguments. For longer commands like this one you can break the command
+        with carriage returns, and then select all of the lines before hitting
+        the "Run" button:</p>
+      <p class="rcmd">scatter3d(Life.expectancy~logPop.Density+logGDP,
+        data=gapminder, <br>
+        fit="linear",&nbsp;
+        <br>
+        residuals=TRUE, <br>
+        bg="white", <br>
+        axis.scales=TRUE, <br>
+        grid=TRUE, <br>
+        ellipsoid=FALSE)</p>
+      <p>The graph may pop up behind the R Studio window, move it if you don't
+        see the graph. </p>
+      <p>When the graph first appears, it will be oriented so that the plane
+        you're fitting through the data is viewed from the side - it looks like
+        a line through the scatter of data. Positive residuals are shown in
+        green, and negative residuals are shown in red. You'll see that the two
+        predictors form the bottom axes on the graph.<br>
+      </p>
+      <p> </p>
+      <p>Grab the plot with your mouse and rotate it so that logPop.Density is
+        horizontal, Life.expectancy is vertical, and logGDP is pointed directly
+        into the screen - this will show you what the relationship looks like
+        between life expectancy and population density if GDP isn't accounted
+        for. </p>
+      <p> </p>
+      <p>You should be able to see two things:</p>
+      <ul>
+        <li>the relationship is really messy if you only look at logPop.Density
+          as a predictor, and</li>
+        <li>the plane through the data is slanted away from you, into the
+          screen, showing that some of the variability along the y-axis is
+          because of variation in GDP.<br>
+        </li>
+      </ul>
+      <p> </p>
+      <p>Now, grab the graph with the mouse again, and arrange it so that logGDP
+        is horizontal, life expectancy is vertical, and population density is
+        into the monitor. This orientation looks better - closer to a line
+        through a data scatter. This is because logGDP has a bigger effect on
+        life expectancy than does logPop.Density, and this tilts the plane more
+        strongly along the logGDP axis.</p>
+      <p> </p>
+      <p>4. You can identify points on the graph with the command:</p>
+      <p class="rcmd">with(gapminder, Identify3d(logPop.Density, logGDP,
+        Life.expectancy, axis.scales=TRUE, labels=row.names(gapminder)))</p>
+      <p>You can now find points that have the longest positive and negative
+        residuals, and use the <em><strong>right</strong></em> mouse button to
+        drag a box around the points (don't just click, or you'll have to start
+        over). The case names will then be displayed on the graph. Find which
+        countries have the longest life expectancies for their GDP, and which
+        have the shortest, based on the sizes of their residuals.</p>
+      <p>If you're using a Mac, I believe you need to hold down the CTRL button
+        while you drag a box to emulate a right mouse button.</p>
+      <p>When you're done, right-click on the 3-D graph once to turn off the
+        identify3D() function.</p>
+      <p> </p>
+      <p>5. It would be nice to more quantitatively assess which predictor had
+        more effect on life expectancy, but we can't compare the slopes
+        directly. Slopes are related to the strength of the relationship between
+        predictor and response, but slopes also have units (specifically, y
+        units divided by x units). Regression coefficients can be different just
+        because the units of measure for the predictors are different. </p>
+      <p>This can be addressed by using "standardized coefficients", which
+        converts the units on the slopes to standard deviations. R doesn't
+        report these by default, but I have written a function that will
+        calculate standardized coefficients for you. You can add this new
+        function into R by:</p>
+      <ul>
+        <li>Right click on <a title="Standardized coefficients script" href="stdcoeff.R">this
+            link</a> and select "Save link as...". Save the file in your project
+          folder.</li>
+        <li>Select File → Open, and find the file you just downloaded - it's
+          called stdcoeff.R</li>
+        <li>Click "Source" to read the entire script file into R - this will
+          create a new command called stdcoeff()<br>
+        </li>
+      </ul>
+      <p>Now, below the script you just submitted, type the command:</p>
+      <p><span class="R-code rcmd">stdcoeff(<em class="R-code">your.fitted.model.name</em>)</span></p>
+      <p>be sure to replace "your.fitted.model.name" with the actual name of the
+        fitted model you used, and then click Submit. You will see the
+        standardized coefficients in the Output Window, they should be 0.15 for
+        logPop.Density, and 0.79 for logGDP.</p>
+      <p>The standardized coefficients tell you that for each standard deviation
+        of increase in logPopDensity you gain 0.15 standard deviations of life
+        expectancy, but for each standard deviation of increase in logGDP you
+        gain 0.79 standard deviations of life expectancy - logGDP has over five
+        times as much effect on life expectancy as logPopDensity.</p>
+      <p> </p>
+      <h2 class="part" id="case2">Case 2: Multiple regression reducing the
+        strength of relationships between variables.</h2>
+      <p>1. Do a linear model of Life.expectancy (response) against Cholesterol
+        (predictor). Record the coefficient and p-value on your assignment
+        sheet.</p>
+      <p>2. This unexpected positive relationship at the country level is
+        suspicious - it's unlikely that more cholesterol is good for your
+        longevity, and the relationship could easily be due to correlations
+        between both cholesterol and life expectancy with wealth and the quality
+        health care that tends to go along with it. If cholesterol really is
+        good for you, it should be detectable as an effect that is above and
+        beyond the effects of wealth and the general quality of health care in
+        the country.</p>
+      <p>To check this, do a (multiple) regression of Life.expectancy against
+        Cholesterol, logGDP (as an indicator of wealth), Maternal.mortality, and
+        TB (as indicators of effectiveness of health care and public health
+        systems). Record the coefficients on your worksheet.</p>
+      <p>3. Now we'll see how the types of sums of squares we use affects our
+        interpretation of the results.</p>
+      <p>The anova() command we have been using so far gives sequential ("Type
+        I") sums of squares, so use it now to get an ANOVA table with Type I
+        sums of squares.</p>
+      <p>The car library we loaded earlier has an Anova() command (note the
+        capital A) that allows us to select either Type II or Type III, with
+        Type II as default. Use the command:</p>
+      <p class="rcmd">Anova(<em>your.fitted.model.name</em>)</p>
+      <p>to get your Type II table.</p>
+      <p>As you answer the question about why Cholesterol was only significant
+        when you ran the analysis with Type I SS, think in terms of shared
+        variation with other predictors - how is the correlated part of the
+        predictors treated when you use Type I SS? How is it treated when you
+        use Type II SS?</p>
+      <h2 class="part" id="case3">Case 3: Correlated predictors cause problems
+        in interpretation.<br>
+      </h2>
+      <p>Two of the variables in the data set are highly correlated with one
+        another: babies per woman, and birth rate. Babies per woman is
+        calculated as number of babies born, divided by number of women in the
+        country. Birth rate also uses the number of babies born, but it is
+        divided by the number of people in the country. If every country had the
+        same sex ratio the numbers would be perfectly correlated, and only
+        variations in sex ratio weaken the correlation between them; since sex
+        ratios are not that variable, these two variables are just slightly
+        different measures of the same thing.</p>
+      <p>First, let's confirm that each variable by itself is a significant
+        predictor of life expectancy.</p>
+      <p>1. Do a linear model of Life.expectancy on Birth.rate. Report the
+        coefficients and p-value.</p>
+      <p>2. Do a linear model of Life.expectancy on Babies.per.woman.&nbsp;</p>
+      <p>Given that both are good predictors, it seems as though including both
+        in the same model would be better still.<br>
+      </p>
+      <p>3. Now, do (multiple) regression of Life.expectancy on both Birth.rate
+        and Babies.per.woman. Report the coefficients and p-values.</p>
+      <p>When you include both of the predictors at the same time, you'll see
+        that one of the predictors is still highly significant, and the other is
+        no longer significant at all. It's obvious enough that this is the case,
+        but it's not so obvious how it could be true. Certainly it's due to the
+        fact that birth rate and babies per woman are correlated - if they were
+        independent then we would get the same slope coefficients whether we
+        included both of them or just one at a time. The correlation between
+        birth rate and babies per woman is very high, r = 0.983, but this
+        correlation applies equally to both of them. How, then, is it possible
+        for this high correlation to result in babies per woman being a poor
+        predictor of life expectancy when it is included with birth rate, but
+        for birth rate to still be a significant predictor?</p>
+      <table width="100%" border="0">
+        <tbody>
+          <tr>
+            <td>
+              <p> We can see what is happening using a Venn diagram. The blue
+                circle represents birth rate, and the yellow circle represents
+                babies per woman. Ignoring life expectancy for the moment, you
+                can see that the amount of overlap between the two predictors is
+                high to reflect the correlation of 0.983 between them. Think of
+                the overlapping area between them as the variation that they
+                share, and the non-overlapping parts as variation in babies per
+                woman that isn't shared with birth rate (yellow sliver) and
+                variation in birth rate that isn't shared with babies per woman
+                (blue sliver).</p>
+            </td>
+            <td style="text-align: center;"><img alt="Shared var." src="shared_variation.png"><br>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" rowspan="1">Now, the overlap of the yellow and blue
+              circles with the red life expectancy circle represents the amount
+              of variation in life expectancy that is explained by birth rate
+              and babies per woman. Because the correlation between the
+              predictors is high, most of the variation in life expectancy that
+              is explained is due to the variation that is shared between the
+              predictors. But, you can see that the blue sliver also overlaps
+              life expectancy, whereas the yellow sliver does not. This shows
+              that, even though there is very little independent variation
+              between the predictors, the independent part of birth rate
+              explains variation in life expectancy, but the independent part of
+              babies per woman does not. So, this means that the amount of
+              correlation between the predictors is the cause of the problem,
+              but the result of including two correlated predictors in a model
+              depends on whether it is the shared part of the predictors or the
+              independent parts that explain variation in the response.</td>
+          </tr>
+          <tr>
+            <td>
+              <p>That's easy enough to illustrate, but let's look at how this
+                works with the actual data. The two predictor variables are
+                plotted to the right. The regression line represents the shared
+                variation (i.e. the overlap in the yellow and blue circles), and
+                the distances from points to the line are the independent
+                variation (the parts of the yellow and blue circles that don't
+                overlap).</p>
+            </td>
+            <td><img alt="Repro predictors" src="predictors.png"><br>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" rowspan="1">
+              <p>We can re-express each of the babies per woman data points as
+                the combination of a predicted value (i.e. the position along
+                the line in the graph above) and a residual. The predicted
+                values are the variation shared by the two variables, and the
+                residual is variation in Babies.per.woman that is independent of
+                Birth.rate. Given what happened when we included birth rate and
+                babies per woman in the same model, do you think that the
+                predicted values will be significant? What about the residuals?
+              </p>
+              <p><a href="javascript:ReverseDisplay('pred_resid')">Click here to
+                  see if you're right.</a></p>
+              <div style="display:none;" id="pred_resid">
+                <p style="border-style:solid;padding:10px;"> The predicted
+                  values for this regression of babies per woman on birth rate
+                  are shared variation between the variables - we expect shared
+                  variation between these predictors to account for a lot of the
+                  variation in life expectancy, so the predicted values should
+                  be significant. The residuals are the variation in babies per
+                  woman that is independent of birth rate, so the residuals
+                  should not be a significant predictor of life expectancy.</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>If you want to try this out yourself, you can run the commands below in
+        the Rgui window - enter each one at the command prompt (&gt;). If you
+        just want the result, skip down to the ANOVA table, below.</p>
+      <p>First, we would need a model of the relationship between
+        Babies.per.woman and Birth.rate.</p>
+      <p><span class="R-code rcmd">bpw.br.lm &lt;- lm(Babies.per.woman ~
+          Birth.rate, data = gapminder)</span></p>
+      <p>Now, we can pull the predicted values representing variation shared
+        between babies per woman and birth rate using:</p>
+      <p><span class="R-code rcmd">bpw.shared &lt;- predict(bpw.br.lm)</span></p>
+      <p>and we can pull out the residuals representing variation in babies per
+        woman that is independent of birth rate:</p>
+      <p><span class="R-code rcmd">bpw.independent &lt;- residuals(bpw.br.lm)</span></p>
+      <p>Now let's see whether it's the shared part or independent part of
+        babies per woman that's associated with life expectancy. Fit the model:</p>
+      <p><span class="R-code rcmd">bpw.lm &lt;- lm(Life.expectancy ~ bpw.shared
+          + bpw.independent, data = gapminder)</span></p>
+      <p>We can get the ANOVA table using:</p>
+      <p><span class="rout rcmd">Anova(bpw.lm)</span></p>
+      <p>which gives us this ANOVA table:</p>
+      <p><span class="rout">Response: Life.expectancy<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;
+          &nbsp; &nbsp; Sum Sq&nbsp; Df&nbsp; F value
+          Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+          bpw.shared &nbsp;&nbsp; &nbsp; 12720.5&nbsp;&nbsp; 1 450.4982
+          &lt;2e-16 ***<br>
+          bpw.independent &nbsp;&nbsp; 43.4&nbsp;&nbsp; 1&nbsp;&nbsp;
+          1.5361&nbsp; 0.217&nbsp;&nbsp;&nbsp; <br>
+          Residuals&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; 4489.6
+          159&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></p>
+      <p> </p>
+      <p>You'll see that the bpw.independent line has the same p-value as babies
+        per woman had when it was in a model with birth rate - in both cases
+        what is being tested is the ability of babies per woman to predict life
+        expectancy, above and beyond what birth rate can predict. Most of the
+        variation in life expectancy that babies per woman is able to predict is
+        shared with birth rate, so the independent part of babies per woman
+        isn't significant.</p>
+      <p>What about birth rate? Would we expect only the shared part of birth
+        rate to explain variation in life expectancy?</p>
+      <p> <a href="javascript:ReverseDisplay('pred_resid_br')">Click here to
+          see if you're right.</a> </p>
+      <div style="display:none;" id="pred_resid_br">
+        <p style="border-style:solid;padding:10px;"> We got a significant effect
+          of birth rate on life expectancy even when babies per woman was also
+          included - this suggests that both the shared part and the independent
+          part of birth rate are important predictors of life expectancy.<br>
+          <br>
+          If we express birth rate as shared variation (br.shared) and
+          independent variation (br.independent) and use these as predictors of
+          life expectancy, we get just what we would expect: <br>
+          <br>
+          <span class="R-code">Response: Life.expectancy<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Sum Sq&nbsp; Df F value&nbsp;&nbsp;&nbsp;
+            Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+            br.shared&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 12046.4&nbsp;&nbsp; 1&nbsp;
+            426.62 &lt; 2.2e-16 ***<br>
+            br.independent&nbsp;&nbsp; 717.5&nbsp;&nbsp; 1&nbsp;&nbsp; 25.41
+            1.249e-06 ***<br>
+            Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4489.6 159</span></p>
+      </div>
+      <p>That's it! Answer the questions on the worksheet based on your results.</p>
+      <p><br>
+      </p>
+    </div>
+  </body>
+</html>

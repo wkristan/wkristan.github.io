@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Analysis of variance prep assignment</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="main.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script type="text/javascript" src="anova.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Analysis of variance (ANOVA) - prep
+        reading</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="act12_anova_prelab.html#intro">Introduction</a></p>
+      <p><a href="act12_anova_prelab.html#anova_twogroup">ANOVA with two groups</a></p>
+      <p><a href="act12_anova_prelab.html#anova_table">The ANOVA table</a></p>
+      <p><a href="act12_anova_prelab.html#multcomp">Multiple testing problem</a></p>
+      <p><a href="act12_anova_prelab.html#tukey">Post-hoc procedures - Tukey</a></p>
+      <p><a href="act12_anova_prelab.html#assumptions">Assumptions of ANOVA</a></p>
+      <p><a href="act12_anova_prelab.html#next_activity">Next activity</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="intro">Introduction - another approach to comparing
+        means</h2>
+      <p><img src="egyptian_two_group1.png" alt="Two groups" style="width: 376px; height: 247px; float:left; margin-right: 10px">Consider
+        this data of measurements of Egyptian skulls recovered from tombs of the
+        Early Predynastic period (ca. 4000 BC), and of the Roman period (ca. 150
+        AD). The variable is the maximum breadth (i.e. width across) the skulls,
+        and the means are indicated by the blue dots. Individual measurements
+        are shown as gray dots. You can see that the means are not identical,
+        but as you should be well aware by now it is possible that the means are
+        only different due to random sampling variation, and another set of
+        skulls would show us no difference at all, or a difference just as big
+        in the opposite direction. To be confident that the periods differed in
+        their skull breadths we would want to do a statistical null hypothesis
+        test to see if this difference in sample means is statistically
+        significant.</p>
+      <p>The method you know already for making a comparison between two sample
+        means is the two-sample t-test. The two-sample t-test would test the
+        null hypothesis that the population means for both periods are equal,
+        or:</p>
+      <p>Ho: μ<sub>early predynastic</sub> = μ<sub>roman</sub></p>
+      <p class="part">To complete the test we would calculate an observed
+        t-value, compare it to a t-distribution to obtain a p-value, and then
+        compare the p-value to our alpha level of 0.05. If the p-value is less
+        than 0.05 we would reject the null hypothesis of no difference in favor
+        of the alternative hypothesis that the periods differ in maximum
+        breadth.</p>
+      <p class="part">The test statistic we use for a two-sample t-test is the
+        observed t-value, which is:</p>
+      <img src="tstat.png" alt="t statistic">
+      <p> Recall that you can interpret the observed t-statistic as the number
+        of standard errors between the means. </p>
+      <p><img src="signal-to-noise.png" alt="Signal to noise" style="width: 200px; height: 259px;float:left; margin-right:10px">You
+
+        can also think of it as a form of <strong>signal to noise ratio</strong>.
+        Signal refers to the information you are trying to detect, and noise
+        refers to random interference that prevents you from detecting the
+        signal (think in terms of static in a phone call that prevents you from
+        hearing the person you're talking to). The images on the left illustrate
+        the concept using the word "signal" spelled out against random dots of
+        color in the background. The word is either clearly standing out against
+        the random noise in the background (bottom), or is barely detectable and
+        nearly overwhelmed by the noise (top). Weak signals, or noisy
+        backgrounds, make it difficult to understand the information in your
+        data.</p>
+      <p>For the skull data, the signal that you are trying to detect is the
+        difference in means between the periods, and the noise is the random
+        sampling variation that makes it difficult to detect the
+        population-level differences we're interested in. The numerator of the
+        observed t-value measures the signal (difference between group means),
+        and the denominator measures the noise (random sampling variation). The
+        bigger the signal and/or the smaller the noise the bigger the signal to
+        noise ratio will be, and the more likely that your results represent a
+        real difference, and not just random sampling variation.</p>
+      <p>Another form of signal to noise ratio can be derived from the F
+        statistic, which we met earlier when we learned to test for homogeneity
+        of variances between to groups. It's not obvious from what we know so
+        far how a ratio of two variances could be interpreted as a signal to
+        noise ratio for the skulls data, but this is done by a procedure called
+        the <strong>Analysis of Variance</strong> (ANOVA). <br>
+      </p>
+      <h2 class="part">Using variances to compare means</h2>
+      <p>ANOVA is one of the real workhorses of biostatistics.&nbsp; Although
+        the name seems to imply that we're comparing variances between groups,
+        in fact we use ANOVA to test a null hypothesis of no difference between
+        group means. The null hypothesis for an ANOVA that compares two group
+        means can be expressed as:</p>
+      <p>Ho: μ<sub>1</sub> = μ<sub>2</sub></p>
+      <p>just like a two-sample t-test.</p>
+      <p>To understand how ANOVA works it's helpful to understand that ANOVA
+        begins by treating each skull's maximum breadth as the result of two
+        different processes - a fixed, predictable effect of the period the
+        skull comes from, and random, unpredictable individual variation.</p>
+      <div style="float:left, width: 410, height: 400, margin-right: 20px"> <img
+          src="total_ss_graph.png" style="float:left; margin-right: 20px" onclick="var images=['between_ss_graph.png','within_ss_graph.png', 'all_sources_graph.png', 'total_ss_graph.png']; changeImage(this, images)">
+      </div>
+      <p>The graph to the left illustrates the skulls data, initially showing
+        the data values for each group color coded with early predynastic in
+        pink and roman in blue. The horizontal black line is the mean of all the
+        data, ignoring group membership, which is called the <strong>grand mean</strong>.
+        Each point is connected to the grand mean with a vertical red line.</p>
+      <p>We can think of the lengths of these red lines as partly due to the
+        effect of being either the early predynastic or roman period. If you
+        click on the graph it will change to a graph titled "Variation between
+        group means" that shows the mean for each group as either red horizontal
+        line (early predynastic) or a blue horizontal line (roman). Skulls from
+        the early predynastic period would be expected to be smaller than those
+        from the roman period because the mean for early predynastic is below
+        the grand mean and the mean for roman is above the grand mean. This is
+        the "fixed, predictable effect" of being a skull from one group or the
+        other.</p>
+      <p>Click again and you'll see a graph titled "Random variation around
+        group means". This shows that the skull measurements are also affected
+        by individual, random differences between skulls. Since we have already
+        accounted for the effect of being from each period using the mean for
+        each period in the previous graph, the vertical lines representing
+        random variation connect to the group mean, rather than the grand mean.</p>
+      <p>Click again and you'll see both of the processes that determine data
+        values on the same graph (titled "Both sources of variation"). This
+        graph shows that all we are doing is dividing, or <strong>partitioning</strong>,
+        the data values into an effect of belonging to a group, and an
+        unpredictable, random effect that together determine what the data value
+        is. The predictable effect of belonging to a group is the signal we are
+        trying to detect, and the individual random variation is the noise that
+        obscures the signal.</p>
+      <p>Both of these different contributors to the data values (called <strong>sources
+          of variation</strong>) are measured in ANOVA using a variance
+        calculation. If you recall, the formula for variance is: </p>
+      <p><img src="variance.png" style="width: 270px; height: 49px;" alt="variance"></p>
+      <p> The numerator of a variance calculation is called the <strong>sums of
+          squares</strong>, which is the part of the calculation that actually
+        measures variability - differences between a group mean (x̄) and
+        individual data values (x<sub>i</sub>) are squared, and then summed
+        across all of the data values. The denominator is <strong>degrees of
+          freedom</strong>, which is based on the sample size (n), but with a
+        deduction for any statistics that have to be estimated to calculate the
+        variance - since the mean has to be estimated to calculate the variance,
+        df is sample size minus 1. Dividing by degrees of freedom makes variance
+        an average squared difference between data points and their mean.</p>
+      <p>To get variances, therefore, we need a sum of squares and a degrees of
+        freedom for each source of variation (between periods - signal, and
+        individual variation within periods - noise) that we can use to
+        calculate the signal to noise ratio we need.</p>
+      <h3>Partitioning variance - sums of squares</h3>
+      <p style="clear: both">We will start with calculations for sums of
+        squares, which are raw measures of variation of values around means. The
+        calculations of total sums of squares (SST), groups sums of squares
+        (SSG), and error sums of squares (SSE) are done like so:<br>
+      </p>
+      <table style="width: 100%" border="1">
+        <tbody>
+          <tr>
+            <td><br>
+            </td>
+            <th style="text-align: center;" colspan="3" rowspan="1">
+              <p>Three sources of variation in the skulls data</p>
+            </th>
+          </tr>
+          <tr>
+            <td>
+              <p><br>
+              </p>
+            </td>
+            <th align="center">
+              <p>Total sums of squares</p>
+            </th>
+            <th align="center">
+              <p>Groups sums of squares</p>
+            </th>
+            <th align="center">
+              <p>Error sums of squares</p>
+            </th>
+          </tr>
+          <tr>
+            <td>
+              <p>Graphical illustration:</p>
+            </td>
+            <td><img style="display: block; margin-left: auto; margin-right: auto;"
+                alt="Total ss" src="total_ss.png"><br>
+            </td>
+            <td><img style="display: block; margin-left: auto; margin-right: auto;"
+                alt="Groups ss" src="groups_ss.png"><br>
+            </td>
+            <td><img style="display: block; margin-left: auto; margin-right: auto;"
+                alt="Error ss" src="error_ss.png"><br>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p>What it measures:</p>
+            </td>
+            <td>
+              <p>Raw measure of variation to be partitioned - individual skulls
+                varying around the <strong> </strong>grand mean<span style="font-family: &quot;Crimson Text&quot;,serif;"><br>
+                </span></p>
+            </td>
+            <td>
+              <p>Signal: Measure of the contribution of period means to
+                variation in skull measurements - period means varying around
+                the grand mean</p>
+            </td>
+            <td>
+              <p>Noise: Measure of individual, random variation in skulls -
+                individual skulls varying around period means</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p>How it is calculated:</p>
+            </td>
+            <td>
+              <p><img alt="sst" src="sst.png" style="display: block; margin-left: auto; margin-right: auto; padding: 10px;"></p>
+              <p>Subtract the grand mean (x with two bars) from each individual
+                skull's maximum breadth. Each difference is squared, and the
+                squared differences are summed. </p>
+            </td>
+            <td>
+              <p><img alt="ssw" src="ssg.png" style="display: block; margin-left: auto; margin-right: auto; padding: 10px;">
+              </p>
+              <p> Subtract the grand mean from each period mean (x̄<sub>j</sub>)
+                and square the differences, once for each data value, and sum
+                them. Since the difference between period mean and grand mean is
+                the same for each skull in a period, this is equivalent to
+                multiplying the squared difference by the number of skulls in
+                the period - thus, the formula is expressed as the differences
+                between group means and the grand mean multiplied by the sample
+                size for the group, n<sub>j</sub>.</p>
+            </td>
+            <td>
+              <p><img alt="ssw" src="ssw.png" style="display: block; margin-left: auto; margin-right: auto; padding: 10px;"></p>
+              <p> Subtract the period mean (x̄<sub>j</sub>) from each individual
+                skull's maximum breadth, square the differences, and sum them. x<sub>i,j</sub>
+                refers to the i'th data point in period j.</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p>For the skulls data, equal to:</p>
+            </td>
+            <td align="center">
+              <p>1841.7</p>
+            </td>
+            <td align="center">
+              <p>304.7</p>
+            </td>
+            <td align="center">
+              <p>1537.0</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>The <strong>Total sums of squares</strong> (SST) is based on variation
+        around the mean of all the data (called the <strong>grand mean</strong>),
+        without reference to the period the skull was measured in. This total is
+        not used in our test of differences between periods, but it is a raw
+        measure of all of the variation in the data. To test for differences
+        between periods the total sums of squares is <strong>partitioned</strong>
+        (that is, divided up) into the two sources of variation we are
+        interested in. </p>
+      <p>The <strong>Period sums of squares</strong> (or more generally, the
+        groups sums of squares, SSG) is based on variability of the period means
+        around the grand mean. To the extent that the group means are far apart
+        from one another they will also be far from the grand mean, so variation
+        of group means around the grand mean measures differences between
+        groups.</p>
+      <p>The <strong>Error sums of squares</strong> (SSE) is based on variation
+        of individual skulls around the mean of the period it belongs to.</p>
+      <p>Sums of squares are <strong>additive</strong>, meaning that SST = SSG
+        + SSE. You can confirm for yourself that 1841.7 = 304.7 + 1537.0</p>
+      <p>At this point we have partitioned the variation in the data (SST) into
+        a part that is due to predictable differences between the periods (SSG)
+        and a part that is due purely to unpredictable individual random
+        variation (SSE). To complete the analysis we need degrees of freedom to
+        go along with each of these sums of squares. </p>
+      <h3>Partitioning variance - degrees of freedom</h3>
+      <p>The DF term needed for each of our sources of variation are:</p>
+      <ul>
+        <li>Total: The SST has degrees of freedom just like the formula for
+          variance says it should, <strong>n-1</strong>. This is the total
+          sample size (n) minus 1. With this data set, this is equal to 59
+          skulls minus 1 = 58. We refer to this as df<sub>total</sub>. </li>
+        <li>Groups: SSG has degrees of freedom of number of groups minus one, or
+          <strong>k - 1</strong>. There are two groups being compared, so df<sub>groups</sub>
+          is 1.</li>
+        <li>Error: SSE has degrees of freedom of sample size minus the number of
+          groups, or <strong>n - k</strong>. With 59 skulls and 2 groups df<sub>error</sub>
+          is 57.</li>
+      </ul>
+      <p>Like sums of squares, degrees of freedom are additive, such that df<sub>total</sub>
+        = df<sub>groups</sub> + df<sub>error</sub>, or 58 = 1 + 57.</p>
+      <h3>In ANOVA, variances are called Mean Squares</h3>
+      <p>Now that we have an SS and a DF for each source of variation, we can
+        calculate a variance for each source. In ANOVA we call SS/df the <strong>mean
+          squares</strong>, but it could just as accurately be called a
+        variance. </p>
+      <p>The formulas for each MS are: </p>
+      <table style="width: 100%" border="0">
+        <tbody>
+          <tr>
+            <td> <img alt="Total" src="mst.png" style="float: left; padding: 10px;">
+              <p>The total MS for this example is 1841.7/58 = 31.75. This value
+                isn't used in the hypothesis test, so statistical software often
+                does not report it - you'll see that MINITAB doesn't report it
+                in its ANOVA output.</p>
+            </td>
+          </tr>
+          <tr>
+            <td><img alt="Groups" src="msg.png" style="float: left; padding: 10px">
+              <p>The groups MS for this example is 304.7/1 = 304.7</p>
+            </td>
+          </tr>
+          <tr>
+            <td><img alt="Error" src="mse.png" style="float: left; padding: 10px">
+              <p>The error MS for this example is 1537.0/57 = 26.96</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p> Sums of squares and degrees of freedom are additive, but mean squares
+        are not (that is, MS<sub>total</sub> is not MS<sub>groups</sub>+MS<sub>error</sub>).</p>
+      <h3>A test statistic - F ratio from MS</h3>
+      <p>We now have all the parts that we need to test for differences between
+        period means - now we just need a test statistic. Since MS are
+        variances, we can use the ratio of MS<sub>groups</sub> to MS<sub>error</sub>
+        as an F ratio, and test if they are different using an F test, just like
+        we have been doing when we test HOV in a two-sample t-test. Before we do
+        the test, let's consider why this is a test of differences between
+        period means.</p>
+      <p>Random sampling will always have some effect on the sample means, and
+        thus the variation between groups that is the basis for MS<sub>groups</sub>
+        is actually due both to real differences between the period population
+        means (which we'll call <strong>fixed effects</strong>), and to random
+        sampling variation. Random sampling variation happens because of random
+        variation among individuals, so we can think of MS<sub>groups</sub> as
+        actually being:</p>
+      <ul>
+        <li>MS<sub>groups</sub> = Fixed effects of differences between period
+          means + Random, individual variation</li>
+      </ul>
+      <p>If we symbolize the fixed effects of differences between period means
+        with a lower-case Greek gamma, γ, and the individual random variation
+        with e, MS<sub>groups</sub> can be represented as&nbsp;γ + e.</p>
+      <p>MS<sub>error</sub> is expected to reflect only individual random
+        variation - that is, it includes the second part of SSG, but not the
+        first part. We can think of MS<sub>error</sub> as being only:</p>
+      <ul>
+        <li>MS<sub>error</sub> = Random, individual variation</li>
+      </ul>
+      <p>That is, MS<sub>error</sub> is only measuring e.</p>
+      <p>To get our F<sub>obs</sub> test statistic we divide MS<sub>groups</sub>
+        by MS<sub>error</sub>. Using our symbols, this means that F<sub>obs</sub>
+        is measuring:</p>
+      <img src="ems_f.png" alt="Expected value of F" style="width: 184px; height: 66px;">
+      <p>Note that the only difference between what we measure for MS<sub>groups</sub>
+        and MS<sub>error</sub> is the fixed effect of being in different
+        periods. Under the null hypothesis, there is no actual difference
+        between population means for the two periods, and if this is true, then
+        the fixed effects are equal to 0. If the fixed differences, represented
+        by γ, are actually equal to 0, what would we expect F<sub>obs</sub> to
+        be equal to? <a href="javascript:ReverseDisplay('fobs')">Click here to
+          see if you're right.</a></p>
+      <div id="fobs" style="display:none;">
+        <p style="border-style:solid;padding:10px;">If the null hypothesis is
+          true then both the MS<sub>groups</sub> and MS<sub>error</sub> values
+          are just measuring random variation they should be equal to each
+          other. If they are equal their ratio should be 1.</p>
+      </div>
+      <p>On the other hand, if the null hypothesis is false and there is an
+        actual difference between means, the fixed effects of differences
+        between group means will make MS<sub>groups</sub> larger than MS<sub>error</sub>,
+        and when we divide MS<sub>groups</sub> / MS<sub>error</sub> we should
+        get an F<sub>obs</sub> value greater than 1.</p>
+      <p>Since MS<sub>groups</sub> is measuring differences between group means
+        (i.e. the signal we're interested in detecting), and MS<sub>error</sub>
+        is measuring random variation (i.e. the random noise that makes it
+        difficult to see the differences in mean), this form of the F test
+        statistic is a signal to noise ratio, just like the t<sub>obs</sub> test
+        statistic was. </p>
+      <p>In our case, F<sub>obs</sub> is equal to 304.7/26.96 = 11.30. With an F<sub>obs</sub>
+        greater than 1 there does seem to be more variation between period means
+        than there is within periods. Now we need to know the probability of
+        getting an F<sub>obs</sub> of that size by chance when the null
+        hypothesis is true, and the population means are the same between
+        periods.</p>
+      <h3>P-values from F ratios</h3>
+      <p>Once we have a test statistic, F<sub>obs</sub>, we need a sampling
+        distribution to tell us the probability of obtaining a value as big or
+        bigger by chance if the null is true, which is the F-distribution. </p>
+      <p> </p>
+      <table style="width: 100%" border="0">
+        <tbody>
+          <tr>
+            <td><img src="fdist1.png" alt="F distribution"><br>
+              <br>
+            </td>
+            <td>
+              <p>Recall from our HOV tests that the F distribution is defined by
+                the df for both of the variances used, and since the F ratio
+                from an ANOVA is always MS<sub>groups</sub>/MS<sub>error</sub>,
+                the numerator df is the groups df (1 for this analysis), and the
+                denominator df is the error df (57 in this analysis). </p>
+              <p>If there are actual differences between periods we expect MS<sub>groups</sub>
+                to be bigger than MS<sub>error</sub>, so we're only interested
+                in the upper tail of the F-distribution; that is, ANOVA uses <strong>one-tailed
+                  F tests</strong>. The p-value is the area under the F
+                distribution that falls above F<sub>obs</sub>. With our F<sub>obs</sub>
+                of 11.3, the p-value is equal to 0.001389.</p>
+              <p>Based on this small p-value, we conclude that the null
+                hypothesis of no difference between periods is rejected - the
+                difference between periods observed is statistically
+                significant.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 class="part" id="anova_table">The ANOVA table </h2>
+      <p>Now that you understand the basic principles behind an ANOVA, let's
+        look at the traditional method of presenting the results of this test. </p>
+      <p>An ANOVA is usually presented in a standard format called the <strong>ANOVA
+          table</strong>. The ANOVA table for the analysis we just completed,
+        above, looks like this:</p>
+      <p><span class="minitab">Source&nbsp; DF&nbsp; Adj SS&nbsp; Adj MS F-Value
+          P-Value<br>
+          period &nbsp; 1&nbsp;&nbsp; 304.7&nbsp; 304.73&nbsp; 11.30 &nbsp;
+          0.001 <br>
+          Error &nbsp; 57&nbsp; 1537.0&nbsp; 26.96 <br>
+          Total&nbsp;&nbsp; 58&nbsp; 1841.7</span></p>
+      <p>The first row is a set of labels for the columns, which are:</p>
+      <ul>
+        <li>Source - a label for the source of variation the row is measuring</li>
+        <li>DF - degrees of freedom for each source of variation</li>
+        <li>(Adj) SS - the sums of squares for each source of variation (don't
+          worry about the "Adj" part - it means "adjusted", but adjustments are
+          only applied for more complicated designs than we will use in this
+          class)</li>
+        <li>(Adj) MS - the mean squares for each source of variation (again,
+          ignore the "Adj")</li>
+        <li>F-value - the F<sub>obs</sub></li>
+        <li>P-value - the p-value for the test of F<sub>obs</sub></li>
+      </ul>
+      <p>Each row is a different source of variation. They are:</p>
+      <ul>
+        <li>period - the groups source of variation. MINITAB labels the groups
+          by the name of the name of the variable used to identify the groups.</li>
+        <li>Error - the random variation between skulls within each group.</li>
+        <li>Total - the total variation in the data, which is partitioned into
+          period and error terms</li>
+      </ul>
+      <p>If you look at the contents of the table, you'll see that it's just
+        organizing the various quantities we calculated above. For example:</p>
+      <ul>
+        <li>The period row gives the groups DF (1), groups SS (304.7), and
+          groups MS (304.73)</li>
+        <li>The Error row gives the error DF (57), error SS (1537.0), and error
+          MS (26.96)</li>
+        <li>Since F<sub>obs</sub> is MS<sub>groups</sub>/MS<sub>error</sub>, we
+          calculate a single value from two rows in the table. F<sub>obs</sub>
+          is a test of differences between period means, so it's placed in the
+          period row.</li>
+        <li>The p-value pertains to F<sub>obs</sub>, so it is also placed in the
+          period row.</li>
+        <li>MS<sub>total</sub> isn't used in the test, so it isn't reported. The
+          Total row is primarily presented so that you can verify that total DF
+          is the sum of period and error df, and that total SS is the sum of
+          period and Error SS (this may seem a little silly - we can probably
+          count on MINITAB to be able to add numbers properly - but there are
+          cases in which SS aren't additive, but again these only appear in more
+          complex designs than we're considering).</li>
+      </ul>
+      <p>So, the ANOVA table is a way of organizing a fairly complicated set of
+        calculations into a compact form that's easy to interpret, once you know
+        how it's put together.</p>
+      <div id="wrapper_div3" style="float: left; border: solid black 4px; margin-right: 10px; width: 950px; text-align: center; margin-bottom: 10px">
+        <div id="chart_div3" style="width: 450px; height: 400px; float: left;"></div>
+        <div id="anova_table_div3" style="float: right; margin: 10px; width: 450px;">
+          <p>ANOVA table</p>
+          <table style="width: 100%;" class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Source</th>
+                <th>df </th>
+                <th>SS</th>
+                <th>MS </th>
+                <th>F </th>
+                <th>p </th>
+              </tr>
+              <tr>
+                <td>Period (groups)</td>
+                <td>1<br>
+                </td>
+                <td>
+                  <p><span id="ss_btwn2">304.7</span></p>
+                </td>
+                <td>
+                  <p><span id="ms_btwn2">304.7</span></p>
+                </td>
+                <td>
+                  <p><span id="F_stat2">11.3</span></p>
+                </td>
+                <td>
+                  <p><span id="p_val2">0.001</span></p>
+                </td>
+              </tr>
+              <tr>
+                <td>Error</td>
+                <td>57<br>
+                </td>
+                <td>
+                  <p><span id="ss_error2">1537.0</span></p>
+                </td>
+                <td>
+                  <p id="ms_error2">26.96</p>
+                  <p> </p>
+                </td>
+                <td><br>
+                </td>
+                <td><br>
+                </td>
+              </tr>
+              <tr>
+                <td>Total</td>
+                <td>58<br>
+                </td>
+                <td>
+                  <p><span id="ss_total2">1841.7</span></p>
+                </td>
+                <td><br>
+                </td>
+                <td><br>
+                </td>
+                <td><br>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="input_div3" style="float: left; clear: both">
+          <p>Set the amount of difference between means: <input id="diff_btwn_means2"
+              min="0" max="11.5" step="0.5" value="4" onchange="drawChart2()" style="display: inline; margin: 0 auto; clear: both; width: 50px"
+              type="number"><button id="back_to_4" onclick="resetDiff()">Reset</button></p>
+        </div>
+      </div>
+      <p> Let's look again at the interpretation of the F value as a signal to
+        noise ratio. This app shows the analysis of the skulls data, but you can
+        use it to to change the amount of difference between the group means so
+        that you can see how the ANOVA table would change as the difference
+        between means increases or decreases. The total sums of squares is held
+        constant by the app, so the focus here is on how the relative amount of
+        variation that's attributable to between-group differences vs.
+        within-group differences translates into either significant or
+        non-significant test results. </p>
+      <p>If you increase the difference between means you will see that more of
+        the variation in the data is due to differences between periods, which
+        causes the period SS and MS to increase. The period MS is in the
+        numerator of the F value, so as period MS gets larger so does the
+        F-value, which in turn makes the p-value smaller. </p>
+      <p>If you decrease the difference between the means more of the variation
+        in the data is the within-group, random variation - the groups SS and MS
+        get smaller while the Error SS and MS get larger, which reduces F and
+        causes the p-value to increase. F is thus a measure of the amount of
+        difference between the groups relative to the amount of random variation
+        there is within groups - and, therefore, is a signal to noise ratio.</p>
+      <h2 id="anova_twogroup_real" style="clear:both">When the null is true</h2>
+      <div>
+        <p>You have now seen an ANOVA applied to a case with a large, highly
+          significant difference between means. It is also helpful to think
+          about what ANOVA results look like when the null hypothesis is true,
+          and there is no actual difference in population means.<span style="font-family: &quot;Crimson Text&quot;,serif;"><br>
+          </span></p>
+      </div>
+      <div id="wrapper_div1" style="float: left; border: solid black 4px; margin-right: 10px; width: 855px; text-align: center">
+        <div id="chart_div1" style="width: 400px; height: 400px; float: left;"></div>
+        <div id="anova_table_div" style="float: right; margin: 10px">
+          <p>ANOVA table</p>
+          <table style="width: 435px;" class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Source</th>
+                <th>df</th>
+                <th>SS</th>
+                <th>MS</th>
+                <th>F</th>
+                <th>p</th>
+              </tr>
+              <tr>
+                <td>Period</td>
+                <td>1</td>
+                <td>
+                  <p><span id="ss_btwn_rand">304.7</span></p>
+                </td>
+                <td>
+                  <p><span id="ms_btwn_rand">304.7</span></p>
+                </td>
+                <td>
+                  <p><span id="F_stat_rand">11.3<br>
+                    </span></p>
+                </td>
+                <td>
+                  <p><span id="p_val_rand">0.0014<br>
+                    </span></p>
+                </td>
+              </tr>
+              <tr>
+                <td>Error</td>
+                <td>57</td>
+                <td>
+                  <p><span id="ss_error_rand">1537.0</span></p>
+                </td>
+                <td>
+                  <p><span id="ms_error_rand">26.9</span></p>
+                </td>
+                <td> <br>
+                </td>
+                <td> <br>
+                </td>
+              </tr>
+              <tr>
+                <td>Total</td>
+                <td>58</td>
+                <td>
+                  <p><span id="ss_total_rand">1841.7</span></p>
+                </td>
+                <td> <br>
+                </td>
+                <td> <br>
+                </td>
+                <td> <br>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="button_div" style="float: left; clear: both; margin-left: 10px">
+          <p><button id="randomize" onclick="drawChart1()" style="display: inline; margin: 0 auto; clear: both;">Randomize</button>
+          </p>
+        </div>
+        <p id="testing" style="clear: both"></p>
+      </div>
+      <p>When the null hypothesis is true the only reason sample means for the
+        two periods differ is random chance. If this is true, two random samples
+        from a population with a maximum skull breadth equal to the grand mean
+        of 133.9. The graph on the left shows one set of two random samples (one
+        for each period), with the resulting ANOVA table. The grand mean is
+        indicated with a horizontal gray line labeled "GM", and the mean for
+        each group is a red bar that extends from the grand mean to the group
+        mean for the sample. The p-value will be colored red if it is below 0.05
+        to help you see when the difference is statistically significant.</p>
+      <p>If you hit the "Randomize" button you will get a new set of random data
+        for each group. When a pair of random samples results in large
+        differences between the groups the red bars will be big - big
+        differences between groups leads to large SS and MS for Period compared
+        with the unexplained Error variation. This will produce a large F-ratio,
+        and a p-value less than 0.05.</p>
+      <p>Just like what you saw when you simulated the null hypothesis for a
+        two-sample t-test, you would expect to get a p &lt; 0.05 about 5% of the
+        time, or once every 20 times you hit the "Randomize" button.</p>
+      <p>Notice that when p is greater than 0.05 the means are relatively close
+        together, compared to the amount of variation around them. Because of
+        this, the Period sums of squares and mean squares are small compared
+        with the error SS and MS, which results in an F ratio (MS<sub>Period</sub>/MS<sub>Error</sub>)
+        that is small. In those approximately 1 in 20 times when p is less than
+        0.05, the means are farther apart, such that the Period SS and MS are
+        big compared with the error SS and MS, which results in a big F ratio.</p>
+      <p>Now compare those randomly generated results with a real example - we
+        are still comparing maximum skull breadth for two periods, but now we're
+        comparing early predynastic to late predynastic periods, which are not
+        nearly as different as early predynastic was from the Roman period.</p>
+      <table style="width: 100%" border="1">
+        <tbody>
+          <tr>
+            <td><img alt="SST with no difference" src="anova_demo/total_nodiff.png"
+                style="width: 300px; height: 240px; display: block; margin-left: auto; margin-right: auto;"><br>
+            </td>
+            <td><img alt="Groups with no difference" src="anova_demo/groups_nodiff.png"
+                style="width: 300px; height: 240px; display: block; margin-left: auto; margin-right: auto;"><br>
+            </td>
+            <td><img alt="SSE with no difference" src="anova_demo/error_nodiff.png"
+                style="width: 300px; height: 240px; display: block; margin-left: auto; margin-right: auto;"><br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>You can see that this time the means are very close together, and the
+        groups sums of squares is thus much smaller. Comparatively, there is a
+        lot of random variation compared with this small amount of difference
+        between means. Not surprisingly, when we do all of the calculations and
+        assemble the ANOVA table:</p>
+      <p><span class="minitab">Source&nbsp; DF&nbsp;&nbsp; Adj SS&nbsp; Adj
+          MS&nbsp; F-Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; P-Value <br>
+          period &nbsp; 1 &nbsp; &nbsp; 3.40&nbsp;&nbsp;
+          3.396&nbsp;&nbsp;&nbsp;&nbsp; 0.14&nbsp; ...<em>see below</em>...<br>
+          Error &nbsp; 58&nbsp; 1445.54&nbsp; 24.923 <br>
+          Total &nbsp; 59&nbsp; 1448.93</span></p>
+      <p>the F-ratio is much smaller for this comparison: F<sub>obs</sub> =
+        3.396/24.923 = 0.14. We can get the p-value for this comparison by
+        comparing F<sub>obs</sub> of 0.14 to an F distribution with 1 numerator
+        and 58 denominator degrees of freedom.</p>
+      <table style="width: 100%" border="0">
+        <tbody>
+          <tr>
+            <td><img alt="Not significant." src="f_nonsig.jpg"><br>
+            </td>
+            <td>
+              <p>The area under the curve from the observed F of 0.14 and above
+                gives us a probability of 0.713.</p>
+              <p>With a p-value over 0.05 we retain the null of no difference
+                between the periods. This amount of difference between means can
+                easily occur by chance when the null is true, so we won't
+                consider the early and late predynastic periods to be different.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>So far all we've done is learn how to do the same analysis using ANOVA
+        that we could have done more simply with a t-test, which might make you
+        wonder why we went to all the trouble. </p>
+      <p>The reason for learning ANOVA is that the general approach is a much
+        better basis for analyzing complex designs. For this class we'll keep it
+        simple - the only complication we'll consider is the case in which we're
+        comparing more than two groups to one another. We have now used three
+        different periods, but only have tested early predynastic to Roman, and
+        early predynastic to late predynastic periods. We still haven't compared
+        late predynastic to Roman skulls, which we could do by doing one more
+        ANOVA with those two groups, but it's not a good idea - there's a
+        problem with doing multiple comparisons among three or groups two at a
+        time, called the <strong>multiple testing problem</strong>.</p>
+      <h2 class="part" id="multcomp">The multiple testing problem</h2>
+      <p>We have now seen data from three different periods (early predynastic,
+        late predynastic, and Roman), but have only compared early predynastic
+        to late predynastic and to Roman periods, but have not compared late
+        predynastic to Roman periods yet. We could make this comparison using a
+        t-test or an ANOVA, but if we do that we would be running a greater risk
+        of making an error in our conclusions that is higher than we expect.</p>
+      <p>As you know by now, the α-level is the threshold value we compare p
+        against to decide if we have a significant test result or not, and we
+        traditionally use 0.05 as the α-level. But remember, the α-level is also
+        an error rate - it's the probability of rejecting the null hypothesis
+        when it's true. Rejecting a true hypothesis is a mistake, and when we
+        set α to 0.05 we're saying we're willing to make this mistake 5% of the
+        time when we test true null hypotheses. Rejecting a true null is a <strong>false
+          positive</strong>, which we also call a Type I error, so α is our Type
+        I error rate.</p>
+      <p>So, each time we test a null hypothesis that's true, we have a
+        probability of making a Type I error of 0.05. If we conduct multiple
+        tests, we take this chance of obtaining a false positive result with
+        each test, and the chance of error accumulates. With three different
+        comparisons, between early predynastic vs. late predynastic, early
+        predynastic vs. roman, and late predynastic vs. roman, our chances of
+        one or more Type I errors is bigger than 0.05, but how big is it?</p>
+      <ul>
+        <li>If we use the traditional α-level of 0.05, we have a probability of
+          0.05 of making a mistake with each test</li>
+        <li>The probability of not making a mistake on each test is therefore
+          (1-0.05) = 0.95</li>
+        <li>The probability of making no mistakes in three tests is just the
+          product of the probability of making no mistakes in a single test -
+          that is, (0.95)(0.95)(0.95), or (0.95)<sup>3</sup></li>
+        <li>If the probability of no mistakes in three tests is (0.95)<sup>3</sup>,
+          then the probability of one or more mistakes is 1 - (0.95)<sup>3</sup>
+          = 0.14</li>
+      </ul>
+      <p> This means that even though we test each pair of means at α = 0.05, by
+        the time we've finished three tests we actually had a probability of
+        0.14 of making one or more Type I errors. This inflation of the
+        probability of a false positive with multiple tests is called the <strong>multiple
+          testing problem</strong>.</p>
+      <p>ANOVA protects against the multiple testing problem in two ways:</p>
+      <ul>
+        <li>Unlike t-tests, ANOVA can be compare means between more than two
+          groups. When there are more than two groups to be compared, ANOVA
+          conducts a single initial F test for significant differences among all
+          of the group means, called an <strong>omnibus test</strong>. The
+          F-test included in the ANOVA table is the omnibus test. The omnibus
+          test indicates if there is reason to think there are differences
+          between two more more of the means being compared, but does not
+          identify which pairs of means are significantly different.</li>
+        <li>If and only if the omnibus test is significant, ANOVA can be
+          followed up with a <strong>post-hoc procedure</strong> to test for
+          differences between pairs of group means so that the groups that are
+          significantly different can be identified. The post-hoc procedure
+          tests for differences between multiple pairs of means in a way that
+          prevents an inflation of Type I error</li>
+      </ul>
+      <p>Let's look at these two methods one at a time.</p>
+      <h3>An omnibus test of differences between three groups using ANOVA</h3>
+      <p>Extending ANOVA to three groups is very simple - the calculations are
+        all the same as for a two group ANOVA, we just have one more group to
+        apply the calculations to. </p>
+      <p>The null hypothesis with three (or more) groups is like the null
+        hypothesis with two, we just add additional population mean symbols:</p>
+      <p><img src="null.png" style="width: 143px; height: 70px;" alt="null"></p>
+      <p> The second way of expressing the null uses variances instead of means
+        (the first variance is labeled "treatment", which is another way of
+        referring to the groups). Since we use an F ratio of mean squares to
+        test for differences among the means, this is also an acceptable way to
+        express the null hypothesis. </p>
+      <table style="width: 100%;" border="0">
+        <tbody>
+          <tr>
+            <td>
+              <p><img alt="Interval plot" src="three_periods1.jpg" style="float: left; padding: 10px;">
+                To begin the analysis, it's a good idea to start with a suitable
+                graph. From this interval plot, it looks like the Roman skulls
+                have bigger maximum breadths than the other two periods, but the
+                early and late predynastic periods may not be different from one
+                another. </p>
+            </td>
+          </tr>
+          <tr>
+            <td><video style="float:left; padding: 10px" controls="controls" width="500"
+                height="400"> <source src="anova.mp4"> </video>
+              <p>This video shows you how an ANOVA on three groups is done.
+                You'll see that there's nothing really different from how we
+                proceeded with only two groups, we just have an additional group
+                mean to use when we calculate SS<sub>groups</sub>.</p>
+              <p>Note that the groups SS is illustrated a little differently
+                than before (but the same way as in your book). Now, rather than
+                calculating a difference between a group mean and the grand mean
+                and then multiplying it by the number of data points in the
+                group, the video shows the difference between group mean and
+                grand mean calculated for each data point, which would then be
+                summed together. Adding the same value 30 times is the same as
+                multiplying the value by 30, so it makes no difference which way
+                the groups SS is calculated.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>The ANOVA table for these data is here - if you hover over a value in
+        the table a box will appear that explains how it is calculated. Make
+        sure you understand where each entry in the table comes from.</p>
+      <span class="minitab"> </span>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th>
+              <div class="tooltip">Source<span class="tooltiptext">The source of
+                  variation column</span></div>
+            </th>
+            <th>
+              <div class="tooltip">DF<span class="tooltiptext">The degrees of
+                  freedom column</span></div>
+            </th>
+            <th>
+              <div class="tooltip">SS<span class="tooltiptext">The sums of
+                  squares column</span></div>
+            </th>
+            <th>
+              <div class="tooltip">MS<span class="tooltiptext">The mean squares
+                  column</span></div>
+            </th>
+            <th>
+              <div class="tooltip">F<span class="tooltiptext">The F<sub>obs</sub>
+                  column</span></div>
+            </th>
+            <th>
+              <div class="tooltip">P<span class="tooltiptext">The p-value column</span></div>
+            </th>
+          </tr>
+          <tr>
+            <td>
+              <div class="tooltip">period<span class="tooltiptext">The row with
+                  the test of differences between periods</span></div>
+            </td>
+            <td>
+              <div class="tooltip">2<span class="tooltiptext">DF<sub>groups</sub>
+                  = number of groups - 1</span></div>
+            </td>
+            <td>
+              <div class="tooltip">373.2<span class="tooltiptext">SS<sub>groups</sub>
+                  = sum[group sample size x (group means - grand mean)<sup>2</sup>]</span></div>
+            </td>
+            <td>
+              <div class="tooltip">186.6<span class="tooltiptext">MS<sub>groups</sub>
+                  = SS<sub>groups</sub> / DF<sub>groups</sub></span></div>
+            </td>
+            <td>
+              <div class="tooltip">7.13<span class="tooltiptext">Fobs = MS<sub>groups</sub>/MS<sub>error</sub></span></div>
+            </td>
+            <td>
+              <div class="tooltip">0.001<span class="tooltiptext">P-value - the
+                  probability of F<sub>obs</sub> if the null is true</span></div>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="tooltip">Error<span class="tooltiptext">The row with
+                  individual random variation</span></div>
+            </td>
+            <td>
+              <div class="tooltip">87<span class="tooltiptext">DF<sub>error</sub>
+                  = sample size - number of groups</span></div>
+            </td>
+            <td>
+              <div class="tooltip">2275.7<span class="tooltiptext">SS<sub>error</sub>
+                  = sum(data values - group means)<sup>2</sup></span></div>
+            </td>
+            <td>
+              <div class="tooltip">26.16<span class="tooltiptext">MS<sub>error</sub>
+                  = SS<sub>error</sub>/DF<sub>error</sub></span></div>
+            </td>
+            <td><br>
+            </td>
+            <td><br>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <div class="tooltip">Total<span class="tooltiptext">The total
+                  variability in the data to be partitioned</span></div>
+            </td>
+            <td>
+              <div class="tooltip">89<span class="tooltiptext">DF<sub>total</sub>
+                  = sample size - 1</span></div>
+            </td>
+            <td>
+              <div class="tooltip">2648.9<span class="tooltiptext">SS<sub>total</sub>
+                  = sum(data values - grand mean)<sup>2</sup></span></div>
+            </td>
+            <td><br>
+            </td>
+            <td><br>
+            </td>
+            <td><br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Based on this table, are there significant differences between the
+        periods? How do you know?</p>
+      <p><a href="javascript:ReverseDisplay('pval')">Click here to see if you're
+          right.</a></p>
+      <div id="pval" style="display:none;">
+        <p style="border-style:solid;padding:10px;">The p-value is below 0.05,
+          so we reject the null of no difference, and conclude there are
+          statistically significant differences between the period means.</p>
+      </div>
+      <p>At this point, we have three periods, and only one F ratio with one
+        p-value. What can you tell about the differences between periods? Do you
+        know which periods are different from one another?</p>
+      <p><a href="javascript:ReverseDisplay('whatsitmean')">Click here to see if
+          you're right.</a></p>
+      <div id="whatsitmean" style="display:none;">
+        <p style="border-style:solid;padding:10px;">The F-ratio compares
+          variability among all the groups to the random variation in the data.
+          At this point we know there's significant variation among the groups,
+          but we don't know which groups are significantly different.</p>
+      </div>
+      <p>We have now gotten as far as conducting the <strong>omnibus test</strong>
+        for differences between the periods. There is only one p-value in the
+        table, so we haven't increased our Type I error rate over 0.05, even
+        though we have three group means being compared. That's the good news.
+        The bad news is that we still don't know which periods are different
+        from one another, but we'll fix that problem by conducting a post-hoc
+        procedure called Tukey's MSD.</p>
+      <h3 class="part" id="tukey">Post-hoc procedures - Tukey's MSD </h3>
+      <p>Post-hoc procedures are comparisons of pairs of group means conducted <em>after
+          obtaining a significant omnibus test</em> in an ANOVA. They are done
+        in a way that protects against the multiple testing problem, but they
+        are only effective in doing so if they are used following a significant
+        ANOVA.</p>
+      <p>There are several different post-hoc procedures available in MINITAB,
+        but we will focus in this class on one that seems to work well and is
+        widely used, called the "Tukey Minimum Significant Difference" (or Tukey
+        MSD for short).</p>
+      <p>Tukey tests look just like t-tests in MINITAB - there is a difference
+        between means, which is divide by a measure of sampling variability to
+        obtain a t-value, and then this test statistic is used to calculate a
+        p-value using a bell-shaped sampling distribution. There are only a
+        couple of differences:</p>
+      <ul>
+        <li>The measure of sampling variation used is based on the MS<sub>error</sub>
+          from the ANOVA instead of using a pooled variance calculation.</li>
+        <li>p-values are obtained by comparing Tukey's test statistic to the <strong>Studentized
+            range distribution</strong> instead of the t-distribution.</li>
+      </ul>
+      <p>The Studentized range distribution is a bell-shaped curve like the t,
+        but its shape is affected by the number of comparisons being conducted.
+        Specifically, the Studentized range distribution requires bigger
+        differences between means in order for them to be considered
+        significant, compared to a t-distribution. The amount of difference
+        needed increases with an increase in the number of groups being
+        compared. If a bigger difference is needed to reject the null, then
+        there will be fewer positive tests, and thus also fewer false positives.
+        Tukey's test thereby protects the α-level, in that the overall
+        probability of a false positive across all the means compared is still
+        0.05, no matter how many groups are compared.</p>
+      <p> </p>
+      <p>Let's look at how MINITAB presents ANOVA and Tukey results. After
+        getting a significant omnibus test for differences among periods, we get
+        Tukey results that look like this:</p>
+      <span class="minitab">Tukey Simultaneous Tests for Differences of Means<br>
+        <br>
+        Difference&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+        &nbsp; Difference &nbsp; &nbsp; &nbsp; SE
+        of&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; Adjusted<br>
+        of
+        Levels&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp; &nbsp; of Means&nbsp; Difference&nbsp;&nbsp; </span><span class="minitab"><span
+          class="minitab">T-Value&nbsp;&nbsp;&nbsp; P-Value </span><br>
+        late_predyna - early_predyn&nbsp;&nbsp; &nbsp; &nbsp; &nbsp; 0.48 &nbsp;
+        &nbsp; &nbsp;&nbsp; 1.32&nbsp; &nbsp; &nbsp;
+        0.36&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.931 <br>
+        roman - early_predyn &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+        &nbsp;&nbsp; 4.55&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.33&nbsp;
+        &nbsp; &nbsp; 3.41&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.003 <br>
+        roman - late_predyna &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+        &nbsp;&nbsp; 4.07&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.31&nbsp;
+        &nbsp; &nbsp; 3.11 &nbsp; &nbsp;&nbsp; 0.007</span> <br>
+      <p>Each row in this table is a different comparison between means - the
+        comparison used is shown under "Difference of Levels". The first row is
+        a difference between late predynastic and early predynastic periods, and
+        the difference is 0.48 mm. The standard error of the difference is based
+        on the MSerror and the sample sizes of the two groups being compared -
+        the MSerror comes from the ANOVA table and is the same for all
+        comparisons, but there are 29 skulls in the early predynastic period, 31
+        in late predynastic, and 30 in Roman, so the standard errors are
+        slightly different. The t-values are differences of means divided by
+        standard errors. The p-value is obtained by comparing the t-values to
+        the <strong>Studentized Range distribution</strong>, which is like a
+        t-distribution that accounts for the number of comparisons being made.</p>
+      <p>Since Tukey's procedure uses a probability distribution that accounts
+        for the number of tests we're running, the p-value can be interpreted as
+        always - if p is less than 0.05 the difference is significant, and
+        having multiple "adjusted" p-values doesn't inflate our Type I error
+        rate.</p>
+      <p>Another way that MINITAB uses to illustrate differences between means
+        from a post-hoc procedure is called a <strong>compact letter display</strong>.
+        For example, if you look at the grouping information output for this
+        test, you'll see:</p>
+      <span class="minitab">Grouping Information Using the Tukey Method and 95%
+        Confidence <br>
+        <br>
+        period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        N&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Mean&nbsp;&nbsp; Grouping <br>
+        roman&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        30&nbsp;&nbsp; 136.167&nbsp;&nbsp;&nbsp;&nbsp; A <br>
+        late_predynastic&nbsp;&nbsp; 31&nbsp;&nbsp;
+        132.097&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; B <br>
+        early_predynastic&nbsp; 29&nbsp;&nbsp;
+        131.621&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; B <br>
+        <br>
+        Means that do not share a letter are significantly different.<br>
+      </span><span class="minitab"></span>
+      <p>As the final line in this block of output says, groups that do not
+        share a letter are significantly different. This means that the Roman
+        period is different from both early and late predynastic, but early and
+        late predynastic periods are not different from one another.</p>
+      <h2 class="part" id="assumptions">Assumptions of ANOVA</h2>
+      <p>ANOVA has similar assumptions to a two-sample t-test - it assumes the
+        data are normally distributed, and that the groups have equal variances.
+        The HOV assumption in ANOVA applies to the amount of variation within
+        each group that is being compared.</p>
+      <h3>Normality</h3>
+      <table style="width: 100%" border="0">
+        <tbody>
+          <tr>
+            <td><img alt="Normality" src="three_periods2.jpg" style="float: left; padding: 10px;">
+              <p>We will test the normality assumption in exactly the same way
+                as we have done with t-tests, using AD tests and normal
+                probability plots. The only difference is that we will often
+                have three or more groups, so we have more normality plots to
+                look at.</p>
+              <p>Normality looks good in all three groups.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>Homogeneity of variances</h3>
+      <p>The fact that we have more than two groups makes it impossible to test
+        HOV using a single F test, so we need a new test. MINITAB offers <strong>Levene's
+          test</strong>, which is able to test for differences among more than
+        two group variances at a time. If you ever ran an HOV test and forgot to
+        check the box for the "option" of using tests based on normal
+        distribution, you have already seen a Levene's test. Like an F test, the
+        null hypothesis for a Levene's test is that the variances are the same
+        for the three periods, so a p-value over 0.05 means we retain the null
+        and conclude that the variances are equal (that is, we pass the test if
+        p is over 0.05).</p>
+      <p><span class="minitab">Test for Equal Variances: maxbreadth versus
+          period <br>
+          <br>
+          Null hypothesis All variances are equal <br>
+          Alternative hypothesis At least one variance is different <br>
+          <br>
+          Significance level α = 0.05 <br>
+          <br>
+          95% Bonferroni Confidence Intervals for Standard Deviations <br>
+          <br>
+          period&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          N&nbsp;&nbsp;&nbsp; StDev&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          &nbsp;&nbsp; CI <br>
+          early_predynastic&nbsp;&nbsp; 29&nbsp; 5.02433&nbsp; (3.69852,
+          7.43954) <br>
+          late_predynastic&nbsp;&nbsp;&nbsp; 31&nbsp; 4.96222&nbsp; (3.20040,
+          8.33783) <br>
+          roman&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          30&nbsp; 5.35037&nbsp; (4.10198, 7.58388) <br>
+          <br>
+          Individual confidence level = 98.3333% <br>
+          <br>
+          Test <br>
+          Method Statistic P-Value <br>
+          <span style="text-decoration: underline;">Levene&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            0.23&nbsp;&nbsp; 0.794</span></span></p>
+      <p>You can see that the p-value is well over 0.05, so we pass the HOV
+        test.</p>
+      <h2 id="next_activity" class="part">Next activity</h2>
+      <h2></h2>
+      <p>We will gain experience in using and interpreting ANOVA by comparing
+        the sizes of European cuckoo eggs found in the nests of several species
+        of European songbird.</p>
+    </div>
+  </body>
+</html>

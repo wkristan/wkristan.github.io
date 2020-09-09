@@ -1,0 +1,427 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+    <title>Lab 8 - Overlays</title>
+    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=1cf8bc715371d498d9f81fcd97aab7152&amp;authkey=AQehVqDr_Z4Pta0S0SpA11o"
+      rel="stylesheet" type="text/css">
+    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=1fe12848dfa4944f19e672af79f686f6b&authkey=AUVXiYCYVsguTlL16UGEvFs"></script>
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif" rel="stylesheet">
+  </head>
+  <body>
+    <h1>Lab 8 - Raster and vector spatial overlays</h1>
+    <h1>Introduction:</h1>
+    <p>Spatial overlays combine information from two or more maps, and are
+      fundamental GIS operations. Overlaying maps allows the associations
+      between two different characteristics of the landscape to be evaluated.
+      Spatial overlays are also important in developing GIS models, like the
+      ones you will be constructing for the lab project this semester. For
+      example, we may be interested in finding all of the coastal sage-scrub
+      within the Escondido city limits, or in finding vegetation that falls
+      within 100 m of a stream, or in finding all of the north-facing slopes
+      that are above 1000 m elevation. In each case, we would need to use the
+      information in two different data layers in order to arrive at our desired
+      outcome, and overlays provide the needed tools.<br>
+    </p>
+    <p>Both vector and raster data can be overlaid, but the procedure is quite
+      different for each. We'll learn both today.</p>
+    <h1>Vector overlays</h1>
+    <p>Fundamentally, overlays are set operations, equivalent to logical "and",
+      "or", and "not". The basic operations we will be working with are:</p>
+    <p><img src="clip_int_union.png" style="width: 579px; height: 442px;" alt="Overlays"></p>
+    <p> <b>Clip</b> - The intersection of two layers is found, but only the
+      features in one layer is retained (the other acts as a "cookie cutter").
+      This is a logical "and" operation, because in the end only parts of
+      features that are common to both layers are kept.</p>
+    <p> <b>Intersect</b> - The intersection of two layers is found, and the
+      overlapping regions of both layers are retained and merged into a new
+      layer. Both the lines that define the polygons and the attribute tables
+      are merged. Intersection is also a logical "and" operation.</p>
+    <p><b> Union</b> - All features and attributes, both overlapping and
+      non-overlapping, from two layers are merged into one. This is a logical
+      "or" operation, because in the end all of the features that occur in
+      either map are kept.</p>
+    <p><b> Erase</b> - Similar to "clip" in that information from only one layer
+      is retained, but the overlapping region between layers is deleted rather
+      than saved (not illustrated above). Only information from the first layer
+      is retained. This is a logical "not", because only parts of features that
+      do not overlap with the bounding layer are retained.</p>
+    <h2>Merging two layers during an overlay</h2>
+    <p> What does it mean for features and attributes of two files to be
+      retained? Consider this example:</p>
+    <br>
+    <img src="vec_overlay.png" style="width: 800px; height: 432px;" alt="VegOverlay">
+    <p>This illustration shows how an overlay will merge both the geometry of
+      the polygons, and the attribute table in the output file. Union and
+      intersect operations differ when the outer boundaries of the layers are
+      different, but here the outer boundaries for Layer 1 and Layer 2 are the
+      same; either an intersection or a union would give us the same result in
+      this case. </p>
+    <p>The interior lines that define the features are different in the two
+      different layers. Layer 1 has data on the vegetation type ("Veg Type"),
+      and Layer 2 has data on soils ("Soils"). When these layers are overlaid,
+      the lines forming the polygons are combined, and new polygons are formed
+      in the output layer by combining the lines from each and then forming new
+      polygons from them. Each one of these new polygons had a "Veg type" in
+      Layer 1, and a "Soils" type in Layer 2, and thus the output attribute data
+      now gives the attributes on both of these variables. Each new polygon in
+      the output layer is delineated based on the combination of vegetation type
+      and soil type, which changes the geometry of the polygons.</p>
+    <p>We tend to keep raw data layers as simple as possible, and to represent
+      as few different "themes" as possible with them, and only combine them
+      when we need to. For example, in the illustration above, having vegetation
+      type and soil type separate makes it maximally easy to map vegetation
+      polygons without having them split by the underlying soil type - if all we
+      wanted to do was to map vegetation then it's not desirable to have the
+      patches of CSS and chaparral divided into two because of the underlying
+      soils. Likewise, if we wanted to measure the average size of patches of
+      vegetation like we did last week, the underlying soil type is irrelevant,
+      and having our vegetation maps broken up by soil type would give us
+      polygons that are too small. </p>
+    <p>However, if we want to answer a question about the relationship between
+      vegetation and soils, or if we want to identify all of the CSS that has
+      loamy soils, then we need to combine the maps. So, generally it's best to
+      have basic data layers represent just one type of data (one "theme"), and
+      combine them only when one is answering a question that requires them to
+      be combined.</p>
+    <h2>GIS models</h2>
+    <p>One of the primary uses of overlays is to build GIS models. A GIS model
+      is simply a map that represents the areas that meet a set of conditions.
+      For example, riparian vegetation near stream courses is potentially
+      ecologically interesting - it is often made up of different plant species
+      than upland areas, it prevents soil erosion, and can filter sediment and
+      pollutants from rainwater runoff. </p>
+    <p><it is="" common="" for="" development="" projects="" to="" be="" required=""
+        maintain="" some="" specified="" distance="" away="" from="" streams=""
+        prevent="" water="" pollution,="" and="" protect="" riparian="" vegetation.=""
+        if="" we="" wanted="" know="" what="" kinds="" of="" vegetation="" fall=""
+        within="" the="" buffer="" zone,="" could="" overlay="" 500="" m="" with=""
+        a="" layer,="" which="" then="" gis="" model="" zone.<="" p=""> </it></p>
+    <p>So, to build this GIS model we need to 1) buffer the streams by 500 m
+      (which you already know how to do), and then 2) clip the vegetation with
+      your stream buffer (which is new to you today).</p>
+    <h2>Exercise 1: GIS model of streamside vegetation - clipping and erasing</h2>
+    <p>Remember to work on the C: drive of the virtual desktop, not of the
+      computer you're working on, and not on the H: drive. You can back up all
+      your files to H: at the end of the day, but these operations will go
+      extremely slowly if you try to work directly on H:.</p>
+    <p>1. <strong>Buffering streams</strong>. Add the layer "Streams.shp" to
+      your project, and open the "Arc Toolbox". Find "Analysis Tools" →
+      "Proximity" → "Buffer". Double-click to launch the tool.</p>
+    <ul>
+      <li>Select "streams" as the input features. The output file will be called
+        "streams_Buffer.shp" by default, which is fine; just make sure it's
+        placed in your working directory on your S: drive.</li>
+      <li>Set the "Distance" Linear Unit to 500 and the units to meters</li>
+      <li>Set the "Dissolve Type" to "ALL". The dissolve type option determines
+        how to handle any overlap in the buffers around different features. We
+        want any interior lines in overlapping buffers to be removed.</li>
+      <li>Click "OK" to buffer the streams. </li>
+    </ul>
+    <p>2. <strong>Clipping the vegetation within 500 m of streams</strong>.
+      Either clipping or intersection would give us the same polygons of
+      vegetation within 500 m of streams. However, we don't need anything from
+      the attribute table of the 500 m buffer, all we need is to use the buffer
+      as a cookie cutter for the vegetation. Since clipping doesn't add anything
+      to the attribute table, clip is the better choice.</p>
+    <p> Add the "vegetation.shp" layer to your project. This is a simplified
+      version of the vegetation map that combines some of the polygons that are
+      only slightly different. It also has had boundaries dissolved between
+      adjacent polygons of the same vegetation type.</p>
+    <p> </p>
+    <ul>
+      <li>Find "Analysis Tools", → Extract" → "Clip", and double-click to launch
+        the tool. </li>
+      <li>Use "vegetation" as the "Input Features". If you look at the help
+        provided with the tool, you'll see that the "INPUT" layer has the data
+        you wish to clip.</li>
+      <li>Use "streams_Buffer" as the "Clip Features". The help provided with
+        the tool shows that the "CLIP FEATURE" is used to cut out the input data
+        to form the output.</li>
+      <li>Use the default output file name "veg_Clip.shp" for the "Output
+        Feature Class" (but put it on your S: drive). </li>
+      <li>Click "OK" to clip the vegetation. </li>
+    </ul>
+    <p>When you're done, the clipped vegetation map should look like <a href="clipped_veg.png">this</a>.</p>
+    <h3>Two problems, before you go on</h3>
+    <p>Turn on the original vegetation layer, and put vegetation_Clip on top of
+      it. You can see that the polygons from the vegetation layer have been cut
+      into pieces. Click on the "<a href="select_features.png">Select features</a>"
+      tool, and then click on the large polygon in the middle of the buffered
+      stream in the middle of the screen, like <a href="select_features1.png">this</a>.
+      You can see that although the original vegetation polygons were cut, they
+      are still considered part of one feature with multiple parts in the output
+      file (click someplace in the white background to clear the selection).
+      This could be a problem if we wanted to calculate the average areas or
+      perimeters of the clipped vegetation polygons. To solve this, we can use
+      the "Data Management Tools", "Features", "Multipart to Singlepart" tool to
+      break them into separate polygons. Do this, and call the output
+      "veg_Clip_sp.shp". Now that you have your workspace defined, you should be
+      able to just edit the file name and click "OK".</p>
+    <p>Second, and much more importantly, the geometry fields in the attribute
+      table are wrong. Click on the "<a href="identify.png">Identify tool</a>",
+      and set the tool to "Identify from:" "&lt;Visible layers&gt;. Click on the
+      same clipped polygon you selected before, and compare the areas and
+      perimeters between vegetation and vegetation_Clip. You'll see that the
+      areas and perimeters are the same, because the clip operation did not
+      automatically update them. To solve this, right-click on
+      "vegetation_Clip_sp" and open its attribute table. Add an "Area" column,
+      and use "Calculate Geometry" to add an area column. Make sure that "Area"
+      is the property being calculated, use square meters as the units, and
+      un-check the "Calculate selected records only" option.</p>
+    <p>3. <strong>Erasing vegetation within 500 m from a stream</strong>. We
+      can now make a map that is the complement of the map we just made, in that
+      it contains only vegetation that is greater than 500 m from streams.</p>
+    <p>Find "Analysis Tools" → "Overlay" → "Erase" and launch it.</p>
+    <ul>
+      <li>Use "vegetation.shp" as the Input Feature</li>
+      <li>Use "streams_Buffer.shp" as the Erase Features</li>
+      <li>Call the output file "veg_Erase.shp", and put it on your S: drive.</li>
+      <li>Click "OK" to run the tool.</li>
+    </ul>
+    <p>When you're done, you should have a vegetation map that only includes
+      polygons greater than 500 m from streams. Zoom in on the edges between the
+      clipped and erased files, and you'll see they match exactly.</p>
+    <p>This file has the same problem that we encountered in the Clip operation
+      - it's multipart, and the areas and perimeters in the attribute table are
+      wrong and need to be updated. Convert the file to single part, add an Area
+      field, and calculate the area for the polygons.</p>
+    <h2>Associations between layers</h2>
+    <p>Using clipping is fine for identifying vegetation within a buffer zone,
+      but if we were interested in something like the association between
+      vegetation and soils we would need to combine two layers into one. The
+      vector overlays that will do this are intersections and unions. The output
+      layer from either of these operations will have an attribute table with
+      both the vegetation type and the soil type of each polygon in the layer,
+      and we can use the combined layer to see whether some vegetation types are
+      more likely to be found on particular soil types.</p>
+    <h2>Exercise 2: Intersections and unions</h2>
+    <p>Intersection and union operations are very similar, differing only in
+      that intersections only retain the areas that overlap between two layers,
+      whereas unions include all features from both layers, including those that
+      do not overlap. When you are working with maps that cover exactly the same
+      area there will be no difference in the output from the two. Our
+      vegetation and soils maps cover the same area, and thus we will just use
+      intersection today. </p>
+    <h3>Using intersection to study the relationship between vegetation and
+      soils.</h3>
+    <p>1. Add the "soil_texture.shp" layer to your project. This is a simplified
+      version of a soils map available for our region, that just gives
+      information about the texture of the soil (sandy, rocky, silty, clay), but
+      omits more detailed information.</p>
+    <p>2. Find "Analysis Tools" → "Overlay" → "Intersect" and double-click to
+      launch the tool.</p>
+    <ul>
+      <li>Add both soils and vegetation as "Input Feature" (select them one at a
+        time). </li>
+      <li>Set the "Output Feature Class" to "veg_soils.shp", on your S: drive. </li>
+      <li>Click "OK" to run the tool. This operation may take awhile - be
+        patient.</li>
+    </ul>
+    <p>Add and area and perimeter field if there isn't one already, or update
+      them if they already exist.</p>
+    <p>3. Export the attribute table for veg_soils to an Excel file. Open the
+      file in Excel, and construct a pivot table with vegetation descriptions as
+      rows, soil descriptions as columns, and the sum of the polygon areas as
+      the data values. Answer the questions on your assignment sheet about
+      relationships between soils and vegetation.</p>
+    <h2>Exercise 3: Proximity searches</h2>
+    <p>Another way that GIS allows us to better understand the spatial
+      relationships in our data is through <strong>topological</strong>
+      relationships. Topology refers to relationships between geometric shapes,
+      based on connections between them. For example, finding lines that share a
+      vertex in common allow us to treat a set of lines on the map as a stream
+      network, and finding edges that are shared by two adjacent polygons allows
+      us to identify cases in which two different vegetation types are next to
+      each other.</p>
+    <p>For example, if we wanted to know which of the vegetation polygons shared
+      an edge with urban areas, we could do the following:</p>
+    <p>First, we will put all of the urban polygons into a layer.</p>
+    <p>1. Right-click on "vegetation", and open the attribute table.</p>
+    <p>2. From the drop-down menu in the upper left corner of the Table window,
+      choose "Select by attribute".</p>
+    <p>3. Enter "VEG_TYPE" into the "Select * FROM vegetation WHERE" query
+      builder (by double-clicking "VEG_TYPE") and click on "Get Unique Values".
+      Then click on "=" and double-click "Urban/Developed" to enter it into the
+      query. Your query should read "VEG_TYPE" = "Urban/Developed". Click
+      "Apply" to select the urban polygons.</p>
+    <p>4. Close the attribute table, and right click on "vegetation". Select
+      "Selection" → "Create layer from selected features". This puts the urban
+      polygons into a temporary layer that you can use in the next step. Re-name
+      the urban polygon layer from "vegetation selection" to "Urban".</p>
+    <p>Now we can use the "Urban" layer to select polygons that share an edge
+      with one or more of the urban polygons.</p>
+    <p>5. Right-click on "vegetation" and clear the selected features
+      ("Selection" → "Clear selected features")</p>
+    <p>6. From the "Selection" menu, choose "Select by location". In the "Select
+      by Location" window, do the following:</p>
+    <ul>
+      <li>Check the box next to "vegetation" to make it the "Target layer" -
+        this is the data set we're extracting information from.</li>
+      <li>In the "Source layer" drop-down list, select your "Urban" polygon
+        layer.</li>
+      <li>In the "Spatial selection method for target layer feature(s):" drop
+        down, choose "Touch the boundary of the source layer feature". Notice
+        that there are many possible choices here - you can read the ArcGIS help
+        files for an explanation of what each of them do if you're curious.</li>
+      <li>Click "OK" to apply the selection criterion. You'll see that a large
+        fraction of the landscape has adjacent edges with urban polygons.</li>
+    </ul>
+    <p>7. You'll see that a large number of polygons are selected, but we have a
+      problem - the urban polygons share an edge with themselves, so the urban
+      polygons are being selected from the vegetation layer as well, but we only
+      want non-urban polygons that share an edge. We can fix this by doing a
+      "select by attribute" on the attribute table in which we leave out the
+      urban areas (which we already know how to do, right?), or we can use
+      "Select by location" again to remove the polygons that intersect with the
+      "Urban" layer. We'll do the latter for practice.</p>
+    <ul>
+      <li>Start "Select by location" again, and keep "vegetation" as the "Target
+        layer" and "Urban" as the "Source layer".</li>
+      <li>Change the "Selection method" to "remove from the currently selected
+        features in"</li>
+      <li>Change the "Spatial selection method for the target layer feature(s):"
+        to "are identical to source layer feature".</li>
+      <li>Click "OK" to apply the criterion.</li>
+    </ul>
+    <p>It will look like nothing happened, because the selected polygons are
+      indicated by the polygon edges, and we selected the vegetation that shared
+      an edge with urban polygons. But, if you now create a layer from the
+      selection and re-name it "Adjacent to urban", you'll see that you have a
+      layer with polygons next to urban polygons, but that are not themselves
+      urban polygons.</p>
+    <h2>Exercise 4: Overlays with raster data</h2>
+    <p>It is possible to do all of these spatial overlays using raster data as
+      well as vector data, but the procedure is quite different. Because raster
+      maps match on a pixel by pixel basis, we don't need an intersect or union
+      operation to look at the associations between maps, we can just use the <strong>raster
+        calculator</strong>. The raster calculator is usable for a variety of
+      mathematical operations on raster maps, using a set of operations and
+      rules called <strong>map algebra</strong>.</p>
+    <p>To do the equivalent of a "clip" or "erase" operation on raster data, we
+      will take advantage of a raster category called "No Data" that is used to
+      represent pixels that have no value assigned to them. This is not the same
+      as a 0 value, since zero is a number and can be a measured value (for
+      example, if we put out a rain gauge and no rain falls, we have a value of
+      0 rainfall, but if we don't put out the rain gauge at all we have No
+      Data). In the rules of&nbsp;map algebra, any mathematical operation
+      applied to a cell that contains a "no data" value makes the result "no
+      data" as well. </p>
+    <p>So, for example, if we have a buffer map that has a value of 1 for every
+      pixel that is within 500 m of a stream, and a value of "no data" for
+      pixels farther than 500 m from a stream, we could find the vegetation that
+      fell within 500 m of a stream by multiplying our vegetation map by the
+      buffer map. This would be equivalent to a clip or erase operation if these
+      were vector data. Since the operation is done by setting some pixels to 1
+      and some to NoData, but there's no "inside" or "outside" of a polygon to
+      worry about, there isn't really a distinction between clip and erase for
+      raster data.</p>
+    <h3>Clipping/erasing with raster data.</h3>
+    <p>1. Locate "Conversion Tools" → "To Raster" → "Polygon to Raster" and
+      double-click to launch the tool. </p>
+    <ul>
+      <li>Use "vegetation" as the "Input Feature"</li>
+      <li>Use "veg_type" as the "Value Field"</li>
+      <li>Use "veg_rast" as the output file name (no filename extension)</li>
+      <li>Set the "cell size" to 100 (feet, since this map is in the state plane
+        coordinate system)</li>
+      <li>Click "OK" to run the tool.</li>
+    </ul>
+    <p>This will create a raster version of the vegetation map, with cell values
+      equal to the veg_type.</p>
+    <p> </p>
+    <p>2. Next, we will make a raster buffer map at 500 m from the stream. If
+      you recall, this is done in two steps: a) first, make a distance raster
+      map, and then b) find all distance less than or equal to 500 m.</p>
+    <p>Distances are calculated with "Spatial Analyst Tools" → "Distance" →
+      "Euclidean Distance". </p>
+    <ul>
+      <li>Assign "streams" to the input feature source</li>
+      <li>Call the output "streams_dist". </li>
+      <li>Use the same cell size for the veg_rast layer (100). </li>
+      <li>Click on "Environment" and select the "Processing Extent" option.
+        Change the extent to "Same as layer veg_rast" - if you don't do this,
+        the distance calculations will stop at the ends of the streams, and
+        won't extend to the entire vegetation map. '</li>
+      <li>Click on "OK" to produce your raster distances.</li>
+    </ul>
+    <p>Then, to get the pixels within 500 m, select "Spatial Analyst" →
+      "Reclass" → "Reclassify".</p>
+    <ul>
+      <li>Use streams_dist as the input raster.</li>
+      <li>You will see in the "Reclassification" table that the distances will
+        be broken up into several different data ranges, but we will only need
+        the first, last, and the "NoData" row in the table. Select the other
+        rows and click "Delete Entries".</li>
+      <li>We need to re-classify any distances within 500 m of the stream to
+        receive a value of 1. </li>
+      <ul>
+        <li>Convert 500 m to feet - there are 1640 ft in 500 m.</li>
+        <li>Set the first row of "Old values" to "0-1640", and set the first row
+          of "New values" to 1. This will assign a 1 to any distance between 0
+          and 1640.</li>
+        <li>Now all remaining "Old values" will be set to "NoData". The biggest
+          distance in the map is just under 69578, so set the second row of "Old
+          values" to "1640-69578", and set the second row of "New values" to
+          "NoData". Make sure you capitalize the N and D, and don't put a space
+          between "No" and "Data".</li>
+        <li>The "Output raster" default file name is fine, it should be called
+          "Reclass_strea". </li>
+        <li>Click "OK" to do the reclassification.</li>
+      </ul>
+    </ul>
+    <p>3. Now you can clip the vegetation raster using your buffer raster.</p>
+    <p>Find "Spatial Analyst" → "Map Algebra" → "Raster Calculator" and launch
+      it. </p>
+    <ul>
+      <li>Double-click on "veg_rast" to add it to the expression in the box in
+        the middle of the tool. </li>
+      <li>Next click on the "*" button, which is multiplication to a computer. </li>
+      <li>Then, double-click on "Reclass_strea". You should end up with an
+        expression that looks like this:<br>
+        <br>
+        [veg_rast] * [Reclass_strea]<br>
+      </li>
+      <li>Name the output raster "veg_clip_rast"</li>
+      <li>Click on "OK" to evaluate this expression.</li>
+    </ul>
+    <p>4. When the raster calculator evaluates this expression, you'll notice
+      that the output only retained the "VALUE" from the original veg_rast, but
+      not the vegetation type codes. The "VALUE" field in veg_rast matches the
+      "VALUE" field in our final clipped raster map, though, so we can add the
+      veg types codes by "joining" them to the attribute table of the original
+      veg_rast layer. Joining means that the information in one data table is
+      matched to the data in another based on a matching column.</p>
+    <ul>
+      <li>Right-click on "veg_clip_rast" and select "Joins and Relates" →
+        "Join". </li>
+      <li>Use the "VALUE" field for "1. Choose the field in this layer...". </li>
+      <li>For "2. Chooose the table to join to this layer...", use "veg_rast".</li>
+      <li>For "3. Choose the field in the table to base the join on", also use
+        "VALUE". </li>
+      <li>Click "OK".</li>
+    </ul>
+    <p>If you now right-click on veg_clip_rast and open its attribute table,
+      you'll see that the veg_type descriptions are now included in
+      veg_clip_rast. You can close the table,&nbsp;double-click on
+      veg_clip_rast, and select the "Symbology" tab. Change the type to "Unique
+      Values", and set the "Value Field" to "veg_rast.vat:veg_type", and click
+      "OK". Your map should now display the vegetation within 500 m from a
+      stream, color coded by vegetation type.</p>
+    <p> 5. To permanently add the vegetation codes to your clipped raster
+      vegetation layer, use the "Lookup" function. Find and launch "Spatial
+      Analyst" → "Reclass" → "Lookup". </p>
+    <ul>
+      <li>Use "veg_clip_rast" as the input raster</li>
+      <li>Use "veg_rast.vat:veg_type" as the lookup field. This indicates that
+        from the "value attribute table" (or vat) of the "veg_rast" file, look
+        up the "veg_type" field and add it to pixels with matching numbers in
+        their VALUE fields. </li>
+      <li>Put the output on your S: drive (call it "rveg_holland").</li>
+    </ul>
+    <p>&nbsp;If you right-click on rveg_holland and open the attribute table,
+      you'll see veg_type is now permanently part of the attribute table.</p>
+    <p>That's all for today - answer the questions on your worksheet based on
+      these exercises. </p>
+  </body>
+</html>

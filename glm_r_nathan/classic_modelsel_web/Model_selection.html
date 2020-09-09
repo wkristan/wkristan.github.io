@@ -1,0 +1,566 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Classic model selection</title>
+    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=02a5532ccf4574e49ae6e245b4a118252&amp;authkey=AcYXNyrvFGWnmf6cbl1qQQ4&amp;e=4170fc6099b74d3f94a7fdaade97010e"
+      rel="stylesheet" type="text/css">
+    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=04e5dfc4b7ee64a7dbacb487cddde06a0&authkey=AdStuSX7RsXlg4QXZtzjDfw&e=f5861611192540a4b0c28483e9e5baf0"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Traditional model selection</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#exercise">Exercise</a></p>
+      <p><a href="#calories">Modeling calories</a></p>
+      <p><a href="#graham_help">Help with Graham paper</a></p>
+      <p><a href="#model_sel">Model selection</a></p>
+    </div>
+    <div id="content">
+      <p> </p>
+      <p class="part" id="intro">Model selection is the process by which we
+        choose the best statistical representation of our data. Statistical
+        analysis of simple experiments that hew very closely to the
+        "experimental ideal" can be treated as tests of treatment effects. When
+        all of the predictors in the model are experimentally interesting, are
+        orthogonal by design, and there are no nuisance variables to account
+        for, a single statistical model that matches the design can be fitted
+        and the results can be interpreted without having to worry about model
+        selection. This approach is perfectly valid when the experimental
+        situation permits it.</p>
+      <p>When we are conducting exploratory analysis of large data sets with
+        many possible predictors, many of which are correlated with one another,
+        and which may have complex interdependent relationships with the
+        response, we definitely need to use the principles of model selection to
+        avoid some common pitfalls.</p>
+      <p>However, even with lab-based experimental work, once we start having to
+        cope with nuisance variables (e.g. observer effects, growth chamber
+        differences), covariates that may not be orthogonal with other predictor
+        variables (e.g. mass of individuals, temperature fluctuation), and
+        factors that may not be biologically important but need to be tested
+        just in case (e.g. sex, strain), we will need to evaluate more than one
+        model and select the one that provides the best basis for
+        interpretations. Any time more than one model of the data must be
+        evaluated, it is good to keep in mind the principles of model selection.</p>
+      <p>Today we will focus on using various approaches to finding the best set
+        of predictors for the energy content of plant-based foods, using
+        adjusted R<sup>2</sup> as the criterion. Adjusted R<sup>2</sup> balances
+        the fit of the model against the model's complexity, such that adding a
+        predictor variable will only improve adjusted R<sup>2</sup> if the
+        predictor explains enough variation in the response to offset the loss
+        in power from the error degrees of freedom it consumes.</p>
+      <p>We will also begin to think of models as hypotheses about our data.
+        Including a predictor or an interaction in a model is to hypothesize the
+        nature of the relationship between predictors and response. From this
+        perspective, model selection as a way of using data to differentiate
+        between competing hypotheses about how the system you're studying works.
+        This will be a step away from classic null hypothesis significance
+        testing, and towards likelihood-based model selection, which will be the
+        subject of the last few weeks of class.</p>
+      <h2 class="part" id="exercise">Exercise</h2>
+      <p> We will use model selection today on a small selection of foods from
+        the USDA's <a href="http://ndb.nal.usda.gov/ndb/foods">National
+          Nutrient database</a>. The database has nutrient information on over
+        67,000 foods, but I've selected 142 plant-based foods with which to
+        model caloric density (kcal of a 100 g sample) as a function of the
+        macronutrient content, as well as some components that carry no calories
+        themselves but may be negative predictors of caloric content.</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> The data can be downloaded <a href="macronutrients.xls">here</a>. If
+        you start a new R Studio project in a folder called "food", and then
+        import the data (into a data set called food) you will see that the
+        variables are:</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <ul>
+        <li> Ash - a measure of inorganic residues that are left behind when
+          caloric content is measured in a bomb calorimeter. Ash does not
+          contain any caloric value.</li>
+        <li>Carb - grams of carbohydrate.</li>
+        <li>Kcal - kilocalories in the sample, to be used as the dependent
+          variable for all models.</li>
+        <li>Fiber - grams of indigestible plant material, mostly cellulose, in
+          the food. Fiber is not digestible by humans, and does not contain any
+          caloric value.</li>
+        <li>Protein - grams of protein.</li>
+        <li>Fat - grams of fat</li>
+        <li>Water - grams of water. Water does not contain any caloric value. </li>
+      </ul>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> Both the dependent and independent variables are standardized to a 100
+        g sample. Log-transformed versions of all of the variables except water
+        (which is left skewed, and for which log transformation would not help)
+        are provided. I applied the logit transformation to water data as to
+        produce water.logit, which is the log odds ratio, or ln(p/(1-p)), where
+        p is the proportion of the sample that is water (since the sample is 100
+        g, p = water/100). The logit transformation works well for proportions
+        or percentages converted to proportions, provided that there are no 0%
+        or 100% values (we won't use the older arcsin square root transformation
+        because of <a href="Warton+&amp;+Hui+2011.pdf">this</a>).</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> We will analyze these data in two stages: </p>
+      <p> </p>
+      <p> </p>
+      <ul>
+        <li>
+          <p> </p>
+          <p>Part 1 - first, you will fit several models with different
+            combinations of the predictor variables to see which set of
+            predictors produces the best model of caloric density. </p>
+          <p> </p>
+        </li>
+      </ul>
+      <p> </p>
+      <ul>
+        <li>
+          <p> </p>
+          <p>Part 2 - each of you will generate your own hypothesis about the
+            types of foods that have the greatest variation in caloric density,
+            and you will generate one additional categorical variable that
+            represents your hypotheses. You will then generate an adjusted R<sup>2</sup>
+            for your model, and we will see as a class whose model is best
+            supported by the data.</p>
+          <p> </p>
+        </li>
+      </ul>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <h3 class="part" id="calories"> Part I - modeling variation in caloric
+        density.</h3>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> 1. <strong>Make a scatterplot matrix of all the untransformed
+          variables, and another of the transformed variables</strong>.
+        Remember, look at your data! It's good to start every analysis with some
+        graphs to get an idea of what the relationships look like, and to spot
+        any possible data entry errors, or potential non-linearities or other
+        issues that might be present in the data set.</p>
+      <p>The ggplot2 package doesn't have a command for making a matrix of
+        scatterplots, so we will use base graphics for this - use the command:</p>
+      <p class="rcmd">pairs(food[,-1])</p>
+      <p>Using -1 in the column index drops the food labels in the first column,
+        and produces a huge matrix of variables plotted against one another.</p>
+      <p>In general, you should see that the relationships for transformed
+        variables look better than for untransformed ones, so we will use the
+        log transformed variables.</p>
+      <blockquote style="background: #f5f5fb; border: 1px solid; padding: 10px;">
+        <p>By the way, when you log-transform both the response and predictor
+          variables for a regression analysis as we will be doing today, the
+          model you are fitting is:</p>
+        <p>log y = b log x + log a</p>
+        <p>Back-transformed to the linear scale that the data were measured on,
+          this is a "power function":</p>
+        <p>y = ax<sup>b</sup></p>
+        <p>The value of y being predicted is the geometric mean. </p>
+        <p>A model with the response on a log scale, but with the predictor on a
+          linear scale, like this:</p>
+        <p>log y = b x + log a</p>
+        <p>became an "exponential" function when it's back-transformed:</p>
+        <p>y = a(e<sup>bx</sup>)</p>
+        <p>Notice that these functions differ in where the x-variable is placed
+          - in an exponential function the x variable is in the exponent,
+          whereas power functions use x as a base and raise it to an exponent.</p>
+        <p>Finally, we can log-transform the x variable, like we did when we
+          related wing span or body length to the log of body mass with our
+          raptor data. This kind of scaling is common when we relate a linear
+          measure to a volumetric one. The model we used was:</p>
+        <p>y = b log x + log a</p>
+        <p>This is a "logarithmic" function, and the back-transformation is:</p>
+        <p>e<sup>y</sup> = ax<sup>b</sup></p>
+        <p>Why does this matter? You can get an idea of the form of the
+          functional relationship between predictor and response by graphing on
+          a logarithmic scale for y, or for x, or for both variables and seeing
+          which gives you a straight line relationship.</p>
+        <p>For example, if you make a scatterplot of kcal (y axis) against
+          protein (x axis), using linear axes for both, selecting log x-axis,
+          log y-axis, or both, you get graphs like these:</p>
+        <table width="100%" border="1">
+          <tbody>
+            <tr align="center">
+              <td colspan="4" rowspan="1">If your data look linear when you use
+                these axis scales...</td>
+            </tr>
+            <tr>
+              <td style="text-align: center;">Linear x and linear y</td>
+              <td style="text-align: center;">Log of x, linear y</td>
+              <td style="text-align: center;">Log of y, linear x</td>
+              <td style="text-align: center;">Log of x and log of y</td>
+            </tr>
+            <tr>
+              <td style="text-align: center;"><img alt="Linear x and linear y" src="linear2.png"><br>
+              </td>
+              <td style="text-align: center;"><img alt="Log of x" src="log_x2.png"><br>
+              </td>
+              <td style="text-align: center;"><img alt="Log y" src="log_y2.png"><br>
+              </td>
+              <td style="text-align: center;"><img alt="Log x and log y" src="log_xy2.png"><br>
+              </td>
+            </tr>
+            <tr align="center">
+              <td colspan="4" rowspan="1">...the relationship between y and x
+                is:</td>
+            </tr>
+            <tr>
+              <td style="text-align: center;">Linear relationship</td>
+              <td style="text-align: center;">Logarithmic relationship</td>
+              <td style="text-align: center;">Exponential relationship</td>
+              <td style="text-align: center;">Power function relationship</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>Based on the graphs, log-transforming both protein and kcal gives us
+          the best results, so the relationship between protein and energy in
+          food is a power function.<br>
+        </p>
+      </blockquote>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> 2. <strong>Generate a correlation matrix for the predictors</strong>.
+        These are all continuous variables, and we know that correlations among
+        predictors can make model selection difficult, so in this step you will
+        look for high correlations among predictors that might cause trouble. To
+        get a correlation matrix for all the transformed predictors use the
+        command:</p>
+      <p class="rcmd">cor(food[,9:15])</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p>Scan through the correlations and look for large ones. Correlations
+        squared give the proportion of variation shared by the variables, so a
+        correlation coefficient of 0.7 or -0.7 means that just under half of the
+        variation is shared between the variables (because 0.7 squared is 0.49).
+        We want the correlations to be as small as possible, but you'll see that
+        there are some pretty big ones. This means that some of these predictors
+        will be statistically redundant, and we can expect that when one of them
+        is already included, including the other will not contribute much to the
+        adjusted R<sup>2</sup>. We'll check for this as we begin fitting models
+        in the next steps.</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> 3. <strong>Fit all the one-variable models</strong>. Fit each of the
+        following models, and fill in the table on your assignment sheet with
+        the associated model output. Use model names that help you keep track of
+        what the models are in case you need to look something up later (rather
+        than Model1, Model2, etc. you can use ash.lm, carb.lm, etc.).</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> log.kcal ~ log.ash</p>
+      <p> </p>
+      <p> log.kcal ~ log.carb</p>
+      <p> </p>
+      <p> log.kcal ~ log. fiber</p>
+      <p> </p>
+      <p> log.kcal ~ log.protein</p>
+      <p> </p>
+      <p> log.kcal ~ log.fat</p>
+      <p> </p>
+      <p> log.kcal ~ logit.water</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> To get the model statistics (including the p-value, multiple R<sup>2</sup>
+        and adjusted R<sup>2</sup>) you need to use the summary() command on
+        each of your models. You'll see that all of these models are
+        statistically significant. All the single variable models are equally
+        complex, so you could pick the best model from this set using either
+        multiple R<sup>2</sup> or adjusted R<sup>2</sup> and the results would
+        be the same (the numbers aren't identical, but the rank order of the
+        models from best to worst would be the same regardless of which you
+        use). But, we are not interested in just single variable models. As we
+        add more variables the adjusted R<sup>2</sup> and multiple R<sup>2</sup>
+        will start to diverge, as the adjusted R<sup>2</sup> starts to penalize
+        us for complex models.</p>
+      <p> </p>
+      <p> </p>
+      <p>4. <strong>Fit a model with just log.ash and log.protein</strong>. The
+        variables log.ash and log.protein are highly correlated. If the
+        correlated part of these predictors is the part that explains variation
+        in log.kcal, then including them both at the same time would not improve
+        the adjusted R<sup>2</sup> compared to including just one or the other
+        of the variables. </p>
+      <p>Compare the adjusted R<sup>2</sup> for this model to the one you got
+        for log.ash alone, and for log.protein alone to determine whether one or
+        both of the variables is statistically redundant.</p>
+      <p> 5. <strong>Fit a model with all of the predictors included</strong>.
+        Use all six of the predictors in the next model, like so:</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> log.kcal ~ log.ash + log.carb + log.fiber + log.protein + log.fat +
+        logit.water</p>
+      <p> </p>
+      <p> </p>
+      <p> This model explains a lot of variation in comparison with the
+        single-variable models according to the multiple R<sup>2</sup> values.
+        However, this model is more complex than a single-variable regression -
+        there are six predictors plus an intercept, so we included 7 terms in
+        the model to achieve our high adjusted R<sup>2</sup>.</p>
+      <p>Produce a Type II ANOVA table for this six-variable model using the
+        Anova() command from the car package, and you will see that some of the
+        predictors are not significant and/or have F-values less than 1. This
+        suggests that they are are not doing enough work for us to justify
+        including them in the model. We should see how dropping these
+        non-significant predictors affects adjusted R<sup>2</sup>.</p>
+      <p> 6. <strong>Fit a model that omits non-significant predictors.</strong>
+        Fit a model that drops the non-significant predictors from the
+        six-variable model you just made. You would expect the adjusted R<sup>2</sup>
+        should increase, even though you will explain somewhat less variation
+        once they are dropped. </p>
+      <p>Note that log.protein doesn't make the cut. This seems to be telling us
+        that protein doesn't have any calories, but we know better than that (in
+        fact, protein and carbohydrates have about the same amount on average, 4
+        kcal/g). If you look at the data there is a lot of protein in several of
+        the foods, so protein is contributing caloric content. </p>
+      <p>So, why isn't protein significant? For an answer look back at our
+        multiple regression exercise - the effect of birth rate and babies per
+        woman on life expectancy showed a similar pattern.</p>
+      <blockquote style="background: #f5f5fb; border: 1px solid; padding: 10px;">
+        <h2 class="part" id="graham_help">Some help with the Graham paper</h2>
+        <p>If you are evaluating the Graham paper for your term paper
+          assignment, there is a technique he uses called the "sequential model"
+          that we haven't learned about in class. This example shows you how the
+          sequential model works, using the model you just fit in step 6, with
+          logit.water, log.carb, and log.fat as predictors of log.kcal.</p>
+        <p>Graham's paper deals with various approaches to coping with
+          correlations between predictors. As we learned in our multiple
+          regression activity, the correlated part of predictors is confounded
+          statistically, and there are no statistical grounds for assigning it
+          to any single predictor. Graham's paper is about various methods of
+          interpreting how this correlated part between predictors affects a
+          response variable.</p>
+        <p>Graham points out that your choices are a) assign the correlated part
+          between predictors to variables in the order they are entered (i.e.
+          his "sequential" model), b) just focus on the independent
+          contributions of predictors and throw out the correlated part (his
+          "standard" model), or c) compute some latent variables that are
+          uncorrelated to use as predictors (his "principal components"
+          approach). </p>
+        <p>The model you just fit for step 6 above included log.carb, log.fat,
+          and logit.water. The coefficients for these predictors were:
+          logit.water = -0.2341, log.carb = 0.5646, and log.fat = 0.1561. R's
+          coefficients are Graham's "standard" model coefficients, estimated
+          with all of the predictors included in the model at once. R is able to
+          generate either Type I or Type II SS ANOVA tables from this fitted
+          model; the Type I SS ANOVA table will match Graham's sequential model
+          ANOVA table, and R's Type II SS ANOVA table will match Graham's
+          "standard" model ANOVA table. But, R doesn't generate Graham's
+          sequential slope coefficients, even when it calculates a sequential SS
+          ANOVA table. To get Graham's sequential coefficients, you need to take
+          a different approach.</p>
+        <p>The procedure is:</p>
+        <ul>
+          <li>
+            <p>Decide the order that you want to use, with the sequence
+              indicating which variables will be assigned the shared variation.
+              If we want to enter logit.water first, followed by log.carb, with
+              log.fat last, then logit.water can just be entered into the model
+              - it will be assigned all of the variation it explains in
+              log.kcal. The slope coefficient for logit.water will be the same
+              as if it was the only variable in the model.</p>
+          </li>
+          <li>
+            <p>The second variable, log.carb, shouldn't include the variation
+              that's shared with logit.water, so we will use the residuals of a
+              regression of log.carb on logit water to represent the effect of
+              log.carb that's independent of logit.water. The command is:<br>
+              <br>
+              <span class="rcmd"> log.carb.resid &lt;- residuals(lm(log.carb ~
+                logit.water, data = food))</span><br>
+              <br>
+              We will use log.carb.resid in our model instead of log.carb. The
+              slope coefficient on log.carb.resid will be the effect of log.carb
+              that is independent of logit.water.</p>
+          </li>
+          <li>
+            <p>Finally, we want to include only the part of log.fat that is
+              independent of logit.water and log.carb. We will use the residuals
+              from a regression of log.fat on logit.water and log.carb to
+              represent the effect of log.fat that's independent of logit.water
+              and log.carb. The command is:<br>
+              <br>
+              <span class="rcmd"> log.fat.resid &lt;- residuals(lm(log.fat ~
+                logit.water + log.carb, data = food))</span><br>
+              <br>
+              We will use log.fat.resid as the predictor that represents the
+              effect of fat on caloric content in our model. The coefficient for
+              this predictor will be the effect of log.fat that is independent
+              of both log.carb and logit.water.</p>
+          </li>
+        </ul>
+        <p>We now have the predictor variables we want to use, so we can run our
+          model:</p>
+        <p><span class="R-code rcmd">resid.regression.lm &lt;- lm(log.kcal ~
+            logit.water + log.carb.resid + log.fat.resid, data = food)</span></p>
+        <p>If you ask for the summary of resid.regression.lm, you'll see the
+          coefficients are: </p>
+        <p><span class="rout">Coefficients:<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp; <br>
+            (Intercept)&nbsp;&nbsp;&nbsp;&nbsp; 5.841814&nbsp;&nbsp;
+            0.018615&nbsp; 313.83&nbsp;&nbsp; &lt;2e-16 ***<br>
+            logit.water&nbsp;&nbsp;&nbsp; -0.620492&nbsp;&nbsp; 0.009045&nbsp;
+            -68.60&nbsp;&nbsp; &lt;2e-16 ***<br>
+            log.carb.resid&nbsp; 0.390883&nbsp;&nbsp; 0.026826&nbsp;&nbsp;
+            14.57&nbsp;&nbsp; &lt;2e-16 ***<br>
+            log.fat.resid&nbsp;&nbsp; 0.156086&nbsp;&nbsp; 0.014911&nbsp;&nbsp;
+            10.47&nbsp;&nbsp; &lt;2e-16 ***</span></p>
+        <p>If you compare teh slopes to the ones you got for single variables,
+          you'll see that logit.water's is the same as if it was included alone,
+          but log.carb alone had a slope of 0.9459, and log.fat alone had a
+          slope of 0.4319. Using the part of log.carb that is independent of
+          logit.water (log.carb.resid) reduces the measured effect of
+          carbohydrate on kcal content, and the same is true for using the part
+          of log.fat that is independent of water or carbohydrate
+          (log.fat.resid).</p>
+        <p>If we do a Type I (sequential) SS ANOVA table on the sequential model
+          we get this:</p>
+        <p><span class="rout">Response: log.kcal<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Df&nbsp; Sum Sq Mean Sq F value&nbsp;&nbsp;&nbsp;
+            Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+            logit.water&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 104.338 104.338 4706.31
+            &lt; 2.2e-16 ***<br>
+            log.carb.resid&nbsp;&nbsp; 1&nbsp;&nbsp; 4.707&nbsp;&nbsp;
+            4.707&nbsp; 212.32 &lt; 2.2e-16 ***<br>
+            log.fat.resid&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp; 2.429&nbsp;&nbsp;
+            2.429&nbsp; 109.57 &lt; 2.2e-16 ***<br>
+            Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 138&nbsp;&nbsp;
+            3.059&nbsp;&nbsp; 0.022</span></p>
+        <p>And, since log.carb.resid and log.fat.resid are forced to be
+          independent of previously-entered variables, the Type II SS ANOVA
+          table is the same as the Type I table:</p>
+        <p><span class="rout">Response: log.kcal<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Sum Sq&nbsp; Df F value&nbsp;&nbsp;&nbsp;
+            Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+            logit.water&nbsp;&nbsp;&nbsp; 104.338&nbsp;&nbsp; 1 4706.31 &lt;
+            2.2e-16 ***<br>
+            log.carb.resid&nbsp;&nbsp; 4.707&nbsp;&nbsp; 1&nbsp; 212.32 &lt;
+            2.2e-16 ***<br>
+            log.fat.resid&nbsp;&nbsp;&nbsp; 2.429&nbsp;&nbsp; 1&nbsp; 109.57
+            &lt; 2.2e-16 ***<br>
+            Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3.059 138 </span></p>
+        <p>Now, to check what the tables look like if we use the raw variables,
+          rather than these sequential residuals:</p>
+        <p><span class="rcmd">mult.regression.lm &lt;- lm(log.kcal ~ logit.water
+            + log.carb + log.fat, data = food)</span></p>
+        <p class="R-code">The Type I SS ANOVA table is the same as the ones
+          using residuals:</p>
+        <p><span class="rout">Response: log.kcal<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Df&nbsp; Sum Sq Mean Sq F value&nbsp;&nbsp;&nbsp;
+            Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+            logit.water&nbsp;&nbsp; 1 104.338 104.338 4706.31 &lt; 2.2e-16 ***<br>
+            log.carb&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+            4.707&nbsp;&nbsp; 4.707&nbsp; 212.32 &lt; 2.2e-16 ***<br>
+            log.fat&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+            2.429&nbsp;&nbsp; 2.429&nbsp; 109.57 &lt; 2.2e-16 ***<br>
+            Residuals&nbsp;&nbsp; 138&nbsp;&nbsp; 3.059&nbsp;&nbsp; 0.022 </span></p>
+        <p>But, since the predictors are not independent the Type II SS table is
+          different:</p>
+        <p><span class="rout">Response: log.kcal<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Sum Sq&nbsp; Df F value&nbsp;&nbsp;&nbsp;
+            Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+            logit.water 2.1048&nbsp;&nbsp; 1&nbsp; 94.942 &lt; 2.2e-16 ***<br>
+            log.carb&nbsp;&nbsp;&nbsp; 7.1023&nbsp;&nbsp; 1 320.360 &lt; 2.2e-16
+            ***<br>
+            log.fat&nbsp;&nbsp;&nbsp;&nbsp; 2.4292&nbsp;&nbsp; 1 109.572 &lt;
+            2.2e-16 ***<br>
+            Residuals&nbsp;&nbsp; 3.0594 138</span></p>
+        <p>So, to bring this back to Graham's paper - to reproduce Graham's
+          p-values in R for his sequential model you just need to use a Type I
+          SS ANOVA table. If you want to reproduce his sequential slope
+          coefficients, though, you'll need to calculate residuals, as above,
+          and use them in place of the raw variables as predictors.</p>
+      </blockquote>
+      <p> </p>
+      <p> </p>
+      <h3 class="part" id="model_sel"> Part 2 - using model selection to
+        evaluate support in data for competing hypotheses</h3>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> In a model selection exercise, each model you test is a different
+        hypothesis about the nature of the relationship between the predictors
+        and the dependent variable. Because each model is a hypothesis, adjusted
+        R<sup>2</sup> can be interpreted as a measure of support in the data for
+        each hypothesis, and comparing models can thus be used as a method of
+        statistical inference (as opposed to using p-values to make inferences
+        about the data). </p>
+      <p>Note that we will develop this way of thinking about statistical
+        analysis over the last few weeks of the semester as we start talking
+        about likelihood-based model selection. Using adjusted R<sup>2</sup> in
+        this way has some disadvantages over the likelihood-based methods we
+        will learn, but we start getting used to using models as hypotheses
+        today.</p>
+      <h4>1. Develop your hypotheses.</h4>
+      <p>You now know something about how macronutrients and other major
+        components of food influence caloric content. But, you don't eat
+        protein, carbohydrate, fat, water, ash, and fiber, you eat food. If you
+        found yourself stranded on a desert island, you wouldn't be able to
+        chemically analyze the foods available, you would have to select the
+        food you eat based on observable characteristics. Your task is to try to
+        come up with the best predictor of caloric content of food based on
+        observable characteristics of the food.</p>
+      <p>You are to develop two hypotheses about what types of foods are most
+        different in their caloric content. You will then translate your
+        hypotheses into a set of categories that you will assign to the foods in
+        our data set. You can use any criteria you want, as long as it's based
+        on observable traits of the food. For example, your first hypothesis may
+        be that beans have little water and lots of carbohydrate and oil, so
+        they will be high in calories, whereas everything else will be lower.
+        You would then state this hypothesis on your worksheet.</p>
+      <h4>2. Translate your hypotheses into variables in your data set.</h4>
+      <p> Once you have your hypotheses, open up the data file in Excel and add
+        a new column in which you classify the foods based on your hypothesis,
+        and call the column H1 (enter H1 as the column label). For the
+        bean/other example, you would write "bean" in your H1 column if the food
+        is a bean, and "other" if for everything else. </p>
+      <p>Once you're done with this hypothesis, devise a second hypothesis, and
+        classify the foods based on this hypothesis in a column labeled H2.</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> Once you have your two hypotheses in their columns in Excel save the
+        file, and then import the data into R again. Fit one model for each
+        hypothesis. For example, for H1 fit the model:</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> log.kcal ~ H1</p>
+      <p>and for H2 you would fit the model:</p>
+      <p>log.kcal ~ H2</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> <strong><em>Don't include any of the other predictors</em></strong>,
+        just the grouping variable that represents your hypothesis.</p>
+      <p> </p>
+      <p>Pick the model with the highest adjusted R<sup>2</sup> of the two, and
+        report the results to the class database. Enter the description of your
+        hypothesis from your worksheet, the adjusted R<sup>2</sup>, the number
+        of categories you used, and what the categories were. For example, the
+        "beans vs. other" hypothesis would have two categories. Once everyone
+        has recorded their results we will look at which hypothesis has the
+        highest adjusted R<sup>2</sup>.</p>
+      <p>That's it! Fill out the worksheet to complete the assignment. </p>
+    </div>
+  </body>
+</html>

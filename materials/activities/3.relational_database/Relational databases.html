@@ -1,0 +1,385 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <title>Relational databases</title>
+    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=134ae931858ad4f10a389adca6344aa26&amp;authkey=ASR5vVPOI7J_r9TVaDmWs2M"
+      rel="stylesheet" type="text/css">
+    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=09087db66fd664ee6a4050af8a475e32a&authkey=Acz-oAwp851Yr-fTxNmSN7g"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <div style="float: right"><button onclick="toggleLinks()">LS</button></div>
+      <h1>Exercise 3: Relational databases</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#pkey">Primary keys</a></p>
+      <p><a href="#joining">Joining tables</a></p>
+      <p><a href="#query">Queries</a></p>
+      <p><a href="#exporting">Exporting to Excel</a></p>
+      <p><a href="#forms">Forms</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <p class="part" id="intro"> We are only going to spend one week on
+        relational databases, but we could easily spend the entire semester on
+        them. We will focus on what is probably the feature that is most likely
+        to be of use to you, and that Excel does not support at all: one to many
+        relational joins. Unless you decide to learn more about MS Access on
+        your own, outside of class, you will probably enter data in Excel,
+        import it into Access, join your tables, then export the joined tables
+        back into Excel. That is what we will do today.</p>
+      <p> <input name="cb1" type="checkbox">1. Download this spreadsheet (<a href="mice.xlsx">mice.xlsx</a>),
+        and save it to your H drive (make a new folder, ex2 - save the file to
+        H:/biol365/ex2), and then open it in Excel.</p>
+      <p> The data represent an experiment in which ten different mice were
+        given different diets, and then their body weights were measured daily
+        for a period of 10 days. There are several characteristics of each mouse
+        that were recorded (age, sex, and the diet they were on), which are
+        stored in the sheet "Mouse". Each mouse was weighed once a day for ten
+        days, and these weights are in sheet "Weights". To do a comparison of
+        weights by diet, we would need to join the Mouse table to the Weights
+        table. We can't do that automatically in Excel (only through laborious,
+        error-prone copying and pasting), but we can do it easily in Access.</p>
+      <p>Be sure to close Excel before you proceed - Access won't open this file
+        while Excel has it open. </p>
+      <p> <input name="cb2" type="checkbox">2. Start MS Access 2013. You will
+        see a fairly cluttered startup screen that looks <a class="link" style="display: none"
+          href="access_startup.jpeg">like this</a><span class="ipt">like this<span
+            class="ip"><img src="access_startup.jpeg"></span></span>. We are
+        going to ignore much of the clutter, but most of it is providing easy
+        access to templates for a variety of common business databases (Access
+        is marketed heavily towards business users).</p>
+      <p> First, click on the "Blank desktop database" button, which will bring
+        up a "Blank desktop database" creation window. Name the database
+        "mice.accdb", and click on the "open folder" icon next to the file name
+        field. You can now navigate to a suitable folder on your H: drive, and
+        click "OK" to select the folder. Back in the "Blank desktop database"
+        window click on "Create" to create the blank database in the folder you
+        selected.</p>
+      <p> <input name="cb3" type="checkbox">3. You will now see the Access
+        interface with a new, blank table called Table1 (it will look <a class="link"
+          style="display: none" href="access_interface.jpeg">like this</a><span
+          class="ipt">like this<span class="ip"><img src="access_interface.jpeg"></span></span>).
+        Rather than using this blank table, we are going to import data from
+        your Excel spreadsheet. Click on the "<a class="link" style="display: none"
+          href="access_interface1.jpeg">External data</a><span class="ipt">External
+          Data<span class="ip"><img src="access_interface1.jpeg"></span></span>"
+        tab, and then click on "<a class="link" style="display: none" href="access_interface2.jpeg">Excel</a><span
+          class="ipt">Excel<span class="ip"><img src="access_interface2.jpeg"></span></span>".
+        Browse to the "mice.xlsx" Excel spreadsheet you downloaded and select it.
+        You will be importing the data into a new table, which is the default
+        option, so click "OK".</p>
+      <p> <input name="cb4" type="checkbox">4. The "Import Spreadsheet Wizard"
+        that pops up will lead you through the process of importing the data.
+        You will only be able to do one sheet at a time, so start with "Mouse" -
+        click "Next".</p>
+      <p> The next step asks whether the first row of the sheet contains the
+        column headings. These will be used as the field names in Access - the
+        sheet does include names for the columns, so click "Next".</p>
+      <p> The next step allows you to set the data type for each of the columns.
+        It will make a guess based on the contents of the file, but you may not
+        like the choices made and you need to check. Use the variable types:</p>
+      <ul>
+        <li>Mouse ID is numeric, but it only contains numbers up to 10 with no
+          decimals, so change the Data Type from "Double" to "Integer" ("single"
+          and "double" are both floating-point data types used for decimal
+          numbers; double can record more significant digits than single).</li>
+        <li>Ages are all integer numbers, so change the type to "Integer" (ages
+          are in months, and none are greater than 255). </li>
+        <li>The last two columns are text, which you can confirm Access guessed
+          correctly.</li>
+      </ul>
+      <p>Once you have the variable type definitions done, press "Next". </p>
+      <h3 class="part" id="pkey">Primary keys</h3>
+      <p>The next screen allows you to create a "<strong>primary key</strong>"
+        for the table. A primary key is a unique identifier for every record in
+        the data table, and relational databases have to have a unique
+        identifier for every record. Access will allow you to create a new
+        variable to use as a primary key, and populate it with sequential
+        numbers for you, but if you have a unique identifier in your data set
+        already you can use that instead. Since mouse ID will always be
+        different for different mice you can use it as the primary key - click
+        on "Choose my own primary key" and select "Mouse ID". Click "Next".</p>
+      <p>Finally, you are given the chance to change the name of the table if
+        you choose - "Mouse" is fine, so don't change anything. Click "Finish".
+        If you are prompted to save the import steps you don't need to - this is
+        only useful if you repeatedly import data with the same organization,
+        such as updating a database with new data each day. </p>
+      <p>You will see a new table called "Mouse" in the list on the left of the
+        screen, and if you double-click it the table will open and show you the
+        data (it should look <a class="link" style="display: none" href="mouse_table.jpeg">like
+          this</a><span class="ipt">like this<span class="ip"><img src="mouse_table.jpeg"></span></span>).
+        </p>
+      <p> <input name="cb5" type="checkbox">5. Repeat the import routine for
+        sheet Weights. You will need to repeat steps 3 and 4, using Weights as
+        the sheet to be imported.</p>
+      <p>Set the variables to the following data types:</p>
+      <ul>
+        <li>Mouse ID = integer</li>
+        <li>Measurement Day = integer</li>
+        <li>Weight = double (double refers to double-precision floating point
+          numbers, which is a good choice for decimal data).</li>
+      </ul>
+      <p>Allow Access to create a primary key for this table - since there are
+        multiple records of the same mice we can't use Mouse ID as a primary key
+        here.</p>
+      <p>When you're done you'll see a new table, Weights, in your list.
+        Double-click it and you'll <a class="link" style="display: none" href="weights_table.jpeg">see
+          this</a><span class="ipt">see this<span class="ip"><img src="weights_table.jpeg"></span></span>.</p>
+      <h3 class="part" id="joining">Relational joins</h3>
+      <p> <input name="cb6" type="checkbox">6. Join the Mouse and Weights data
+        based on matching Mouse ID's. Joining is done in a query, which is a
+        term that refers to all manner of operations that retrieve data from a
+        database.</p>
+      <p>To open the query design view switch to the "<a class="link" style="display: none"
+          href="create.jpeg">Create</a><span class="ipt">Create<span class="ip"><img
+              src="create.jpeg"></span></span>" tab, and select the "<a class="link"
+          style="display: none" href="query_design.jpeg">Query Design</a><span class="ipt">Query
+          Design<span class="ip"><img src="query_design.jpeg"></span></span>"
+        option.</p>
+      <p> In the "Show Table" form that pops up, select and add both the Mouse
+        and Weights tables. Close the "Show Table" form.</p>
+      <p> Now that you have the tables added, you are in the "Query Design"
+        view. The tables you added are at the top, each showing a list of the
+        fields they contain - we will be establishing the relationship between
+        the tables (i.e. linking the tables by their matching columns) here.
+        Below the tables is what looks like a blank spreadsheet - this is where
+        we will actually build the query by selecting the fields from the joined
+        tables that we want to display. </p>
+      <p> You'll see that since we have a field called "Mouse ID" in each table,
+        Access guessed (correctly) that this is the column that's common between
+        the tables, and that should be the basis for joining them together. You
+        can see this as a black line that connects the two tables, like <a class="link"
+          style="display: none" href="relationship.jpeg">this</a><span class="ipt">this<span
+            class="ip"><img src="relationship.jpeg"></span></span>. It's nice
+        when Access guesses the relationship correctly, but you need to learn to
+        do this yourself - so, click on the black line to select it, then hit
+        the "delete" key. To make the connection yourself, click on the "Mouse
+        ID" label in the "Mouse" table, drag it to the "Weights" table, and then
+        drop it on top of the "Mouse ID" label there.</p>
+      <p>We have a single column that defines the matching rows in our data, but
+        you can actually have more than one column that indicates the
+        relationship. For example, if we had mice with two different strains,
+        with each mouse numbered sequentially within a strain, we would need the
+        combination of strain and mouse number to uniquely identify the mice.
+        All we would need is a column in each table that indicates the strain,
+        and another that indicates the mouse number. We could then make two
+        links between the tables, one that linked the strain columns and another
+        that linked the mouse numbers, and Access would be able to join the
+        records correctly.</p>
+      <p>If you double-click on the black line, you'll see that there are
+        different ways to make the link between the table. The difference
+        between them is in which records will be displayed in the event that
+        there are Mouse ID's in one that aren't found in the other. The choices
+        are:</p>
+      <ul>
+        <li>Only include rows where the joined fields from both tables are equal</li>
+        <li>Include ALL records from "Mouse" and only those records from
+          "Weights" where the joined fields are equal</li>
+        <li>Include ALL records from "Weights" and only those records from
+          "Mouse" where the joined fields are equal</li>
+      </ul>
+      <p>You will want to use the first option when either you know that all the
+        records match between the tables, or when you want to drop data from the
+        query if the records are incomplete. The second and third cases are
+        useful to help you identify where there are missing values in one table
+        or the other. You can click on the "Cancel" button to close the Join
+        Properties.</p>
+      <h3 class="part" id="query">Queries</h3>
+      <p> <input name="cb9" type="checkbox">9. Now that the tables and their
+        relationships are all set up, we can build the query to combine the
+        fields in Mouse with the fields in Weights. Double click on the
+        following fields to add them to the query:</p>
+      <ul>
+        <li>Mouse table - Mouse ID, Age, Sex, and Diet</li>
+        <li>Weight table - Measurement Day, and Weight</li>
+      </ul>
+      <p>Note that we only included Mouse ID once (it doesn't matter which table
+        it comes from), and we didn't include the ID primary key field from the
+        Weight table at all. In this sense we are not only using the query to
+        combine information from both tables, we are also using it to filter
+        which fields are to be included.</p>
+      <p> <input name="cb10" type="checkbox">10. Execute the query. To run the
+        query, click on "<a class="link" style="display: none" href="view.jpeg">View</a><span
+          class="ipt">View<span class="ip"><img src="view.jpeg"></span></span>"
+        to switch from design view (in which you build the query) to datasheet
+        view (in which you see the result). You should see a table with the
+        weights for each day, but now with all the Mouse table fields repeated
+        for each day of weighing (<a class="link" style="display: none" href="query_result.jpeg">like
+          this</a><span class="ipt">like this<span class="ip"><img src="query_result.jpeg"></span></span>).</p>
+      <p>Note that this joined file has all the ages, sexes, and diets repeated
+        for each day of measurement, without having to actually enter this
+        information multiple times.</p>
+      <p>Also, be aware that the query is a temporary, on-the-fly arrangement.
+        Queries can be saved and re-executed to re-create a view of the joined
+        files, and queries can even be used as though they are tables - you can
+        make a query that uses another query as a table, for example. Given
+        this, it is generally not needed to make a permanent table from a query
+        for use within Access.</p>
+      <p>However, to use the joined data to do some analysis in another program,
+        such as Excel, you will need to export the query. That's what you'll do
+        next.</p>
+      <h3 class="part" id="exporting">Exporting a query to Excel</h3>
+      <p> <input name="cb11" type="checkbox">11. Export the joined file to an
+        Excel spreadsheet. The simplest, quickest way to get the data back into
+        Excel is to copy and paste it. Open the mouse.xlsx file in Excel, then click
+        on the box in the upper left corner of the Access query (<a class="link"
+          style="display: none" href="select_records.jpeg">here</a><span class="ipt">here<span
+            class="ip"><img src="select_records.jpeg"></span></span>) to select
+        all the records. Right-click and copy them, and then switch to Excel and
+        paste them in sheet 3.</p>
+      <p> Another way is to export the data to an Excel spreadsheet file. First,
+        save the query (click on the save icon, and call it "Joined files"). It
+        now appears below the Weights table in the list to the left of the
+        screen. Select "Joined files" from the list, right-click and select
+        "Export" → "Excel". In the wizard that pops up, put the new "Joined
+        files.xlsx" file onto your H: drive. If you then open the file in Excel,
+        you will have a joined version of the tables, ready to summarize in a
+        pivot table.</p>
+      <p><input name="cb12" type="checkbox">12. Export just the Females. We
+        already used the query to decide which variables to include and not
+        include in the data set, but we can also filter the data within a
+        variable like we did in Excel. To do this, you will go back to the
+        Design view for your Joined files query, and add a statement that will
+        only return records for female mace.</p>
+      <p>If it isn't open, double-click on the Joined files query. In the upper
+        left end of the Home tab, click on View (if a drop-down menu pops up,
+        select Design. Otherwise clicking on View should open up the Design view
+        by default). You should see your joined tables, with your fields below.</p>
+      <p>If you look at the field list in the lower panel, you'll see that on
+        the left side are the labels "Field", "Table", "Sort", "Show",
+        "Criteria", and "or". To only show the females, you need to add a
+        Criteria to the Sex column. In the Criteria cell (just below the Show
+        checkbox), type "Female" (with or without quotes - if you don't use
+        quotes Access will add them). Note that this will only work if you type
+        Female correctly - don't add spaces after it, or before it, or change to
+        lowercase.</p>
+      <p>If you run this, you will see only female data in the result.
+        Right-click on the tab for the query and save it again so that the new
+        Females criteria is saved.</p>
+      <p>You can now export this version of the query by right-clicking on the
+        query, and save it as "Joined files females.xlsx".</p>
+      <h3 id="forms">Forms</h3>
+      <p>Another excellent reason to use a relational database is that it's
+        possible to create data entry forms that make data entry and retrieval
+        easier. It's possible to make an Access form match the appearance of a
+        paper form that you use to collect data so that data entry is less
+        confusing.</p>
+      <p>When you have a one to many relationship between data tables, like we
+        do, it's also possible to use a form to make it easier to enter data
+        into both tables at once. In our case, we can enter new "mouse" level
+        information in one part of the form, and enter the daily measurements of
+        weights into another part of the form, and the information will be
+        automatically placed in the correct table.</p>
+      <p><input type="checkbox">1. Make sure you have the "Mouse" table selected
+        in the table list on the left side of your database window. Switch to
+        the "Create" tab, and then "Form" button (<a class="link" style="display: none"
+          href="form_button.png">here</a><span class="ipt">here<span class="ip"><img
+              src="form_button.png"></span></span>). This will make a basic form
+        that includes all of the fields that are in the "Mouse" table.</p>
+      <p>You will be automatically put into "Layout" mode, which is used to
+        design the appearance and behavior of the form. At this point you can
+        also scroll through the records in the "Mouse" table by clicking on the
+        navigation buttons at the bottom of the form window (<a class="link" style="display: none"
+          href="form_scroll_through_records.png">here</a><span class="ipt">here<span
+            class="ip"><img src="form_scroll_through_records.png"></span></span>).</p>
+      <p>Initially, only fields from the "Mouse" table were included, but we
+        would also like to include the daily weight measurements we collect.
+        There is a one to many relationship between each record in the "Mouse"
+        table and records in the "Weights" table, so we want to make the form
+        show us all of the weights for whatever mouse is currently displayed. To
+        do this we need to add a subform.</p>
+      <p><input type="checkbox">2. Find the subform button in the list of
+        available controls above the form (<a class="link" style="display: none"
+          href="form_subform_button.png">here</a><span class="ipt">here<span class="ip"><img
+              src="form_subform_button.png">here</span></span>). As you move
+        down over the form, you will see a red dimension line that indicates
+        where the subform will be positioned if you click the mouse - move your
+        mouse so that the dimension line is below the fields that are already in
+        the form (below Diet), and left-click the mouse.</p>
+      <p>The subform is initially blank, and has a label on the left that is
+        called "Child14:" - we'll fix both of those issues next.</p>
+      <p><input type="checkbox">3. Double-click on the "Child14:" label, and it
+        will become editable - change it to "Weights".</p>
+      <p>Now, select just the blank box to the right of the label - this is
+        where the data will appear, once we tell Access where to get it.</p>
+      <p>When you select the field, the "Property Sheet" on the right side of
+        the database window will show a long list of properties, in several
+        tabs. The first tab gives a long list of appearance settings - we will
+        leave those alone. You should see though that "Child14" is listed in the
+        dropdown menu box above the tabs - this means that all of the properties
+        pertain to our subform.</p>
+      <p>You can change the name of the subform to something easier to remember
+        - switch to the "Other" tab and change the "Name" from "Child14" to
+        "WeightSubForm" (no spaces, use capitals to separate words). You'll see
+        that the name changes in the dropdown menu, so we still are seeing
+        properties of our subform.</p>
+      <p>Now, switch to the "Data" tab in the "Property Sheet". We need to
+        identify the "Weights" table as the source of data to display in this
+        subform, so drop down the "Source Object" menu and select the "Weights"
+        table. You'll see the table appears in the subform.</p>
+      <p>We also need to tell Access how the data in the subform relates to the
+        data in the main form. We do this by clicking on "Link Master Fields"
+        and then clicking the ellipses button (...) - Access will notice we have
+        two fields with the same name in each table, and will suggest them as
+        the fields to use to link the tables. The "Master" Mouse ID refers to
+        the main form that has "Mouse" fields in it, and the "Child" Mouse ID
+        refers to the subform that has the "Weights" fields. Access guessed
+        right, so click "OK" to accept the choices.</p>
+      <p>The subform has its own set of navigation controls - you can scroll
+        through the individual weight records using the subform navigation
+        tools, and can scroll from one mouse to another using the main form
+        navigation controls. As you switch from one mouse to another you will
+        see that only the records for the mouse selected in the main form are
+        displayed in the subform.</p>
+      <p><input type="checkbox">4. To finish making the form, re-size the
+        subform by dragging the lower right corner down until all ten days of
+        measurement are showing.</p>
+      <p>Now that the form is done, drop down the "View" button and change it to
+        "Form view" - this will disable editing, and prevent you from
+        accidentally changing the form itself.</p>
+      <p><input type="checkbox">5. Let's see what this does for us when it comes
+        to data entry. Scroll the main form to the first mouse, Mouse 1.</p>
+      <p>In the subform window, enter the following:</p>
+      <p>ID: No change, this field gets filled in automatically (it's the
+        primary key for the table).</p>
+      <p>Mouse ID: No change, the ID is filled in automatically because it is
+        the field that joins the two tables (having Mouse ID 1 in the main form
+        makes these all Mouse ID 1 as well).</p>
+      <p>Measurement: 11</p>
+      <p>Weight: 30</p>
+      <p>Hit "Enter" after you enter the weight so that it is accepted as an
+        entry.</p>
+      <p>Once all the fields are filled in, open the "Weights" table&nbsp; from
+        the Tables list and you'll see your new entry at the very bottom of the
+        table.</p>
+      <p>To start a record for a new mouse, switch back to your form, and click
+        on the "New (blank) record" button in the navigation tools at the bottom
+        of the form (<a class="link" style="display: none" href="form_new_main_form_record.png">here</a><span
+          class="ipt">here<span class="ip"><img src="form_new_main_form_record.png"></span></span>).
+        A new main form record is added, and since there are no matching weights
+        for this new animal the subform goes blank. Enter the following into the
+        main form:</p>
+      <p>Mouse ID: 11</p>
+      <p>Age: 2</p>
+      <p>Sex: Female</p>
+      <p>Diet: Cheese (yeah, I know...but it will make the record easy to find
+        once you're done)</p>
+      <p>Hit Enter and open the "Mouse" table - you should see this new record
+        listed (if the table is already open you may need to close its tab and
+        open it again to see the new record). </p>
+      <p>You can switch back to your form and add some rows - feel free to put
+        in whatever you want just so you have something to see - and you'll see
+        it show up in the Weights table, with the needed Mouse ID to keep the
+        weights linked to the mouse information.</p>
+      <p>Right-click on the tab for your form and select "Save".</p>
+      <h3 id="forms"></h3>
+      <h2 id="assignment" class="part">Assignment</h2>
+      <p>When you're done, post a copy of your Access database file and your two
+        Excel files with your exported queries to the class web site.</p>
+    </div>
+  </body>
+</html>

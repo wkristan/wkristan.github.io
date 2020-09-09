@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Post-hocs and contrasts</title>
+    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=02a5532ccf4574e49ae6e245b4a118252&amp;authkey=AcYXNyrvFGWnmf6cbl1qQQ4&amp;e=4170fc6099b74d3f94a7fdaade97010e"
+      rel="stylesheet" type="text/css">
+    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=04e5dfc4b7ee64a7dbacb487cddde06a0&authkey=AdStuSX7RsXlg4QXZtzjDfw&e=f5861611192540a4b0c28483e9e5baf0"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Post-hoc procedures and orthogonal polynomial contrasts</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#tukey">Tukey post-hocs</a></p>
+      <p><a href="#orthog_poly">Orthogonal polynomials</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="tukey">Tukey post-hocs</h2>
+      <p>You learned to do Tukey post-hocs in Biol 215, so we won't spend too
+        much time on the simple application to a one-way ANOVA. But, R doesn't
+        make post-hocs as easy to do as MINITAB, so we need to learn how to get
+        post-hocs from R. We will also learn more about planned comparisons,
+        including orthogonal polynomial contrasts as a special case.</p>
+      <p> </p>
+      <p>For the assignment, make sure you copy all of your output (including
+        any graphs you produce) into a Word file for upload.</p>
+      <p> </p>
+      <p>1. First, start R Studio and make a new project in a folder called
+        "posthocs". Import the allsp worksheet from the cuckoo data we used last
+        week, into an R data set called "allsp".</p>
+      <p>Start a new R script to use for all the commands you use today.</p>
+      <p> </p>
+      <p>2. Now, we we are going to reorder the factor levels for species to
+        reflect the sizes of the birds. Based on their body weights, the species
+        (listed smallest to largest) are: wren, meadow pipit, robin, hedge
+        sparrow, tree pipit, and pied wagtail. To set the factor levels to this
+        order, use the command:</p>
+      <p class="rcmd">allsp$species &lt;- factor(allsp$species, levels =
+        c("Wren","Meadow Pipit","Robin","Hedge Sparrow","Tree Pipit", "Pied
+        Wagtail"))</p>
+      <p> </p>
+      <p>With the species in order by body size, you can now load gplots and
+        make a graph with plotmeans() that shows weights for the species, and
+        the x-axis will put the species in the order you specified.<br>
+      </p>
+      <p>Now fit a linear model of length as a function of species, and call it
+        allsp.bw.lm (where the "bw" is short for "body weight").</p>
+      <p> </p>
+      <p>2. There is a TukeyHSD() command in R, but it's not flexible enough to
+        do everything we want for the rest of the semester, so we are going to
+        start learning an add-on package that we will need later. You can load
+        add-on packages (which R calls "libraries") with a command:</p>
+      <p> </p>
+      <p><span class="rcmd">library(multcomp)</span></p>
+      <p> </p>
+      There are many kinds of post-hoc procedures, but we will primarily focus
+      on Tukey's, which works well for unplanned comparisons among all possible
+      pairs of means. The multcomp package uses a single command, glht(), for
+      all of its post-hocs, with arguments that indicate the kind of post-hoc to
+      return.<br>
+      <p> </p>
+      <p>To get Tukey post-hocs, type the command:</p>
+      <p> </p>
+      <p><span class="rcmd">allsp.bw.tukey &lt;- glht(allsp.bw.lm, linfct =
+          mcp(species = "Tukey"))</span></p>
+      <p> </p>
+      <p>This is a fairly complex command, so let's unpack it.</p>
+      <p> </p>
+      <p>The work is being done by the glht() function. The name, glht, stands
+        for "general linear hypothesis test". This function can do lots of
+        different things, and can take several different arguments that we don't
+        need to worry about. This is common in R functions - there will be
+        arguments that are required such that omitting them will cause an error,
+        but others are optional, and if they aren't specified then default
+        values are used.</p>
+      <p> </p>
+      <p>The first required argument for glht() is the name of the model we will
+        be working with - we used allsp.bw.lm.</p>
+      <p> </p>
+      <p>The next argument is "linfct", which stands for "linear function". This
+        is where we specify what kind of comparisons we will use. We are
+        specifying this argument using a function called mcp(), which stands for
+        "multiple comparison procedure". You can see that we are setting up
+        Tukey multiple comparisons between the levels of the species variable,
+        using mcp(species = "Tukey").</p>
+      <p> </p>
+      <p>To get the Tukey comparisons, now issue the command:</p>
+      <p> </p>
+      <p><span class="rcmd">summary(allsp.bw.tukey)</span></p>
+      <p> </p>
+      <p>You will see all fifteen of the comparisons that can be made between
+        the six species, along with their p-values, reported. When you use
+        post-hoc procedures like the Tukey test the correction for multiple
+        comparisons is done for you, and you can consider any p-values below
+        0.05 to be significant.</p>
+      <p> </p>
+      <p>3. A list of 15 comparisons is difficult to interpret. A simpler
+        presentation is the "compact letter display", which we can get with the
+        command:</p>
+      <p> </p>
+      <p><span class="rcmd">cld(allsp.bw.tukey)</span></p>
+      <p> </p>
+      <p>This will give you output that looks like this:</p>
+      <p> </p>
+      <p><span class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          Wren&nbsp; Meadow
+          Pipit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Robin Hedge
+          Sparrow&nbsp;&nbsp;&nbsp; Tree Pipit &nbsp;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          "a"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          "b"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          "bc"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          "c"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          "c"&nbsp; <br>
+        </span></p>
+      <p><span class="rout">Pied Wagtail &nbsp;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "bc"&nbsp;</span></p>
+      <p> </p>
+      <p>The compact letter display examines all the p-values generated by the
+        Tukey procedure, and assigns the same letters to species that are not
+        significantly different, and different letters to species that are
+        significantly different. Based on this output, you should see that wrens
+        are different from everyone, because only wrens are assigned the letter
+        "a". There are a couple more significant differences, can you see what
+        they are? <a href="javascript:ReverseDisplay('whodiff')">Click here to
+          see if you're right.</a> </p>
+      <div style="display:none;" id="whodiff">
+        <p style="border-style:solid;padding:10px;"> Meadow pipit only has an b,
+          and tree pipit and hedge sparrows only have a c, so meadow pipit is
+          different from those two species (but they are not different from each
+          other). Pied wagtail and robin have both an b and a c, so they are not
+          different from either meadow pipit, tree pipit, or hedge sparrow. </p>
+      </div>
+      <p> </p>
+      <h2 class="part" id="orthog_poly">Orthogonal polynomial contrasts</h2>
+      <p>When we put the species in body weight order that was enough to get our
+        plot of means in the order we wanted, and it's enough to get R to use
+        Wren as the baseline group when it fits the linear model (remember, this
+        means that the tests of the slope coefficients were tests of differences
+        between the other species and Wren).</p>
+      <p>It may seem counter-intuitive, but we didn't make an "ordered factor"
+        when we put the factor levels in body weight order. Analytically,
+        nothing was done differently except that wrens were set to be the
+        baseline group. An ordered factor is a kind of factor in which the order
+        of the factor levels are not just arbitrary, but instead reflect an
+        ordinal relationship. We are going to do the factor level re-ordering
+        again, but this time we are going to make an actual ordered factor. The
+        advantage of doing this is that by default R uses orthogonal polynomial
+        contrasts when you use an ordered factor in a linear model. We will be
+        able to test for various shapes of response across the ordinal factor
+        levels by seeing which of the orthogonal polynomial coefficients is
+        significant.</p>
+      <p>1. To make an ordered factor, you can make a copy of the factor()
+        command you used above, but add the "ordered = T" argument, like so:</p>
+      <p class="rcmd">allsp$species &lt;- factor(allsp$species, levels =
+        c("Wren","Meadow Pipit","Robin","Hedge Sparrow","Tree Pipit", "Pied
+        Wagtail"), ordered = T) </p>
+      <p>If you type allsp$species at the command prompt you'll see at the
+        bottom that the factor levels are separated by less than symbols, &lt;,
+        indicating the ordinal relationship between them.</p>
+      <p>2. We are going to fit a linear model again, and now that species is
+        ordered we will get orthogonal polynomial contrasts instead of dummy
+        coding. Let's take a look at what the orthogonal polynomial contrasts
+        actually do - enter the command:</p>
+      <p><span class="R-code">contr.poly(6)</span></p>
+      <p>This dumps a bunch of weights to the screen so you can look at them,
+        but hasn't changed any settings. If you look down each column, you'll
+        see the weights follow the pattern you would expect - the .L column
+        gives weights for a linear trend, and the start at -0.597, and increase
+        in equal intervals to 0.597. The quadratic term (.Q) starts high,
+        descends to a minimum, and then returns to the same high point (that is,
+        it's concave upwards). And so forth. These weights establish the basic
+        patterning that each contrast will be testing for in the data.</p>
+      <blockquote style="background: #f5f5fb; border: 1px solid; padding: 10px;">
+        <p>A little aside on R...</p>
+        <p>You can see what the default contrast types are by using the command:</p>
+        <p><span class="rcmd">options("contrasts")</span></p>
+        <p>This should show you that the default contrasts are "contr.Treatment"
+          "contr.poly", which are the contrasts used for un-ordered factors and
+          for ordered factors, respectively. The "treatment" contrast type is
+          another name for dummy-coding.</p>
+        <p>So, we get polynomial contrasts because we are going to use an
+          ordered factor, but what if we wanted to get dummy-coded contrasts
+          back, so that we could compare all the species to wrens again? There
+          are two choices: change the default, or assign treatment contrasts to
+          species (which overrides the default polynomial contrasts).</p>
+        <p>To change the default value, we would use the command:</p>
+        <p><span class="rcmd">options(contrasts = c("contr.treatment",
+            "contr.treatment"))</span></p>
+        <p>This would set the contrast type to dummy-coded contrasts for both
+          unordered and ordered factors. Changing the default changes what R
+          will use for any ordered factor we choose, within this project. We
+          could then set it back to default with:</p>
+        <p><span class="rcmd">options(contrasts = c("contr.treatment",
+            "contr.poly"))</span></p>
+        <p>If we wanted to just override the orthogonal polynomials for species,
+          without affecting any other ordered factor we might use later, we
+          could set the contrasts for the species variable:</p>
+        <p><span class="R-code rcmd"> contrasts(allsp.bw$species) &lt;-
+            contr.treatment(6) </span></p>
+        <p>where the argument 6 in contr.treatment() says to dummy code for 6
+          different levels. To set the contrasts back to orthogonal polynomial
+          for species, you would use the command: </p>
+        <p><span class="R-code rcmd">contrasts(allsp.bw$species) &lt;-
+            contr.poly(6) </span></p>
+      </blockquote>
+      <p>Now, let's see what happens when we run the model with an ordered
+        factor for species:</p>
+      <p><span class="rcmd">allsp.op.lm &lt;- lm(length ~ species,
+          data=allsp.bw)</span></p>
+      <p> </p>
+      <p>This command fits exactly the same linear model as we used before, with
+        length predicted by species, but this time species is ordered. The
+        fitted model is assigned to allsp.op.lm. To see the coefficients, type
+        the name of the fitted model object:</p>
+      <p> </p>
+      <p><span class="rcmd">summary(allsp.op.lm)</span></p>
+      <p>The model output looks like this:</p>
+      <p class="rout">Call: <br>
+        lm(formula = length ~ species, data = allsp) <br>
+        &nbsp;<br>
+        Residuals: <br>
+        &nbsp;&nbsp;&nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1Q&nbsp;&nbsp; Median&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        3Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Max&nbsp; <br>
+        -2.69333 -0.39333 -0.01429&nbsp; 0.50833&nbsp; 2.10667&nbsp; <br>
+        &nbsp;<br>
+        Coefficients: <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        (Intercept) 22.50842&nbsp;&nbsp;&nbsp; 0.09003 249.997&nbsp; &lt; 2e-16
+        *** <br>
+        species.L&nbsp;&nbsp;&nbsp; 1.40456&nbsp;&nbsp;&nbsp;
+        0.22350&nbsp;&nbsp; 6.284 6.21e-09 *** <br>
+        species.Q&nbsp;&nbsp; -0.87529&nbsp;&nbsp;&nbsp; 0.23299&nbsp; -3.757
+        0.000273 *** <br>
+        species.C&nbsp;&nbsp;&nbsp; 0.08158&nbsp;&nbsp;&nbsp;
+        0.21155&nbsp;&nbsp; 0.386 0.700493&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        species^4&nbsp;&nbsp; -0.14594&nbsp;&nbsp;&nbsp; 0.20734&nbsp; -0.704
+        0.482939&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        species^5&nbsp;&nbsp;&nbsp; 0.21504&nbsp;&nbsp;&nbsp;
+        0.22629&nbsp;&nbsp; 0.950 0.343969&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        --- <br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1 <br>
+        &nbsp;<br>
+        Residual standard error: 0.9052 on 114 degrees of freedom <br>
+        Multiple R-squared:&nbsp; 0.3143,&nbsp;&nbsp;&nbsp; Adjusted
+        R-squared:&nbsp; 0.2842&nbsp; <br>
+        F-statistic: 10.45 on 5 and 114 DF,&nbsp; p-value: 2.852e-08</p>
+      <p>If you compare the model output here to what you got with the unordered
+        version of species, the bottom section is identical - using an ordered
+        factor doesn't change the model fit. But, the coefficient tests are
+        tests of trend across the ordered species levels. You'll see that the
+        linear (.L) and quadratic (.Q) terms are significant, but the rest are
+        not.</p>
+      <p>When you interpret orthogonal polynomials, remember that they add
+        together. The first, linear trend has a positive coefficient, which
+        tells us that there is also a tendency for the means to increase from
+        left to right on the graph. The second, quadratic trend has a negative
+        coefficient. Remember from the matrix of contrast weights that they
+        represented a parabola that is concave upwards, but the trend in the egg
+        length data reaches a peak and levels off or declines a little - the
+        negative coefficient flips the parabola so that it's concave downward.
+        Adding this trend to the linear one means that there is a tendency for
+        the means to increase to a peak and then decline as you go from left to
+        right on the graph. This matches our impression from looking at the
+        graph nicely, and provides us with some statistical support for claiming
+        that cuckoos adjust their egg sizes to the host species size, up to a
+        maximum egg size that the cuckoos are able to produce.</p>
+      <p>3. Feeling adventurous? If you're in the mood for a challenge, continue
+        (yes, this step is optional, but if you want to start fleshing out your
+        R skills you should opt to do it).</p>
+      <p>R is pretty powerful, it isn't just a tool for running canned
+        procedures. We know that in order to perfectly reproduce the means for
+        each species we need to use all of the contrasts, up to the 5th degree,
+        but only the linear and quadratic trends were statistically significant.
+        If we would like to see what the linear and quadratic trends actually
+        look like, we can use R to predict the means using those two sets of
+        contrast weights and coefficients.</p>
+      <p>We want to add points to your plot of means that indicate the predicted
+        values for the trends we've identified as significant. To do this, we
+        need to extract the coefficients from our fitted model, and the weights
+        from our factor. First the coefficients:</p>
+      <p><span class="rcmd">coef(allsp.op.lm) -&gt; species.coef</span></p>
+      <p>This uses the coef() function to extract the coefficients, and then
+        assigns them to the species.coef object. Nothing will be displayed on
+        the screen, but to see what's in species.coef, just type the name of the
+        object and hit Enter.</p>
+      <p><span class="R-code rcmd">species.coef</span></p>
+      <p>Now we need the contrast weights. We will use the same contrasts()
+        function we used before, but this time instead of assigning contrasts
+        with it, we will be extracting the weights from species instead.</p>
+      <p><span class="R-code rcmd">contrasts(allsp$species) -&gt;
+          species.contrasts</span></p>
+      <p>Again, if you want to see what this did, enter the name of the
+        species.contrasts object we created:</p>
+      <p><span class="R-code rcmd">species.contrasts</span></p>
+      <p>You should see a matrix with the weights for each trend, and with rows
+        labeled by species names (if we had just used contr.poly(6) -&gt;
+        species.contrasts we would have gotten the same set of weights, but
+        using the species column gets R to count up the number of levels and
+        construct the contrasts accordingly).</p>
+      <p>Now we are going to use the coefficients and weights to calculate the
+        linear trend.</p>
+      <p><span class="R-code rcmd">species.coef[1] +
+          species.coef[2]*species.contrasts[ ,1] -&gt; linear ; linear</span></p>
+      <p>This command will show you the result of our calculation, because I
+        added a "; linear" to the end of the command. The semicolon allows a
+        second command to be added to the line, and since the command just named
+        the object called "linear" we created with our calculation, it displays
+        the predicted linear trend values on the screen.</p>
+      <p>The actual calculation takes the intercept from species.coef (which we
+        indicated by giving its "index" number within the brackets - it's the
+        first coefficient in species.coef, so species.coef[1] is the intercept),
+        then adds to it the product of the slope (species.coef[2]) multiplied by
+        the weights for the linear trend (species.contrasts[ ,1]). The indexing
+        is different for species.contrasts because it is a matrix, so it has
+        both rows and columns. The numbers in the brackets indicate the row
+        number and the column number as [row number, column number]. We wanted
+        all of the rows for column 1, which we got by leaving the row index
+        blank, and by using a 1 for the column index. Note that what this
+        equation did was to take the single values for the intercept and slope
+        and then apply them to each row in the linear trend column.</p>
+      <p>Now, to add the linear trend to the graph, you need to use the command:</p>
+      <p><span class="R-code rcmd">points(linear, pch=21, bg="green")</span></p>
+      <p>This command adds points to the currently active plot - we used
+        "linear" as the argument, since that's the object that has the linear
+        trend numbers. The other two arguments control the appearance of the
+        points - pch is "point character", and number 21 is a filled circle; bg
+        is "background color", and we set the fill color to "green".</p>
+      <p>Next, let's calculate the quadratic trend. We already have the linear
+        trend, and as you learned in lecture these terms are meant to be
+        interpreted hierarchically - the quadratic trend is added to the linear
+        trend, it's not interpreted on its own. So, we just need to calculate
+        the quadratic part, and add it to our linear trend values.</p>
+      <p><span class="R-code rcmd">species.coef[3]*species.contrasts[,2] +
+          linear -&gt; quadratic ; quadratic</span></p>
+      <p>Like before, the coefficient for the quadratic term (species.coef[3])
+        is multiplied by each row in the second column of weights matrix
+        (species.contrasts[,2]), and this time the product is added to an
+        existing set of linear values; this is all then assigned to a new object
+        called "quadratic".</p>
+      <p>Try adding the points for the quadratic trend to your plot. Use "red"
+        for the bacground color this time. You should see that with this
+        quadratic term included the red dots are very close to the observed
+        means, including between Tree Pipit and Pied Wagtail where the size dips
+        a little.</p>
+      <p>We could keep adding on the cubic, 4th, and 5th order terms, but none
+        of those were statistically significant. If we did include all of them,
+        though, the predicted means would be equal to the measured group means,
+        instead of being only approximately close to them.</p>
+      <p><br>
+      </p>
+      <p>All done! Upload your Word file with all your output.</p>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <title>Error and power</title>
+    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=15d870248bc9f4d868563aad3c5f7a036&amp;authkey=AWeN0NdNkuJDvmtOKSgGUYs"
+      rel="stylesheet" type="text/css">
+    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=13fc6f0fc4e7a40cfb28e8d5414ce9679&authkey=AeebrenPYCL2zysCC2bsZiw"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="error_power.js"></script>
+    <script type="text/javascript" src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=1ef9142b21a1740a3b4e2b62d84542dfd&authkey=AVSULSnJJMH27-YzZmUt1mE"></script>
+  </head>
+  <body>
+    <h2>Statistical errors and statistical power</h2>
+    <p>For a two-sample t-test comparing heart rates for lobsters treated with
+      GABA to controls, the null hypothesis is: </p>
+    <p>Ho: μ<sub>Control</sub> = μ<sub>GABA</sub> , or equivalently: Ho: μ<sub>Control</sub>&nbsp;-&nbsp;μ<sub>GABA</sub>
+      = 0 </p>
+    <p>The alternative hypothesis is Ha: </p>
+    <p>μ<sub>Control</sub> ≠ μ<sub>GABA</sub> , or Ha: μ<sub>Control</sub>&nbsp;-&nbsp;μ<sub>GABA</sub>
+      ≠ 0</p>
+    <p>Statistical errors arise from drawing a conclusion about the null (either
+      rejecting or retaining it), and the error we can make depends on the
+      conclusion we draw:</p>
+    <ul>
+      <li>If we reject the null, we would be mistaken if the null is actually
+        true. This is called a <strong>Type I error</strong>, or a <strong>false
+          positive</strong>.</li>
+      <li>If we retain the null, we would be mistaken if the null is actually
+        false. This is a called a <strong>Type II error</strong>, or a <strong>false
+          negative</strong>.</li>
+    </ul>
+    <p>The graph shows the following:</p>
+    <ul>
+      <li>The <em>null hypothesis</em> is shown in blue. The curve is the
+        t-distribution, centered on a hypothetical difference of μ<sub>Control</sub>&nbsp;-&nbsp;μ<sub>GABA</sub>
+        = 0. The null hypothesis always sets the conditions under which we do
+        our test, and we reject the null only when a difference between sample
+        mean falls into the blue-shaded tails of the curve. The blue shaded
+        areas of the tails are thus the <strong>rejection region</strong>, and
+        the un-shaded space between them is the <strong>retention region</strong>
+        for the t-test.</li>
+      <li>The <em>alternative hypothesis</em> is shown as a red line, and the
+        mean for the curve is the amount of difference between population means.
+        The shaded regions indicate differences between sample means that fall
+        inside of the retention region (yellow), or in the rejection region
+        (pink).</li>
+    </ul>
+    <p>To see what determines the error rates, you can change the amount of
+      difference between means, alpha level, and sample size and see what
+      happens.<br>
+    </p>
+    <ul>
+    </ul>
+    <div id="wrapper_div4" style="float: left; border: solid black 4px; margin-bottom: 20px; width: 900px; padding: 10px">
+      <div id="chart_div4" style="width: 60%; height: 300px; float: left;"></div>
+      <div id="output_div" style="width: 40%; float: right"> <span id="alpha_error"
+          style="display: none">
+          <p>If the null is true, only Type I error is possible. The probability
+            of a Type I error is the alpha level, which is set to<br>
+            <span id="alpha_level" style="background: rgb(204,229,255);">0.05</span></p>
+        </span> <span id="beta_power">
+          <p>If the null is false, only Type II (β) error is possible. We can
+            only measure β error for a specific alternative. In reality we don't
+            know what the alternative is, but setting the amount of difference
+            between the population means shows how β and power are affected by
+            the size of difference, the alpha level, and the sample size.</p>
+          <p><span style="background: rgb(255,255,0);">β error = <span id="beta_error">0.0004</span></span>,
+            <span style="background: rgb(255,153,153);">power = <span id="power">0.0006</span>
+            </span></p>
+        </span></div>
+      <div id="controls_div" style="clear:both; padding: 10px; width: 70%">
+        <div id="diff_div" style="padding: 5px; float: left; margin-right: 20px">
+          <p>Difference between population means<br>
+            (0 = Ho is true)</p>
+          <p>μ<sub>Control</sub>&nbsp;-&nbsp;μ<sub>GABA</sub> = <input id="diff_means"
+              min="0" max="8" value="2.7" step="0.1" onchange="drawChart4()" style="width: 50px"
+              type="number"></p>
+          <p><button id="switchChart" onclick="switchChart()" style="width: 150px">Switch
+              to <span id="ct">BPM</span></button><button id="reset_t_dists" onclick="resetToObs()">Reset</button></p>
+        </div>
+        <div id="alpha_div" style="padding: 5px; float: left">
+          <p>Alpha level = <input id="alpha" min="0.01" max="0.75" value="0.05"
+              step="0.01" onchange="drawChart4()" style="width: 50px" type="number"></p>
+          <p>n per group = <input id="n_t_comp" min="2" value="10" onchange="drawChart4()"
+              style="width: 50px" type="number"></p>
+        </div>
+      </div>
+    </div>
+    <h3 style=" clear:both">If the difference between means is anything other
+      than 0, the null hypothesis is false</h3>
+    <p style="clear:both">If the null hypothesis is false, then Type II error
+      rate (β) and statistical power (1-β) are displayed. The α level is still
+      important because it is what determines the size of the rejection region,
+      but we cannot make a Type I error if the null hypothesis is false. All
+      three of the factors alter Type II error:</p>
+    <ul>
+      <li>Changing the amount of difference - when the amount of difference is
+        larger the alternative curve is further from the null, and more of it
+        falls into the rejection region. This decreases β (yellow) and increases
+        power (pink).</li>
+      <li>Changing the α level - increasing α makes the rejection region bigger,
+        which decreases β and increases power. Note that although increasing α
+        makes β smaller, α is also an error rate, and it is not desirable to
+        make one type of error less likely by increasing the chances of another.</li>
+      <li>Changing the sample size - increasing the sample size makes the
+        standard errors smaller, and improves our estimate of the amount of difference
+        between population means. We are more likely to reject a false null
+        hypothesis if we have a better estimate of the amount of difference,
+        which decreases β and increases power.</li>
+    </ul>
+    <p>If you change the sample size to see this last point in action you'll see
+      that the red curve moves to the right, which looks like the same effect as
+      increase the size of difference between the means. However, the amount of
+      difference between means isn't changing, the size of the standard errors
+      is. To understand what is happening, click "Switch to BPM", which changes
+      the x-axis to the scale of the data, which is heart rate in beats per
+      minute. If you change the sample size now you will see that what is
+      happening is that the null and alternative hypothesis means stay the same,
+      but the sampling distributions get narrower as the sample size increases.
+    </p>
+    <p>The reason that the alternative curve moves away from the null as sample
+      size increases when the x-axis is set to t units is that t units are
+      standard errors. As the standard error gets smaller the same amount of
+      difference between means becomes a larger number of standard errors - for
+      example, with a sample size of 10 the standard error was 1.21, and the
+      means are 2.7/1.21 = 2.23 standard errors apart. If we increase the sample
+      size to 100 the standard error is reduced to √<span style="text-decoration: overline">7.3(1/100
+        + 1/100)</span> = 0.38, and the same difference of 2.7 BPM is equal to
+      2.7/0.38 = 7.1 standard errors. When the x-axis is set to t-units the
+      increase in number of standard errors between means can happen either by
+      increasing the actual difference between means, or by reducing the size of
+      the standard error, thereby increasing the number of standard errors
+      between means.</p>
+    <h3>If the difference between population means is 0, the null hypothesis is
+      true</h3>
+    <p>You can make the null hypothesis true by setting the amount of difference
+      between means to 0. With a difference of 0 the blue curve becomes the
+      actual sampling distribution, and differences between means that are small
+      enough to fall into the un-shaded retention region will cause us to
+      correctly retain the true null. Differences between means that land in the
+      blue-shaded rejection region will cause us to reject the null mistakenly,
+      and are Type I errors. Since the area under the curve in the rejection
+      region is set to equal α, the α-level we select is also the Type I error
+      rate.</p>
+    <p>With the difference set to 0 you can choose different alpha levels and
+      you will see how that choice affects the size of the rejection region. </p>
+    <p>However, note that while changing sample size affects the spread in the
+      t-distribution, it does not change the size of the rejection region
+      because that is determined solely by our choice of α level.</p>
+    <h3>A strategy for minimizing wrong conclusions in statistical tests</h3>
+    <p>It is helpful to look at cases in which we know the null to be true or
+      false to help us understand how the testing is working, but in an actual
+      experiment we don't know if the null hypothesis is true or false, and we
+      need to try to avoid both of the possible errors that we could make. The
+      strategy we use is:</p>
+    <ul>
+      <li>Set α to 0.05 - this traditional level means that Type I errors will
+        happen 1 in 20 times that we do a t-test when the null hypothesis is
+        true, which is small enough that we will avoid Type I error most of the
+        time. Setting this value to a smaller error rate would make small
+        differences more difficult to detect, which would increase Type II error
+        rate.</li>
+      <li>Use a sample size that makes it possible to detect moderate to large
+        differences between population means - in other words, even though we
+        cannot eliminate the possibility that we are missing a very small
+        difference between means, we can at least use sample sizes that make it
+        unlikely we would miss big differences.</li>
+    </ul>
+    <p><img style="width: 455px; height: 305px; float: left; margin-right: 10px;"
+        alt="Power curves" src="power_curve.png">A good way to pick a sample
+      size is to use a power curve, like the ones illustrated to the left. Each
+      line represents the power curve for a different sample size, from 10 to
+      30; colors are selected so that sample size increases from darkest to
+      lightest shade of red. The x-axis is effect size, which is the number of
+      standard deviations between the means, and the y-axis is power.</p>
+    <p>If you start with the curve for n = 10, you'll see that the probability
+      of detecting differences above about 1.5 standard deviations are very good
+      - power is approximately 0.9 or better for these big effect sizes. The
+      default effect size used in the applet above was 1 (the standard deviation
+      for this example is 2.7, so a difference in means of 2.7 is 1 standard
+      deviation). With a sample size of 10 the probability of detecting an
+      effect size of 1 is close to 0.6. We have very little chance of detecting
+      effects of 0.5 or below, which have power values of about 0.15 or lower.</p>
+    <p>Increasing sample size increases power to detect smaller differences. By
+      the time n = 30 power is still high (0.9) for an effect size of 0.75, half
+      the size we could detect when sample sizes were 10.</p>
+    <p>Note that power is very low for all sample sizes when effect sizes are
+      tiny. The implication of this fact is that very small differences between
+      population means can never be ruled out completely, even when sample sizes
+      get large.</p>
+    <p>However, the size of effect we have to consider to be plausible gets very
+      small when the sample size is large. For example, power to detect an
+      effect of 0.2 standard deviation with a sample size of 10 is only 0.07,
+      and if we retained the null hypothesis there would be a 93% chance that an
+      effect of size 0.2 existed, and we just failed to detect it. In contrast,
+      if we used a sample size of 1000 our power to detect an effect of size 0.2
+      increases to 0.99, and there would only be a 1% chance if we retained the
+      null hypothesis that we had missed an effect of size 0.2. Just like with
+      confidence interval widths, increasing sample size never buys us complete
+      certainty, but it does allow us to narrow the range of possibilities that
+      we have to consider.</p>
+    <p><br>
+    </p>
+    <ul>
+    </ul>
+  </body>
+</html>

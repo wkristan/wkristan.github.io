@@ -1,0 +1,608 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <title>Probability</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script src="main.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="probabilities.js"></script>
+    <script type="text/javascript" src="coin_toss.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Probability</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="act6_probability.html#intro">Introduction</a></p>
+      <p><a href="act6_probability.html#law%20large%20numbers">The law of large
+          numbers - coin tosses</a></p>
+      <p><a href="act6_probability.html#inverse">Inverse probability - Down
+          Syndrome</a></p>
+      <p><a href="act6_probability.html#challenge">Challenge question</a></p>
+    </div>
+    <div id="content"> <img src="Probability-Coin-Toss.jpg" alt="Coin toss" align="left">
+      <h2 class="part" id="intro">Introduction</h2>
+      <p>This week we will work with probabilities. First, we will explore how
+        to estimate probabilities empirically, and why it's necessary to use
+        many trials to do so (the "law of large numbers"). Second, we will look
+        at inverse probabilities, as they pertain to screening tests for rare
+        disorders, such as Down Syndrome. <br>
+      </p>
+      <p> </p>
+      <h2 class="part" id="law large numbers">The Law of Large Numbers</h2>
+      <p>We will be dealing with data that is subject to random variation for
+        the rest of the semester, but "subject to random variation" is not the
+        same thing as "completely unpredictable". It is true that we can only
+        make probability statements about data that is subject to random
+        variation, but there is a lot that we can know about a system based on
+        probabilities. </p>
+      <p>Sometimes we know the probabilities of outcomes based on our
+        understanding of how randomness works in the system. For example, when
+        we toss a coin we know that the probability of each outcome, "Heads" or
+        "Tails", is 1/2. We know this because we know something about coin
+        tossing - there are two possible outcomes, and each is equally likely to
+        occur. </p>
+      <p>On the other hand, if we didn't have this conceptual understanding of
+        coin tossing and were instead trying to estimate the probability of a
+        Heads based on what we learn from actually tossing a coin, how would we
+        do it? This is the <strong>empirical</strong> approach to estimating
+        probability.</p>
+      <p>If we wanted to empirically estimate the probability of tossing a Heads
+        in one coin toss, we would need to toss the coin multiple times and see
+        how often it comes up "Heads". Each toss of the coin is a <strong>trial</strong>
+        - if we tossed a coin 4 times, we would be conducting four trials. To
+        calculate a probability of Heads from our trials, we could count up how
+        many times our trials gave us a <strong>success</strong> (which we
+        define as the outcome we are estimating the probability of - in this
+        case, the coin landing Heads up is a success), and divide by the number
+        of trials (4).</p>
+      <p>Using this procedure, we would need to get 2 Heads and 2 Tails for our
+        empirical estimate of the probability of heads (P(Heads)) to equal what
+        we know it to be (0.5). But, with only 4 tosses, there is a good chance
+        that instead of 2 Heads we would get 3 heads, for an empirical estimate
+        of P(Heads) = 3/4 = 0.75, or even 4 heads, for an empirical estimate of
+        P(Heads) = 4/4 = 1. Getting 3 or 4 heads would not be a particularly
+        unlikely outcome, but they give us empirical estimates of P(Heads) that
+        are very different from the correct value.</p>
+      <p>If we tossed a coin 1,000 times, the empirical estimate would equal 0.5
+        exactly only if we got 500 Heads and 500 Tails - we wouldn't be too
+        surprised if we got a few more or fewer Heads than 500 though due to
+        random chance. However, even if we were off by a couple of Heads, such
+        that we got 502 Heads and 498 Tails, the empirical estimate would be
+        502/1000 = 0.52. To be as far off as we were with only four trials we
+        would need to get 750 Heads and 250 Tails for a 0.75 estimate, or 1,000
+        Heads and no Tails for an estimate of 1, but neither of these outcomes
+        is very likely.</p>
+      <p>So, based on this simple example, when we're estimating probabilities
+        empirically we need to use large numbers of trials.</p>
+      <p>In fact, when we specify a probability of Heads = 1/2, we are making a
+        statement about what would happen in an imaginary, mathematically
+        perfect world in which we could toss a coin an infinite number of times.
+        Although we can never do anything an infinite number of times, we do
+        expect our real-world trials to converge on the behavior of infinite
+        tosses as the number of trials gets large. This is the <strong>law of
+          large numbers</strong>, and it tells us that our actual, empirical
+        results should converge on the correct theoretical values as the number
+        of trials goes to infinity.<br>
+      </p>
+      <p>We will make use of this law to empirically calculate probabilities of
+        multiple "heads" in a row, occurring within a set of 10 coin tosses. For
+        this exercise, a "Trial" is tossing a coin ten times, not tossing it
+        once. It turns out that calculating the probability of a string of
+        "heads" in a row in 10 tosses is a fairly complicated problem to solve
+        mathematically. There are two simple <strong>special cases</strong>
+        that are easy: A) 10 H's in a row, and B) at least one H in ten tosses.</p>
+      <ul>
+        <li>
+          <p>The probability of ten H's in a row is an "and" probability - we
+            need to get an H in toss 1, and an H in toss 2, and in every toss up
+            to the 10th. The multiplication rule tells us to multiply the
+            probability of each outcome to get the probability of all of the
+            outcomes occurring in a trial - this means the probability of
+            HHHHHHHHH = 1/2 x 1/2 x 1/2 x 1/2 x 1/2 x 1/2 x 1/2 x 1/2 x 1/2 x
+            1/2, or 1/2<sup>10</sup>. The number 2<sup>10</sup> is equal to 1024
+            - dividing 1 by 1024 equals p = 0.000977. What is the probability of
+            ten T's in a row? <a href="javascript:ReverseDisplay('ten_t')">Click
+              here to see if you're right.</a></p>
+          <div id="ten_t" style="display:none;">
+            <p style="border-style:solid;padding:10px;clear: both;">Since ten
+              T's in a row is also an "and" probability, we would multiply the
+              probability of a T (1/2) together 10 times, or 1/2<sup>10</sup>.
+              There is only one way to get ten T's in a row, so the probability
+              is 1/1024 = 0.000977, just like ten H's in a row.</p>
+          </div>
+        </li>
+        <li>
+          <p>The probability of one or more H is easiest to solve by calculating
+            the probability of the single outcome in which it wouldn't occur,
+            which is TTTTTTTTTT. Since the probability of ten T's in a row is
+            1/2<sup>10</sup>, the probability of not rolling this sequence is
+            also the probability of one or more H, or 1-1/2<sup>10</sup>, which
+            equals 0.999023. What do you think the probability of at least one T
+            is? <a href="javascript:ReverseDisplay('one_t')">Click here to see
+              if you're right.</a></p>
+          <div id="one_t" style="display:none;">
+            <p style="border-style:solid;padding:10px;clear: both;">Just like
+              with heads, the probability of ten T's is 0.000977, so the
+              probability of one or more T is 1 - 0.000997 = 0.999023.</p>
+          </div>
+        </li>
+      </ul>
+      <p> </p>
+      <p>Aside from these two simple cases, strings of other numbers of H's in a
+        row become difficult to calculate because there are many more than a
+        single way we could obtain them. For example, if we wanted to know the
+        probability of tossing at least two H's in a row in 10 tosses, the
+        sequence HHTTTTTTTT has two H's in a row, but so does HHTHHTHHTH, and
+        HHHHHHHHHH. It turns out that there isn't a simple formula that
+        calculates this probability, so instead we will use a computer to
+        calculate it empirically.</p>
+      <p>According to the Law of Large Numbers, to get results that are accurate
+        we need to conduct lots of trials. Since we're working with outcomes
+        that can have probabilities as low as 1 in 1024, we need a number of
+        trials that's big compared to 1024 - we will simulate 20,000 trials of
+        10 coin tosses each (doing this by hand would be tedious, but computers
+        excel at doing tedious work). To estimate the probability of a sequence
+        of H's or T's that we specify, we just need to conduct 20,000 trials,
+        count how many contain the sequence (the number of "successes"), then
+        divide the number of successes by the number of trials.</p>
+      <p>You will empirically estimate the probability of sequences of H's from
+        one to ten in a row. Since we have already calculated the probabilities
+        of one H and ten H's, we'll check to make sure our empirical estimates
+        are working by comparing the estimates to these two calculated
+        probabilities. Once we're confident the method is working, we can
+        interpret how increasing the number of H's in a row affects the
+        probability that the sequence will occur in ten tosses.</p>
+      <p> </p>
+      <div id="wrapper_div" style="float: left; border: solid black 4px; margin-right: 10px; width: 405px;">
+        <div id="table_div" style="width: 500px; height: 400px;"></div>
+        <p>Enter a test sequence of H's and T's: <input id="test" value="H" type="text">
+          <button id="submit" onclick="drawTable()">Submit</button> </p>
+        <p id="probability" align="center"></p>
+      </div>
+      <p> 1. The simulation to the left generates 20,000 random sets of 10 coin
+        tosses, counts up how many contain the test sequence entered, and then
+        divides them to 20,000 to calculate the probability of the test sequence
+        appearing. Initially H is entered as a test sequence, so the p you will
+        get is the probability of a single H appearing in 10 tosses. We are
+        expecting a probability of 0.999, your result should be close to that
+        (it won't be identical because we are using a simulation that is subject
+        to random chance - if the rounded value is within 0.001 of this result
+        consider it a match). </p>
+      <p>2. The other sequence we calculated above was the probability of ten
+        H's in a row. Enter ten H's as the "Test sequence", and record the
+        probability on your worksheet. It should be close to the 0.000977 value
+        that we calculated, above (again, it should match rounded to about the
+        third decimal place, 0.001).</p>
+      <p> </p>
+      <p> 3. Now that we have some reason to think this thing is working, you
+        can try the rest of the test sequences. Enter each test sequence one at
+        a time, and record the probability estimate you get on your assignment
+        sheet. </p>
+      <p>What do you think will happen to the probabilities as you increase the
+        number of H's in a row? <a href="javascript:ReverseDisplay('more_h')">Click
+          here to see if you're right.</a></p>
+      <div id="more_h" style="display:none;">
+        <p style="border-style:solid;padding:10px; clear: both">The total number
+          of trials is the same every time (20,000) so the only reason the
+          probabilities would change is if a different number of trials match
+          the test sequence. With a single H there are many ways to match the
+          sequence - any H in any position is a match. With two H's there are
+          fewer ways to match - there has to be an HH in one or more positions
+          to match. With three H's there are still fewer ways to match - there
+          has to be at least one HHH in the sequence. Each time an H is added to
+          the sequence there are fewer ways to match, until we get to
+          HHHHHHHHHH, which can only occur in one way. Since the number of ways
+          for the outcome to occur goes down each time we add an H, the
+          probability of a match should go down as well.</p>
+      </div>
+      <p> </p>
+      <p> 4. We selected a class test sequence, which you recorded on your
+        worksheet. Enter this as a test sequence and record its probability.</p>
+      <p> </p>
+      <p> It certainly seems like a sequence that looks decidedly non-random,
+        like HHHHHHHHHH, should be much harder to get than some random jumble of
+        H's and T's, like the class sequence we selected. Was it?</p>
+      <p> </p>
+      <p> 5. To complete this part of the activity, answer the questions on your
+        worksheet about coin tossing.</p>
+      <p> </p>
+      <h2 class="part" id="inverse" style="clear: both">Screening for Down
+        Syndrome and inverse probability</h2>
+      <p>Next, we will explore inverse probability by having you do the
+        calculations for the example we discussed in lecture of using a blood
+        test on pregnant women to screen for Down syndrome (the "triple test").</p>
+      <div id="prob_wrapper" style="float: left; width: 925px; border: 2px solid black; margin-right: 10px">
+        <div id="tableDiv2" style="float: left; width: 450px; height: 320px; padding: 10px;">
+          <table id="dsData" class="tableLarge">
+            <tbody>
+              <tr>
+                <th><br>
+                </th>
+                <th colspan="2" rowspan="1">Test result<br>
+                </th>
+                <th><br>
+                </th>
+              </tr>
+              <tr>
+                <th>DS status<br>
+                </th>
+                <th>Positive<br>
+                  <select class="positive" id="positive" onchange="setStates(this)">
+                    <option selected="selected">None</option>
+                    <option>Marginal</option>
+                    <option>Joint</option>
+                    <option>Conditional</option>
+                    <option>Given</option>
+                  </select>
+                </th>
+                <th>Negative<br>
+                  <select class="negative" id="negative" onchange="setStates(this)">
+                    <option selected="selected">None </option>
+                    <option>Marginal</option>
+                    <option>Joint</option>
+                    <option>Conditional</option>
+                    <option>Given</option>
+                  </select>
+                </th>
+                <th>Total<br>
+                </th>
+              </tr>
+              <tr id="eYrow">
+                <td>DS<br>
+                  <select class="ds" id="ds" onchange="setStates(this)">
+                    <option selected="selected">None </option>
+                    <option>Marginal</option>
+                    <option>Joint</option>
+                    <option>Conditional</option>
+                    <option>Given</option>
+                  </select>
+                </td>
+                <td id="ds_pos">60<br>
+                </td>
+                <td id="ds_neg">40<br>
+                </td>
+                <td id="ds_total">100<br>
+                </td>
+              </tr>
+              <tr id="eNrow">
+                <td>No DS<br>
+                  <select class="no_ds" id="no_ds" onchange="setStates(this)">
+                    <option selected="selected">None </option>
+                    <option>Marginal</option>
+                    <option>Joint</option>
+                    <option>Conditional</option>
+                    <option>Given</option>
+                  </select>
+                </td>
+                <td id="no_ds_pos">5<br>
+                </td>
+                <td id="no_ds_neg">95<br>
+                </td>
+                <td id="no_ds_total">100<br>
+                </td>
+              </tr>
+              <tr>
+                <td>Total</td>
+                <td id="positive_total">65</td>
+                <td id="negative_total">135</td>
+                <td id="grand_total">200</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="outputDiv2" style="float: right; height: 280; width: 425px;">
+          <h2>Probability calculation</h2>
+          <p style="clear: both">DS rate: <input id="ds_rate_num" min="1" max="100"
+              value="100" style="width: 60px" onchange="initializeTable()" type="number">
+            in <input id="ds_rate_denom" min="100" value="200" style="width: 60px"
+              onchange="initializeTable()" type="number"></p>
+          <p>Sensitivity - P(Positive | DS) = <input id="sensitivity" min="0" max="1"
+              value="0.6" step="0.01" style="width: 60px" onchange="initializeTable()"
+              type="number"></p>
+          <p>False positive rate - P(Positive | No DS) = <input id="false_pos"
+              min="0" max="1" value="0.05" step="0.01" style="width: 60px" onchange="initializeTable()"
+              type="number"></p>
+          <p id="output"></p>
+          <p id="prob_testing"></p>
+        </div>
+      </div>
+      <p> The simulation to the left is a table showing the (instructor
+        generated) results of a study of effectiveness of the triple test as a
+        screening test for Down syndrome. Although the data themselves are not
+        real, they were generated to reflect the reported sensitivity (i.e. true
+        positive rate) and false positive rate for this test. The rows of the
+        table give the DS status of the fetuses as either DS or No DS. </p>
+      <p>Before you make any changes, the numbers in the table are set to
+        reflect a study of the effectiveness of the triple test for screening
+        for DS. Because this is a study to assess the accuracy of the screening
+        test, the actual DS status of every woman in the table would be
+        established using amniocentesis, which is essentially 100% accurate.
+        Each woman would then also be given the triple test. In clinical terms,
+        a "positive" result on the triple test means the test indicates a DS
+        fetus, whereas a "negative" result indicates that the test indicates a
+        No DS pregnancy (in medical terms, "positive" means that the test
+        indicates the presence of the disorder you are testing for). By design,
+        there is an equal number of women with or without a DS pregnancy - which
+        is a good feature of experimental design - why? <a href="javascript:ReverseDisplay('why_balanced')">Click
+          here to see if you're right.</a></p>
+      <div id="why_balanced" style="display:none;">
+        <p style="border-style:solid;padding:10px; clear: both">Experiments that
+          are balanced give the most reliable results, with the smallest amount
+          of sampling error.</p>
+      </div>
+      <h3>Probabilities based on the "study data"</h3>
+      <p>Let's start with the data as it initially appears - this is the "study
+        of effectiveness of trip test section" referred to on your worksheet.</p>
+      <p> 1. Let's first just check that we're learning something from doing the
+        test. If the test result is indicating DS status, then DS status should
+        depend on the test result. To assess this we need to calculate the
+        marginal probability of DS, and then the conditional probability of DS
+        given a positive test - if these are the same number then DS status is
+        independent of the test result. If DS status was independent of the test
+        result that would mean that your chances of having DS are the same if
+        you get a positive test and if you don't take the test at all - this
+        would be a good indication that the test was not working at all. If
+        P(DS) and P(DS | Positive) are different, then the DS status depends on
+        the test result, and as long as P(DS | Positive) is bigger than P(DS),
+        the test result is giving us information about DS status.</p>
+      <p>Calculate the marginal probability of DS from the study population -
+        drop down the menu under "DS" and set it to "Marginal". A marginal
+        probability is the total number of times that DS occurred, divided by
+        the total number of women in the study. The color coding in the table
+        and in the probability reported will show you how the calculation is
+        done.</p>
+      <p>2. Next, calculate the inverse probability of being a DS patient if you
+        receive a Positive test result, or P(DS | Positive). To do a conditional
+        probability, you need to set a "Given", which is the outcome that comes
+        after the vertical line - the given is already known to have occurred,
+        and we are not calculating its probability. Then, set the outcome whose
+        probability you are calculating as "Conditional", which is DS. You'll
+        see that when you set Positive as "Given" its entire column is shaded
+        gray to indicate that we only need to consider the data in the
+        "Positive" column if we know already that we've received a positive test
+        result. The conditional probability of DS given a positive result is the
+        number of times the pregnancy actually was DS after a positive test
+        result was obtained, divided by the number of positive test results
+        (60/65).</p>
+      <p> </p>
+      <p>3. The <strong>sensitivity</strong> is already entered as 0.6 in the
+        simulation, but let's see where that number is coming from.</p>
+      <p>Sensitivity is a standard measure of how well a screening test is
+        working, and it is a conditional probability - namely, it is the
+        probability of a positive test result given that the pregnancy is
+        actually DS. Symbolically, sensitivity is P(Positive | DS). The vertical
+        line tells us we already know DS status, so set DS as the "Given" - we
+        are only interested in the DS row of the table. It is the probability of
+        testing positive that we calculate - set DS as the "Conditional". Check
+        that the conditional probability of Positive given DS matches the
+        sensitivity reported in the simulation.</p>
+      <p> </p>
+      <p> 4. Another standard measure of effectiveness is the <strong>false
+          positive rate</strong>.</p>
+      <p>The false positive rate is the probability that a patient that is known
+        not to have the condition will incorrectly test positive. This too is a
+        conditional probability, P(Positive | No DS), and the vertical line
+        tells us we only need to pay attention to the No DS row, because we know
+        the patient doesn't have a DS pregnancy. This probability is calculated
+        as the number of positive tests in the No DS row divided by the total
+        number of No DS patients. Do the calculation and check that it matches
+        the false positive rate reported in the simulation.</p>
+      <p>Sensitivity and false positive rate are classic <strong>researcher's
+          questions</strong>, because they both require us to already know the
+        DS status of the patient. When a patient takes the triple test, she will
+        know the test result but will not know her actual DS status (if she knew
+        that, the screening test would be unnecessary). The probability you
+        calculated in step 2 to test for independence between DS status and test
+        result is a <strong>patient's question</strong>, namely: if I get a
+        positive test result, what is the probability that I have a DS
+        pregnancy?</p>
+      <p>If you think about what the patient's question is asking, what is the
+        given? What is it the probability of (DS status, or test result)? <a href="javascript:ReverseDisplay('patient_q')">Click
+          here to see if you're right.</a><span style="color: #0000ee;"></span></p>
+      <div id="patient_q" style="display:none;">
+        <p style="border-style:solid;padding:10px;clear: both;">If she knows her
+          test result, positive, that's the given. We are calculating the
+          probability of the outcome that isn't known yet, which is the
+          probability that the pregnancy is DS.</p>
+      </div>
+      <p>Notice that sensitivity and the patient's question both use the same
+        terms, but put them in different places. Sensitivity, P(Positive | DS),
+        treats DS status as a given, and calculates the probability of a
+        positive test result when the DS status is known to be DS. The patient's
+        question, P(DS | Positive), treats the test result as a given, and
+        calculates the probability of DS after a positive test is obtained. Even
+        though the same terms are used, one is a probability of DS, and the
+        other is a probability of a positive test result, and as you can now see
+        the numbers are not the same.</p>
+      <p>At least, though, things are looking good for the triple test - based
+        on the study population's data the probability of having a DS pregnancy
+        given a positive test result is 0.9231, which is much higher than the
+        sensitivity of the test of 0.6. It looks like getting a positive test
+        result is very informative, based on these results.</p>
+      <p>But, there's a problem - the study population has a really high rate of
+        DS; according to the P(DS) you calculated, the rate of DS in the
+        population is 0.5. When the test is actually used on the general
+        population the rate is much lower - and this turns out to make a huge
+        difference in the answer to the patient's question. Let's see how huge,
+        and why.</p>
+      <h3>Triple test applied to the general population</h3>
+      <p> </p>
+      <p> In actual human populations, DS is a rare disorder, occurring in only
+        1 in 1000 pregnancies. We can see how making just this one change
+        affects the probabilities we calculated in the previous step.</p>
+      <p> </p>
+      <p> 5. First, we need to change the setup to reflect the DS rate in the
+        general population. Leave the simulation set to the patient's question -
+        the conditional probability of DS given a positive test result - as you
+        make the following change.</p>
+      <p>Change the "DS rate:" to have a 1 for the first entry, and a 1000 for
+        the second - this sets the DS rate to 1 in 1000, and you'll see that the
+        table automatically updates to reflect this new rate. There will be a 1
+        as the marginal total for DS, a 999 as the marginal total for No DS, and
+        1000 as the grand total.</p>
+      <p>Note that the numbers in the body of the table are being calculated
+        from the sensitivity and false positive rates, which are set to 0.6 and
+        0.05, respectively. The only thing you changed was the DS rate, and
+        neither the sensitivity nor false positive rates changed at all.
+        Sensitivity was used to put 60% of DS pregnancies into the positive test
+        result column, and therefore 40% were put into the negative test result
+        column. Likewise the false positive rate of 5% was used to put 5% of the
+        No DS pregnancies into the positive column, and 95% of No DS pregnancies
+        were put into the negative column. In other words, the test is working
+        just as well as before, as far as the researcher's questions are
+        concerned.</p>
+      <p> </p>
+      <p> </p>
+      <p> 6. Note what happened to P(DS | Positive) - it is now a very small
+        number. This is telling you that when you apply the triple test to the
+        general population the answer to the patient's question is much less
+        certain.</p>
+      <p>Since the only thing that changed was the rate of DS in the population
+        that must be why P(DS | Positive) changed. Now we need to think about
+        why that happens.</p>
+      <p>The conditional probability P(DS | Positive) is telling us that we only
+        need to consider the positive test results. There are two ways to get a
+        positive test result - <strong>true positives</strong> (i.e. positives
+        received by women who actually have a DS pregnancy) and <strong>false
+          positives</strong> (i.e. positives received by women who have a No DS
+        pregnancy), and the probability P(DS | Positive) is calculated as the
+        proportion of positive test results that are true positives. Changing
+        the DS rate affects this probability because:</p>
+      <ul>
+        <li>The relative number of <em>true</em> positives <strong>decreases</strong>.
+          Only women with DS pregnancies get true positive test results. In the
+          study population 1/2 of the women have DS pregnancies, so 1/2 of the
+          women in the population are able to contribute true positive tests. In
+          the general population only 1 woman in 1000 actually has a DS
+          pregnancy, so many fewer true positives could occur.</li>
+        <li>The relative number of <em>false</em> positives <strong>increases</strong>.
+          Only women with No DS pregnancies can get false positive test results.
+          In the study population 1/2 of the women have No DS pregnancies, so
+          only 1/2 of the women in the population are able to contribute false
+          positives. But, in the general population 999 out of 1000 women have
+          No DS pregnancies, which will greatly increase the number of false
+          positives.</li>
+      </ul>
+      <p>With fewer true positives, and more false positives, the probability
+        P(DS | Positive) goes way down.</p>
+      <p>7. While you're at it, also calculate the marginal probability of DS,
+        P(DS), for the general population - this is the number of women with DS
+        divided by the total number of women. You'll see that this is the DS
+        rate in the population, 1 in 1000 = 0.001.</p>
+      <p>So, let's focus now on what we could do to make the test work better.</p>
+      <h3 class="part">Potential for improvement of the triple test</h3>
+      <p> </p>
+      <p> 8. Things are looking pretty bad for the test, so we are going to look
+        at ways we could improve its performance.</p>
+      <p>Since the probability we're looking at, P(DS | Positive), is based just
+        on the Positive column, we can focus on the two ways that we can get
+        positive test results. We have two rates that indicate how well the test
+        is working, sensitivity and false positive rate. We will try changing
+        each of them to see how P(DS | Positive) changes - we want P(DS |
+        Positive) to be as big as possible, so if changing sensitivity or false
+        positive rate increases P(DS | Positive) we are improving the
+        performance of the test.</p>
+      <p> </p>
+      <p> Start with sensitivity. Being right only 60% of the time leaves lots
+        of room for improvement. The best sensitivity possible would be 1, which
+        means the disease is always detected when it's present. Change the test
+        sensitivity to 0.7, 0.8, 0.9, and 1 and record P(DS | Positive) at each
+        sensitivity.</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> Once you're done with the sensitivities, <span style="font-weight: bold;">change
+          sensitivity back to 0.6</span>. </p>
+      <p>Next, try improving false positive rate. The best false positive rate
+        we could have is zero, which means the test is never positive for No DS
+        pregnancies. Change false positive rate to 0.04, 0.03, 0.02, 0.01, and
+        0, and for each one record the P(DS | Positive) on your worksheet. You
+        should see that, even though we could only improve false positive rate
+        by 5%, it has a much bigger effect on P(DS | Positive) than improving
+        sensitivity does.</p>
+      <p> </p>
+      <p> 9. Answer the remaining question on your worksheet about inverse
+        probability.</p>
+      <h2 class="part" id="challenge">Challenge Question</h2>
+      <p> You've probably seen pictures of hand prints on cave walls, like the
+        one on the left side of this image, made by prehistoric artists. Cave
+        paintings of this kind are found in a variety of places, including
+        Australia, South America, and Indonesia, and hand prints from these
+        areas date from the Neolithic (approximately 8500 BC) to modern times.
+        Hand prints found in western Europe caves are even older, dating to the
+        upper Paleolithic (about 10,000 BC). The prints are made by placing
+        one's palm on the cave wall, and then blowing pigment through a straw
+        over the back of the hand to leave a negative impression. The position
+        of the thumb makes it easy to tell which hand was used for which part of
+        this task, and two researchers (C. Faurie and M. Raymond) did a study in
+        which they compared the handedness of upper Paleolithic hand prints from
+        caves ni France and Spain to handedness in classes of students. They
+        gave students paper, straws, and (non-toxic) pigment to create their own
+        hand prints. The researchers did not tell the students which hands to
+        use, and so students were free to choose whichever hand seemed most
+        natural for accomplishing the task. The data on paleolithic and modern
+        hand prints, taken from their paper in Biology Letters (2003,
+        271:S43-S45) is given here:</p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th><br>
+            </th>
+            <th colspan="2">Negative hands</th>
+            <th><br>
+            </th>
+          </tr>
+          <tr>
+            <th>Period<br>
+            </th>
+            <th>Left</th>
+            <th>Right</th>
+            <th>Row total</th>
+          </tr>
+          <tr>
+            <td>Paleolithic </td>
+            <td>264 </td>
+            <td>79 </td>
+            <td>343 </td>
+          </tr>
+          <tr>
+            <td>Modern </td>
+            <td>138 </td>
+            <td>41 </td>
+            <td>179 </td>
+          </tr>
+          <tr>
+            <td>Column total </td>
+            <td>402 </td>
+            <td>120 </td>
+            <td>522 </td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+      <p> 1. What is the marginal probability of being left-handed?</p>
+      <p> </p>
+      <p> 2. What is the marginal probability of being Paleolithic?</p>
+      <p> </p>
+      <p> 3. What is the conditional probability of being left handed given that
+        you are from the Paleolithic?</p>
+      <p> </p>
+      <p> 4. What is the conditional probability of being left handed given that
+        you are Modern?</p>
+      <p> </p>
+      <p> 5. How do the conditional probabilities compare to one another? Does
+        there seem to have been a change in handedness over time?</p>
+      <p> </p>
+      <p> 6. Is handedness independent of time period? Compare the marginal
+        probability of being left-handed to the conditional probabilities, given
+        the period.</p>
+      <p> </p>
+      <p> 7. If somebody told you they had seen a left-handed hand print, what
+        is the probability that it was from the Paleolithic? Why is it not 0.5?</p>
+      <p> </p>
+    </div>
+  </body>
+</html>

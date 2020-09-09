@@ -1,0 +1,457 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Anova as GLM</title>
+    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=02a5532ccf4574e49ae6e245b4a118252&amp;authkey=AcYXNyrvFGWnmf6cbl1qQQ4&amp;e=4170fc6099b74d3f94a7fdaade97010e"
+      rel="stylesheet" type="text/css">
+    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=04e5dfc4b7ee64a7dbacb487cddde06a0&authkey=AdStuSX7RsXlg4QXZtzjDfw&e=f5861611192540a4b0c28483e9e5baf0"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>The General Linear Model - ANOVA as regression</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#instructions">Instructions</a></p>
+      <p><a href="#twosp">Two species</a></p>
+      <p><a href="#sixsp">Six species</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <p class="part" id="intro">Today we will analyze grouped data in a variety
+        of ways: a) as a traditional one-way ANOVA, b) as a dummy-coded
+        regression, and c) as a general linear model (GLM). Since GLM expresses
+        all analyses as regressions, we expect that all three of these
+        approaches will give identical results, but with different standard
+        output. By comparing the output we get from each approach we can begin
+        to learn how to interpret GLM output when we are using it to conduct an
+        analysis of variance on grouped data. We will also learn how to take
+        advantage of the tests of coefficients that are part of the standard GLM
+        output, but not part of the standard ANOVA output in R. </p>
+      <table width="100%" border="1">
+        <tbody>
+          <tr>
+            <td><img alt="About to do the deed" src="Cuckoo.jpg"><br>
+            </td>
+            <td>
+              <p>The data we will use today gives the length of European cuckoo
+                eggs laid in nests of various host species (if you have taken
+                Biol 215 here you probably recognize it). European cuckoos are
+                nest parasites, which means they do not build nests of their
+                own, but instead place their eggs in the nests of other "host"
+                bird species. They have been observed laying their eggs on the
+                ground, picking them up in their beaks, and then depositing them
+                in a host nest nearby.</p>
+            </td>
+          </tr>
+          <tr>
+            <td><img alt="Chick ejecting" src="chick_ejecting_egg.jpg"><br>
+            </td>
+            <td>
+              <p>These host species raise the cuckoo chick as its own, even
+                though the cuckoo chick is often much larger than the host
+                species' chicks. Cuckoo chicks hatch quickly and grow rapidly
+                after hatching, and are able to actively eject the host species'
+                eggs from the nest. Hosts often end up raising only the cuckoo
+                chick.</p>
+            </td>
+          </tr>
+          <tr>
+            <td><img alt="Meadow pipit parent" src="meadow_pipit_parent.jpg"><br>
+            </td>
+            <td>
+              <p>As the cuckoo chick reaches full size, it may be substantially
+                larger than the host adults. This chick is being fed by a meadow
+                pipit.</p>
+            </td>
+          </tr>
+          <tr>
+            <td><img alt="Wren parent" src="wren_parent.jpg"><br>
+            </td>
+            <td>
+              <p>One of the host species cuckoos use is the European wren. Wrens
+                are quite a bit smaller than meadow pipits, and you can see that
+                feeding such a large cuckoo chick must be very taxing for such a
+                small host. At some point the food needs of the cuckoo chick
+                could exceed the host pair's foraging ability, and the cuckoo
+                chick may starve. The size of the egg is related to the size of
+                the chick, such that smaller cuckoo eggs tend to give rise to
+                smaller adults.</p>
+              <p>Given this, it seems likely that a female cuckoo's reproductive
+                success would increase if she matched her egg sizes to the size
+                of the host species. These data were measured by Oswald Latter
+                in 1902 using museum egg collections to address this question.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>The question we are asking is, are cuckoo egg lengths different in
+        different host species nests?</p>
+      <h2 class="part" id="instructions">Instructions</h2>
+      <p>To begin, download <a href="cuckoo_all_species.xls">this</a> file, and
+        save it to your h-drive.</p>
+      <p>Recall from lecture that when there are only two groups, we can
+        dummy-code the groups with a single numeric variable and analyze data as
+        a simple linear regression. We will demonstrate this with just two host
+        species first, and then later we will generalize the approach to the
+        full set of six host species. Normally it would not be necessary to
+        dummy code factors (i.e. categorical variables) by hand, because R will
+        take care of it for us. We will do it today to help you understand how
+        the process works, but will let R take care of this tedious work for us
+        hereafter.</p>
+      <p> </p>
+      <h3 class="part" id="twosp">Two host species</h3>
+      <h4>A. Dummy coding the two species data</h4>
+      <p>1. Import the "two_sp" sheet into R Studio, and call the R data set
+        "twosp". You will see there are 15 measurements of cuckoo egg length for
+        each of two host species, the wren and the tree pipit.</p>
+      <p> </p>
+      <p>2. Start a new R Script for your commands - remember, this will allow
+        you to record all your steps, and to fix mistakes, so that you have a
+        nice clean, repeatable set of steps to refer to, and to document your
+        work.</p>
+      <p>3. The first thing we need to do is to make a dummy-coded version of
+        the Species column. We can take advantage of the model.matrix() command
+        in R to do this for us, but model.matrix() produces a column for the
+        intercept of the model as well - we will use it, but then will drop the
+        intercept column so that all that is left is the dummy-coded species.</p>
+      <p>So, in your R script, enter the line:</p>
+      <p class="rcmd">model.matrix(~twosp$species)</p>
+      <p>and run it. You'll see that on the console you will get a column for
+        the intercept, and one for the dummy-coded Wren. There is some
+        additional stuff at the bottom that gives attributes of the matrix that
+        we won't use - we aren't actually interested in the entire model matrix,
+        just the dummy-coded Wren column, so we can ignore the rest for now.</p>
+      <p>To get just the dummy-coded column, edit the command to read:</p>
+      <p class="rcmd">model.matrix(~twosp$species)[ , -1]</p>
+      <p>and run it. The model.matrix() command returns a matrix, and we can
+        extract the part of the matrix we want as part of the command. Adding a
+        row, column index at the end causes only the rows and columns specified
+        to be returned. The row index in the first position is blank, so all
+        rows are returned. Using a negative in front of the 1 in the column
+        index position causes the first column to be dropped, such that only the
+        dummy-coded Wren column is returned.</p>
+      <p>Finally, to get this column added to the twosp data set, edit the
+        command once again to read:</p>
+      <p class="rcmd">model.matrix(~twosp$species)[,-1] -&gt; twosp$Wren</p>
+      <p>If you look at twosp you'll see that there is now a new Wren column,
+        which has a 1 in every row that is a Wren, and a 0 for every row that is
+        a Tree Pipit.</p>
+      <h4>B. Look at your data</h4>
+      <p>Load the gplots package, and use plotmeans() to graph the lengths
+        grouped by species.</p>
+      <p>The plot will give you a mean for Tree Pipit and a mean for Wren, and
+        the 95% CI's should be clearly non-overlapping, with a low mean for
+        Wren. You would expect that the ANOVA should be significant given this.</p>
+      <p>We will conduct an ANOVA with these data using species as the grouping
+        variable, and then use regression with Wren as the predictor. Both of
+        these analyses will ask the same question about the data (i.e. can
+        length be explained by species), but the regression approach will use
+        the mean for one species as the intercept (which we'll call the
+        "baseline" group), and the slope of the regression line will be the
+        difference between the baseline species and the other species. </p>
+      <p>Take a look at the plot - you have set Wren to 1, and Tree Pipit to 0
+        in your dummy-coded column. When you use regression or GLM to analyze
+        the differences between the groups, which species mean will be equal to
+        the intercept term? <a href="javascript:ReverseDisplay('who_is_zero')">Click
+          here to see if you're right.</a> </p>
+      <div style="display: none;" id="who_is_zero">
+        <p style="border-style: solid; padding: 10px;"> The Tree Pipit is the 0
+          group, so the intercept will be the tree pipit mean. </p>
+      </div>
+      <p> Should the coefficient on the Wren dummy variable be positive or
+        negative? <a href="javascript:ReverseDisplay('wren_pos_neg')">Click
+          here to see if you're right.</a> </p>
+      <div style="display: none;" id="wren_pos_neg">
+        <p style="border-style: solid; padding: 10px;"> The coefficient on the
+          dummy variable is going to be the difference between the zero group
+          mean and the 1 group mean. Since Wrens have a lower mean than Tree
+          Pipits the coefficient will be negative. </p>
+      </div>
+      <p><span style="font-family: &quot;Source Sans Pro&quot;,sans-serif;">Start
+          a new file in MS Word, and copy and paste your graph into your Word
+          file.</span></p>
+      <h4>C. ANOVA</h4>
+      <p>1. We'll start with the analysis you already know how to use for
+        comparing means of grouped data, ANOVA. </p>
+      <p>We used the aov() function to do ANOVA last time, but the lm() function
+        can do ANOVA as well. If we use a categorical variable as the predictor
+        in the model formula then we will get ANOVA output from lm(), and if we
+        use a numeric predictor we get regression output. So, to get our ANOVA
+        use the commands:</p>
+      <p class="rcmd">lm(length ~ species, data = twosp) -&gt; twosp.anova</p>
+      <p class="rcmd">anova(twosp.anova) </p>
+      <p>The first command conducts the analysis, and the second produces the
+        ANOVA table.</p>
+      <p> </p>
+      <p>2. Copy and paste the ANOVA table into your MS Word document. If it
+        looks scrambled in Word, select the output and change its font to
+        Courier.</p>
+      <p>Load the biol531 package, and use the summarySE function to make a
+        table of summary statistics for the two species. Copy and paste it to
+        your Word file as well.</p>
+      <p>Now that we know what the ANOVA table should look like, you can move on
+        to using regression on our dummy coded variable.</p>
+      <h4>D. Regression with dummy coded species</h4>
+      <p>1. To do your regression analysis, use the command:</p>
+      <p class="rcmd">lm(length ~ Wren, data = twosp) -&gt; twosp.lm</p>
+      <p>If you type the name twosp.lm in the console you'll see the
+        coefficients reported. Copy the output and paste it into your Word file.</p>
+      <p> </p>
+      <p>2. Now that the model is fit, generate an ANOVA table using the
+        command:</p>
+      <p class="rcmd">anova(twosp.lm)</p>
+      <p>You'll see that the ANOVA table is exactly the same, except that Wren
+        is shown as the predictor instead of species.</p>
+      <p> </p>
+      <p>3. Copy and paste the ANOVA table to Word, below the first block of
+        output.</p>
+      <p>Now that you have an idea of how this works using a simple example with
+        only two species to compare, we'll repeat the procedure with six
+        species.<br>
+      </p>
+      <h3 class="part" id="sixsp">Six host species</h3>
+      <h4>A. Dummy coding the six species data.</h4>
+      <p>1. Import the "all_sp" worksheet into an R data set called allsp.</p>
+      <p> </p>
+      <p>2. We will use the model.matrix() command again, but since we will now
+        have 5 columns to represent 6 species we need to do a little more work
+        to get the dummy codes into the allsp data set, labeled properly.</p>
+      <p>To get the dummy-coded columns into the allsp data set, use the
+        command:</p>
+      <p class="rcmd">data.frame(allsp, model.matrix(~allsp$species)[,-1]) -&gt;
+        allsp</p>
+      <p>The data.frame() command is used to work with R data sets (called "data
+        frames" in R terminology). This command is taking an existing data
+        frame, allsp, and adding on columns using our model.matrix() statement.
+        Remember, using the -1 in the row, column index in square brackets drops
+        the intercept term, and leaves behind only the dummy-coded species.
+        Assigning back into allsp replaces allsp with this new data frame. You
+        should now have 7 columns in allsp, the 2 original ones plus 5
+        dummy-coded columns.</p>
+      <p>But, we're not done yet - the default naming on the dummy-coded columns
+        is needlessly messy and difficult to read, so we need to re-label them.
+        If you type the command:</p>
+      <p class="rcmd">colnames(allsp)</p>
+      <p>you'll see that column 3 through 7 are labeled by the name of the data
+        frame and the species column, and only then give the name of the
+        species. We can replace just these 5 column names with the names we want
+        by assigning new values with the colnames() command - modify it to read:</p>
+      <p class="rcmd">colnames(allsp)[3:7] &lt;-
+        c("Meadow.Pipit","Pied.Wagtail","Robin","Tree.Pipit","Wren") </p>
+      <p>This command identifies the 3rd through the 7th column name, and sets
+        them to the vector of labels on the right.</p>
+      <p> </p>
+      You're all set to move on to some graphing and analysis.<br>
+      <h4>B. Look at your data.</h4>
+      <p> </p>
+      <p>Produce another plot comparing means for the six host species in this
+        data set, like you did for two species (you can use the species column
+        for grouping). Copy and paste the graph into Word.</p>
+      <p>Take a look at the plot - now Hedge Sparrow is the species with 0 on
+        all the dummy coded variables. What will the intercept represent? <a href="javascript:ReverseDisplay('who_is_zero_six')">Click
+          here to see if you're right.</a> </p>
+      <div style="display: none;" id="who_is_zero_six">
+        <p style="border-style: solid; padding: 10px;"> The intercept will now
+          be the hedge sparrow mean. </p>
+      </div>
+      <p> Should the coefficient on the Wren dummy variable be positive or
+        negative? <a href="javascript:ReverseDisplay('wren_pos_neg_six')">Click
+          here to see if you're right.</a> </p>
+      <div style="display: none;" id="wren_pos_neg_six">
+        <p style="border-style: solid; padding: 10px;"> Cuckoo eggs in wren
+          nests are the smallest, so the difference between Hedge Sparrow and
+          Wren is negative. For the other species, any that are above Hedge
+          Sparrow will be positive, and any that are below Hedge Sparrow will be
+          negative. </p>
+      </div>
+      <h4>C. ANOVA</h4>
+      <p>Conduct an ANOVA on these six species, as you did for the two species
+        data set. Use the same naming convention as we started using with two
+        species - use "allsp.anova" for the name of the model. Record the same
+        output as you did for the two group analysis (including the table of
+        species means).</p>
+      <h4>D. (Multiple) Regression</h4>
+      <p>To conduct a regression using the dummy-coded variables is to conduct
+        your first <strong>multiple regression</strong>. We will learn more
+        about multiple regression in the coming weeks, but for now you just need
+        to know that we are still predicting a single response (length), but we
+        will be using each dummy-coded column as a predictor. The command for
+        this analysis is thus:</p>
+      <p class="rcmd">lm(length ~ Meadow.Pipit + Pied.Wagtail + Robin +
+        Tree.Pipit + Wren, data = allsp) -&gt; allsp.lm </p>
+      <p class="rcmd">anova(allsp.lm)</p>
+      <p> </p>
+      <p>Run the analysis and record the ANOVA table in your Word document. It
+        will look like this:</p>
+      <p class="rout">Analysis of Variance Table <br>
+        &nbsp;<br>
+        Response: length <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Df Sum Sq Mean Sq F value&nbsp;&nbsp;&nbsp;
+        Pr(&gt;F)&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Meadow.Pipit&nbsp;&nbsp; 1&nbsp; 1.767&nbsp; 1.7672&nbsp; 2.1567
+        0.1446995&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Pied.Wagtail&nbsp;&nbsp; 1&nbsp; 2.202&nbsp; 2.2016&nbsp; 2.6869
+        0.1039311&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Robin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;
+        0.209&nbsp; 0.2092&nbsp; 0.2553 0.6143459&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Tree.Pipit&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp; 9.832&nbsp; 9.8319 11.9991
+        0.0007507 *** <br>
+        Wren&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1
+        28.800 28.8002 35.1486 3.329e-08 *** <br>
+        Residuals&nbsp;&nbsp;&nbsp; 114 93.410&nbsp;
+0.8194&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+        --- <br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1<br>
+      </p>
+      <p> </p>
+      <p> The ANOVA table you get from this approach has a line for each dummy
+        variable. In a multiple regression each predictor is tested for its
+        effect on egg length separately. Since regression predictors get 1
+        degrees of freedom, across all of the predictors we are using 5 degrees
+        of freedom, which is the same as when we used species in an ANOVA. If
+        this is the same analysis as our ANOVA, the sums of squares explained by
+        these 5 predictors should be the same as the species sums of squares we
+        got when species was used as a grouping variable in our ANOVA. We can
+        check this by extracting the sums of squares from the table and summing
+        them.</p>
+      <p>The ANOVA table we get with anova(allsp.lm) is structured with several
+        named components. To see what they are use the command:</p>
+      <p class="rcmd">names(anova(allsp.lm))</p>
+      <p>You'll see the output:</p>
+      <p class="rout">[1] "Df"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "Sum Sq"&nbsp;
+        "Mean Sq" "F value" "Pr(&gt;F)"&nbsp; </p>
+      <p>The sums of squares are the second named component, called "Sum Sq". We
+        can pull just the sums of squares with the command:</p>
+      <p class="rcmd">anova(allsp.lm)["Sum Sq"]</p>
+      <p>We're using the square brackets this time to specify the name of a
+        named component, rather than giving an index number. We could get the
+        same thing with the command:</p>
+      <p class="rcmd">anova(allsp.lm)[2]</p>
+      <p>because the sums of squares are the second named component. You'll see
+        that the final row of the sums of squares column is the residual SS -
+        this is the unexplained, random variation. It equals the residual SS
+        from your ANOVA, but we don't want to include it in our sum of the SS
+        explained by our five dummy-coded species. So, we can sum all but the
+        final row of this column using the command:</p>
+      <p class="rcmd">sum(anova(allsp.lm)[-6, "Sum Sq"])</p>
+      <p>This will give you a total of the five dummy-coded predictors, and it
+        should equal the SS for species that you got in your ANOVA.</p>
+    </div>
+    <div class="rout">
+      <p>Use summary() to get the coefficients - put the summary output into
+        Word as well. Note that each of the slope coefficients has a t-test
+        associated with it, as does the intercept. Each of these tests is
+        comparing the coefficient estimate to 0 - this is a silly thing to do
+        for the intercept in this case, because the intercept is the mean for
+        Hedge Sparrow, which we already know can't be 0 (why?). Since the slopes
+        on the dummy-coded predictors are all actually the differences between
+        the species means and the Hedge Sparrow mean, testing these against 0
+        makes some sense - if they are significant it means that the mean for
+        the species is different from the mean for Hedge Sparrow. We'll learn
+        more about these test when we learn about contrasts later in the
+        semester. </p>
+      <p>Since the SS are the same, and the DF for species is the same as the
+        sum of the DF for the dummy-coded predictors, the rest of the ANOVA has
+        to be the same - MS are SS/DF, and F is a ratio of the mean squares.<br>
+      </p>
+      <div style="display: none;" id="resid">
+        <p style="border-style: solid; padding: 10px;"> Remember that all we are
+          doing by dummy coding is representing our six species with five
+          numeric variables. The analysis is still about comparing the amount of
+          variation we can explain (in terms of differences in average between
+          species) to the amount of variation we can't explain (in terms of
+          individual variation around the averages). So, if all we're doing is
+          expressing group means using regression coefficients, then we should
+          explain exactly the same amount of variation when we use regression,
+          and we should thus leave exactly the same amount unexplained. The
+          residual term should be the same for both. </p>
+      </div>
+      <h4>E. Setting wrens as the comparison group</h4>
+      <p>R needs to convert categorical variables into factors to use them in
+        analysis. Making a factor involves finding all the unique words in the
+        column, sorting them alphabetically, and assigning them a number
+        starting with 1 and going up to the number of levels in the factor. It
+        then uses the alphabetical list of the actual text species names as the
+        "levels" of the factor, and substitutes these level names for the
+        internally assigned numbers when it displays the factor on the screen.</p>
+      <p>When you use a factor in a GLM, R by default will use the level that
+        comes first alphabetically as the baseline level. You may not want it to
+        do that. Remember from lecture that it's possible to get some mileage
+        out of the coefficient tests if you set the level you want to compare
+        all the other levels to as the baseline. If, for example, one of your
+        levels was a "control", and the rest were various types of treatments,
+        you might want to compare all of the treatments to the control - if so,
+        setting the control level as the baseline makes the coefficient tests do
+        this work for you. </p>
+      <p>This study of cuckoo egg sizes is not a very good example because there
+        isn't a single species we are using as a "control". But, even though
+        this cuckoo egg study was not designed to compare all the other species
+        to Wrens, we are going to learn how to specify which group is the
+        baseline so you can do it in other contexts when it is more appropriate.</p>
+      <p>To change the order so that Wren comes first use:</p>
+      <p class="rcmd">allsp$species &lt;- factor(allsp$species, levels =
+        c("Wren","Hedge Sparrow","Meadow Pipit", "Pied Wagtail","Robin","Tree
+        Pipit"))&nbsp;</p>
+      <p>The factor() command on the right side of the assignment operator is
+        specifying the order of the levels, using Wren as the first one. The new
+        re-ordered factor is assigned back into the species column of allsp,
+        which replaces the original alphabetically ordered factor with the new
+        one.</p>
+      <p>Now, if you run your ANOVA command again and do a summary() on the
+        results you'll see this:</p>
+      <p><span class="rout">Call: <br>
+          lm(formula = length ~ species, data = allsp) <br>
+          &nbsp;<br>
+          Residuals: <br>
+          &nbsp;&nbsp;&nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          1Q&nbsp;&nbsp; Median&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          3Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Max&nbsp; <br>
+          -2.69333 -0.39333 -0.01429&nbsp; 0.50833&nbsp; 2.10667&nbsp; <br>
+          &nbsp;<br>
+          Coefficients: <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp;&nbsp; <br>
+          (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          21.1200&nbsp;&nbsp;&nbsp;&nbsp; 0.2337&nbsp; 90.364&nbsp; &lt; 2e-16
+          *** <br>
+          speciesHedge Sparrow&nbsp;&nbsp; 1.9943&nbsp;&nbsp;&nbsp;&nbsp;
+          0.3364&nbsp;&nbsp; 5.929 3.33e-08 *** <br>
+          speciesMeadow Pipit&nbsp;&nbsp;&nbsp; 1.1733&nbsp;&nbsp;&nbsp;&nbsp;
+          0.2699&nbsp;&nbsp; 4.348 3.01e-05 *** <br>
+          speciesPied Wagtail&nbsp;&nbsp;&nbsp; 1.7667&nbsp;&nbsp;&nbsp;&nbsp;
+          0.3305&nbsp;&nbsp; 5.345 4.70e-07 *** <br>
+          speciesRobin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          1.4363&nbsp;&nbsp;&nbsp;&nbsp; 0.3253&nbsp;&nbsp; 4.415 2.31e-05 *** <br>
+          speciesTree Pipit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          1.9600&nbsp;&nbsp;&nbsp;&nbsp; 0.3305&nbsp;&nbsp; 5.930 3.31e-08 *** <br>
+          --- <br>
+          Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1 <br>
+          &nbsp;<br>
+          Residual standard error: 0.9052 on 114 degrees of freedom <br>
+          Multiple R-squared:&nbsp; 0.3143,&nbsp;&nbsp;&nbsp; Adjusted
+          R-squared:&nbsp; 0.2842&nbsp; <br>
+          F-statistic: 10.45 on 5 and 114 DF,&nbsp; p-value: 2.852e-08</span></p>
+    </div>
+    <div>
+      <p>If you look closely at the block of output at the bottom, nothing is
+        different from the same block for your original six-species ANOVA - you
+        still have the same residual standard error, multiple r-squared,
+        F-statistic, and p-value as when you used the original, default ordering
+        on the species variable. But, now Wren is the species that is missing
+        from the list of predictors, and it is thus the baseline group. Since
+        all of the species are being compared to Wren, rather than to Hedge
+        Sparrow, all the t-tests of the coefficients are different. If we were
+        only concerned with differences between the Wren and the rest of the
+        species, this would be a good way to test for those differences.</p>
+      <p>Copy and paste the output from this analysis to your Word file.</p>
+      <h2 class="part" id="assignment">ASSIGNMENT</h2>
+      <p>Save your Word file with all of the graphs and statistical output, and
+        upload it to the class web site, then answer the questions on the
+        assignment sheet and turn it in. Due on 9/20/16.</p>
+    </div>
+  </body>
+</html>

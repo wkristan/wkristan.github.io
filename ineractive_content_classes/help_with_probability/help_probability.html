@@ -1,0 +1,561 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=15d870248bc9f4d868563aad3c5f7a036&amp;authkey=AWeN0NdNkuJDvmtOKSgGUYs"
+      rel="stylesheet" type="text/css">
+    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=13fc6f0fc4e7a40cfb28e8d5414ce9679&authkey=AeebrenPYCL2zysCC2bsZiw"></script>
+    <style type="text/css">  
+    </style>
+    <title>Marginal, joint, and conditional probability</title>
+  </head>
+  <body>
+    <h1>Marginal, joint, and conditional probabilities</h1>
+    <p></p>
+    <div id="header_wrapper" style="padding: 10px">
+      <div id="batdiv" style="float: left; width: 40%; padding: 10px">
+        <img src="vampire-bat-hanging.png"
+          style="padding: 10px; border: 5px solid black; float: left; margin-right: 15px">
+        <p>This table gives data from a
+          study of vampire bats feeding on cows.</p>
+      </div>
+      <div id="cowdiv" style="float:right; width: 40%"><img src="cow.png" style="padding: 10px; border: 5px solid black; float: right;">
+        <p>During the study, cows were either in estrous (i.e. reproductively
+          receptive) or not, and were either bitten by a vampire bat or not.</p>
+      </div>
+    </div>
+    <p style="clear: both"> To use the app, select a type of probability you
+      want to calculate from the drop-down menus - Marginal, Joint, or
+      Conditional.</p>
+    <div id="tableDiv" style="float: left; width: 500px; height: 320px; padding: 10px;">
+      <table id="vampireCow" class="tableLarge">
+        <tbody>
+          <tr>
+            <th><br>
+            </th>
+            <th colspan="2" rowspan="1">Bat bite<br>
+            </th>
+            <th><br>
+            </th>
+          </tr>
+          <tr>
+            <th>Estrous<br>
+            </th>
+            <th>Bitten<br>
+              <select name="bYsel" id="bYsel" onchange="optionSelected(this)">
+                <option selected="selected">None</option>
+                <option>Marginal</option>
+                <option>Joint</option>
+                <option>Conditional</option>
+                <option>Given</option>
+              </select>
+            </th>
+            <th>Not bitten<br>
+              <select name="bNsel" id="bNsel" onchange="optionSelected(this)">
+                <option selected="selected">None </option>
+                <option>Marginal</option>
+                <option>Joint</option>
+                <option>Conditional</option>
+                <option>Given</option>
+              </select>
+            </th>
+            <th>Total<br>
+            </th>
+          </tr>
+          <tr id="eYrow">
+            <td>In estrous &nbsp; &nbsp; &nbsp; &nbsp;
+              <select name="eYsel" id="eYsel" onchange="optionSelected(this)">
+                <option selected="selected">None </option>
+                <option>Marginal</option>
+                <option>Joint</option>
+                <option>Conditional</option>
+                <option>Given</option>
+              </select>
+            </td>
+            <td id="bYeY">15<br>
+            </td>
+            <td id="bNeY">7<br>
+            </td>
+            <td id="eY">22<br>
+            </td>
+          </tr>
+          <tr id="eNrow">
+            <td>Not in estrous
+              <select name="eNsel" id="eNsel" onchange="optionSelected(this)">
+                <option selected="selected">None </option>
+                <option>Marginal</option>
+                <option>Joint</option>
+                <option>Conditional</option>
+                <option>Given</option>
+              </select>
+            </td>
+            <td id="bYeN">6<br>
+            </td>
+            <td id="bNeY">322<br>
+            </td>
+            <td id="eN">328<br>
+            </td>
+          </tr>
+          <tr>
+            <td>Total</td>
+            <td id="bY">21</td>
+            <td id="bN">329</td>
+            <td id="GT">350</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="outputDiv" style="float: left; height: 280; width: auto;">
+      <h2>Probability calculation</h2>
+      <p id="output"></p>
+      <p id="messages"></p>
+      <p id="debug"></p>
+    </div>
+    <div id="margDiv" style="display: none; clear: both;">
+      <h3>Marginal probabilities</h3>
+      <p>Marginal probabilities are probabilities of an outcome on just one
+        variable. You selected <span myattribute="margSelected"></span>, so the
+        marginal probability is the marginal total for <span myattribute="margSelected"></span>
+        divided by the grand total of 350. This is the probability that a
+        randomly selected cow will be <span id="cowState"></span>.</p>
+    </div>
+    <div id="jointDiv" style="display: none; clear: both;">
+      <h3>Joint probabilities</h3>
+      <p>Joint probabilities are the probability of two events happening at
+        once. Your first selection is <span id="joint1"></span>. <span id="joint2">Now
+          select an outcome on the other variable.</span></p>
+    </div>
+    <div id="givenDivFirst" style="display: none; clear: both;">
+      <h3>Conditional probabilities - selected the given first</h3>
+      <p>Given means known to have occurred. By selecting <span myattribute="givenSelected"></span>
+        you are saying that you already know that the cow is <span myattribute="givenSelected"></span>,
+        which is thus not subject to random chance. Since you already know this
+        outcome, only the data on cows that were <span myattribute="givenSelected"></span>
+        matter, so only those cells are highlighted. To calculate a conditional
+        probability you now need to select the conditional, which is the outcome
+        that is still subject to chance.</p>
+    </div>
+    <div id="condDivFirst" style="display: none; clear: both;">
+      <h3>Conditional probabilities - selected the condition first</h3>
+      <p>Selecting <span myattribute="condSelected"></span> means that you want
+        to know the probability of <span myattribute="condSelected"></span>
+        given that there is a known outcome on another variable. To calculate
+        the conditional probability of <span myattribute="condSelected"></span>,
+        you now need to select a given, which will identify what outcome is
+        already known to have occurred.</p>
+    </div>
+    <div id="condProbDiv" style="display: none; clear: both;">
+      <h3>Conditional probabilities</h3>
+      <p>Conditional probabilities are probabilities of an outcome, given some
+        information that is already known to be true. Since we know the given
+        has occurred, we only need to consider the data for the given outcome
+        (shaded in gray). The probability calculated is thus the probability
+        that a cow is <span id="condProbOf"></span> given that you already know
+        it is <span id="condGiven"></span>.</p>
+    </div>
+    <script>
+  <!-- This is a function to show the selected item from the a select list -->
+    
+var table = document.getElementById("vampireCow");
+var rows = table.getElementsByTagName("tr");
+var theCol = ["bYsel","bNsel"];
+var theRow = ["eYsel","eNsel"];
+var colIndex = -1;
+var rowIndex = -1;
+var allButtons = ["bYsel","bNsel","eYsel","eNsel"];
+var whatTypeSelected = ["None","None","None","None"];
+var yesOrNo = ["Yes","No","Yes","No"];
+var stateOfCow = ["bitten","not bitten","in estrous","not in estrous"];
+var myDat = [0,0,0];
+var theData = [
+        [15, 7, 22],
+        [6, 322, 328],
+        [21, 329, 350]];
+var divList = ["margDiv","jointDiv","givenDivFirst","condDivFirst","condProbDiv"];
+
+    
+function optionSelected( e ) {
+    var idOfSelected = e.id;
+    var typeOfSelected = e.value;
+    var colIndexSel = theCol.indexOf(e.id);
+    var rowIndexSel = theRow.indexOf(e.id);
+    var buttonSelectedIndex = allButtons.indexOf(idOfSelected);
+    var biteOrEst = "";
+    var complement = "";
+
+    
+    if (buttonSelectedIndex < 2) {
+        biteOrEst = "Bite";
+        } 
+        else {
+        biteOrEst = "Estrous";
+        }
+    
+    switch(e.value) {
+        case "None":
+            complement = "";
+            document.getElementById("output").innerHTML = "You selected " + typeOfSelected;
+            setMeNone(colIndexSel, rowIndexSel, buttonSelectedIndex);
+            document.getElementById("output").innerHTML = "";
+            clearFormatTable();
+            hideAllDivs();
+            break;
+            
+        case "Marginal":
+            setAllToNone(idOfSelected);
+            hideAllDivs();
+            whatTypeSelected[buttonSelectedIndex] = typeOfSelected;
+            myDat = getRC(colIndexSel, rowIndexSel);
+            var marginalProb = myDat[2]/theData[2][2];
+            document.getElementById("output").innerHTML = "<strong>Marginal probability that a cow is " + stateOfCow[buttonSelectedIndex] + ":</strong> <span style='color: red;'>" + myDat[2] + "</span>/<span style='color: blue;'>" + theData[2][2] + "</span> = " + marginalProb.toFixed(4);
+            document.getElementById("messages").innerHTML = "";
+            document.getElementById("margDiv").style.display = "block";
+            var m = document.getElementById("margDiv").getElementsByTagName("span");
+            for (i = 0; i < m.length; i++) {
+                if (m[i].getAttribute('myattribute') == "margSelected") {
+                    m[i].innerHTML = stateOfCow[buttonSelectedIndex];
+                }
+            }
+            document.getElementById("cowState").innerHTML = stateOfCow[buttonSelectedIndex];
+            clearFormatTable();
+            if (rowIndexSel > -1) {
+                rows[rowIndexSel+2].cells[3].style.color = "red";
+                rows[rowIndexSel+2].cells[3].style.backgroundColor = "yellow";
+                
+            }
+            else {
+                rows[4].cells[colIndexSel+1].style.color = "red";
+                rows[4].cells[colIndexSel+1].style.backgroundColor = "yellow";
+            }
+            rows[4].cells[3].style.color = "blue";
+            rows[4].cells[3].style.backgroundColor = "lightblue";
+        break;
+        
+        case "Joint":
+            complement = "Joint"
+            setOtherToNone(idOfSelected,colIndexSel);
+            hideAllDivs();
+            whatTypeSelected[buttonSelectedIndex] = typeOfSelected;
+            setRorC(rowIndexSel, colIndexSel);
+            document.getElementById("jointDiv").style.display = "block";
+            var isRight = otherRight(buttonSelectedIndex, complement);
+            if (isRight == false) {
+                document.getElementById("joint1").innerHTML = stateOfCow[buttonSelectedIndex];
+                clearFormatTable();
+                setAllToNone(idOfSelected);
+                var selectMe = whatOther(biteOrEst);
+                document.getElementById("messages").innerHTML = "Please set one of the " + selectMe + " options to Joint";
+                document.getElementById("output").innerHTML = "";
+            }
+            else {
+                clearFormatTable();
+                var jointProb = theData[rowIndex][colIndex]/theData[2][2];
+                document.getElementById("output").innerHTML = "<strong>Joint probability is the probability of " + stateOfCow[colIndex] + " and " + stateOfCow[colIndex + 2] + ":</strong> <span style='color: red;'>" + theData[rowIndex][colIndex] + "</span>/<span style='color: blue;'>" + theData[2][2] + "</span> = " + jointProb.toFixed(4);
+                document.getElementById("messages").innerHTML = "";
+                rows[rowIndex+2].cells[colIndex+1].style.color = "red";
+                rows[rowIndex+2].cells[colIndex+1].style.backgroundColor = "yellow";
+                rows[4].cells[3].style.color = "blue";
+                rows[4].cells[3].style.backgroundColor = "lightblue";
+                document.getElementById("joint2").innerHTML = "Your second selection is " + stateOfCow[buttonSelectedIndex] + ", so this joint probability is the probability of selecting a cow at random that is both " + stateOfCow[rowIndex+2] + " and " + stateOfCow[colIndex];
+
+            }
+            
+            break;
+            
+        case "Conditional":
+            var complement = "Given";
+            var isRight = otherRight(buttonSelectedIndex, complement);
+            //If the other option in the row or column selected is not "None" set it to "None"
+            setOtherToNone(idOfSelected,colIndexSel);
+            hideAllDivs();
+            whatTypeSelected[buttonSelectedIndex] = typeOfSelected;
+            //Set the row index or the column index of the selected button.
+            setRorC(rowIndexSel, colIndexSel);
+            if (isRight == false) {
+                document.getElementById("condDivFirst").style.display = "block";
+                var m = document.getElementById("condDivFirst").getElementsByTagName("span");
+                for (i = 0; i < m.length; i++) {
+                    if (m[i].getAttribute('myattribute') == "condSelected") {
+                        m[i].innerHTML = stateOfCow[buttonSelectedIndex];
+                    }
+                }                
+                setAllToNone(idOfSelected);
+                clearFormatTable();
+                var selectMe = whatOther(biteOrEst);
+                document.getElementById("messages").innerHTML = "Please set one of the " + selectMe + " options to Given";
+                document.getElementById("output").innerHTML = "";
+            }
+            else {
+                var ind = 0;
+                clearFontColTable();
+                document.getElementById("condProbDiv").style.display = "block";
+                if (colIndexSel > -1) {
+                    ind = colIndex;
+                    rows[rowIndex + 2].cells[ind + 1].style.color = "red";
+                    rows[rowIndex + 2].cells[3].style.color = "blue";
+                    document.getElementById("condGiven").innerHTML = stateOfCow[rowIndex + 2];
+                    document.getElementById("condProbOf").innerHTML = stateOfCow[colIndex];
+                }
+                else {
+                    ind = rowIndex;
+                    rows[ind+2].cells[colIndex+1].style.color = "red";
+                    rows[4].cells[colIndex+1].style.color = "blue";
+                    document.getElementById("condGiven").innerHTML = stateOfCow[colIndex];
+                    document.getElementById("condProbOf").innerHTML = stateOfCow[rowIndex+2];
+
+                }
+                document.getElementById("messages").innerHTML = "";
+                var condProb = myDat[ind]/myDat[2];
+                if (colIndexSel > -1) {
+                    document.getElementById("output").innerHTML = "<strong>Conditional probability is P(" + stateOfCow[colIndex] + " | " + stateOfCow[rowIndex + 2] + "):</strong> <span style='color: red'>" + myDat[ind] + "</span>/<span style='color: blue'>" + myDat[2] + "</span> = " + condProb.toFixed(4);
+                }
+                else {
+                    document.getElementById("output").innerHTML = "<strong>Conditional probability is P(" + stateOfCow[rowIndex+2] + " | " + stateOfCow[colIndex] + "):</strong> <span style='color: red'>" + myDat[ind] + "</span>/<span style='color: blue'>" + myDat[2] + "</span> = " + condProb.toFixed(4);
+
+                }
+
+            }
+            
+            //If neither of the options on the other variable are "Given" set them to "None" and prompt to select one.
+            //If a "Given" is already selected, use the column index from this "Conditional" to find the numerator, calculate the probability.
+            
+        break;
+
+        case "Given":
+            clearFormatTable();
+            var complement = "Conditional";
+            whatTypeSelected[buttonSelectedIndex] = typeOfSelected;
+            //If the other option in the row or column selected is not "None" set it to "None"
+            setOtherToNone(idOfSelected,colIndexSel);
+            hideAllDivs();
+            //Extract the row or column.
+            myDat = getRC(colIndexSel, rowIndexSel);
+            //Set the row index or column index of the selected button.
+            setRorC(rowIndexSel, colIndexSel);
+            if (rowIndexSel != -1) {
+                for (i = 1; i <= 3; i++) {
+                    rows[rowIndexSel+2].cells[i].style.backgroundColor = "#f5f5f5";
+                }
+            }
+            else {
+                for (i = 2; i <= 4; i++) {
+                    rows[i].cells[colIndexSel+1].style.backgroundColor = "#f5f5f5";
+                }                    
+            }
+            var isRight = otherRight(buttonSelectedIndex, complement);
+            if (isRight == false) {
+                document.getElementById("givenDivFirst").style.display = "block";
+                var m = document.getElementById("givenDivFirst").getElementsByTagName("span");
+                for (i = 0; i < m.length; i++) {
+                    if (m[i].getAttribute('myattribute') == "givenSelected") {
+                        m[i].innerHTML = stateOfCow[buttonSelectedIndex];
+                    }
+                }                
+                setAllToNone(idOfSelected);
+                var selectMe = whatOther(biteOrEst);
+                document.getElementById("messages").innerHTML = "Please set one of the " + selectMe + " options to Conditional";
+                document.getElementById("output").innerHTML = "";
+            }
+            else {
+                var ind = 0;
+                document.getElementById("condProbDiv").style.display = "block";
+                if (colIndexSel > -1) {
+                    ind = rowIndex;
+                    rows[ind+2].cells[colIndex+1].style.color = "red";
+                    rows[4].cells[colIndex+1].style.color = "blue";
+                    document.getElementById("condGiven").innerHTML = stateOfCow[colIndex];
+                    document.getElementById("condProbOf").innerHTML = stateOfCow[rowIndex + 2];
+
+                    }
+                else {
+                    ind = colIndex;
+                    rows[rowIndex + 2].cells[ind + 1].style.color = "red";
+                    rows[rowIndex + 2].cells[3].style.color = "blue";
+                    document.getElementById("condGiven").innerHTML = stateOfCow[rowIndex + 2];
+                    document.getElementById("condProbOf").innerHTML = stateOfCow[colIndex];
+
+                    }
+                var condProb = myDat[ind]/myDat[2];
+                document.getElementById("messages").innerHTML = "";
+                if (colIndexSel > -1) {
+                    document.getElementById("output").innerHTML = "<strong>Conditional probability is P(" + stateOfCow[rowIndex+2] + " | " + stateOfCow[colIndex] + "):</strong> <span style='color: red'>" + myDat[ind] + "</span>/<span style='color: blue'>" + myDat[2] + "</span> = " + condProb.toFixed(4);
+                }
+                else {
+                    document.getElementById("output").innerHTML = "<strong>Conditional probability is P(" + stateOfCow[colIndex] + " | " + stateOfCow[rowIndex+2] + "):</strong> <span style='color: red'>" + myDat[ind] + "</span>/<span style='color: blue'>" + myDat[2] + "</span> = " + condProb.toFixed(4);                
+                }
+
+            }
+
+            break;
+            
+
+    }
+}
+
+
+
+
+        
+function getRC(cInd,rInd) {
+        if (cInd > -1) {
+            var x = getCol(theData, cInd);
+        } else {
+            var x = getRow(theData, rInd);
+        }
+        return x;
+    }
+        
+     
+function getCol(matrix, col){
+       var column = [];
+       for(var i=0; i<matrix.length; i++){
+          column.push(matrix[i][col]);
+       }
+       return column;
+    }
+    
+function getRow(matrix, r){
+       var row = [];
+       for(var i=0; i<matrix.length; i++){
+          row.push(matrix[r][i]);
+       }
+       return row;
+    }
+
+function setRorC(rI, cI) {
+    if (rI != -1) {
+        rowIndex = rI;
+        }
+        else
+        {
+        colIndex = cI;
+        }
+}
+
+
+function otherRight(selInd, comp) {
+    var isComp = false;
+    if (selInd > 1) {
+
+            if (whatTypeSelected[0] == comp || whatTypeSelected[1] == comp) {
+                isComp = true;
+            }
+            else {
+                isComp = false;
+            }
+        }
+    
+    if (selInd < 2) {
+
+            if (whatTypeSelected[2] == comp || whatTypeSelected[3] == comp) {
+                isComp = true;
+            }
+            else {
+                isComp = false;
+            }
+        }
+        return isComp;
+}
+
+function whatOther(alreadySelected) {
+    var SM = "";
+    if (alreadySelected == "Bite") {
+        SM = "Estrous";
+    }
+    else {
+        SM = "Bite";
+        }
+    
+    return SM;
+    
+    }
+
+    
+<!-- Function for setting all the other selections to "None" when marginal is selected -->
+    
+function setAllToNone(notme){
+    for (i = 0; i < allButtons.length; i++) {
+        if (allButtons[i] != notme) {
+            document.getElementById(allButtons[i]).value = "None";
+            whatTypeSelected[i] = "None";
+        }
+
+    }
+}
+
+function setOtherToNone(notme,cI) {
+        if (cI > -1) {
+            for (i = 0; i < theCol.length; i++) {
+                if (theCol[i] != notme) {
+                    document.getElementById(theCol[i]).value = "None";
+                    whatTypeSelected[allButtons.indexOf(theCol[i])] = "None";
+ 
+                }
+
+            }
+        }
+        else {
+            for (i = 0; i < theRow.length; i++) {
+                if (theRow[i] != notme) {
+                    document.getElementById(theRow[i]).value = "None";
+                    whatTypeSelected[allButtons.indexOf(theRow[i])] = "None";
+                }
+
+            
+            }
+        }
+}
+
+function setMeNone(cI, rI, bI) {
+    if (cI != -1) {
+        colIndex = -1;
+    }
+    if (rI != -1) {
+        rowIndex = -1;
+    }
+    whatTypeSelected[bI] = "None";
+
+}
+
+<!-- Formatting functions -->
+
+function clearFormatTable(){
+    for (var i=2; i<=4;i++){
+        for (var j=1; j<=3; j++) {
+            rows[i].cells[j].style.color = "black";
+            rows[i].cells[j].style.backgroundColor = "";
+        }
+    }
+}
+
+
+function clearFontColTable(){
+    for (var i=2; i<=4;i++){
+        for (var j=1; j<=3; j++) {
+            rows[i].cells[j].style.color = "black";
+        }
+    }
+}
+
+function hideAllDivs(){
+    for (var i = 0; i<divList.length;i++){
+        document.getElementById(divList[i]).style.display = "none";
+    
+    }
+}
+
+
+
+
+<!-- Accessing the data in dataArray and displaying it in the console log. -->
+
+function getArray(){
+	for (var i=0, len=dataArray.length; i<len; i++) {
+    for (var j=0, len2=dataArray[i].length; j<len2; j++) {
+      console.log(dataArray[i][j]);
+    }
+  }
+}       
+</script>
+  </body>
+</html>
