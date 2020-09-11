@@ -235,7 +235,7 @@ function switchChart() {
     drawChart1();
 }
 
-function reset() {
+function resetCounter() {
     nsims = 0;
     nfixed = 0;
     document.getElementById("nsims").innerHTML = nsims;
@@ -243,6 +243,6 @@ function reset() {
 }
 
 function popChange() {
-    reset();
+    resetCounter();
     oneRun();
 }
