@@ -1,0 +1,81 @@
+// Note: to make this work, export a layer from QGIS as a geojson file.
+// Open the geojson file in a text editor, and add a var name_of_javascript_variable = [ to the beginning, and ]; to the end
+// Change the extension to js, and then in the HTML file load the file like any local javascript document
+// The "bh" reference is the name of the javascript variable created when the geojson file loads.
+
+var colors = ["white","red"];
+var patch_states = [];
+for (var i = 0; i<41; i++) {
+	patch_states.push(Math.round(Math.random()));
+}
+
+var mymap = L.map('map_div');
+mymap.dragging.disable();
+mymap.touchZoom.disable();
+mymap.doubleClickZoom.disable();
+mymap.scrollWheelZoom.disable();
+
+var geojson_bh = L.geoJSON(bh, {style: function (feature) {
+		return {fillColor: colors[patch_states[feature.properties.ID]], fillOpacity: "1", color: colors[patch_states[feature.properties.ID]], opacity: "1"};
+}}).addTo(mymap);
+
+mymap.fitBounds(geojson_bh.getBounds());
+
+function oneYear(){
+	setStates();
+	drawMap();
+}
+
+function drawMap() {
+geojson_bh.setStyle(function (feature) {
+		return {fillColor: colors[patch_states[feature.properties.ID]], fillOpacity: "1", color: colors[patch_states[feature.properties.ID]], opacity: "1"};
+});
+}
+
+function setStates() {
+	var c = Number(document.getElementById("colonization").value);
+	var e = Number(document.getElementById("extinction").value);
+	var colonized = 0;
+	var extinct = 0;
+	var occupied = 0;
+	var patch_init = Array.from(patch_states);
+	var patch_temp = Array.from(patch_states);
+	
+	var which_colonized = 0;
+	
+	for (var i = 0; i < 41; i++) {
+		if (patch_states[i] == 1) {
+			if (Math.random() < c) {
+				which_colonized = Math.floor(Math.random()*41);
+				if (patch_states[which_colonized] == 0){
+					colonized = colonized + 1;		
+					patch_temp[which_colonized] = 1;		
+				}
+			}
+			if (Math.random() < e) {
+				patch_temp[i] = 0;
+				extinct = extinct + 1;			
+			}
+		}		
+	}
+	
+	patch_states = Array.from(patch_temp);		
+	
+	for (var i = 0; i<41; i++){
+		occupied = occupied + patch_states[i];	
+	}
+	
+	document.getElementById("phat").innerHTML = (occupied/41).toFixed(2);
+	document.getElementById("colonizations").innerHTML = colonized;
+	document.getElementById("extinctions").innerHTML = extinct;
+
+}
+
+function reset() {
+	var rand_states = [];
+	for (var i = 0; i < 41; i++){
+		rand_states.push(Math.round(Math.random()));	
+	}
+	patch_states = Array.from(rand_states);
+	drawMap();
+}

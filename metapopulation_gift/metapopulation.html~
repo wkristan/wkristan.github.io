@@ -1,0 +1,298 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Metapopulations</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script src="main.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+      integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+      crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js" integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+crossorigin=""></script>
+  </head>
+  <body>
+    <h1>Metapopulations</h1>
+    <p><img src="sdut-kearny-mesa-is-among-the-places-20160830.jpg" alt="Vernal pools"
+        style="float:left; width:20%; margin-right: 10px"><img src="urban.gif" alt="Urban fragmentation"
+        style="float:right; margin-left: 10px">Many landscapes are naturally
+      patchy, like the vernal pools that appear during the winter and spring in
+      San Diego, pictured on the left. These pools disappear during the dry
+      season, and the aquatic plants and animals that live in them have
+      adaptations that help them cope with the dry period. Aquatic animals
+      cannot simply cross over dry land, and movement between the pools will be
+      less common than movement within.</p>
+    <p> Other habitats become patchy because of habitat fragmentation, like the
+      urbanizing landscape of San Marcos and Escondido shown to the right. The
+      image to the right shows an aerial view of the area around CSUSM, and
+      polygons identifying some of the fragments of chaparral vegetation that
+      are left after our region built up fade in and out. Prior to development
+      the entire image would have been covered by chaparral, so the chaparral
+      plants and animals in these fragments would have lived in a contiguous sea
+      of suitable habitat before development. Movement between the patches may
+      still be possible, particularly for more mobile species, but some species
+      will not be able to move easily from place to place.</p>
+    <p> Regardless of the cause of patchiness, simple population models aren't
+      designed to account for how a population that is subdivided into patches
+      of habitat, linked by movements but subject to local extinctions, would
+      change over time. The fact that the sub-populations are prone to going
+      extinct would suggest that fragmentation could be a risk factor for
+      extinction of the entire population - after all, as extinctions accumulate
+      eventually all of the patches could be lost. However, it is also possible
+      for a patch that experiences a local extinction could be re-colonized from
+      another occupied patch. This <strong>rescue effect</strong> would be a
+      novel feature of fragmented populations. </p>
+    <h2>A model of metapopulation dynamics</h2>
+    <p>Populations made up of sub-populations linked by movements of individual
+      organisms are called <strong>metapopulations</strong>. From a
+      conservation perspective, local extinction of the sub-population is not
+      necessarily a problem, provided that the metapopulation as a whole is
+      persistent.</p>
+    <p>Metapopulations are a good example of how mathematics helped us
+      understand an ecological system better. Simple models can help us
+      understand some of the key features of how a system works without all of
+      the complexity of the real world. For example, we can start by supposing
+      that we have a collection of patches of habitat that are separated by
+      non-habitat of some kind - could be islands surrounded by ocean, or
+      patches of forest surrounded by clearcuts, or high elevation rocky
+      outcrops surrounded by low elevation forest. Our model will be of a single
+      species, but to keep our model simple we will only model the proportion of
+      patches that are occupied by our species - we will call the proportion
+      occupied <strong>p</strong> (we won't worry about whether the population
+      occupying a patch has a single individual or a population of thousands).</p>
+    <p>We can continue our approach to understanding change over time (or <strong>dynamics</strong>)
+      as being a simple balance between additions and subtractions. The
+      proportion of patches occupied should be a balance between patches that
+      are currently occupied but experience a local extinction (the
+      subtractions) and patches that are not currently occupied but that are
+      colonized by movement from one of the occupied patches (the additions).</p>
+    <p>A patch can only become unoccupied patch if it starts off occupied. We
+      will calculate the expected rate that populations will go extinct using
+      some basic probability theory. Our proportion of sub-populations occupied,
+      p, can be interpreted as a probability, because the probability of
+      randomly selecting a patch that is occupied is equal to the proportion
+      occupied, p. We can define a second probability, e, which is the
+      probability that an occupied patch goes extinct at an instant in time. If
+      e is the probability of an extinction of an occupied patch, then the
+      proportion of occupied patches that are expected to go extinct in an
+      instant in time is <strong>ep</strong>.</p>
+    <p>Movement between patches can also be represented as a probability, <strong>m</strong>,
+      which is the probability that an individual will move from an occupied
+      patch to another patch (either occupied or not) in an instant of time. We
+      won't worry about how many individuals move from one patch to the next -
+      think of m as being movement of sufficient numbers to start a new
+      population in an unoccupied patch, whatever that number happens to be.
+      However, a movement between an occupied patch and another occupied patch
+      doesn't change the total number of patches occupied. For a movement to
+      increase the number of patches occupied we need for the movement to be
+      from an occupied patch to an unoccupied patch. Movement from an occupied
+      patch would just be <strong>mp</strong> - the probability that a patch is
+      occupied and has a movement from it. Since there are only two possible
+      states for a patch, occupied or unoccupied, we know that if the proportion
+      of patches occupied is p then the proportion that is unoccupied has to be
+      <strong>1-p</strong>. The proportion of unoccupied patches that will be
+      re-colonized by a movement is thus <strong>mp(1-p)</strong>.</p>
+    <p>Putting these two sources of change over time together, we get our simple
+      metapopulation model:</p>
+    <img src="metapop_diffeq.png" alt="Diff eq">
+    <p>The left side is read as "Change in p over change in time" - the d's
+      indicate change - and according to this model we expect that change in the
+      proportion of sites occupied will equal colonization (mp(1-p)) minus
+      extinction (ep). This is the first metapopulation model developed, by a
+      mathematical biologogist named Richard Levins in 1969, and as the first it
+      is also the simplest.</p>
+    <p>Since we expect that sub-populations will be lost (at a rate of e), we
+      should be concerned that loss of sub-populations will eventually lead to
+      loss of the entire metapopulation - the metapopulation as a whole is
+      extinct if p is equal to 0. The question is, does this model tell us that
+      it's possible for a metapopulation as a whole to be stable, or does it
+      predict that metapopulations will always decline to extinction?</p>
+    <p> We can answer this question by finding the equilibrium solution. When
+      the amount of change over time is 0 we consider the model to be at an
+      equilibrium, in that it isn't going to increase or decrease any further
+      without some outside force changing it. We find the equilibrium for a
+      model like this by setting the change in p over time (dp/dt) to 0 and then
+      solving for p. Doing so gives us:</p>
+    <img src="metapop_equilibrium.png" alt="Equilibrium">
+    <p></p>
+    <p>The "hat" over the p indicates that this is an equilibrium solution.</p>
+    <p>So, based on this equilibrium solution is a metapopulation stable? The
+      answer is, it depends. You should be able to see a couple of things by
+      looking at the structure of this equation:</p>
+    <ul>
+      <li>If extinction rate and movement rate are equal the equilibrium
+        proportion of patches occupied is 0 - the equilibrium patches occupied
+        of 0 means the metapopulation is expected to go extinct if e = m. This
+        will be true no matter what the values of e and m are (the
+        metapopulation could have a very low extinction rate and a very low
+        movement rate, or it could have a high extinction rate with a high
+        movement, and it will still go extinct - it will just take longer in the
+        first case than in the second case).</li>
+      <li>If extinction rate is greater than movement rate then e/m is greater
+        than 1, and subtracting a value greater than 1 from 1 gives a negative
+        number. Even though p̂ is a proportion and can't possibly be negative
+        you can interpret this value as indicating that the metapopulation is
+        not stable, and is expected to go extinct.</li>
+      <li>If extinction rate is less than movement rate then e/m will less than
+        1, and the equilibrium proportion of patches occupied will be greater
+        than 0 - the metapopulation should be stable over time.</li>
+    </ul>
+    <p>Note that what we mean by the metapopulation being stable over time is
+      that it would not tend to go extinct overall. However, the fact that any
+      given patch has a probability, e, of extinction means that we can expect a
+      different set of patches to be occupied at any given time. In other words,
+      we would expect a lot of unpredictable, random chance in which patches we
+      will actually find the species present at any given time, but extinctions
+      would be balanced by colonizations, and the metapopulation as a whole
+      should persist.</p>
+    <h2>A metapopulation simulation app</h2>
+    <p>Nice analytical models like the Levins model above have the advantage
+      that you can use the structure of the equations to interpret what the
+      model has to tell us about metapopulation dynamics, and you would have
+      confidence that your interpretations are mathematically correct. However,
+      to give you an idea of what the metapopulation model is actually saying is
+      happening in the world, it is helpful to build a simulation.</p>
+    <img src="data_source_bighorn.png" style="float: left; margin-right: 10px; width: 25%"><img
+      src="BighornSheep_ownby1.jpg" style="float:right; width: 10%; margin-left: 10px">
+    <p>The image to the left shows the data source we will use as the basis for
+      a metapopulation simulation model - this is a map of the distribution of
+      bighorn sheep in Colorado (the green outline is the Colorado border, which
+      can easily be mistaken for a shoe box), and a picture of a bighorn sheep
+      is on the right.</p>
+    <p>Each of the red polygons is a patch of habitat where the sheep are found.
+      Bighorn sheep prefer high-elevation, rocky habitat, and you can see that
+      in this mountainous state their habitat is quite patchy. Each patch is
+      potentially connected via movements by sheep between the patches, and each
+      patch is subject to loss of its sheep population.</p>
+    <p>Just like we learned when we worked with population viability models, an
+      analytical model can have terms in it that are actually <strong>expected
+        values</strong> of a random variable. Although the equilibrium solution
+      tells us to expect a stable metapopulation any time m is greater than e,
+      both of these terms are probabilities, and we can expect in reality the
+      number of movements and number of extinctions will randomly vary from one
+      year to the next. The equilibrium patch occupancy will thus be subject to
+      random variation.</p>
+    <p>This matters, because according to the Levins model if the extinction
+      probability is only slightly lower than movement rate (i.e. with e = 0.49
+      and m = 0.5) then the metapopulation is expected to be stable (i.e. 1 -
+      0.49/0.5 = 0.02). With so few patches occupied it wouldn't take much
+      random variation around this statistical expectation for those last
+      patches to go extinct by chance, and the metapopulation could still be
+      lost in spite of the non-zero p̂.</p>
+    <p>Below is an app that includes all but the smallest of the patches in the
+      actual map (there are 41 patches used by the app, but 56 in the image
+      above, some of which were very small and difficult to see).</p>
+    <div style="width: 804; float:left; display: inline-block; clear:both; margin-right: 20px">
+      <div id="map_div" style="height:600; width: 800; border: 2px solid green; float:left">
+      </div>
+      <div style="float:left">
+        <p> Movement: <input id="colonization" value="0.5" min="0" max="1" step="0.01"
+            style="width: 60px" type="number"> Extinction: <input id="extinction"
+            value="0.1" min="0" max="1" step="0.01" style="width: 60px" type="number">
+          <input value="Run again" onclick="oneYear()" type="button"> &nbsp;
+          &nbsp;<input value="Reset" onclick="reset()" type="button"></p>
+        <p> Proportion occupied (p): <span id="phat"></span>, colonizations: <span
+            id="colonizations"></span>, extinctions: <span id="extinctions"></span>
+        </p>
+      </div>
+    </div>
+    <p>When you start the map is initialized with approximately 1/2 of the
+      patches occupied. The movement rate is set to 0.5, meaning that the
+      probability of a movement from one patch to another (occupied or not) is
+      0.5. The extinction rate is set to 0.1, meaning that the probability of
+      extinction from an occupied patch is 0.1. When you hit "Run again" you
+      will see that the polygons change color - white indicates an unoccupied
+      patch, and red indicate an occupied patch, and each time you run occupancy
+      has the opportunity to change for each patch.</p>
+    <p>Below the app you will see some numeric results. The proportion occupied
+      (p) is given, as well as the number of colonizations (i.e. the number of
+      unoccupied patches that received a movement from an occupied patch) and
+      the number of extinctions (i.e. the number of occupied patches that lost
+      their populations and became unoccupied).</p>
+    <p>To understand what the model tells us about metapopulations, do the
+      following:</p>
+    <ul>
+      <li>Click "Run again" multiple times until the proportion occupied more or
+        less stabilizes (10 or more should do it). What is the typical
+        proportion occupied when m is 0.51 and e is 0.1, according to the model?</li>
+      <li>If these sheep could fly they may not be bothered by the gaps between
+        the patches, and movements might be really common. Furthermore, the
+        habitat might be really good, and population sizes might be nice and
+        high, such that extinctions are really rare. To simulate this, set
+        movement to 0.95 and extinction to 0.01. What happens to the proportion
+        occupied?</li>
+      <li>If you set movement rate to 0.1 while leaving extinction at 0.01 you
+        can still expect a high level of patch occupancy (the Levins model
+        predicts 1-(0.01/0.1) = 0.9, or 90% occupancy), but when a patch loses
+        its population the low movement rate will mean it stays unoccupied for
+        longer. Set movement to 0.1 while extinction is 0.01 and you'll see that
+        the white patches that occasionally pop up stay white for many clicks.</li>
+      <li>The Levins model predicts that the metapopulation model is unstable if
+        e = m, even if they are very small numbers. With the map showing all or
+        nearly all of the patches occupied after the previous run, set movement
+        to 0.01 and extinction to 0.01. Run multiple times. What happens to the
+        proportion occupied? If it's going down (as we expect), is it changing
+        quickly?</li>
+      <li>Set the movement to 0.95 and get those patches occupied again. Then,
+        set the extinction rate to 0.95 as well, and run repeatedly. Did the
+        metapopulation go extinct? Was it faster or slower than the previous
+        run, with e and m set to 0.01? You can hit "Reset" to get your
+        metapopulation back.</li>
+      <li>Let's see what it takes to make a stable metapopulation. We would
+        expect that any values of m greater than e would do it, so let's try
+        setting m to 0.6 and e to 0.5. Did the metapopulation go extinct?</li>
+      <li>We can crank up the movements to higher values - try 0.7, 0.8, and 0.9
+        and see at what point the metapopulation stops rapidly going extinct.</li>
+    </ul>
+    <p>Notice that it takes a higher movement rate than the Levins model
+      predicts to prevent extinction when we let random variation come into
+      play. Notice also that a stable metapopulation does not necessarily have
+      all of its patches occupied, or even a majority of them if extinction
+      rates are high. Because of this we have to be careful about using the
+      absence of a species to indicate that habitat is not suitable for it - it
+      could be that the habitat is perfectly fine, but that the population has
+      recently gone locally extinct and hasn't yet been re-colonized.</p>
+    <h2>Limitations of the simple models</h2>
+    <p>Simple models like these can give us insight into how a patchy population
+      is expected to change over time, but we need to be careful about expecting
+      the simple Levins model (or my simple-minded simulation app based on it)
+      to predict how an actual population will behave. Consider some of the
+      sources of un-reality:</p>
+    <ul>
+      <li>Some patches are quite large, and others are much smaller, yet a
+        single extinction rate is used for all of them. If all the patches are
+        suitable habitat we should expect the bigger patches to support bigger
+        populations that are less likely to go extinct, and a single value of e
+        doesn't reflect this.</li>
+      <li>Some patches are close together and some are far apart. It is
+        reasonable to expect that patches that are close together are more
+        likely to have movements between them than ones that are far apart, yet
+        we have a single movement probability that we use for every movement.</li>
+      <li>Movements between patches will probably also be affected by the
+        presence or absence of routes that are easy to move through. Since we
+        are treating the "matrix" between the patches as gray, featureless space
+        it isn't clear that this would matter, but if you look at the picture
+        above you'll see that the patches cover most of the Rocky Mountains of
+        Colorado. Some routes through mountains are much easier than others.</li>
+      <li>Extinction rates are the same at all times for every patch. A
+        colonization would be expected to involve just a few individuals, and
+        for awhile the population size would be small. While the population is
+        small it would be more prone to extinction, but would become less likely
+        to go extinct if it persists long enough to grow to a more stable
+        population size.</li>
+    </ul>
+    <p>So, if the models are so unrealistic, why study them? The basic lessons
+      of the Levins model hold up when you add more complexity. It is still the
+      case that when movements balance extinctions a metapopulation can be
+      stable. Adding more realism to the model makes it a better predictor of
+      how a particular species will change over time, and if we were doing this
+      exercise in support of a conservation plan for bighorn sheep we would want
+      to use a more realistic version. But, to just explore the behavior of
+      metapopulations, with a minimum of complexity to confuse and confound us,
+      the simple Levins models is still perfectly suitable.</p>
+    <ul>
+    </ul>
+    <script type="text/javascript" src="bighorn.js"></script>
+    <script type="text/javascript" src="metapop.js"></script>
+  </body>
+</html>
