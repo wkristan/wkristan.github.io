@@ -8,6 +8,7 @@ var patch_states = [];
 for (var i = 0; i<41; i++) {
 	patch_states.push(Math.round(Math.random()));
 }
+var n_runs = 0;
 
 var mymap = L.map('map_div');
 mymap.dragging.disable();
@@ -62,17 +63,28 @@ function setStates() {
 	
 	patch_states = Array.from(patch_temp);
 	
+    n_runs = n_runs + 1;
+    
 	document.getElementById("phat").innerHTML = (occupied/41).toFixed(2);
 	document.getElementById("colonizations").innerHTML = colonized;
 	document.getElementById("extinctions").innerHTML = extinct;
+    document.getElementById("runs").innerHTML = n_runs;
 
 }
 
 function reset() {
-	var rand_states = [];
-	for (var i = 0; i < 41; i++){
-		rand_states.push(Math.round(Math.random()));	
+    var rand_states = [];
+    var c = Number(document.getElementById("colonization").value);
+	var e = Number(document.getElementById("extinction").value);
+	var phat = 1-e/c;
+    if (phat <= 0) {
+        phat = 0.5;
+    }
+    for (var i = 0; i < 41; i++){
+		rand_states.push(Math.round(Math.random()<phat));	
 	}
 	patch_states = Array.from(rand_states);
+    n_runs = 0;
+    setStates();
 	drawMap();
 }
