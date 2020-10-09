@@ -28,7 +28,9 @@ if (screen.width < 500) {
       function swapImage(x, img1, img2) {
         var fullPath = x.src;
         var filename = fullPath.replace(/^.*[\\\/]/, '');
-        if (filename == img1) {
+        var img1_fn = img1.replace(/^.*[\\\/]/, '');
+        var img2_fn = img2.replace(/^.*[\\\/]/, '');
+        if (filename == img1_fn) {
           x.src = img2;
         }
         else {
