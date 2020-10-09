@@ -108,7 +108,7 @@ function tableSelected(poly) {
     vegtable.rows[index+1].cells[3].innerHTML = vegtypes[index].selected.length;
     document.getElementById("tot_selected").innerHTML = total_selected;
     var pct_ws = 100*total_selected/89572;
-    document.getElementById("pct_ws").innerHTML = pct_ws.toFixed(1);
+    document.getElementById("pct_ws").innerHTML = pct_ws.toFixed(2);
 }
 
 function tableUnSelected(poly) {
@@ -130,7 +130,7 @@ function tableUnSelected(poly) {
     }
     document.getElementById("tot_selected").innerHTML = total_selected;
     var pct_ws = 100*total_selected/89572;
-    document.getElementById("pct_ws").innerHTML = pct_ws.toFixed(1);
+    document.getElementById("pct_ws").innerHTML = pct_ws.toFixed(2);
 
 }
 
