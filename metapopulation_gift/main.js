@@ -60,3 +60,14 @@ function navToggle() {
         document.getElementById("navigation").style.display = "block";
 		}
 }
+
+//Reveal and hide tooltips
+
+function showTip(tip_to_show) {
+	e = document.getElementById(tip_to_show);
+	Object.assign(e.style, {display: "inline-block", position: "absolute", zIndex: "1"});
+}
+    
+function hideTip(tip_to_hide) {
+	document.getElementById(tip_to_hide).style.display = "none";
+}
