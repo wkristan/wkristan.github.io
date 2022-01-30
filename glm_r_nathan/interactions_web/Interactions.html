@@ -3,14 +3,21 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>Interactions</title>
-    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=02a5532ccf4574e49ae6e245b4a118252&amp;authkey=AcYXNyrvFGWnmf6cbl1qQQ4&amp;e=4170fc6099b74d3f94a7fdaade97010e"
-      rel="stylesheet" type="text/css">
-    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=04e5dfc4b7ee64a7dbacb487cddde06a0&authkey=AdStuSX7RsXlg4QXZtzjDfw&e=f5861611192540a4b0c28483e9e5baf0"></script>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <!--Load Google charts -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <!-- The script runs the interaction demo -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script type="text/javascript" src="make_interactions.js"></script>
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <link href="link_button_style.css" rel="stylesheet" type="text/css">
+    <!--<script type="text/javascript" src="draw_on_canvas.js"></script> -->
+    <script type="text/javascript" src="draw_on_canvas.js"></script>
   </head>
-  <body>
+  <body onload="init()">
     <div id="header">
-      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
-      <h1>Interactions</h1>
+      <div style="float: left"><button name="nav_button" onmouseover="navToggle()">☰</button></div>
+      <h1>Factorial experiments and interactions</h1>
     </div>
     <div id="navigation" style="display:none" onclick="navToggle()">
       <p><a href="#intro">Introduction</a></p>
@@ -19,426 +26,656 @@
       <p><a href="#interactions_collin">Interactions, not correlated predictors</a></p>
     </div>
     <div id="content">
-      <p class="part" id="intro">Characterizing interactions between variables
-        is both one of the most powerful aspects of linear modeling, and one of
-        the most easily misunderstood. Today you will conduct an analysis on
-        some contrived data from a plant growth experiment, in which growth is
-        measure for plants that are given different levels of water (no
-        additional water, adequate water) and light (darkness. indirect light,
-        direct light), and watering regime (no additional water, adequate
-        water). Even without doing any analysis, as a biologist it should be
-        obvious that a plant that is given plenty of light and no water will not
-        grow well, and that a plant that is given plenty of water but kept in
-        the dark will not grow well, but a plant given both adequate light and
-        adequate water will grow well. The fact that the response to water
-        depends on how much light the plant is exposed to will give us a
-        textbook example of a statistical interation.</p>
-      <p>The data are made up, but since the patterns are intuitively obvious to
-        a biologist, analyzing the data will give you practice interpreting main
-        effects and interactions in a two-way factorial ANOVA. The focus of this
-        exercise will be on the correct sequence of steps needed to understand a
-        particular result, and on the best graphs and numeric summaries for
-        understanding interactions when they occur.<br>
-      </p>
-      <h2 class="part" id="factorials">Analysis of factorial experiments: the
-        general approach</h2>
-      <p>When you are analyzing data that was collected using a factorial design
-        (with two crossed predictors), the set of steps you should follow is as
-        follows:<br>
-      </p>
-      <p>1. Look at the data - make an interaction plot, using one of your
-        predictors as x-axis labels, and the other predictor as a grouping
-        variable to produce different lines and/or plot symbols for each factor
-        level. Use the graph to see if there is any evidence of interaction
-        between predictor variables. Apparent effects may not prove to be
-        significant, so be careful not to pre-judge the results until you've
-        conduced the ANOVA, but this first step helps you anticipate what the
-        major patterns are so you can recognize them in the numerical output.<br>
-      </p>
-      <p>2. Run the model, including the interaction between the predictors, and
-        obtain an ANOVA table.<br>
-      </p>
-      <p>3. If the overall model is significant, check if the interaction term
-        is significant, and then:</p>
+      <p class="part" id="intro">Experiments that test for the effect of more
+        than one treatment at once are more efficient, compared with testing
+        single treatments at a time. Experiments with more than one predictor
+        are also the only way that we can see how the effects of one treatment
+        can be changed when combined with another. Factorial designs look just
+        like the randomized complete block designs we encountered earlier -
+        every combination of factor levels for the two treatments are used, with
+        equal numbers of observations in each group. With this design it is
+        possible to assess the effects of each of the treatments independently,
+        because their effects are orthogonal to one another.</p>
+      <p class="part">When we analyze a factorial experiment, we make a
+        distinction between the <strong>main effects</strong> of the predictors
+        and <strong>interactions</strong> between them. Main effects are
+        measured using <strong>marginal means</strong>. Marginal means are
+        simply the means for levels of just one of the treatments, ignoring the
+        levels of the other. Interactions are measured based on the <strong>subgroup</strong>
+        means, which are means for combinations of the treatment levels for both
+        of the variables.</p>
+      <p class="part">This distinction between main effects and interactions
+        between variables is both one of the most powerful aspects of linear
+        modeling, and one of the most easily misunderstood. A statistical
+        interaction means that the effect one predictor has on the response
+        depends on the level of the other predictor.</p>
+      <p class="part">We would use models with interactions to test for
+        biological effects such as:</p>
       <ul>
-        <li>
-          <p>If the interaction term is not significant, conduct Tukey tests for
-            any significant main effects. There is no need to test combinations
-            of the two predictors, because the non-significant interaction
-            indicates that the differences among levels of one predictor are
-            independent of the level of the other predictor, and you can
-            interpret them separately.</p>
-        </li>
-        <li>
-          <p>If the interaction term is significant, you will need to take into
-            account the level of one predictor when you interpret the other - do
-            not try to interpret the main effects directly, they can be
-            misleading in the presence of an interaction. You will need to
-            compare means for different combinations of predictors against one
-            another, but this can be done in different ways. The most common
-            approaches are:</p>
-        </li>
+        <li>Synergy - the effect of one treatment on a response variable is
+          enhanced by another. For example, consumption of either alcohol or
+          tobacco alone increase risk of esophageal cancer by 25%, but
+          consumption of both increases risk by 300% (not 50%, like we would
+          expect if the effects of alcohol and tobacco were independent) </li>
+        <li>Inhibition - the effect of one treatment is dampened or eliminated
+          by another. For example, low doses of aspirin are often taken to
+          prevent blood clots that cause heart attacks and strokes. Taking
+          ibuprofen at the same time interferes with aspirin's anticoagulant
+          effects, and blocks the positive effects of aspirin.</li>
+        <li><span style="font-family: &quot;Source Sans Pro&quot;,sans-serif;">Multifactorial
+            control - more than one factor may be needed to produce a response.
+            For example, providing food alone to your pets will allow them to
+            survive for several days, providing them water alone will allow them
+            to survive for several days, but providing them both food and water
+            is needed to keep them alive indefinitely.</span></li>
+      </ul>
+      <h2>Possible outcomes - main effects and interactions</h2>
+      <p>To get an idea of what an interaction is testing for, consider the
+        example from your book of an experiment on the amount of fat eaten by
+        male or female rats. The fat fed to the rats was either fresh or rancid.
+        Each combination of fat type (fresh, rancid) and sex of rat (male,
+        female) was tested, with equal numbers of rats in each combination -
+        that is, the design was complete and balanced.</p>
+      <ul>
+      </ul>
+      <div id="wrapper_div_graphs" style="width:520px; float:right; margin-left:10px; border: 1px solid black">
+        <div id="chart_div"> </div>
+        <div id="inputs_div" style="margin-left:10px">
+          <p>Main effect of sex: <input id="sex_main" value="35.5" style="width: 50px"
+              onchange="drawChart()" type="number"> </p>
+          <p> Main effect of fat type: <input id="fat_main" value="142.8333" style="width: 75px"
+              onchange="drawChart()" type="number"> </p>
+          <p> Interaction between sex and fat type: <input id="sex_fat_inter" value="17.5"
+              style="width: 50px" onchange="drawChart()" type="number"></p>
+        </div>
+        <p style="margin-left:10px"> ANOVA table </p>
+        <div id="table_div" style="margin-left:10px; margin-bottom:10px;float:left">
+        </div>
+        <button id="reset" onclick="reset()" value="Reset" style="float:left;margin-left:20px">Reset
+          to observed</button> </div>
+      <p class="part">The graph on the right is an <strong>interaction plot</strong>,
+        in which one of the predictor variables (sex) is on the x-axis, and the
+        other predictor represented by separate lines (fat type). There are
+        additional symbols on the graph that are not usually included in an
+        interaction plot, but they are there to indicate the locations of
+        marginal means for each sex (pink dot for the female marginal mean, baby
+        blue dot for the male marginal mean - cheesy, I know, but it will help
+        you remember what they are), and each fat type (the stars in the middle
+        of the lines for each fat type). The symbols showing marginal means are
+        used to calculate main effects - if the pink and blue dots are not at
+        the same location along the y-axis there may be a main effect of sex,
+        and if the stars are not at the same location along the y-axis there may
+        be a main effect of fat type. The effects are expressed as differences
+        between the relevant means - for example, the Main effect of sex of 35.5
+        says that the difference between the male and female marginal mean is
+        35.5 g. </p>
+      <p class="part">Initially the graph shows the actual data. Before we
+        change anything, let's interpret the actual observed results.</p>
+      <ul>
+        <li>The plot shows lower levels of rancid fat eaten than fresh fat for
+          both of the sexes, and the marginal mean for rancid (red star) is
+          lower than for fresh (blue star). Since the marginal means appear to
+          be different we would expect there to be a significant main effect of
+          fat type in the ANOVA table below the graph, and there is. Main
+          effects are reported in an ANOVA table using the name of the variable
+          by itself, so look at the row labeled "Fat".</li>
+        <li>The average amount of fat consumed for females is not identical to
+          the amount consumed for males, but the marginal means (pink and baby
+          blue dots) are close together. The observed difference is not enough
+          to be statistically significant, so the main effect of sex is not
+          significant in the ANOVA table (look at the row labeled "Sex").</li>
+        <li>The lines are not perfectly parallel, but they are nearly so because
+          the difference in the amount of fresh and rancid fat eaten is nearly
+          the same for females and for males. When the lines are parallel this
+          means that the difference in amount eaten for rancid and fresh fat is
+          the same for both sexes, and thus the difference is independent of
+          sex. We wouldn't expect a significant interaction, and if you look at
+          the row in the table labeled Sex x Fat you'll see it is not.</li>
+      </ul>
+      <p class="part">Now that you're oriented, let's start making some changes.</p>
+      <ul>
+        <li>First, set all of the differences to 0. This will make the means all
+          exactly the same, and the lines will be at the grand mean fat consumed
+          (which is 597.75 g).</li>
+        <li>Try introducing a main effect for sex, while keeping the other terms
+          at 0 - enter 200, which represents 200g difference in the marginal
+          means between the sexes. You'll see that the lines stay on top of each
+          other, but they tilt because the means for each sex are different. If
+          you hover over the pink and baby blue dots you'll see that the female
+          marginal mean is 497.75, and the male marginal mean is 697.75, for a
+          difference of 200 g.</li>
+        <li>Set the sex difference back to 0, and set the difference between fat
+          types to 200. The lines now separate, and the stars are 200g apart.
+          Since the sexes don't differ the pink and baby blue dots are now the
+          same (at 597.75), and since there is no interaction the lines are
+          parallel because the means for males and females are the same within
+          each of the fat types.</li>
+        <li>Set the fat type difference back to 0, and set the interaction
+          effect to 200. The lines are no longer parallel, because now females
+          eat more rancid fat while males eat more fresh fat. With only an
+          interaction and no main effects, the lines cross in the middle and are
+          perfectly symmetrical. This places the marginal mean for males and
+          females at the same place (thus no sex main effect), and the marginal
+          means for fresh and rancid fat at the same place (thus no fat main
+          effect). From this graph you should see that: </li>
         <ul>
-          <li>Test for differences between the levels of one predictor, within
-            each level of the other - for example, you can test for differences
-            between the three light levels for plants given adequate light, and
-            for plants given no water, but not do any comparisons between plants
-            that received different water levels. This approach is a choice to
-            leave out some comparisons in order to reduce the amount of
-            correction for multiple comparisons needed.</li>
-          <li>Test for differences between all possible combinations of the two
-            predictors. This approach will allow you to compare means for every
-            possible combination of light and water, which is maximally
-            informative, but with so many comparisons to do the power of each
-            test will be fairly low. </li>
+          <li>It is possible to have an interaction without significant main
+            effects.</li>
+          <li>The lack of main effects doesn't mean that sex or fat type don't
+            matter - there is a difference in amount of fat consumed between the
+            fat types, and the direction of the difference depends on sex, so
+            neither of these predictors is without effect on the outcome. If
+            there is a significant interaction between two variables then both
+            are having an effect, whether their main effects are significant or
+            not.</li>
+        </ul>
+        <li>With the interaction kept at 200, make the sex effect 200 as well.
+          Now the lines are tilted, but the interaction causes them to cross.
+          From this graph you should see that: </li>
+        <ul>
+          <li>The main effect of sex is significant, because the pink and baby
+            blue dots are at different locations. The main effect suggests that
+            females eat less fat than males. </li>
+          <li>However, the interaction is due to the fact that the lines cross.
+            The amount of rancid fat eaten is actually exactly the same for the
+            two sexes, and it is only the fresh fat that is different between
+            them. The interpretation of the main effect would not be accurate if
+            we were only feeding rats rancid fat. The main effect can be
+            misleading in the presence of an interaction.</li>
+        </ul>
+        <li>Set the sex effect to 0, keep the interaction at 200, and set the
+          fat effect to 200. From this graph you should see that:</li>
+        <ul>
+          <li>Means for the fat type lines are now different, so there is a main
+            effect of fat type</li>
+          <li>The amount of difference between the lines is 0 for females but
+            400g for males - the consumption of fresh or rancid fat depends on
+            sex, so there is an interaction. The main effect of fat tells us
+            that more fresh fat is eaten than rancid fat, but this is only true
+            for males. Again, the interpretation of the main effect can be
+            misleading in the presence of an interaction.</li>
+        </ul>
+        <li>Now, lastly, set every effect to 100. Notice that:</li>
+        <ul>
+          <li>The marginal means for sex are different (pink and baby blue
+            dots), so the main effect of sex is significant - males eat more fat
+            on average than females. </li>
+          <li>The marginal means for fat type are different (stars), so the main
+            effect of fat is significant. Rats eat more fresh fat than rancid.</li>
+          <li>The amount of difference between the fat types is different for
+            males and females. Males only eat more fresh fat than females, but
+            the amount of rancid fat they eat is the same. The main effects say
+            that more fresh fat is eaten and that males eat more than females,
+            but neither of these statements is true in all cases. Once again,
+            main effects can be misleading in the presence of an interaction.</li>
         </ul>
       </ul>
-      <p>Now that you have the general idea, you can try out this approach with
-        some data.</p>
+      <p>Feel free to play around with the numbers until you're able to tell by
+        looking at the graph whether the main effects and interaction will be
+        significant. Bear in mind that actual interaction plots will not include
+        dots for the marginal mean, so use them as a learning tool, but realize
+        that you'll need to make educated guesses about where the means will be
+        for each of the levels of the first predictor along the x-axis, and
+        across each of the lines representing the different levels of the second
+        predictor when you're interpreting interaction plots (of course, the
+        final word on whether effects are significant will be the p-values in
+        the ANOVA table, but learning to read the graphs will help you
+        understand the statistical results).</p>
+      <p>Since the observed results only show a significant effect of fat type
+        the interpretation is very simple - the marginal means of rancid and
+        fresh fat differ. But, since we now know that significant interactions
+        complicate interpretation, we will need to wait for an example with a
+        significant interaction to learn how to proceed. This will be the
+        subject of this week's activity.</p>
       <h2 class="part" id="instructions">Instructions</h2>
-      <p>The data you will use are in <a href="interaction_examples.xls">this</a>
-        file. Start a new project in R Studio, import the data into a data set
-        called "plant", and start an R script for your commands. </p>
-      <p>If you view the data set, you'll see a column for the dependent
+      <p>Today you will conduct an analysis on some contrived data from a plant
+        growth experiment. You are probably well aware that plants need sunlight
+        and water to grow. Providing a plant with just one of these two
+        requirements is not sufficient to keep it alive. Given this, if we were
+        to conduct an experiment in which we varied water and sunlight as two
+        predictor variables, the amount of growth we will get in the plants
+        should be much greater when both sunlight and water are provided.</p>
+      <p>Our two predictors then are:</p>
+      <ul>
+        <li>Water - levels are none, adequate</li>
+        <li>Light - levels are none, indirect, and direct</li>
+      </ul>
+      <p>The response variable will be the height of the plants.</p>
+      <p>Start a new project in R Studio for this exercise. The Rmd file for you
+        need is <a href="interactions.Rmd">here</a>, and the data you will use
+        are in <a href="interaction_examples.xls">this</a> file.</p>
+      <p>Import the data from interaction_examples.xls into a data set called
+        "plant". If you view the data set, you'll see a column for the dependent
         variable (height), and one each for water and light. Every combination
         of light level and water level is present, with an equal number of
         replicates (3) used for each combination - thus, the experiment is
         complete and balanced, which makes the predictors orthogonal to one
         another. </p>
-      <p>1. On your assignment sheet, draw in the results you would expect from
-        this experiment in the blank graph in Question 1A. If the lines cross,
-        converge, or diverge as you move from the left to the right side of the
-        graph that indicates that you should expect an interaction between light
-        and water.</p>
-      <p>Now, on to the data analysis.</p>
-      <p>2. First, look at your data. We will use ggplot2 to make an
-        "interaction plot" that uses two different grouping variables and a
-        numeric response. The first grouping variable is plotted on the x-axis,
-        and the second is used for lines that connect means. </p>
-      <p>First, load the library:</p>
-      <p class="rcmd">library(ggplot2)</p>
-      <p>We will need means and standard errors, so use summarySE to get those,
-        and assign them to an object called plant.summ:</p>
-      <p class="rcmd">plant.summ &lt;- summarySE(plant, measurevar = "height",
-        groups = c("water","light"))</p>
-      <p>Now you can set up the global settings for your graph with:</p>
-      <p class="rcmd">plant.gg &lt;- ggplot(plant.summ, aes(x = light, y = mean,
-        color = water, group = water, ymin = mean - se, ymax = mean + se))</p>
-      <p>A couple of new things to notice here...first, we added a setting in
-        the aes() statement that identifies water as the groups, as well as the
-        colors. We will be adding connecting lines between means for the plot in
-        the next step, and geom_lines() requires that groups be identified. We
-        are also using a calculation for ymin and ymax that uses the mean and se
-        columns in plant.summ, instead of doing the calculations and adding a
-        new column to plant.summ first.</p>
-      <p>Finally, to get the graph we need to add points, error bars, and line
-        geometric objects to our plant.gg object:</p>
-      <p class="rcmd">plant.gg + geom_point() + geom_errorbar(width = 0.1) +
-        geom_line()</p>
-      <p>Using a width statement in geom_errorbar() makes the top of the
-        crossbar narrower and more attractive.</p>
-      <p>Based on the graph you should have some idea of what is going to happen
-        when you fit the model - the lines are clearly not parallel, so we have
-        reason to expect an interaction (provided we have enough statistical
-        power to detect it).<br>
-      </p>
-      <p>3. Test the model. The complete model specification would be: </p>
-      <p>height ~ light + water + light*water</p>
-      <p>But, linear models are hierarchical, meaning that you can't include an
-        interaction term without also including main effects for both of the
-        factors. As a shorthand for this full specification, then, R allows us
-        to use:</p>
-      <p class="rcmd">lm(height ~ light*water, data = plant)</p>
-      <p>4. Generate an ANOVA table, and see whether there is a significant
-        interaction between light and water. This model is balanced and
-        complete, meaning that there are equal numbers of data points in each
-        combination of light and water, and every combination is included in the
-        data set. Because of this, light and water are orthogonal, and it won't
-        matter if you use Type I or Type II sums of squares, so you can get an
-        ANOVA table using either anova() or Anova().</p>
-      <p>You can plot the interaction using the effects package - load it with:</p>
-      <p class="rcmd">library(effects)</p>
-      <p><span class="R-code rcmd">plot(effect("light*water", plant.lm),
-          multiline=TRUE)</span></p>
-      <p>This is essentially the same plot as you made earlier, but effect()
-        uses the least squares means estimated from the model, which can be
-        different with unbalanced designs.<br>
-      </p>
-      <p>5. Now what? </p>
-      <p>We definitely have an interaction, which means that we can't apply a
-        naive interpretation of the main effects - for example, if we just did
-        Tukey post-hocs on light level, we would get a significant increase in
-        height for indirect light compared to the other two light levels, but
-        this would entirely be due to the high mean when adequate water is
-        provided - if you don't water the plants you don't get this positive
-        effect of indirect light. Given that we are going to have to explain
-        this contingent relationship between water and light, the main effects
-        don't really add anything to our understanding of the biology of the
-        system. To understand what's going on, we need to compare pairs of means
-        for combinations of light and water.</p>
-      <p>But, which comparisons to make depends on what we really want to know.
-        Let's look at some possible approaches, depending on the question we're
-        interested in answering:</p>
-      <p>Question 1: what is the best combination of light and water?</p>
-      <p>We can look at the graph and see that adequate water and indirect light
-        certainly seems to be the best, but we don't know if that combination is
-        significantly different from the others. We should test all of the means
-        against one another, and if indirect light, adequate water is
-        significantly different from all the other combinations we can conclude
-        it's the best.</p>
-      <p>The simplest method of comparing all the combinations of factor levels
-        to one another in R is to combine the water and light factors into a
-        single factor with six groups (one each for the possible combinations of
-        light and water), and then run a one-way ANOVA with this new merged
-        factor. We can then conduct Tukey post-hocs to see which of the combined
-        levels are different. The interaction() function combines variables for
-        us, so use the command:</p>
-      <p class="rcmd">plant$light.water &lt;- with(plant, interaction(light,
-        water))</p>
-      <p>After you're done view the plant data set to see what
-        interaction(light, water) does - there will be a new column called
-        light.water that contains combinations of light and water separated by a
-        period. </p>
-      <p>You can now use light.water as the predictor in a one-way ANOVA,
-        complete with Tukey post-hocs - you know how to do this, please do so.</p>
-      <p>This approach is the most information rich, because every pair of means
-        is tested. The problem is that there are six different means, and it
-        takes 15 different comparisons (with 15 p-values) to test all of them.
-        This is an issue because the p-value is adjusted for the number of
-        comparisons, and comparing all of the means against one another reduces
-        the power of each comparison. If you really want to compare all of the
-        combinations, this is just the cost of doing business.</p>
-      <p>On the other hand, if you are only actually interested in comparing
-        some of the pairs anyway, then testing only a subset of the possible
-        pairs of means is a good idea - you will get increased power for the
-        comparisons that you do. So, for example, if your question is:</p>
-      <p>Question 2: at each level of water, which light levels are different?</p>
-      <p>then you can reduce the number of comparisons that you make by more
-        than half. If we only make comparisons between the three light levels
-        that have adequate water, and the three light levels that have no water,
-        we only have to test a total of six differences. Using this approach
-        sacrifices comparisons between water levels, so we can't talk about the
-        differences between water levels when we present our results, but if we
-        already know that watering plants is important and are only interested
-        in how water level and light level interact, then this may be a good
-        choice.</p>
-      <p>Unfortunately, this is one of the cases in which R makes the relatively
-        simple very difficult - difficult enough, in fact, that we might be
-        tempted to do the wrong analysis because it's easier to accomplish than
-        doing the right analysis. The relatively easy, but wrong, approach is to
-        subset the data into just adequate water and just no water data sets,
-        and run a separate one-way ANOVA on each data set. I'll show you the
-        effect of making the wrong choice as a demonstration (gray box) - read
-        through it and make sure you understand the problem before you move on
-        to the correct way.</p>
-      <blockquote>
-        <h3>The easy (but wrong) way to analyze differences in light level at a
-          given water level</h3>
-        <p>If we do the analysis by splitting the data, we would be working with
-          two different ANOVA tables, one for adequate water:</p>
-        <p> <span class="R-code rout">Response: height
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum Sq
-            Mean Sq F value&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
-            light&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2 871.38&nbsp; 435.69&nbsp;
-            52.825 0.0001552 *** <br>
-            Residuals&nbsp; 6&nbsp; 49.49&nbsp;&nbsp;&nbsp; 8.25 </span> </p>
-        <p> and one for no water:</p>
-        <p> <span class="R-code rout">Response: height<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum Sq
-            Mean Sq F value Pr(&gt;F)<br>
-            light&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp; 2.22&nbsp;
-            1.1100&nbsp; 0.1957 0.8273<br>
-            Residuals&nbsp; 6&nbsp; 34.04&nbsp; 5.6733</span></p>
-        <p> </p>
-        <p>We can do Tukey tests for light levels when adequate water is
-          provided:</p>
-        <p><span class="R-code rout">Linear Hypotheses:<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp; <br>
-            indirect - direct == 0&nbsp;&nbsp;
-            13.167&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.345&nbsp;&nbsp; 5.615&nbsp;
-            0.00310 ** <br>
-            none - direct == 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            -10.900&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.345&nbsp; -4.648&nbsp;
-            0.00836 ** <br>
-            none - indirect == 0&nbsp;&nbsp;&nbsp;
-            -24.067&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.345 -10.263&nbsp; &lt; 0.001
-            ***</span></p>
-        <p>and when no water is provided:</p>
-        <p><span class="R-code rout">Linear Hypotheses:<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            Estimate Std. Error t value Pr(&gt;|t|)<br>
-            indirect - direct == 0&nbsp;&nbsp;
-            -0.100&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.945&nbsp;
-            -0.051&nbsp;&nbsp;&nbsp; 0.999<br>
-            none - direct == 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            -1.100&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.945&nbsp;
-            -0.566&nbsp;&nbsp;&nbsp; 0.843<br>
-            none - indirect == 0&nbsp;&nbsp;&nbsp;&nbsp;
-            -1.000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.945&nbsp;
-            -0.514&nbsp;&nbsp;&nbsp; 0.867</span></p>
-        <p>Seems reasonable, but it's wrong for a couple of reasons. The first
-          reason is that the standard error used in the Tukey tests are
-          different for the two water levels. We're assuming equal variances
-          between the groups, and if this is true we get the best estimate of
-          the amount of random variation in the data when all of the data is
-          included (better estimates from larger sample sizes, don't you know).
-          If you look at the two ANOVA tables for the split data, above, and
-          compare it to the table for the entire data set here:</p>
-        <p><span class="R-code rout">Response: height<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            Df Sum Sq Mean Sq F value&nbsp;&nbsp;&nbsp;
-            Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
-            light&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2 471.54&nbsp;
-            235.77&nbsp; 33.872 1.161e-05 ***<br>
-            water&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 621.87&nbsp;
-            621.87&nbsp; 89.342 6.561e-07 ***<br>
-            light:water&nbsp; 2 402.06&nbsp; 201.03&nbsp; 28.881 2.590e-05 ***<br>
-            Residuals&nbsp;&nbsp; 12&nbsp; 83.53&nbsp;&nbsp;&nbsp; 6.96</span></p>
-        <p>the residual MS is different for all three, but we expect it to be
-          most accurate for the last table with all the data included.</p>
-        <p>The other problem is that splitting the data set into two parts
-          causes the Tukey tests to only adjust for the three comparisons within
-          each water level. The reason for doing Tukey tests instead of t-tests
-          on pairs of means is that Tukey adjusts for the number of tests we do,
-          to avoid increasing Type I error rates. We end up doing a total of 6
-          post-hoc comparisons, so the number we <em>should</em> be adjusting
-          for is 6 - splitting the data fails to control the Type I error rate
-          properly.</p>
-      </blockquote>
-      <p>So, we need to do this correctly.</p>
-      <p>The way to get glht() to give us the comparisons we need is to set up
-        "contrast matrices" that specify which means are to be compared with one
-        another. The contrast matrices only make sense in the context of using
-        matrix algebra for the comparisons, which is a little beyond what I
-        expect you to know from your math classes. If you are interested, you
-        can check out <a href="Contrast%20matrices.html">this link</a>, which
-        will walk you through what a contrast matrix does, and how to set one
-        up. And, if you're really interested, read <a href="https://cran.r-project.org/web/packages/multcomp/vignettes/multcomp-examples.pdf">this
-          paper</a> explaining how to set up your own custom tests using glht
-        (written by the author of the multcomp package).</p>
-      <p>I've written a script that does the work of setting up the contrast
-        matrices for you - download <a href="test_conditional.R">this file</a>
-        (right-click and "save target as"). Open it in R Commander and source it
-        to get test.conditional() added to your workspace.</p>
-      <p>test.conditional() has three arguments: the name of a fitted model
-        object (with a significant interaction), the name of a variable you want
-        to use to subset the data (the "conditional" variable), and the name of
-        a variable whose levels you want to compare with Tukey tests. The
-        function takes these three pieces of information, constructs the needed
-        contrast matrix, and submits it as input to the glht() function. The
-        output you get is the same as if you had used glht() directly, so if you
-        nest the test.conditional() command within a summary() command you will
-        get tests and p-values. </p>
-      <p>To use the function, you can write the command:</p>
-      <p><span class="R-code rcmd">summary(test.conditional(plant.lm, "water",
-          "light"))</span></p>
-      <p>You'll see in the output window that you get lines that look like this:</p>
-      <p><span class="R-code rout">&nbsp;&nbsp;&nbsp;&nbsp; Simultaneous Tests
-          for General Linear Hypotheses <br>
-          &nbsp;<br>
-          Fit: lm(formula = height ~ light * water, data = plant) <br>
-          &nbsp;<br>
-          Linear Hypotheses: <br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp;&nbsp; <br>
-          adequate:indirect - direct == 0&nbsp;&nbsp;
-          13.167&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.154&nbsp;&nbsp; 6.112&nbsp;
-          &lt; 0.001 *** <br>
-          adequate:none - direct == 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          -10.900&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.154&nbsp; -5.060&nbsp; 0.00142
-          **&nbsp; <br>
-          adequate:none - indirect == 0&nbsp;&nbsp;&nbsp;
-          -24.067&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.154 -11.172&nbsp; &lt; 0.001
-          *** <br>
-          none:indirect - direct == 0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          -0.100&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.154&nbsp; -0.046&nbsp;
-          1.00000&nbsp;&nbsp;&nbsp;&nbsp; <br>
-          none:none - direct ==
-          0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          -1.100&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.154&nbsp; -0.511&nbsp;
-          0.98000&nbsp;&nbsp;&nbsp;&nbsp; <br>
-          none:none - indirect ==
-          0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          -1.000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.154&nbsp; -0.464&nbsp; 0.98590</span></p>
-      <p>The labeling gives the factor level for water first, followed by a
-        colon, followed by the names of the two light levels that are being
-        tested. The first three lines compare the means for all possible
-        combinations of light level, given adequate water, and the last three
-        give the comparisons given no water. Note that all six comparisons are
-        done here, so the tests are (correctly) adjusting for all six
-        comparisons, and all are using the same standard error taken from the
-        complete ANOVA table.</p>
-      <p>The command is smart enough to work with either variable set as the
-        conditional variable - try it using light as the conditional and water
-        as the test variable and see what happens.</p>
-      <h2 class="part" id="interactions_collin">Interactions vs. correlated
-        predictors</h2>
-      <p>There's a question on your worksheet about the difference between
-        interactions and correlated predictors - before you try to answer it
-        read through this explanation of the issue. It's easier to see the point
-        if we have an equal number of levels in the light and water data set, so
-        the graphs show three levels of water - I added a "moderate" level,
-        which is just halfway between the adequate and none water levels at each
-        light level.</p>
-      <table width="100%" border="0">
-        <tbody>
-          <tr>
-            <td><img alt="Interaction plot" src="interaction_plot.png"><br>
-            </td>
-            <td><img alt="3D plot, interaction" src="interaction_3d.png"><br>
-            </td>
-            <td>
-              <p>We set up the design to have all possible combinations of light
-                level and water level, with equal numbers of replicates in each
-                combination (each "cell", to use experimental design
-                terminology). The graphs to the left show the patterns of
-                response in both a (now familiar) interaction plot, and as a
-                three-dimensional bar chart.</p>
-              <p>The interaction plot shows the lack of parallel in responses
-                (i.e. heights) for the combinations of the predictors, but the
-                3D plot shows the design of the experiment better - you can see
-                that all the combinations of light and water were used, and that
-                the response to one predictor (e.g. light) depends on the other
-                (e.g. water).</p>
-            </td>
-          </tr>
-          <tr>
-            <td><br>
-            </td>
-            <td><br>
-            </td>
-            <td><br>
-            </td>
-          </tr>
-          <tr>
-            <td><img alt="Correlated predictors" src="corr_pred.png"><br>
-            </td>
-            <td><img alt="Correlated predictors in 3D" src="corr_pred_3d.png"><br>
-            </td>
-            <td>
-              <p>What if we had used a design that only had the combinations
-                direct.adequate, indirect.moderate, and none.none? You can see
-                on the 3D plot that this introduces a correlation between the
-                predictors that is so severe that the predictors are completely
-                confounded - if you know the water level, you also know the
-                light level. You can no longer tell when a response is due to
-                the water level, the light level, or a combination of the two.</p>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p>So, correlated predictors are a problem that makes it difficult to tell
-        how each predictor affects the response variable. Interactions measure
-        the extent to which response to one variable depends on another, and we
-        can't even assess whether interactions exist unless we have enough
-        independent variation between the predictors to measure their joint
-        effects.</p>
-      <p>That's it - answer the questions on your assignment sheet, and upload R
-        output to the course web site.</p>
-      <p><br>
-      </p>
+      <img src="axes.png" id="axes" style="display:none">
+      <div id="wrapper_div" style="float:left;width:404;height:450;margin-right:20px;border: 1px solid gray">
+        <canvas id="can" width="400" height="300" style="border:2px solid;"></canvas>
+        <p style="clear:both"></p>
+        <input class="button" value="Clear" onclick="resetToBlank()" type="button"><a
+          href="#" class="button" id="btn-download" download="graph.png">Download</a>
+        <div style="clear:both" id="color_wrapper_div">
+          <p style="clear:both">Choose water level to draw</p>
+          <div style="display:inline-block;"> <input value="Adequate" id="#F8766D"
+onclick="color(this)" style="width:100px;height:20px;background-color:#F8766D" type="button">
+            <br>
+            <input value="None" id="#00BFC4" onclick="color(this)" style="width:100px;height:20px;background-color:#00BFC4"
+type="button"> </div>
+          <div style="display:inline-block;background:#F8766D;width:45px;height:45px;margin-bottom:-5px"
+            id="selected"></div>
+          <div style="display:inline-block;"> <input value="Light marginal" id="red"
+onclick="color(this)" style="width:110px;height:20px;background-color:red" type="button">
+            <br>
+            <input value="Water marginal" id="black" onclick="color(this)" style="width:110px;height:20px;background-color:black;color:white"
+type="button"> </div>
+        </div>
+      </div>
     </div>
+    <p>1. Before you run the analysis, predict what the results will be. On the
+      blank axes to the left, draw in the results you would expect from this
+      experiment: </p>
+    <ul>
+      <li>Draw a line for each water level, Adequate and None (use the correct
+        color for each). Lines on an interaction plot connect means that are all
+        in one predictor level - in this case the lines connect all three group
+        means that were in the same water level. To help you think through where
+        the line should go, put a dot where you expect the means would be for
+        each light level given the water level you are drawing. The easy water
+        level is None - it should be obvious that when you don't water plants
+        they don't grow, regardless of the light level, so the locations of the
+        means should be easy to anticipate for the None water level. Once the
+        dots are in place, connect them with a line. Switch to the Adequate
+        color and do the same there (you may not know whether Direct or Indirect
+        light will be better, but you can probably anticipate how well the
+        plants will grow with no light, even if you water them - put the dots
+        for Adequate water someplace above the three Light treatment levels that
+        makes sense to you and connect them with a line).</li>
+      <li>With the red pen (labeled Light marginal) draw a plus (+) for the
+        location of the marginal mean for each light level - they will be in
+        between the two means at each water level. These are the basis for
+        measuring the main effect of light, and if they are not all at the same
+        Height you can expect a main effect of light.</li>
+      <li>With the black pen (labeled Water marginal) draw an x for the location
+        of the marginal mean for each water level - you would average all the
+        means for Adequate water (the pink line) to get the Adequate marginal
+        mean, and all the means for water level None (teal line) to get the
+        marginal mean for None. If these two marginal means are not the same
+        then you can expect a main effect of water level.</li>
+    </ul>
+    <p> What of an interaction? If the lines cross, converge, or diverge as you
+      move from the left to the right side of the graph that indicates that the
+      amount of difference between the water levels depends on the light level,
+      and you should expect an interaction between light and water.</p>
+    <p>Once you are done, click the "Download" button - the file you download
+      should be called "<strong>graph.png</strong>", place it in your project
+      folder (you should see it in your Files tab). Your Rmd file will add your
+      drawing to your knitted output file automatically as long as it is in the
+      same project folder as the Rmd file, and is named graph.png.</p>
+    <p>Now, on to the data analysis.</p>
+    <p style="clear:both">2. First, you should look at your data. We will use
+      ggplot2 to make an interaction plot that uses two different grouping
+      variables and a numeric response. This interaction plot will look much
+      like the hand-drawn graph you just made - it will have means for each
+      possible combination of light and water level, color coded by water level
+      and with lines connecting means for a water level across the three light
+      levels.</p>
+    <p>We will need means and standard errors, so use summarySE to get those,
+      and assign them to an object called plant.sumstats (in your <strong>Rmd
+        file</strong>, summarize.plant.data chunk - don't forget you need to
+      load the Rmisc library to get the function):</p>
+    <p class="rcmd">plant.sumstats &lt;- summarySE(plant, measurevar = "height",
+      groups = c("water","light"))</p>
+    <p>If you look at the data you should see:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp; water&nbsp;&nbsp;&nbsp; light
+      N&nbsp;&nbsp; height&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      sd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      se&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ci<br>
+      1 adequate&nbsp;&nbsp; direct 3 16.10000 2.847806 1.644182 7.074343<br>
+      2 adequate indirect 3 29.26667 3.847510 2.221361 9.557745<br>
+      3 adequate&nbsp;&nbsp;&nbsp;&nbsp; none 3&nbsp; 5.20000 1.352775 0.781025
+      3.360479<br>
+      4&nbsp;&nbsp;&nbsp;&nbsp; none&nbsp;&nbsp; direct 3&nbsp; 5.50000 1.873499
+      1.081665 4.654031<br>
+      5&nbsp;&nbsp;&nbsp;&nbsp; none indirect 3&nbsp; 5.40000 2.163331 1.249000
+      5.374012<br>
+      6&nbsp;&nbsp;&nbsp;&nbsp; none&nbsp;&nbsp;&nbsp;&nbsp; none 3&nbsp;
+      4.40000 2.971532 1.715615 7.381694</p>
+    <p>The two grouping variables you provided are the first two columns of
+      plant.sumstats, and you can see that each row is a different combination
+      of water and light.</p>
+    <p>Now you can graph the means for each combination of light (on the x-axis)
+      and water (grouped and color-coded), with lines connecting the means from
+      the same water level (<strong>Rmd file</strong>, graph.plant.data chunk):</p>
+    <p class="rcmd">ggplot(plant.sumstats, aes(x = light, y = height, color =
+      water, group = water))&nbsp;+ </p>
+    <p class="rcmd">geom_point() + </p>
+    <p class="rcmd">geom_errorbar(aes(ymin = height - ci, ymax = height + ci),
+      width = 0.1) + </p>
+    <p class="rcmd">geom_line()</p>
+    <p>We have been writing ggplot() commands all strung together in a line, but
+      it works to hit a carriage return after each + so that the command is
+      easier to read.</p>
+    <p>Based on the graph you should have some idea of what is going to happen
+      when you fit the model - the lines are clearly not parallel, so we have
+      reason to expect an interaction.<br>
+    </p>
+    <p>3. Fit the model. The complete model specification for a GLM with an
+      interaction would be: </p>
+    <p> height ~ light + water + light*water </p>
+    <p>Main effects are indicated by the names of the predictors added together,
+      and interactions are indicated as one predictor multiplied by another -
+      this is literally how the interaction is represented in the GLM, as
+      dummy-coded columns multiplied together (when both predictors are
+      categorical), as a numeric column multiplied by dummy-coded columns (if
+      one is categorical and the other is numeric), and as two numeric columns
+      multiplied together (if both predictors are numeric). The asterisk
+      indicates multiplication in R (and in most programming languages).</p>
+    <p>But, linear models are hierarchical, meaning that you can't include an
+      interaction term without also including main effects for each of the
+      factors. Because of this, to shorten and simplify the model specification
+      R allows us to use just the highest-order interaction to specify the model
+      - thus, all you need is (<strong>Rmd file</strong>, fit.lm chunk):</p>
+    <p class="rcmd">lm(height ~ light*water, data = plant) -&gt; plant.lm</p>
+    <p>Including the light*water interaction in the model requires that main
+      effects are also included, so it isn't necessary to write them in.</p>
+    <p>This model is balanced and complete, meaning that there are equal numbers
+      of data points in each combination of light and water, and every
+      combination is included in the data set. Because of this, light and water
+      are orthogonal, and it won't matter if you use Type I or Type II sums of
+      squares. You can confirm this is true by getting both a Type I SS ANOVA
+      table (from anova()) and a Type II SS ANOVA table (from Anova(), in the
+      car library). Get each and confirm that they give the same results (you
+      can put these commands in the fit.lm chunk below your lm() command).</p>
+    <p>4. We definitely have a statistically significant interaction between
+      light and water, so now what? </p>
+    <p>The significant interaction means that we can't interpret the main
+      effects as some sort of general pattern - for example, if we just did
+      Tukey post-hocs on light level, we would get a significant increase in
+      height for indirect light compared to the other two light levels, but this
+      would entirely be due to the high mean obtained when adequate water is
+      provided - if you don't water the plants you don't get this positive
+      effect of indirect light. Given that we are going to have to explain this
+      contingent relationship between water and light, the main effects don't
+      really add anything to our understanding of the biology of the system. To
+      understand what's going on, we need to compare pairs of means for
+      combinations of light and water.</p>
+    <p>But, which comparisons to make depends on what we really want to know.
+      Our choice of post-hoc analysis will depending on the question we're
+      interested in answering:</p>
+    <p><strong>Question 1: what is the best combination of light and water?</strong></p>
+    <p>Our graph shows that the combination of adequate water and indirect light
+      gives us the tallest plants, but this combination may not be statistically
+      significantly different from all of the other means. We can find this out
+      by comparing the means for all of the combinations, using Tukey tests.</p>
+    <p> The simplest method of comparing all the combinations of factor levels
+      to one another in R is to use emmeans() with tukey ~ light*water to define
+      the comparisons to be made - this argument will compare heights for every
+      combination of light and water. In the tukey.light.water chunk of the <strong>Rmd
+        file</strong> enter:</p>
+    <p class="rcmd">library(emmeans)</p>
+    <p class="rcmd">emmeans(plant.lm, tukey ~ light*water) -&gt; plant.emm</p>
+    <p class="rcmd">plant.emm</p>
+    <p>You will see this output:</p>
+    <p class="rout">$emmeans<br>
+      &nbsp;light&nbsp;&nbsp;&nbsp; water&nbsp;&nbsp;&nbsp; emmean&nbsp;&nbsp;
+      SE df lower.CL upper.CL<br>
+      &nbsp;direct&nbsp;&nbsp; adequate&nbsp;&nbsp; 16.1 1.52
+      12&nbsp;&nbsp;&nbsp; 12.78&nbsp;&nbsp;&nbsp; 19.42<br>
+      &nbsp;indirect adequate&nbsp;&nbsp; 29.3 1.52 12&nbsp;&nbsp;&nbsp;
+      25.95&nbsp;&nbsp;&nbsp; 32.59<br>
+      &nbsp;none&nbsp;&nbsp;&nbsp;&nbsp; adequate&nbsp;&nbsp;&nbsp; 5.2 1.52
+      12&nbsp;&nbsp;&nbsp;&nbsp; 1.88&nbsp;&nbsp;&nbsp;&nbsp; 8.52<br>
+      &nbsp;direct&nbsp;&nbsp; none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      5.5 1.52 12&nbsp;&nbsp;&nbsp;&nbsp; 2.18&nbsp;&nbsp;&nbsp;&nbsp; 8.82<br>
+      &nbsp;indirect none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5.4 1.52
+      12&nbsp;&nbsp;&nbsp;&nbsp; 2.08&nbsp;&nbsp;&nbsp;&nbsp; 8.72<br>
+      &nbsp;none&nbsp;&nbsp;&nbsp;&nbsp;
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4.4 1.52
+      12&nbsp;&nbsp;&nbsp;&nbsp; 1.08&nbsp;&nbsp;&nbsp;&nbsp; 7.72<br>
+      <br>
+      Confidence level used: 0.95 <br>
+      <br>
+      $contrasts<br>
+      &nbsp;contrast&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      estimate&nbsp;&nbsp; SE df t.ratio p.value<br>
+      &nbsp;direct adequate - indirect adequate&nbsp;&nbsp;&nbsp; -13.2 2.15
+      12&nbsp; -6.112&nbsp; 0.0006<br>
+      &nbsp;direct adequate - none
+      adequate&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10.9 2.15
+      12&nbsp;&nbsp; 5.060&nbsp; 0.0029<br>
+      &nbsp;direct adequate - direct
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10.6 2.15
+      12&nbsp;&nbsp; 4.921&nbsp; 0.0037<br>
+      &nbsp;direct adequate - indirect
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10.7 2.15
+      12&nbsp;&nbsp; 4.967&nbsp; 0.0034<br>
+      &nbsp;direct adequate - none
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      11.7 2.15 12&nbsp;&nbsp; 5.431&nbsp; 0.0016<br>
+      &nbsp;indirect adequate - none
+      adequate&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 24.1 2.15 12&nbsp;
+      11.172&nbsp; &lt;.0001<br>
+      &nbsp;indirect adequate - direct
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 23.8 2.15 12&nbsp;
+      11.033&nbsp; &lt;.0001<br>
+      &nbsp;indirect adequate - indirect
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 23.9 2.15 12&nbsp; 11.079&nbsp;
+      &lt;.0001<br>
+      &nbsp;indirect adequate - none
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 24.9 2.15
+      12&nbsp; 11.544&nbsp; &lt;.0001<br>
+      &nbsp;none adequate - direct
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      -0.3 2.15 12&nbsp; -0.139&nbsp; 1.0000<br>
+      &nbsp;none adequate - indirect
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -0.2 2.15
+      12&nbsp; -0.093&nbsp; 1.0000<br>
+      &nbsp;none adequate - none
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      0.8 2.15 12&nbsp;&nbsp; 0.371&nbsp; 0.9988<br>
+      &nbsp;direct none - indirect
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      0.1 2.15 12&nbsp;&nbsp; 0.046&nbsp; 1.0000<br>
+      &nbsp;direct none - none
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      1.1 2.15 12&nbsp;&nbsp; 0.511&nbsp; 0.9947<br>
+      &nbsp;indirect none - none
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      1.0 2.15 12&nbsp;&nbsp; 0.464&nbsp; 0.9966<br>
+      <br>
+      P value adjustment: tukey method for comparing a family of 6 estimates </p>
+    <p>You can see that each row of the Tukey tests table is comparing one
+      combination of light and water to another, and every combination is
+      compared against every other. You can get a compact letter display by
+      using the cld() function in the multcomp library - in the same code chunk,
+      enter:</p>
+    <p class="rcmd">multcomp::cld(plant.emm)</p>
+    <p>and you will see that the following is added below the Tukey comparisons:</p>
+    <p class="rout">&nbsp;light&nbsp;&nbsp;&nbsp; water&nbsp;&nbsp;&nbsp;
+      emmean&nbsp;&nbsp; SE df lower.CL upper.CL .group<br>
+      &nbsp;none&nbsp;&nbsp;&nbsp;&nbsp;
+      none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4.4 1.52
+      12&nbsp;&nbsp;&nbsp;&nbsp; 1.08&nbsp;&nbsp;&nbsp;&nbsp; 7.72&nbsp;
+      1&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;none&nbsp;&nbsp;&nbsp;&nbsp; adequate&nbsp;&nbsp;&nbsp; 5.2 1.52
+      12&nbsp;&nbsp;&nbsp;&nbsp; 1.88&nbsp;&nbsp;&nbsp;&nbsp; 8.52&nbsp;
+      1&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;indirect none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5.4 1.52
+      12&nbsp;&nbsp;&nbsp;&nbsp; 2.08&nbsp;&nbsp;&nbsp;&nbsp; 8.72&nbsp;
+      1&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;direct&nbsp;&nbsp; none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      5.5 1.52 12&nbsp;&nbsp;&nbsp;&nbsp; 2.18&nbsp;&nbsp;&nbsp;&nbsp;
+      8.82&nbsp; 1&nbsp;&nbsp;&nbsp; <br>
+      &nbsp;direct&nbsp;&nbsp; adequate&nbsp;&nbsp; 16.1 1.52
+      12&nbsp;&nbsp;&nbsp; 12.78&nbsp;&nbsp;&nbsp; 19.42&nbsp;&nbsp;
+      2&nbsp;&nbsp; <br>
+      &nbsp;indirect adequate&nbsp;&nbsp; 29.3 1.52 12&nbsp;&nbsp;&nbsp;
+      25.95&nbsp;&nbsp;&nbsp; 32.59&nbsp;&nbsp;&nbsp; 3&nbsp; <br>
+      <br>
+      Confidence level used: 0.95 <br>
+      P value adjustment: tukey method for comparing a family of 6 estimates <br>
+      significance level used: alpha = 0.05 <br>
+      NOTE: Compact letter displays can be misleading<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; because they show NON-findings rather than
+      findings.<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Consider using 'pairs()', 'pwpp()', or
+      'pwpm()' instead.</p>
+    <p>You'll see the groups identified in the .group column. You can also see
+      that the authors of emmeans disagree with the authors of multcomp about
+      the wisdom of using compact letter displays!</p>
+    <p>This approach of comparing every combination of light and water is the
+      most information rich, because every pair of means is tested. The problem
+      is that with 2 water levels and 3 light levels there are six different
+      combinations, and it takes 15 different comparisons (with 15 p-values) to
+      test all of the means against each other. This is an issue because the
+      p-value is adjusted for the number of comparisons, and comparing all of
+      the means against one another reduces the power of each comparison. If you
+      really want to compare all of the combinations, this is unavoidable, but
+      it may be that you can answer all the questions you care about without
+      doing all of these comparisons. </p>
+    <p>For example, if your question is...</p>
+    <p><strong>Question 2: at each level of water, which light levels are
+        different?</strong></p>
+    <p>then you can reduce the number of comparisons that you make by more than
+      half. If we only make comparisons between the three light levels that have
+      adequate water, and the three light levels that have no water, we only
+      have to test a total of six differences. Using this approach sacrifices
+      comparisons between water levels, so we can't talk about the differences
+      between water levels when we present our results, but if we already know
+      that watering plants is important and are only interested in how water
+      level and light level interact, then this may be a good choice.
+      Fortunately, emmeans() provides a very simple way to do these comparisons
+      (<strong>Rmd file</strong>, light.given.water.level chunk): </p>
+    <p><span class="R-code rcmd">emmeans(plant.lm, tukey ~ light | water)<br>
+      </span></p>
+    <p>You'll see in the output window that you get lines that look like this:</p>
+    <span class="R-code rout"></span><span class="R-code rout"></span>
+    <p><span class="R-code rout">$emmeans<br>
+        water = adequate:<br>
+        &nbsp;light&nbsp;&nbsp;&nbsp; emmean&nbsp;&nbsp; SE df lower.CL upper.CL<br>
+        &nbsp;direct&nbsp;&nbsp;&nbsp;&nbsp; 16.1 1.52 12&nbsp;&nbsp;&nbsp;
+        12.78&nbsp;&nbsp;&nbsp; 19.42<br>
+        &nbsp;indirect&nbsp;&nbsp; 29.3 1.52 12&nbsp;&nbsp;&nbsp;
+        25.95&nbsp;&nbsp;&nbsp; 32.59<br>
+        &nbsp;none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5.2 1.52
+        12&nbsp;&nbsp;&nbsp;&nbsp; 1.88&nbsp;&nbsp;&nbsp;&nbsp; 8.52<br>
+        <br>
+        water = none:<br>
+        &nbsp;light&nbsp;&nbsp;&nbsp; emmean&nbsp;&nbsp; SE df lower.CL upper.CL<br>
+        &nbsp;direct&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5.5 1.52
+        12&nbsp;&nbsp;&nbsp;&nbsp; 2.18&nbsp;&nbsp;&nbsp;&nbsp; 8.82<br>
+        &nbsp;indirect&nbsp;&nbsp;&nbsp; 5.4 1.52 12&nbsp;&nbsp;&nbsp;&nbsp;
+        2.08&nbsp;&nbsp;&nbsp;&nbsp; 8.72<br>
+        &nbsp;none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4.4 1.52
+        12&nbsp;&nbsp;&nbsp;&nbsp; 1.08&nbsp;&nbsp;&nbsp;&nbsp; 7.72<br>
+        <br>
+        Confidence level used: 0.95 <br>
+        <br>
+        $contrasts<br>
+        water = adequate:<br>
+        &nbsp;contrast&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        estimate&nbsp;&nbsp; SE df t.ratio p.value<br>
+        &nbsp;direct - indirect&nbsp;&nbsp;&nbsp; -13.2 2.15 12&nbsp;
+        -6.112&nbsp; 0.0001<br>
+        &nbsp;direct - none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10.9
+        2.15 12&nbsp;&nbsp; 5.060&nbsp; 0.0008<br>
+        &nbsp;indirect - none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 24.1 2.15
+        12&nbsp; 11.172&nbsp; &lt;.0001<br>
+        <br>
+        water = none:<br>
+        &nbsp;contrast&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        estimate&nbsp;&nbsp; SE df t.ratio p.value<br>
+        &nbsp;direct - indirect&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.1 2.15
+        12&nbsp;&nbsp; 0.046&nbsp; 0.9988<br>
+        &nbsp;direct -
+        none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.1 2.15
+        12&nbsp;&nbsp; 0.511&nbsp; 0.8676<br>
+        &nbsp;indirect - none&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.0 2.15
+        12&nbsp;&nbsp; 0.464&nbsp; 0.8891<br>
+        <br>
+        P value adjustment: tukey method for comparing a family of 3 estimates <br>
+      </span></p>
+    <p>The output is divided into a set of comparisons for adequate water and
+      another for no water, which makes it appear that the data are being split
+      and analyzed separately, but this is not the case - the fact that the same
+      standard error is being used for each comparison makes it clear that Tukey
+      comparisons are being used, and is adjusting for all six of the
+      comparisons.</p>
+    <p>The command is smart enough to work with either variable set as the
+      conditional variable - try it using light as the conditional and water as
+      the test variable and see what happens (<strong>Rmd file</strong>,
+      water.given.light.level chunk).</p>
+    <h2 class="part" id="interactions_collin">Interactions vs. correlated
+      predictors</h2>
+    <p>There's a question in your Rmd file about the difference between
+      interactions and correlated predictors - before you try to answer it read
+      through this explanation of the issue. It's easier to see the point if we
+      have an equal number of levels in the light and water data set, so the
+      graphs show three levels of water - I added a "moderate" level, which is
+      just halfway between the adequate and none water levels at each light
+      level.</p>
+    <table width="100%" border="0">
+      <tbody>
+        <tr>
+          <td><img alt="Interaction plot" src="interaction_plot.png"><br>
+          </td>
+          <td><img alt="3D plot, interaction" src="interaction_3d.png"><br>
+          </td>
+          <td>
+            <p>We set up a factorial design using all possible combinations of
+              light level and water level, with equal numbers of replicates in
+              each cell (i.e. each combination of light and water). The graphs
+              to the left show the patterns of response in both a (now familiar)
+              interaction plot, and as a three-dimensional bar chart.</p>
+            <p>The interaction plot shows the lack of parallel in responses
+              (i.e. heights) for the combinations of the predictors, but the 3D
+              plot shows the design of the experiment better - you can see that
+              all the combinations of light and water were used (it is
+              complete), and assuming the sample size is the same for all of the
+              cells we can measure the effect of water independently of our
+              measurement of the effect of light - the design is orthogonal.</p>
+            <p>Because we have an orthogonal design, we can see that the <em>response</em>
+              to one predictor (e.g. light) depends on the level of the other
+              (e.g. water) - if no light is provided then the effect of water is
+              essentially zero, but if either direct or indirect light is used
+              then the plants grow better with more water, the effect being
+              greatest for indirect light.</p>
+          </td>
+        </tr>
+        <tr>
+          <td><img alt="Correlated predictors" src="corr_pred.png"><br>
+          </td>
+          <td><img alt="Correlated predictors in 3D" src="corr_pred_3d.png"><br>
+          </td>
+          <td>
+            <p>But, what if instead of a nice balanced, complete design we had
+              used only the combinations direct.adequate, indirect.moderate, and
+              none.none? You can see on the 3D plot that this introduces a
+              correlation between the predictors that is so severe that the
+              predictors are completely confounded - each water level is matched
+              with just one light level, so it's impossible to tell if the
+              response is due to water alone, light alone, or an interaction
+              between the two.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>So, correlated predictors are a design-level problem that makes it
+      difficult to tell how each predictor affects the response variable.
+      Interactions measure the extent to which response to one variable depends
+      on another, and we can't even assess whether interactions exist unless we
+      have enough independent variation between the predictors to measure their
+      joint effects.</p>
+    <p>That's it - knit and upload your Word file.</p>
+    <p><br>
+    </p>
+    <script>var button = document.getElementById('btn-download');
+button.addEventListener('click', function (e) {
+    var dataURL = canvas.toDataURL('image/png');
+    button.href = dataURL;
+});</script>
   </body>
 </html>
