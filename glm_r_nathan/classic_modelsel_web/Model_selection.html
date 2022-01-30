@@ -3,9 +3,8 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>Classic model selection</title>
-    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=02a5532ccf4574e49ae6e245b4a118252&amp;authkey=AcYXNyrvFGWnmf6cbl1qQQ4&amp;e=4170fc6099b74d3f94a7fdaade97010e"
-      rel="stylesheet" type="text/css">
-    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=04e5dfc4b7ee64a7dbacb487cddde06a0&authkey=AdStuSX7RsXlg4QXZtzjDfw&e=f5861611192540a4b0c28483e9e5baf0"></script>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
   </head>
   <body>
     <div id="header">
@@ -20,184 +19,366 @@
       <p><a href="#model_sel">Model selection</a></p>
     </div>
     <div id="content">
-      <p> </p>
       <p class="part" id="intro">Model selection is the process by which we
-        choose the best statistical representation of our data. Statistical
-        analysis of simple experiments that hew very closely to the
-        "experimental ideal" can be treated as tests of treatment effects. When
-        all of the predictors in the model are experimentally interesting, are
-        orthogonal by design, and there are no nuisance variables to account
-        for, a single statistical model that matches the design can be fitted
-        and the results can be interpreted without having to worry about model
-        selection. This approach is perfectly valid when the experimental
-        situation permits it.</p>
-      <p>When we are conducting exploratory analysis of large data sets with
-        many possible predictors, many of which are correlated with one another,
-        and which may have complex interdependent relationships with the
-        response, we definitely need to use the principles of model selection to
-        avoid some common pitfalls.</p>
-      <p>However, even with lab-based experimental work, once we start having to
-        cope with nuisance variables (e.g. observer effects, growth chamber
-        differences), covariates that may not be orthogonal with other predictor
-        variables (e.g. mass of individuals, temperature fluctuation), and
-        factors that may not be biologically important but need to be tested
-        just in case (e.g. sex, strain), we will need to evaluate more than one
-        model and select the one that provides the best basis for
-        interpretations. Any time more than one model of the data must be
-        evaluated, it is good to keep in mind the principles of model selection.</p>
-      <p>Today we will focus on using various approaches to finding the best set
-        of predictors for the energy content of plant-based foods, using
-        adjusted R<sup>2</sup> as the criterion. Adjusted R<sup>2</sup> balances
-        the fit of the model against the model's complexity, such that adding a
-        predictor variable will only improve adjusted R<sup>2</sup> if the
-        predictor explains enough variation in the response to offset the loss
-        in power from the error degrees of freedom it consumes.</p>
-      <p>We will also begin to think of models as hypotheses about our data.
-        Including a predictor or an interaction in a model is to hypothesize the
-        nature of the relationship between predictors and response. From this
-        perspective, model selection as a way of using data to differentiate
-        between competing hypotheses about how the system you're studying works.
-        This will be a step away from classic null hypothesis significance
-        testing, and towards likelihood-based model selection, which will be the
-        subject of the last few weeks of class.</p>
-      <h2 class="part" id="exercise">Exercise</h2>
+        choose the best statistical representation of the <strong>structure</strong>
+        in our response data. Structure refers to the predictable patterning in
+        the response data, which can be due to anything that is not purely
+        random variation between individuals. A major cause of structure in
+        response data (and the part of the structure that we are most interested
+        in scientifically) are the fixed effects of predictor variables.</p>
+      <p class="part">Model selection is not always a necessary part of data
+        analysis. For example, when all of the predictors in a model are
+        experimentally interesting, are orthogonal by design, and have treatment
+        levels that can be randomly assigned to subjects, then model selection
+        becomes very simple - a single statistical model that matches the
+        experimental design is the appropriate model, and elaborate model
+        selection is not really needed. Scientists who only ever analyze
+        experimental data that has these properties often think of their linear
+        models just as tests of effects of each experimental treatment, and the
+        fact that they are building a model is something they don't really need
+        to think about.</p>
+      <p>However, when we are conducting exploratory analysis of data sets with
+        many possible predictors, which are not independent of one another (and
+        may be strongly correlated), which may have complex inter-dependent
+        relationships with the response, and with subjects that can't be
+        randomly assigned the values of their predictors, then the fact that
+        we're fitting a model to our data becomes important, because there are
+        many possible models we could select, and our interpretation of the data
+        depends on the model we use. With studies subject to these complications
+        we definitely need to use the principles of model selection so that we
+        base our understanding of our biological system on a good, informative
+        model.</p>
+      <p>Field ecologists that routinely work with observational data will
+        nearly always need to approach their analysis as a model selection
+        exercise. However, even lab-based experimental work can benefit from
+        this perspective if it involves nuisance variables (e.g. observer
+        effects, growth chamber differences), covariates that may not be
+        orthogonal with other predictor variables (e.g. mass of individuals,
+        body temperature fluctuation), and factors that can't be randomly
+        assigned to subjects (e.g. sex, strain).</p>
+      <p>Today we will focus on using model selection to find the best set of
+        predictors for the caloric content of plant-based foods, using adjusted
+        R<sup>2</sup> as the criterion. Adjusted R<sup>2</sup> is better than
+        multiple R<sup>2</sup> for model selection, because it balances the fit
+        of the model to the data against the model's complexity.</p>
+      <h2 class="part" id="exercise">Model selection with multiple predictors</h2>
       <p> We will use model selection today on a small selection of foods from
-        the USDA's <a href="http://ndb.nal.usda.gov/ndb/foods">National
-          Nutrient database</a>. The database has nutrient information on over
-        67,000 foods, but I've selected 142 plant-based foods with which to
-        model caloric density (kcal of a 100 g sample) as a function of the
-        macronutrient content, as well as some components that carry no calories
-        themselves but may be negative predictors of caloric content.</p>
+        USDA's massive <a href="https://fdc.nal.usda.gov/">National Nutrient
+          database</a>. The database has nutrient information on over 67,000
+        foods, but I've selected 142 plant-based foods with which to model
+        caloric density (kcal of a 100 g sample) as a function of the the food's
+        chemical composition.</p>
       <p> </p>
       <p> </p>
       <p> </p>
-      <p> The data can be downloaded <a href="macronutrients.xls">here</a>. If
-        you start a new R Studio project in a folder called "food", and then
-        import the data (into a data set called food) you will see that the
-        variables are:</p>
+      <p> Start a new R Studio project for today. The data can be downloaded <a
+          href="macronutrients.xls">here</a>, and the R markdown file is <a href="model_selection1.Rmd">here</a>.
+      </p>
+      <p>When you import the data make sure you use data.frame(read_excel()) to
+        convert the tibble into a data frame, or some of the graphing steps
+        below won't work correctly. Import the Excel file into a data set named
+        <strong>food</strong>, and open it - you will see that the variables
+        are:</p>
       <p> </p>
       <p> </p>
       <p> </p>
       <ul>
-        <li> Ash - a measure of inorganic residues that are left behind when
-          caloric content is measured in a bomb calorimeter. Ash does not
-          contain any caloric value.</li>
-        <li>Carb - grams of carbohydrate.</li>
-        <li>Kcal - kilocalories in the sample, to be used as the dependent
-          variable for all models.</li>
-        <li>Fiber - grams of indigestible plant material, mostly cellulose, in
+        <li> food - the name of the food</li>
+        <li>kcal - kilocalories in the sample, to be used as the <strong>dependent
+            variable</strong> for all models.</li>
+        <li>ash - weight of inorganic residues (g) that are left behind when
+          caloric content is measured in a bomb calorimeter.</li>
+        <li>carb - grams of carbohydrate.</li>
+        <li>fiber - grams of indigestible plant material, mostly cellulose, in
           the food. Fiber is not digestible by humans, and does not contain any
           caloric value.</li>
-        <li>Protein - grams of protein.</li>
-        <li>Fat - grams of fat</li>
-        <li>Water - grams of water. Water does not contain any caloric value. </li>
+        <li>protein - grams of protein.</li>
+        <li>fat - grams of fat</li>
+        <li>water - grams of water. Water does not contain any caloric value. </li>
       </ul>
-      <p> </p>
-      <p> </p>
-      <p> </p>
-      <p> Both the dependent and independent variables are standardized to a 100
-        g sample. Log-transformed versions of all of the variables except water
-        (which is left skewed, and for which log transformation would not help)
-        are provided. I applied the logit transformation to water data as to
-        produce water.logit, which is the log odds ratio, or ln(p/(1-p)), where
-        p is the proportion of the sample that is water (since the sample is 100
-        g, p = water/100). The logit transformation works well for proportions
-        or percentages converted to proportions, provided that there are no 0%
-        or 100% values (we won't use the older arcsin square root transformation
-        because of <a href="Warton+&amp;+Hui+2011.pdf">this</a>).</p>
-      <p> </p>
-      <p> </p>
-      <p> </p>
-      <p> We will analyze these data in two stages: </p>
-      <p> </p>
-      <p> </p>
+      <p>Each of the possible predictor variables also has a transformed
+        version, called log.variable.name for each variable but water, which is
+        called logit.water.</p>
+      <p>Before any model selection begins, it's a good idea to look at the data
+        to start developing an understanding of the patterns and potential
+        issues.</p>
       <ul>
-        <li>
-          <p> </p>
-          <p>Part 1 - first, you will fit several models with different
-            combinations of the predictor variables to see which set of
-            predictors produces the best model of caloric density. </p>
-          <p> </p>
-        </li>
-      </ul>
-      <p> </p>
-      <ul>
-        <li>
-          <p> </p>
-          <p>Part 2 - each of you will generate your own hypothesis about the
-            types of foods that have the greatest variation in caloric density,
-            and you will generate one additional categorical variable that
-            represents your hypotheses. You will then generate an adjusted R<sup>2</sup>
-            for your model, and we will see as a class whose model is best
-            supported by the data.</p>
-          <p> </p>
-        </li>
       </ul>
       <p> </p>
       <p> </p>
       <p> </p>
+      <p>1. First, we will <strong>make histograms of the variables</strong>.
+        To save space we'll put them in an array, like we did for our residual
+        plots in the model criticism exercise, but we don't want to plot all 14
+        of the variables together or we won't be able to see them. We'll do a
+        separate set of histograms for the un-transformed variables, and for the
+        transformed variables.</p>
+      <p>In the chunk plot.untransformed.histograms of your Rmd file, set up the
+        layout - we'll have 7 variables to plot in each set of histograms, and
+        it's good to give them a little height so we can see the shape of the
+        distribution better, so we'll use 2 rows and 4 columns to fit them all
+        in:</p>
+      <p class="rcmd">oldpar &lt;- par()</p>
+      <p class="rcmd">par(oma = c(0,0,3,0), mfrow = c(2,4))</p>
+      <p>We can take advantage of lapply() to get the graphs all created with a
+        single command - first we need a list of the variables we want to plot,
+        which will be the un-transformed variables for this first set (next row
+        of the same chunk):</p>
+      <p class="rcmd">untrans.var &lt;-
+        c("kcal","ash","carb","fiber","protein","fat","water")</p>
+      <p>Then we can use lapply() on this list to make our 7 histograms with one
+        command - these graphs don't need to be publication quality, they are
+        just to guide our model building decisions, so the R base graphics
+        command hist() will do the job:</p>
+      <p class="rcmd">lapply(untrans.var, FUN = function(x) hist(food[ , x],
+        main = x, xlab = x)) </p>
+      <p>You should see these histograms:</p>
+      <img src="untrans_histo.png" alt="Untrans">
+      <p>The lapply() command takes the list of variables, untrans.var, and
+        works through the variable names one at a time. The FUN = function(x)
+        statement defines the plotting command we used, which is hist(data.set[
+        , name.of.variable], main = title.of.plot, xlab = label.on.x.axis). The
+        value x comes from the untrans.var list, so it is just the name of a
+        variable. If we type the command in the <strong>Console</strong>:</p>
+      <p class="rcmd">hist(food[,"kcal"])</p>
+      <p>you will see the kcal histogram in the plot window. We can add the
+        title and x-axis label with (still in the <strong>Console</strong>):</p>
+      <p class="rcmd">hist(food[,"kcal"], main = "kcal", xlab = "kcal")</p>
+      <p>This gives us the same histogram as the first one in our
+        lapply()-generated set - all we do in lapply() is to define the variable
+        name we will get from untrans.vars as x, and then write the command to
+        use x everywhere we would use "kcal" from the console.</p>
+      <p>You may notice that the header block in the code chunk reads {r
+        plot.transformed.histograms, results='hide'} - the results='hide' part
+        tells R to not include all the numerical output from hist(), and just
+        plot the graphs themselves. The commands work without this setting, but
+        the output includes pages of output you don't need to look at unless
+        it's included.</p>
+      <p>So, back to the histograms - nothing looks remotely normally
+        distributed, so we can look at the transformed variables next. Go ahead
+        and try to do this in chunk plot.transformed.histograms of your <strong>Rmd
+          file</strong>. If all goes well you should see this:</p>
+      <img src="transformed_vars.png" alt="Transformed histograms">
+      <p>The transformed versions are obviously much closer to normally
+        distributed, so we might expect that transformations will be needed. The
+        <strong>logit transformation</strong> was applied to water data to
+        produce water.logit. The logit of a proportion or a probability is the
+        log odds ratio, or ln(p/(1-p)), where p is the proportion of the sample
+        that is water (since the sample is 100 g, p = water/100). The logit
+        transformation works well for proportions or percentages converted to
+        proportions, provided that there are no 0% or 100% values.</p>
+      <p>To be clear, the distribution of the data isn't as important as the fit
+        of the model to the data and the distribution of residuals, but it's
+        uncommon for strongly non-normal variables to work well with linear
+        models, and spending some time looking at the individual variables can
+        help us anticipate steps we'll need to take later.</p>
+      <p>Now that we know something about the distribution of the individual
+        variables, we can see how they are inter-related.</p>
       <p> </p>
-      <h3 class="part" id="calories"> Part I - modeling variation in caloric
-        density.</h3>
       <p> </p>
       <p> </p>
       <p> </p>
-      <p> 1. <strong>Make a scatterplot matrix of all the untransformed
-          variables, and another of the transformed variables</strong>.
+      <p> </p>
+      <p> </p>
+      <p> 2. <strong>Make a scatterplot matrix of all of the variables</strong>.
         Remember, look at your data! It's good to start every analysis with some
         graphs to get an idea of what the relationships look like, and to spot
         any possible data entry errors, or potential non-linearities or other
         issues that might be present in the data set.</p>
-      <p>The ggplot2 package doesn't have a command for making a matrix of
-        scatterplots, so we will use base graphics for this - use the command:</p>
-      <p class="rcmd">pairs(food[,-1])</p>
-      <p>Using -1 in the column index drops the food labels in the first column,
-        and produces a huge matrix of variables plotted against one another.</p>
-      <p>In general, you should see that the relationships for transformed
-        variables look better than for untransformed ones, so we will use the
-        log transformed variables.</p>
+      <p>Since the upper triangle and the lower triangle of the scatterplot
+        matrix are mirror images of each other, we can make better use of the
+        lower triangle by putting the correlation coefficients and p-values in
+        them. R allows us to define functions and then use them within the
+        session. Run the panel.cor.function chunk to get the function added to
+        your workspace (you should see it in the Environment tab if all goes
+        well).</p>
+      <p>Since we will either use kcal or log.kcal as the response variable we
+        can make two different sets of scatter plots that include just one or
+        the other version of kcal. To make the version with the un-transformed
+        version of kcal use (in the kcal.untrans.pairs.plots chunk of your <strong>Rmd
+          file</strong>):</p>
+      <p class="rcmd">pairs(food[,untrans.var], lower.panel = panel.cor)</p>
+      <p>Having made a list of untransformed variables when we made histograms,
+        we can use it again here to identify the variables we want to include in
+        our scatterplot matrix. We need to load the biol531 library because the
+        panel.cor() function is in it, which we use to put correlation
+        coefficients and their p-values in the lower triangle of our scatterplot
+        matrix. You should see:</p>
+      <img src="splom_untrans.png" alt="Untransformed">
+      <p>If you have a hard time seeing your own pairs plot you can use the
+        "Display in own window" button in the upper right corner of the output
+        block, <img src="own_window.png" style="display: inline">, to get the
+        scatterplots to pop out into a larger, resizable window.</p>
+      <p>The pairs() command makes a scatterplot matrix with names of the
+        variables in the diagonal. Variables are used as the y-axis for the row
+        they appear in, and the x-axis for the column they appear in. For this
+        example, kcal is the y-axis for the first row of scatterplots, and you
+        can use that first row of graphs to see how kcal is related to all of
+        the the predictor variables, one at a time. The relationship between the
+        predictors (and thus how much of a problem with confounding to expect
+        between them) is illustrated by the rest of the scatterplots. The lower
+        triangle also has information about all of the combinations of the
+        variables, but the panel.cor() function was used to put the correlation
+        coefficient and p-value for the correlation in each of these. The
+        correlations of each predictor with kcal is in the first column, and the
+        correlations between the predictors is in all the other positions.</p>
+      <blockquote>
+        <h3> Convenience vs. clarity </h3>
+        <p> Frequently, there are multiple ways of accomplishing the same thing
+          in R, and deciding what approach to take is arbitrary to some extent -
+          if the end result is the same, does it really matter how you get it
+          done?</p>
+        <p>But, some of the different ways of accomplishing a task differ in
+          their level of convenience to you as the analyst, vs. clarity about
+          what the code is doing. For example, we could have written our pairs()
+          command this way:</p>
+        <p class="rcmd">pairs(food[ , 2:8], lower.panel = panel.cor)</p>
+        <p>This is convenient because the numbers 2:8 refer to columns 2 through
+          8 of the food data set - using this method gets the plot made without
+          having to make a list of variables at all. But, it has the
+          disadvantage of being opaque to somebody reading your code who does
+          not have the data set in hand, because the names and column numbers
+          appear nowhere in your Rmd file. You may not yet have had the
+          embarrassing experience of opening up an Rmd file, knowing that you
+          wrote all the code in it, and not being able to remember why you did
+          what you did, but that day is coming! Using approaches that are hard
+          to understand make it more likely this will happen to you.</p>
+        <p>By far the clearest, most "self-documenting" way to write the command
+          would be: </p>
+        <p class="rcmd">pairs(food[ ,
+          c("kcal","ash","carb","fiber","protein","fat","water")], lower.panel =
+          panel.cor)</p>
+        <p>This style is self documenting in that it's perfectly clear to anyone
+          who reads this line of code what you're plotting. But, the
+          disadvantage is that it is more typing, and is an opportunity for
+          typos (and the elevated blood pressure that goes with them). Also, if
+          you use this approach and realize you should have included another
+          variable in the list, you would need to update the list in every line
+          of code in which you used this list of variables.<span style="font-family: &quot;Open Sans&quot;,sans-serif;"><br>
+          </span></p>
+        <p><span style="font-family: &quot;Open Sans&quot;,sans-serif;">None of
+            these approaches is wrong, and they all work. </span>Personally, I
+          have gravitated toward the approach you used above, in which we first
+          make a list of variables and then use it as an argument in commands,
+          particularly when the same list is used more than once. It's really
+          useful to be able to change one element in the list in one line of
+          code, and then re-run all the code that uses the list as an argument
+          to update them, rather than having to re-write every line of code that
+          uses the same list with the new element. In other words, if we decided
+          to drop protein from the list, we could have just re-written the line
+          in which we made the untrans.var object, and then re-run the
+          histograms and pairs plot to update them with the new list.</p>
+        <p>When a list of variables is only used once, like will be the case in
+          our next two pairs() plots, I just write the list of variable names so
+          that the code is easier to understand. I used to prefer using column
+          numbers because of the convenience, but over time have found the lack
+          of clarity to be a liability, and I don't use that method very often
+          anymore. </p>
+      </blockquote>
+      <p>We can see how kcal relates to the log-transformed versions of the
+        predictors with (in chunk kcal.trans.pairs.plots of your <strong>Rmd
+          file</strong>):</p>
+      <p class="rcmd">pairs(food[,c("kcal","log.ash","log.carb","log.fiber","log.protein","log.fat","logit.water")],
+        lower.panel = panel.cor)<br>
+      </p>
+      <p>You'll see that several of the relationships look more linear using
+        transformed predictors.</p>
+      <p>If we compare log.kcal to the un-transformed predictors with (in the
+        log.kcal.untrans.pairs.plots chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">pairs(food[,c("log.kcal","ash","carb","fiber","protein","fat","water")],
+        lower.panel = panel.cor)</p>
+      <p>Now, make the pairs plot that compares log.kcal to the transformed
+        predictors (in the log.kcal.trans.pairs.plots chunk of your <strong>Rmd
+          file</strong>).</p>
+      <p>2. <strong>Pick the scale to use for the variables.</strong> Now that
+        we have all of the scatterplot matrices, let's put them to use. Our
+        first concern is to make sure our predictors are linearly related to the
+        response, so look at each of the scatterplot matrices first to see which
+        of the first rows of scatterplots gives us relationships that look the
+        most linear.</p>
+      <p>Secondly, we should pick versions of the variables we think will let us
+        meet the distributional assumptions of GLM. There is a lot we can't tell
+        from pairs of variables plotted against one another, but to the extent
+        that the plots give us an even distribution of data along the x-axis,
+        and what looks like an even distribution of data along the y-axis, we
+        will have a better chance of meeting GLM assumptions when we use the
+        variables in a model.</p>
+      <p>Based on these initial considerations, you'll see that the most linear
+        relationships with the best data distributions come from the combination
+        of log.kcal and transformed predictors. This matches what we saw with
+        our histograms, which gave us much more bell-shaped distributions for
+        transformed variables than for untransformed versions. Consequently, we
+        will use the log.kcal column as our response variable, and the
+        transformed versions of all the predictors in our models.</p>
       <blockquote style="background: #f5f5fb; border: 1px solid; padding: 10px;">
-        <p>By the way, when you log-transform both the response and predictor
-          variables for a regression analysis as we will be doing today, the
-          model you are fitting is:</p>
+        <p>We are going to be working with models that have a log-transformed
+          response as well as log-transformed predictors today. This gives us a
+          good excuse for learning about how to interpret models with log
+          transformed predictors, responses, or both.</p>
+        <p>When you log-transform both the response and predictor variables for
+          a regression analysis as we will be doing today, the model you are
+          fitting is:</p>
         <p>log y = b log x + log a</p>
-        <p>Back-transformed to the linear scale that the data were measured on,
-          this is a "power function":</p>
+        <p>Back-transforming both sides of the equation to the linear scale that
+          the data were measured on gives us a <strong>power function</strong>:</p>
         <p>y = ax<sup>b</sup></p>
-        <p>The value of y being predicted is the geometric mean. </p>
+        <p>The value of y being predicted is the geometric mean of kcal.</p>
         <p>A model with the response on a log scale, but with the predictor on a
           linear scale, like this:</p>
-        <p>log y = b x + log a</p>
-        <p>became an "exponential" function when it's back-transformed:</p>
+        <p>log y = b x + k</p>
+        <p>became an <strong>exponential</strong> function when it's
+          back-transformed:</p>
         <p>y = a(e<sup>bx</sup>)</p>
         <p>Notice that these functions differ in where the x-variable is placed
-          - in an exponential function the x variable is in the exponent,
-          whereas power functions use x as a base and raise it to an exponent.</p>
-        <p>Finally, we can log-transform the x variable, like we did when we
-          related wing span or body length to the log of body mass with our
-          raptor data. This kind of scaling is common when we relate a linear
-          measure to a volumetric one. The model we used was:</p>
-        <p>y = b log x + log a</p>
-        <p>This is a "logarithmic" function, and the back-transformation is:</p>
+          - in an exponential function the x variable is in the exponent for the
+          base of the logarithm, whereas power functions use x as a base and
+          raise it to an exponent. Since we fit the model with log y as the
+          response, this equation is also predicting the geometric mean on the
+          original, linear data scale.</p>
+        <p>The switch from using the letter k to the letter a is to avoid having
+          a log-term on the right side of the equation. The letter k is used as
+          the intercept of a straight line equation, and the intercept is a
+          constant that is estimated from the data. After back-transforming a is
+          also a constant estimated from the data, but it is a constant
+          multiplier instead of being additive. The intercept, k, is equal to
+          log a, so it is equally correct to write the straight line equation as
+          log y = b x + log a, but since log a is just a constant, and we're
+          saying that the right side of the equation is on a linear scale, it's
+          confusing to have log a there.</p>
+        <p>Finally, we can log-transform the x variable but keep the y-variable
+          on a linear scale. The model we used was:</p>
+        <p>y = b log x + k</p>
+        <p>This model is predicting the a arithmetic mean of y, it's just using
+          the log of x to do it. If you back-transform this model it becomes a <strong>logarithmic</strong>
+          function:</p>
         <p>e<sup>y</sup> = ax<sup>b</sup></p>
-        <p>Why does this matter? You can get an idea of the form of the
-          functional relationship between predictor and response by graphing on
-          a logarithmic scale for y, or for x, or for both variables and seeing
-          which gives you a straight line relationship.</p>
-        <p>For example, if you make a scatterplot of kcal (y axis) against
-          protein (x axis), using linear axes for both, selecting log x-axis,
-          log y-axis, or both, you get graphs like these:</p>
+        <p>With this introduction as background, you can use graphs that have
+          log-scale axes to get an idea of the form of the functional
+          relationship between predictor and response. For example, if you make
+          a scatterplot of kcal (y axis) against protein (x axis), using linear
+          axes for both, using a log x-axis with a linear y-axis, using a log
+          y-axis with a linear x-axis, or using log axes for both x and y, you
+          get graphs like these:</p>
         <table width="100%" border="1">
           <tbody>
             <tr align="center">
-              <td colspan="4" rowspan="1">If your data look linear when you use
-                these axis scales...</td>
+              <td colspan="4" rowspan="1">
+                <p>If your data look linear when you use these axis scales...</p>
+              </td>
             </tr>
             <tr>
-              <td style="text-align: center;">Linear x and linear y</td>
-              <td style="text-align: center;">Log of x, linear y</td>
-              <td style="text-align: center;">Log of y, linear x</td>
-              <td style="text-align: center;">Log of x and log of y</td>
+              <td style="text-align: center;">
+                <p>Linear x and linear y</p>
+              </td>
+              <td style="text-align: center;">
+                <p>Log of x, linear y</p>
+              </td>
+              <td style="text-align: center;">
+                <p>Log of y, linear x</p>
+              </td>
+              <td style="text-align: center;">
+                <p>Log of x and log of y</p>
+              </td>
             </tr>
             <tr>
               <td style="text-align: center;"><img alt="Linear x and linear y" src="linear2.png"><br>
@@ -210,357 +391,733 @@
               </td>
             </tr>
             <tr align="center">
-              <td colspan="4" rowspan="1">...the relationship between y and x
-                is:</td>
+              <td colspan="4" rowspan="1">
+                <p>...the relationship between y and x is:</p>
+              </td>
             </tr>
             <tr>
-              <td style="text-align: center;">Linear relationship</td>
-              <td style="text-align: center;">Logarithmic relationship</td>
-              <td style="text-align: center;">Exponential relationship</td>
-              <td style="text-align: center;">Power function relationship</td>
+              <td style="text-align: center;">
+                <p style="height: 20px;">Linear relationship</p>
+              </td>
+              <td style="text-align: center;">
+                <p>Logarithmic relationship</p>
+              </td>
+              <td style="text-align: center;">
+                <p>Exponential relationship</p>
+              </td>
+              <td style="text-align: center;">
+                <p>Power function relationship</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align:center">
+                <p>y =bx + a</p>
+              </td>
+              <td style="text-align:center">
+                <p>e<sup>y</sup> = ax<sup>b</sup></p>
+              </td>
+              <td style="text-align:center">
+                <p>y = a(e<sup>bx</sup>)</p>
+              </td>
+              <td style="text-align:center">
+                <p>y = ax<sup>b</sup></p>
+              </td>
             </tr>
           </tbody>
         </table>
-        <p>Based on the graphs, log-transforming both protein and kcal gives us
-          the best results, so the relationship between protein and energy in
-          food is a power function.<br>
+        <p>Based on these graphs, you get the most linear relationship on the
+          graph from log-transforming both protein and kcal, so the relationship
+          between protein and energy in food is a power function.<br>
         </p>
       </blockquote>
+      <p>Now that we have established that we should be using the log of kcal,
+        and the transformed versions of all the predictor variables, we can
+        start fitting models.</p>
+      <p>We will start by fitting each of the single predictor models to give us
+        a baseline for comparison, and then we will fit some multiple
+        regressions with combinations of predictors to see if the added
+        complexity improves the adjusted R<sup>2</sup> enough compared with the
+        single predictor models to justify using more than one predictor. Since
+        adjusted R<sup>2</sup> balances fit and complexity, using adjusted R<sup>2</sup>
+        as the basis for picking the best model will help us avoid building
+        excessively complex models. </p>
       <p> </p>
       <p> </p>
       <p> </p>
-      <p> 2. <strong>Generate a correlation matrix for the predictors</strong>.
-        These are all continuous variables, and we know that correlations among
-        predictors can make model selection difficult, so in this step you will
-        look for high correlations among predictors that might cause trouble. To
-        get a correlation matrix for all the transformed predictors use the
-        command:</p>
-      <p class="rcmd">cor(food[,9:15])</p>
+      <p> 3. <strong>Fit all the one-variable models</strong>. So far we have
+        done all of our model building by running an lm() function and assigning
+        the output to an object. There's nothing wrong with this approach, but
+        when you have multiple models to compare with one another it is helpful
+        to take advantage of some of R's built-in data structures that help you
+        stay organized. To help us keep track of our models we can put each of
+        them in an R <strong>list</strong>. Once we have all the models we want
+        to compare in the list, we can use commands designed to do the same
+        thing to each element of a list (such as lapply() and sapply()) to pull
+        out what we want from each model we store in the list.</p>
+      <p>First, let's make an empty list we can add models to (in the
+        make.model.list chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">models.list &lt;- list()</p>
+      <p>The list() function with no arguments makes a list with nothing in it
+        that we can add our models to as we make them. If you find models.list
+        in the Environment tab you'll see it's shown as a "List of 0", with no
+        triangle next to it to reveal summary information - there's nothing to
+        summarize yet.</p>
+      <p>To add the first model to models.list use the command (chunk
+        add.single.predictor.models.to.list in your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">models.list$log.ash &lt;- lm(log.kcal ~ log.ash, data =
+        food)</p>
+      <p>This command has a familiar part (the lm() command is what we have been
+        doing all semester long), but the assignment to an object is a little
+        different. We have used a similar method to assign new columns to a data
+        frame, but this time the models.list$log.ash statement on the left side
+        of the arrow is creating a named element in models.list, which we are
+        assigning the fitted log.ash model to. If you look at the models.list in
+        the Environment tab it now shows it as being a list of 1, and if you
+        open it using the triangle next to the models.list object you will see a
+        summary of the fitted model stored in log.ash. You'll see that log.ash
+        is shown as a "List of 12", because fitted models are themselves R lists
+        - we can store any object in an R list, including other lists.</p>
+      <blockquote>
+        <p>A little more on using information stored in lists... given that we
+          can store objects in lists, we would like to be able to use our usual
+          commands on them to get the summary statistics and ANOVA tables we
+          need to interpret the models. This is simple to do, we just need to
+          use name.of.list$name.of.stored.object to refer to the fitted model
+          objects, instead of just the name of the fitted model alone.</p>
+        <p>To see what is in the models.list object, you can type in the <strong>console</strong>:</p>
+        <p class="rcmd">models.list</p>
+        <p>which shows you the contents of the list:</p>
+        <p class="rout">$log.ash<br>
+          <br>
+          Call:<br>
+          lm(formula = log.kcal ~ log.ash, data = food)<br>
+          <br>
+          Coefficients:<br>
+          (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; log.ash&nbsp; <br>
+          &nbsp;&nbsp;&nbsp;&nbsp; 4.9773&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          0.5827&nbsp; </p>
+        <p>This shows the name of the element (with a dollar sign before it,
+          $log.ash), and then the print() output for the object. We see this
+          same print() output any time we just type the name of a fitted model
+          in the console, and we can get it without the name of the object using
+          (in the <strong>console</strong>):</p>
+        <p class="rcmd">models.list$log.ash</p>
+        <p>and you will see:</p>
+        <p class="rout">Call:<br>
+          lm(formula = log.kcal ~ log.ash, data = food)<br>
+          <br>
+          Coefficients:<br>
+          (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; log.ash&nbsp; <br>
+          &nbsp;&nbsp;&nbsp;&nbsp; 4.9773&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          0.5827 </p>
+        <p>This is just the output for the lot.ash object, and since we
+          specifically asked for this object with our command we do not get the
+          object name reported this time. </p>
+        <p>If we ask for a summary() of the models.list object we get a summary
+          of its properties as an object (in the <strong>console</strong>):</p>
+        <p class="rcmd">summary(models.list)</p>
+        <p>gives us:</p>
+        <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Length Class
+          Mode<br>
+          log.ash 12&nbsp;&nbsp;&nbsp;&nbsp; lm&nbsp;&nbsp;&nbsp; list</p>
+        <p>This is a summary of models.list, in that it displays what is stored
+          in the list, but it doesn't summarize the model that's in log.ash. If
+          what we want is the summary of the log.ash object we would name it in
+          the summary() command (in the <strong>console</strong>):</p>
+        <p class="rcmd">summary(models.list$log.ash)</p>
+        <p>which shows us the summary output for this fitted model:</p>
+        <p class="rout">Call:<br>
+          lm(formula = log.kcal ~ log.ash, data = food)<br>
+          <br>
+          Residuals:<br>
+          &nbsp;&nbsp;&nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          1Q&nbsp;&nbsp; Median&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          3Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Max <br>
+          -1.73359 -0.63291&nbsp; 0.04934&nbsp; 0.55279&nbsp; 1.86214 <br>
+          <br>
+          Coefficients:<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp; <br>
+          (Intercept)&nbsp; 4.97726&nbsp;&nbsp;&nbsp; 0.06852&nbsp;&nbsp;
+          72.64&nbsp; &lt; 2e-16 ***<br>
+          log.ash&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.58268&nbsp;&nbsp;&nbsp;
+          0.09398&nbsp;&nbsp;&nbsp; 6.20 5.96e-09 ***<br>
+          ---<br>
+          Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1<br>
+          <br>
+          Residual standard error: 0.8012 on 140 degrees of freedom<br>
+          Multiple R-squared:&nbsp; 0.2154,&nbsp;&nbsp;&nbsp; Adjusted
+          R-squared:&nbsp; 0.2098 <br>
+          F-statistic: 38.44 on 1 and 140 DF,&nbsp; p-value: 5.959e-09</p>
+        <span style="font-family: &quot;Open Sans&quot;,sans-serif;">We can add
+          as many models as we want to this list, and access each one in the
+          same way.</span><br>
+      </blockquote>
+      <p> </p>
+      <p>Okay, returning to our regularly scheduled program... add the next
+        model of log.kcal ~ log.carb to the list use the command: </p>
+      <p class="rcmd">models.list$log.carb &lt;- lm(log.kcal ~ log.carb, data =
+        food)</p>
+      <p>If you type models.list you'll see that you now have two named
+        elements, one called $log.ash and one called $log.carb, each containing
+        the fitted model you assigned.</p>
+      <p>Keep going - add models to the models.list for log.fiber, log.protein,
+        log.fat, and logit.water. Watch the labeling - make sure you assign each
+        model to a different predictor name in the models.list or you'll
+        over-write one model with another. When you're done you should have six
+        models in the list (check in your Environment tab that the models.list
+        object is a List of 6).</p>
+      <p>If you assign the wrong model to the list, but the label you used is
+        okay, just assign the correct model to the same name again and the right
+        model will over-write the wrong one. If you assign a model to the list
+        with the wrong label, you can delete it using the command:</p>
+      <p class="rcmd">models.list$the.wrong.label.you.used &lt;- null</p>
       <p> </p>
       <p> </p>
       <p> </p>
-      <p>Scan through the correlations and look for large ones. Correlations
-        squared give the proportion of variation shared by the variables, so a
-        correlation coefficient of 0.7 or -0.7 means that just under half of the
-        variation is shared between the variables (because 0.7 squared is 0.49).
-        We want the correlations to be as small as possible, but you'll see that
-        there are some pretty big ones. This means that some of these predictors
-        will be statistically redundant, and we can expect that when one of them
-        is already included, including the other will not contribute much to the
-        adjusted R<sup>2</sup>. We'll check for this as we begin fitting models
-        in the next steps.</p>
-      <p> </p>
-      <p> </p>
-      <p> </p>
-      <p> 3. <strong>Fit all the one-variable models</strong>. Fit each of the
-        following models, and fill in the table on your assignment sheet with
-        the associated model output. Use model names that help you keep track of
-        what the models are in case you need to look something up later (rather
-        than Model1, Model2, etc. you can use ash.lm, carb.lm, etc.).</p>
-      <p> </p>
-      <p> </p>
-      <p> </p>
-      <p> log.kcal ~ log.ash</p>
-      <p> </p>
-      <p> log.kcal ~ log.carb</p>
-      <p> </p>
-      <p> log.kcal ~ log. fiber</p>
-      <p> </p>
-      <p> log.kcal ~ log.protein</p>
-      <p> </p>
-      <p> log.kcal ~ log.fat</p>
-      <p> </p>
-      <p> log.kcal ~ logit.water</p>
-      <p> </p>
-      <p> </p>
-      <p> </p>
-      <p> To get the model statistics (including the p-value, multiple R<sup>2</sup>
-        and adjusted R<sup>2</sup>) you need to use the summary() command on
-        each of your models. You'll see that all of these models are
-        statistically significant. All the single variable models are equally
-        complex, so you could pick the best model from this set using either
-        multiple R<sup>2</sup> or adjusted R<sup>2</sup> and the results would
-        be the same (the numbers aren't identical, but the rank order of the
-        models from best to worst would be the same regardless of which you
-        use). But, we are not interested in just single variable models. As we
-        add more variables the adjusted R<sup>2</sup> and multiple R<sup>2</sup>
-        will start to diverge, as the adjusted R<sup>2</sup> starts to penalize
-        us for complex models.</p>
-      <p> </p>
-      <p> </p>
-      <p>4. <strong>Fit a model with just log.ash and log.protein</strong>. The
+      <p>and then you can add the model back in using the correct label.</p>
+      <p>4. <strong>Extract the r.squared and adj.r.squared from every model</strong>.
+        Once you have a list with a set of six single-predictor models in it we
+        can take advantage of some commands that will do the same command on
+        every named element of a list, which will allow us to extract the output
+        needed to find the best model. The command is a little complicated, so
+        we'll build up to it by typing the following several commands into the <strong>Console</strong>
+        until we are getting what we want, and then we'll put the final, correct
+        command in your Rmd file.</p>
+      <p>For example, we can use lapply() to get summary() output from each
+        model (in the <strong>Console</strong>):</p>
+      <p class="rcmd">lapply(models.list, summary)</p>
+      <p>This command gives us summary output for each model in models.list.
+        Used this way lapply() is simple - it takes a list as its first
+        argument, and the name of a built-in function to apply to each named
+        element as the second. This use of lapply() is equivalent to using
+        summary(models.list$model.name) once for each model in the list, but
+        with lapply() you just need to issue the command once to get all of
+        them.</p>
+      <p>Big improvement already - we now have summary output for every model,
+        which includes the R-squared, adjusted R-squared, F, and p-values each
+        model, which is all the information that we need. However, it's not
+        reported in a very convenient format - we would need to go through and
+        record all of these values by hand. Doing this task by hand is tedious
+        and error-prone, and resembles work, which is what computers are
+        supposed to do for us! To save time and avoid typos it is better to
+        figure out how to construct a function that will give us what we need in
+        a nice, compact, organized form.</p>
+      <p>First, we need a little information about the summary() output to know
+        how best to extract the statistics we need. If we're lucky these
+        quantities are named elements that we can pull out of the fitted model
+        output. We can get a report of the named elements in an object by using
+        the names() command - just to see how the summary() output is
+        structured, we'll use names() on the summary() of the first model in
+        models.list, like so (still in the Console):</p>
+      <p class="rcmd">names(summary(models.list$log.ash))</p>
+      <p>You will see that the named elements are:</p>
+      <p class="rout">&nbsp;[1]
+        "call"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        "terms"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        "residuals"&nbsp;&nbsp;&nbsp;&nbsp; "coefficients"&nbsp;
+        "aliased"&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br>
+        &nbsp;[6] "sigma"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        "df"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        "r.squared"&nbsp;&nbsp;&nbsp;&nbsp; "adj.r.squared" "fstatistic"&nbsp;
+        &nbsp;<br>
+        [11] "cov.unscaled"</p>
+      <p>The named elements include "r.squared", "adj.r.squared", and another
+        called "fstatistic". We can confirm that these elements contain the
+        values we need with the command (in the Console):</p>
+      <p class="rcmd">summary(models.list$log.ash)$r.squared</p>
+      <p>which should give you:</p>
+      <p class="rout">[1] 0.2154293</p>
+      <p>which is indeed the R<sup>2</sup> for the log.ash model. </p>
+      <p>To use this summary() command in our lapply() function we can define
+        our own function to be applied to each named element, like so (in the
+        Console):</p>
+      <p class="rcmd">lapply(models.list, FUN = function(x)
+        summary(x)$r.squared)</p>
+      <p>This will give you output like this:</p>
+      <p class="rout">$log.ash<br>
+        [1] 0.2154293<br>
+        <br>
+        $log.carb<br>
+        [1] 0.8356839<br>
+        <br>
+        $log.fiber<br>
+        [1] 0.4676565<br>
+        <br>
+        $log.protein<br>
+        [1] 0.3557148<br>
+        <br>
+        $log.fat<br>
+        [1] 0.3620739<br>
+        <br>
+        $logit.water<br>
+        [1] 0.9109813</p>
+      <p>This is fine, but we can get this output into vector of numbers,
+        labeled by the name of the model, with a different version of the
+        apply() command, called sapply() - in the Console:</p>
+      <p class="rcmd">sapply(models.list, FUN = function(x)
+        summary(x)$r.squared)</p>
+      <p>which gives us:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp; log.ash&nbsp;&nbsp;&nbsp;
+        log.carb&nbsp;&nbsp; log.fiber log.protein&nbsp;&nbsp;&nbsp;&nbsp;
+        log.fat logit.water <br>
+        &nbsp; 0.2154293&nbsp;&nbsp; 0.8356839&nbsp;&nbsp; 0.4676565&nbsp;&nbsp;
+        0.3557148&nbsp;&nbsp; 0.3620739&nbsp;&nbsp; 0.9109813</p>
+      <p>The only difference between sapply() and lapply() is that lapply()
+        output is a list, and sapply() gives output is a vector - they each
+        apply the function specified to each named element of models.list.</p>
+      <p>This takes care of getting our r.squared values from each model, so
+        let's put this into a command in our Rmd file (chunk r.squared of your <strong>Rmd
+          file</strong>):</p>
+      <p class="rcmd">sapply(models.list, FUN = function(x)
+        summary(x)$r.squared) -&gt; r.squared</p>
+      <p>We can use this same approach to get the adj.r.squared (in the
+        adj.r.squared chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">sapply(models.list, FUN = function(x)
+        summary(x)$adj.r.squared) -&gt; adj.r.squared</p>
+      <p>We can now combine the r.squared and adj.r.squared vectors into a data
+        frame to make them easier to interpret (in the make.adj.r.squared.table
+        chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">data.frame(r.squared, adj.r.squared)</p>
+      <p>which should give you:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        r.squared adj.r.squared<br>
+        log.ash&nbsp;&nbsp;&nbsp;&nbsp; 0.2154293&nbsp;&nbsp;&nbsp;&nbsp;
+        0.2098252<br>
+        log.carb&nbsp;&nbsp;&nbsp; 0.8356839&nbsp;&nbsp;&nbsp;&nbsp; 0.8345102<br>
+        log.fiber&nbsp;&nbsp; 0.4676565&nbsp;&nbsp;&nbsp;&nbsp; 0.4638540<br>
+        log.protein 0.3557148&nbsp;&nbsp;&nbsp;&nbsp; 0.3511128<br>
+        log.fat&nbsp;&nbsp;&nbsp;&nbsp; 0.3620739&nbsp;&nbsp;&nbsp;&nbsp;
+        0.3575173<br>
+        logit.water 0.9109813&nbsp;&nbsp;&nbsp;&nbsp; 0.9103455<br>
+      </p>
+      <p>You'll see that the adjusted R<sup>2</sup> are all very similar to the
+        non-adjusted versions, because these are all single variable models. Of
+        these, logit.water has by far the highest adjusted R<sup>2</sup> - if we
+        were restricted to picking the best single predictor model, it would be
+        the one with logit.water.</p>
+      <p>But, we are not restricted to using a single predictor, and it's
+        possible we can improve. We will fit some more complex models next for
+        comparison.<br>
+      </p>
+      <p>5. <strong>Fit a model with log.ash and log.protein</strong>. The
         variables log.ash and log.protein are highly correlated. If the
         correlated part of these predictors is the part that explains variation
         in log.kcal, then including them both at the same time would not improve
         the adjusted R<sup>2</sup> compared to including just one or the other
         of the variables. </p>
-      <p>Compare the adjusted R<sup>2</sup> for this model to the one you got
-        for log.ash alone, and for log.protein alone to determine whether one or
-        both of the variables is statistically redundant.</p>
-      <p> 5. <strong>Fit a model with all of the predictors included</strong>.
-        Use all six of the predictors in the next model, like so:</p>
+      <p>Add a model (in chunk log.ash.log.protein.model) that uses log.ash +
+        log.protein as predictors to your models.list, and name it <strong>log.ash.log.protein</strong>
+        (that is, you'll assign it as models.list$log.ash.log.protein).</p>
+      <p>In the same code chunk, run your sapply() commands to get r.squared and
+        adj.r.squared extracted (just repeat the commands, the old versions of
+        r.squared and adj.r.squared will be replaced with the new ones that
+        include your new log.ash.log.protein model).</p>
+      <p>Then, in the same chunk, make your data frame of r.squared and
+        adj.r.squared again - you should see:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        r.squared adj.r.squared<br>
+        log.ash&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.2154293&nbsp;&nbsp;&nbsp;&nbsp; 0.2098252<br>
+        log.carb&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.8356839&nbsp;&nbsp;&nbsp;&nbsp; 0.8345102<br>
+        log.fiber&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.4676565&nbsp;&nbsp;&nbsp;&nbsp; 0.4638540<br>
+        log.protein&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.3557148&nbsp;&nbsp;&nbsp;&nbsp; 0.3511128<br>
+        log.fat&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.3620739&nbsp;&nbsp;&nbsp;&nbsp; 0.3575173<br>
+        logit.water&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.9109813&nbsp;&nbsp;&nbsp;&nbsp; 0.9103455<br>
+        log.ash.log.protein 0.3557625&nbsp;&nbsp;&nbsp;&nbsp; 0.3464929</p>
+      <p>Any time you add variables you'll get an increase in the unadjusted R<sup>2</sup>
+        - you can see the unadjusted R<sup>2</sup> is a little higher than
+        either the model with log.ash alone or log.protein alone. But, if you
+        compare the adjusted R<sup>2</sup> for this model to the one you got for
+        log.protein alone, and you'll see that it's a little lower than
+        log.protein's adjusted R<sup>2</sup> alone. This happened because adding
+        ash to the model doesn't add much in the way of explained variation, but
+        it increases the complexity of the model, and this combination of things
+        actually reduces the adjusted R<sup>2</sup> compared with the model with
+        protein by itself.</p>
+      <p> 6. <strong>Fit a model with all of the predictors included</strong>.
+        Use all six of the predictors in the next model, and assign it to
+        models.list as an object called all.var.<span style="color: blue;"><span
+            style="font-family: &quot;Ubuntu Mono&quot;;"> </span></span>Get an
+        updated set of r.squared and adj.r.squared for that includes this new
+        model (all in chunk all.variables of the <strong>Rmd file</strong>). </p>
       <p> </p>
       <p> </p>
-      <p> </p>
-      <p> log.kcal ~ log.ash + log.carb + log.fiber + log.protein + log.fat +
-        logit.water</p>
-      <p> </p>
-      <p> </p>
-      <p> This model explains a lot of variation in comparison with the
-        single-variable models according to the multiple R<sup>2</sup> values.
-        However, this model is more complex than a single-variable regression -
-        there are six predictors plus an intercept, so we included 7 terms in
-        the model to achieve our high adjusted R<sup>2</sup>.</p>
-      <p>Produce a Type II ANOVA table for this six-variable model using the
-        Anova() command from the car package, and you will see that some of the
-        predictors are not significant and/or have F-values less than 1. This
-        suggests that they are are not doing enough work for us to justify
-        including them in the model. We should see how dropping these
+      <p> This six variable model explains a lot of variation in comparison with
+        the single-variable models according to the multiple R<sup>2</sup>
+        values, and it has the highest adjusted R<sup>2</sup> of any of the
+        models fit so far. However, this model is more complex than a
+        single-variable regression, and we may be able to get a better
+        adj.r.squared if we drop non-significant terms.</p>
+      <p>Produce a Type II ANOVA table for the all.var model (in chunk
+        type.II.ss.anova of the <strong>Rmd file</strong>). You will see that
+        some of the predictors are not significant and/or have F-values less
+        than 1. Predictors with F-values less than 1 generally decrease adjusted
+        R<sup>2</sup>, and variables with F-values greater than 1 increase it
+        (even if they are not statistically significant). Variables with
+        F-values less than 1 are not explaining enough variation in log.kcal to
+        justify including them in the model, so we should see how dropping these
         non-significant predictors affects adjusted R<sup>2</sup>.</p>
-      <p> 6. <strong>Fit a model that omits non-significant predictors.</strong>
+      <p> 7. <strong>Fit a model that omits non-significant predictors.</strong>
         Fit a model that drops the non-significant predictors from the
-        six-variable model you just made. You would expect the adjusted R<sup>2</sup>
-        should increase, even though you will explain somewhat less variation
-        once they are dropped. </p>
-      <p>Note that log.protein doesn't make the cut. This seems to be telling us
-        that protein doesn't have any calories, but we know better than that (in
-        fact, protein and carbohydrates have about the same amount on average, 4
-        kcal/g). If you look at the data there is a lot of protein in several of
-        the foods, so protein is contributing caloric content. </p>
-      <p>So, why isn't protein significant? For an answer look back at our
-        multiple regression exercise - the effect of birth rate and babies per
-        woman on life expectancy showed a similar pattern.</p>
-      <blockquote style="background: #f5f5fb; border: 1px solid; padding: 10px;">
-        <h2 class="part" id="graham_help">Some help with the Graham paper</h2>
-        <p>If you are evaluating the Graham paper for your term paper
-          assignment, there is a technique he uses called the "sequential model"
-          that we haven't learned about in class. This example shows you how the
-          sequential model works, using the model you just fit in step 6, with
-          logit.water, log.carb, and log.fat as predictors of log.kcal.</p>
-        <p>Graham's paper deals with various approaches to coping with
-          correlations between predictors. As we learned in our multiple
-          regression activity, the correlated part of predictors is confounded
-          statistically, and there are no statistical grounds for assigning it
-          to any single predictor. Graham's paper is about various methods of
-          interpreting how this correlated part between predictors affects a
-          response variable.</p>
-        <p>Graham points out that your choices are a) assign the correlated part
-          between predictors to variables in the order they are entered (i.e.
-          his "sequential" model), b) just focus on the independent
-          contributions of predictors and throw out the correlated part (his
-          "standard" model), or c) compute some latent variables that are
-          uncorrelated to use as predictors (his "principal components"
-          approach). </p>
-        <p>The model you just fit for step 6 above included log.carb, log.fat,
-          and logit.water. The coefficients for these predictors were:
-          logit.water = -0.2341, log.carb = 0.5646, and log.fat = 0.1561. R's
-          coefficients are Graham's "standard" model coefficients, estimated
-          with all of the predictors included in the model at once. R is able to
-          generate either Type I or Type II SS ANOVA tables from this fitted
-          model; the Type I SS ANOVA table will match Graham's sequential model
-          ANOVA table, and R's Type II SS ANOVA table will match Graham's
-          "standard" model ANOVA table. But, R doesn't generate Graham's
-          sequential slope coefficients, even when it calculates a sequential SS
-          ANOVA table. To get Graham's sequential coefficients, you need to take
-          a different approach.</p>
-        <p>The procedure is:</p>
+        six-variable model you just made, and assign it to models.list with the
+        name "signif.pred" (in chunk signif.predictors.model of the <strong>Rmd
+          file</strong>). You would expect the adjusted R<sup>2</sup> should
+        increase very slightly when you drop non-significant predictors, even
+        though you will explain somewhat less variation. Get a final updated set
+        of model stats, which will look like this:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        r.squared adj.r.squared<br>
+        log.ash&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.2154293&nbsp;&nbsp;&nbsp;&nbsp; 0.2098252<br>
+        log.carb&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.8356839&nbsp;&nbsp;&nbsp;&nbsp; 0.8345102<br>
+        log.fiber&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.4676565&nbsp;&nbsp;&nbsp;&nbsp; 0.4638540<br>
+        log.protein&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.3557148&nbsp;&nbsp;&nbsp;&nbsp; 0.3511128<br>
+        log.fat&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.3620739&nbsp;&nbsp;&nbsp;&nbsp; 0.3575173<br>
+        logit.water&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.9109813&nbsp;&nbsp;&nbsp;&nbsp; 0.9103455<br>
+        log.ash.log.protein 0.3557625&nbsp;&nbsp;&nbsp;&nbsp; 0.3464929<br>
+        all.var&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.9734324&nbsp;&nbsp;&nbsp;&nbsp; 0.9722516<br>
+        signif.pred&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.9732879&nbsp;&nbsp;&nbsp;&nbsp; 0.9727072</p>
+      <p>You'll see that the best model is the one that only includes only
+        significant predictors, since its adjusted R<sup>2</sup> is (slightly)
+        higher than for any of the other models. Although the difference in
+        adj.r.squared is tiny, the fact that the model with only statistically
+        significant predictors out-performs a more complex model makes it a
+        better choice for interpretation.</p>
+      <p>8. <strong>Consider why the non-significant variables are
+          non-significant</strong>. Look for a minute at the un-adjusted R<sup>2</sup>
+        for each of the predictors that were not significant in the all.var
+        model (log.ash, log.fiber, and log.protein). All of these have
+        reasonably large R<sup>2</sup> values, and they are all statistically
+        significant by themselves. This is a sign that they are correlated with
+        other predictors, and are not significant when they are included in the
+        model with other predictors. Since we dropped them from the model to
+        make the signif.pred model It's possible that they collectively explain
+        a significant amount of variation, but because they are correlated with
+        one another we couldn't see this when they are all included together.</p>
+      <p>We can check this by testing the three variables that were dropped as a
+        group. The simplest way of doing this in R is by comparing the model
+        that included them (the full model) to the model that omitted them (the
+        reduced model). In R this is simply a matter of using the anova()
+        command with the reduced model as the first argument, and the full model
+        as the second. So, for example, you can use (in chunk
+        test.reduced.against.full.model of the <strong>Rmd file</strong>):</p>
+      <p class="rcmd">anova(models.list$signif.pred, models.list$all.var)</p>
+      <p>to get this:</p>
+      <p class="rout">Analysis of Variance Table<br>
+        <br>
+        Model 1: log.kcal ~ log.carb + log.fat + logit.water<br>
+        Model 2: log.kcal ~ log.ash + log.carb + log.fiber + log.protein +
+        log.fat + logit.water<br>
+        &nbsp; Res.Df&nbsp;&nbsp;&nbsp; RSS Df Sum of
+        Sq&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; F Pr(&gt;F)<br>
+        1&nbsp;&nbsp;&nbsp; 138
+        3.0595&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <br>2&nbsp;&nbsp;&nbsp; 135 3.0429&nbsp; 3&nbsp; 0.016554 0.2448 0.8649</p>
+      <p>This output shows the two models being compared, with Model 1 being the
+        reduced model in which log.ash, log.fiber, and log.protein were dropped,
+        and Model 2 being the complete model that includes all of the variables.
+        The difference in residual sums of squares (RSS) is the variation that
+        is explained by the three predictors that were dropped - any variation
+        they explained was added to the residual term when they were omitted, so
+        the difference in RSS is a measure of what they collectively explained.
+        The difference between the two RSS numbers is the Sum of Sq for the
+        test. The difference in residual degrees of freedom (Res.Df) is the
+        degrees of freedom for these three predictors, and is the DF for the
+        test. The MS for these three dropped predictors is Sum of Sq/Df, or
+        0.016554/3 = 0.005518, and the MS used for the error termis for the
+        second (complete) model, which is 3.0429/135 = 0.02254. The F value is
+        0.005518/0.02254 = 0.2448, which with a numerator DF of 3 and a
+        denominator DF of 135 gives a p-value of 0.8649. Which tells us that
+        these three predictors were dropped because they didn't explain much
+        variation in log.kcal separate from the variables that were left in the
+        model, not because they were statistically redundant with one another.</p>
+      <p>The way this test was presented in your book, and in lecture, was to
+        sum the degrees of freedom and the explained SS for the three predictors
+        from a Type I table. To match what we get by comparing the models
+        together we need to re-run the model with log.ash, log.protein, and
+        log.fiber entered last. The Type I SS table for this model is:</p>
+      <p class="rout">Analysis of Variance Table<br>
+        <br>
+        Response: log.kcal<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Df Sum Sq Mean Sq&nbsp;&nbsp; F value Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+        log.carb&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 95.714&nbsp; 95.714 4246.4281
+        &lt;2e-16 ***<br>
+        log.fat&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 13.655&nbsp; 13.655&nbsp;
+        605.8355 &lt;2e-16 ***<br>
+        logit.water&nbsp;&nbsp; 1&nbsp; 2.105&nbsp;&nbsp; 2.105&nbsp;&nbsp;
+        93.3830 &lt;2e-16 ***<br>
+        log.ash&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp; 0.010&nbsp;&nbsp;
+        0.010&nbsp;&nbsp;&nbsp; 0.4241 0.5160&nbsp;&nbsp;&nbsp; <br>
+        log.protein&nbsp;&nbsp; 1&nbsp; 0.001&nbsp;&nbsp;
+        0.001&nbsp;&nbsp;&nbsp; 0.0405 0.8408&nbsp;&nbsp;&nbsp; <br>
+        log.fiber&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp; 0.006&nbsp;&nbsp;
+        0.006&nbsp;&nbsp;&nbsp; 0.2698 0.6043&nbsp;&nbsp;&nbsp; <br>
+        Residuals&nbsp;&nbsp; 135&nbsp; 3.043&nbsp;&nbsp; 0.023</p>
+      <p>The sum of the Sum Sq for the last three predictors is 0.010 + 0.001 +
+        0.006 = 0.017, which is the same as our test of the two models against
+        each other. To get the p-value for this test we would use the command
+        pf(0.2448, 3, 135, lower.tail = F), which would give us the same p =
+        0.8649 we got above. Since comparing the two models together can be done
+        in a single command it's a simpler way to test for the effect of
+        dropping three variables at once.</p>
+      <p>The other thing we can look at to confirm that these predictors weren't
+        adding much to the all.var model is to look at the un-adjusted R<sup>2</sup>
+        for the all.var and signif.pred models - all.var had an r.squared of
+        0.9734, and signif.pred had an r.squared of 0.97832, which is only
+        slightly lower. Dropping the non-significant predictors barely altered
+        the amount of variation explained. It's not surprising, then, that
+        dropping them produced a better model.</p>
+      <p>Finally, we have focused on which model is best from a set of
+        candidates, but it is possible that the best model is not even
+        statistically significant. With such high R<sup>2</sup> values this is
+        not really a concern, but we can confirm our suspicion that the model is
+        significant by looking at the summary output for the signif.pred model.
+        Get the summary() for this model in chunk summary.of.signif.pred, and
+        the overall model test is here:</p>
+      <p class="rout">Residual standard error: 0.1489 on 138 degrees of freedom<br>
+        Multiple R-squared:&nbsp; 0.9733,&nbsp;&nbsp;&nbsp; Adjusted
+        R-squared:&nbsp; 0.9727 <br>
+        F-statistic:&nbsp; 1676 on 3 and 138 DF,&nbsp; p-value: &lt; 2.2e-16</p>
+      <p>You can see from the p-value that this is a statistically significant
+        model.</p>
+      <h2>Model selection and statistical redundancy</h2>
+      <p>Note that in our model with the highest adjusted R<sup>2</sup>
+        log.protein doesn't make the cut. This may be puzzling to you as
+        Biologists, because this result seems to be telling us that protein
+        doesn't have any calories, but we know better than that (in fact,
+        protein and carbohydrates have about the same amount on average, 4
+        kcal/g). </p>
+      <p>So, why isn't protein significant? The reason is that most of the
+        variation in log.kcal that log.protein explains is also explained by
+        log.fat, log.carb, and logit.water. Including protein in the model is
+        thus statistically redundant, and log.protein isn't significant when it
+        is included with these other variables.</p>
+      <p>Take this as a lesson in interpreting models - a variable that is a
+        good predictor by itself, but not when it is included with others, could
+        still be important! To tell for sure you would need a different data set
+        with less correlation (ideally, zero correlation) between the
+        predictors, which is something we will never get from a random selection
+        of foods. To get zero correlation between predictors requires a designed
+        experiment that varies these nutrients independently in a factorial
+        design.</p>
+      <h2>Models as hypotheses</h2>
+      <p>A linear model is a hypothesis about the structure of the response
+        data. Structure refers to anything that isn't just residual,
+        within-groups random variation. It can include fixed effects of
+        experimental treatments, differences between sexes, nuisance variables,
+        random effects, and serial dependency between repeated measurements of
+        the same individuals. The variables we include are hypotheses about this
+        structure, and we can use model selection to allow us to evaluate which
+        hypothesis is best supported by the data. </p>
+      <p>Starting today, for the rest of the semester, we will think about each
+        GLM we fit as a hypothesis about the structure in the data.
+        Specifically:</p>
+      <ul>
+        <li>Including a predictor variable in a model hypothesizes that it has
+          an effect on the response</li>
         <ul>
-          <li>
-            <p>Decide the order that you want to use, with the sequence
-              indicating which variables will be assigned the shared variation.
-              If we want to enter logit.water first, followed by log.carb, with
-              log.fat last, then logit.water can just be entered into the model
-              - it will be assigned all of the variation it explains in
-              log.kcal. The slope coefficient for logit.water will be the same
-              as if it was the only variable in the model.</p>
-          </li>
-          <li>
-            <p>The second variable, log.carb, shouldn't include the variation
-              that's shared with logit.water, so we will use the residuals of a
-              regression of log.carb on logit water to represent the effect of
-              log.carb that's independent of logit.water. The command is:<br>
-              <br>
-              <span class="rcmd"> log.carb.resid &lt;- residuals(lm(log.carb ~
-                logit.water, data = food))</span><br>
-              <br>
-              We will use log.carb.resid in our model instead of log.carb. The
-              slope coefficient on log.carb.resid will be the effect of log.carb
-              that is independent of logit.water.</p>
-          </li>
-          <li>
-            <p>Finally, we want to include only the part of log.fat that is
-              independent of logit.water and log.carb. We will use the residuals
-              from a regression of log.fat on logit.water and log.carb to
-              represent the effect of log.fat that's independent of logit.water
-              and log.carb. The command is:<br>
-              <br>
-              <span class="rcmd"> log.fat.resid &lt;- residuals(lm(log.fat ~
-                logit.water + log.carb, data = food))</span><br>
-              <br>
-              We will use log.fat.resid as the predictor that represents the
-              effect of fat on caloric content in our model. The coefficient for
-              this predictor will be the effect of log.fat that is independent
-              of both log.carb and logit.water.</p>
-          </li>
         </ul>
-        <p>We now have the predictor variables we want to use, so we can run our
-          model:</p>
-        <p><span class="R-code rcmd">resid.regression.lm &lt;- lm(log.kcal ~
-            logit.water + log.carb.resid + log.fat.resid, data = food)</span></p>
-        <p>If you ask for the summary of resid.regression.lm, you'll see the
-          coefficients are: </p>
-        <p><span class="rout">Coefficients:<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp; <br>
-            (Intercept)&nbsp;&nbsp;&nbsp;&nbsp; 5.841814&nbsp;&nbsp;
-            0.018615&nbsp; 313.83&nbsp;&nbsp; &lt;2e-16 ***<br>
-            logit.water&nbsp;&nbsp;&nbsp; -0.620492&nbsp;&nbsp; 0.009045&nbsp;
-            -68.60&nbsp;&nbsp; &lt;2e-16 ***<br>
-            log.carb.resid&nbsp; 0.390883&nbsp;&nbsp; 0.026826&nbsp;&nbsp;
-            14.57&nbsp;&nbsp; &lt;2e-16 ***<br>
-            log.fat.resid&nbsp;&nbsp; 0.156086&nbsp;&nbsp; 0.014911&nbsp;&nbsp;
-            10.47&nbsp;&nbsp; &lt;2e-16 ***</span></p>
-        <p>If you compare teh slopes to the ones you got for single variables,
-          you'll see that logit.water's is the same as if it was included alone,
-          but log.carb alone had a slope of 0.9459, and log.fat alone had a
-          slope of 0.4319. Using the part of log.carb that is independent of
-          logit.water (log.carb.resid) reduces the measured effect of
-          carbohydrate on kcal content, and the same is true for using the part
-          of log.fat that is independent of water or carbohydrate
-          (log.fat.resid).</p>
-        <p>If we do a Type I (sequential) SS ANOVA table on the sequential model
-          we get this:</p>
-        <p><span class="rout">Response: log.kcal<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            Df&nbsp; Sum Sq Mean Sq F value&nbsp;&nbsp;&nbsp;
-            Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
-            logit.water&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 104.338 104.338 4706.31
-            &lt; 2.2e-16 ***<br>
-            log.carb.resid&nbsp;&nbsp; 1&nbsp;&nbsp; 4.707&nbsp;&nbsp;
-            4.707&nbsp; 212.32 &lt; 2.2e-16 ***<br>
-            log.fat.resid&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp; 2.429&nbsp;&nbsp;
-            2.429&nbsp; 109.57 &lt; 2.2e-16 ***<br>
-            Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 138&nbsp;&nbsp;
-            3.059&nbsp;&nbsp; 0.022</span></p>
-        <p>And, since log.carb.resid and log.fat.resid are forced to be
-          independent of previously-entered variables, the Type II SS ANOVA
-          table is the same as the Type I table:</p>
-        <p><span class="rout">Response: log.kcal<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            Sum Sq&nbsp; Df F value&nbsp;&nbsp;&nbsp;
-            Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
-            logit.water&nbsp;&nbsp;&nbsp; 104.338&nbsp;&nbsp; 1 4706.31 &lt;
-            2.2e-16 ***<br>
-            log.carb.resid&nbsp;&nbsp; 4.707&nbsp;&nbsp; 1&nbsp; 212.32 &lt;
-            2.2e-16 ***<br>
-            log.fat.resid&nbsp;&nbsp;&nbsp; 2.429&nbsp;&nbsp; 1&nbsp; 109.57
-            &lt; 2.2e-16 ***<br>
-            Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3.059 138 </span></p>
-        <p>Now, to check what the tables look like if we use the raw variables,
-          rather than these sequential residuals:</p>
-        <p><span class="rcmd">mult.regression.lm &lt;- lm(log.kcal ~ logit.water
-            + log.carb + log.fat, data = food)</span></p>
-        <p class="R-code">The Type I SS ANOVA table is the same as the ones
-          using residuals:</p>
-        <p><span class="rout">Response: log.kcal<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            Df&nbsp; Sum Sq Mean Sq F value&nbsp;&nbsp;&nbsp;
-            Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
-            logit.water&nbsp;&nbsp; 1 104.338 104.338 4706.31 &lt; 2.2e-16 ***<br>
-            log.carb&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
-            4.707&nbsp;&nbsp; 4.707&nbsp; 212.32 &lt; 2.2e-16 ***<br>
-            log.fat&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
-            2.429&nbsp;&nbsp; 2.429&nbsp; 109.57 &lt; 2.2e-16 ***<br>
-            Residuals&nbsp;&nbsp; 138&nbsp;&nbsp; 3.059&nbsp;&nbsp; 0.022 </span></p>
-        <p>But, since the predictors are not independent the Type II SS table is
-          different:</p>
-        <p><span class="rout">Response: log.kcal<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            Sum Sq&nbsp; Df F value&nbsp;&nbsp;&nbsp;
-            Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
-            logit.water 2.1048&nbsp;&nbsp; 1&nbsp; 94.942 &lt; 2.2e-16 ***<br>
-            log.carb&nbsp;&nbsp;&nbsp; 7.1023&nbsp;&nbsp; 1 320.360 &lt; 2.2e-16
-            ***<br>
-            log.fat&nbsp;&nbsp;&nbsp;&nbsp; 2.4292&nbsp;&nbsp; 1 109.572 &lt;
-            2.2e-16 ***<br>
-            Residuals&nbsp;&nbsp; 3.0594 138</span></p>
-        <p>So, to bring this back to Graham's paper - to reproduce Graham's
-          p-values in R for his sequential model you just need to use a Type I
-          SS ANOVA table. If you want to reproduce his sequential slope
-          coefficients, though, you'll need to calculate residuals, as above,
-          and use them in place of the raw variables as predictors.</p>
-      </blockquote>
-      <p> </p>
-      <p> </p>
-      <h3 class="part" id="model_sel"> Part 2 - using model selection to
-        evaluate support in data for competing hypotheses</h3>
-      <p> </p>
-      <p> </p>
-      <p> </p>
-      <p> In a model selection exercise, each model you test is a different
-        hypothesis about the nature of the relationship between the predictors
-        and the dependent variable. Because each model is a hypothesis, adjusted
-        R<sup>2</sup> can be interpreted as a measure of support in the data for
-        each hypothesis, and comparing models can thus be used as a method of
-        statistical inference (as opposed to using p-values to make inferences
-        about the data). </p>
+        <li>Including an interaction between two variables hypothesizes that the
+          response to one predictor depends on the level of another.</li>
+        <li>Including a log-transformed predictor, or a quadratic or cubic term
+          hypothesizes that response to that predictor variable is non-linear.</li>
+        <li>For a categorical variable, the factor levels used are a hypothesis
+          that all of the groups are different from one another, and only the
+          groups used are different from one another</li>
+        <ul>
+          <li>If we modify a categorical variable by combining factor levels
+            together we hypothesize that the levels we combine are not different</li>
+          <li>If we modify a categorical variable by splitting one factor level
+            into two or more new groups we hypothesizes that the grouping was
+            too broad, and that there were differences between means of the
+            split groups that needed to be accounted for</li>
+        </ul>
+        <li>And, conversely, if we leave out a predictor, an interaction, a
+          non-linear relationships, or a grouping variable we are hypothesizing
+          that those terms do not have an effect on the response.</li>
+        <ul>
+        </ul>
+      </ul>
+      <p>From this perspective, model selection can be used as a way of
+        differentiate between competing hypotheses, because each model is a
+        hypothesis. Adjusted R<sup>2</sup> can be interpreted as a measure of
+        support in the data for each hypothesis, and the model with the highest
+        adjusted R<sup>2</sup> is the hypothesis with the best support. </p>
       <p>Note that we will develop this way of thinking about statistical
         analysis over the last few weeks of the semester as we start talking
         about likelihood-based model selection. Using adjusted R<sup>2</sup> in
         this way has some disadvantages over the likelihood-based methods we
-        will learn, but we start getting used to using models as hypotheses
-        today.</p>
-      <h4>1. Develop your hypotheses.</h4>
-      <p>You now know something about how macronutrients and other major
-        components of food influence caloric content. But, you don't eat
-        protein, carbohydrate, fat, water, ash, and fiber, you eat food. If you
-        found yourself stranded on a desert island, you wouldn't be able to
-        chemically analyze the foods available, you would have to select the
-        food you eat based on observable characteristics. Your task is to try to
-        come up with the best predictor of caloric content of food based on
-        observable characteristics of the food.</p>
-      <p>You are to develop two hypotheses about what types of foods are most
-        different in their caloric content. You will then translate your
-        hypotheses into a set of categories that you will assign to the foods in
-        our data set. You can use any criteria you want, as long as it's based
-        on observable traits of the food. For example, your first hypothesis may
-        be that beans have little water and lots of carbohydrate and oil, so
-        they will be high in calories, whereas everything else will be lower.
-        You would then state this hypothesis on your worksheet.</p>
-      <h4>2. Translate your hypotheses into variables in your data set.</h4>
-      <p> Once you have your hypotheses, open up the data file in Excel and add
-        a new column in which you classify the foods based on your hypothesis,
-        and call the column H1 (enter H1 as the column label). For the
-        bean/other example, you would write "bean" in your H1 column if the food
-        is a bean, and "other" if for everything else. </p>
-      <p>Once you're done with this hypothesis, devise a second hypothesis, and
-        classify the foods based on this hypothesis in a column labeled H2.</p>
+        will learn next, but we will start getting used to using models as
+        hypotheses today.</p>
+      <h4>1. Hypothesize about food - it's what we eat</h4>
+      <p>Before you started working with the data set today you probably already
+        knew something about how macronutrients and other major components of
+        food influence caloric content, and you may have learned a little more
+        from the models you constructed. </p>
+      <p>But, you don't eat protein, carbohydrate, fat, water, ash, and fiber.
+        What you eat is food. If you found yourself stranded on a desert island,
+        you would want to find the most calorically dense foods to help you
+        survive while you waited to be rescued, and you wouldn't be able to
+        chemically analyze the foods available. Instead, you would have to
+        select the food you eat based on observable characteristics.</p>
+      <p>Your next task is to use observable characteristics of the foods to
+        develop <em>two different</em> hypotheses about <strong>groups of
+          foods that differ in average caloric content</strong>. For each
+        hypothesis you will make a new categorical predictor that puts the foods
+        into the groups you hypothesize will be different, and then you will use
+        this hypothesis to predict log.kcal. To the extent that your hypothesis
+        is well supported by the data, you should get a high adjusted R<sup>2</sup>
+        - your model will explain a lot of the variation in log.kcal, without a
+        lot of unneeded groups that don't really differ on average.</p>
+      <p>Download <a href="macronutrients_nopredictors.xls">this version</a> of
+        the data and open it in Excel. You will see that the name of the food is
+        still present and visible. I've included an example to guide you, called
+        H.example. H.example represents the hypothesis that the different
+        anatomical parts of a plant differ in their caloric contents. Using this
+        H.example column as a predictor will generate a model adjusted R<sup>2</sup>
+        that will balance the amount of variation in log.kcal explained by the
+        different plant parts (i.e. the model fit), against the number of
+        different plant parts I used (i.e. the model complexity). If it turns
+        out that some of the plant parts don't actually differ on average then
+        using them as separate groups in the model consumes degrees of freedom
+        without explaining additional variation in log.kcal, which reduces
+        adjusted R<sup>2</sup>. To the extent that some plant parts (like
+        shoots) might be used as energy storage organs by some plants but just
+        as structural support by others may mean that there are some differences
+        due to the function of the anatomical structures that I'm not accounting
+        for, and the amount of explained variation may not be as high as it
+        could be - this would mean the model is too simple, and that a more
+        complex model would fit the data better. Models that are too simple
+        reduce adjusted R<sup>2</sup> by explaining less variation than more
+        complex alternatives.</p>
+      <p>In other words, we will be making use of the principle above that says
+        that categorical predictors hypothesize that <strong><em>all</em></strong>
+        of the factor levels we use have different mean responses, and that <em><strong>only</strong></em>
+        the factor levels we use have different mean responses. You can use any
+        observable characteristic of the food to develop your categorical
+        predictor, including what it tastes like, how juicy it is, where it
+        comes from, whether you personally like the taste or not, how the plant
+        uses it (that is, the function rather than the anatomical designation of
+        the plant part), or any other characteristic you can think of, but you
+        are <strong>not</strong> allowed to use the chemical composition data
+        or the caloric data to guide your choices.</p>
+      <p>Note that your hypotheses do not need to be related to my H.example in
+        any way - you are free to develop your hypotheses based on any
+        observable characteristic, including taste, sweetness, whether you like
+        the food (maybe you only like to eat plants that are high in calories,
+        or that are low in calories), the "culinary" designation of the food
+        (vegetable, fruit...), and so on. There is no need for your categories
+        to start with mine and lump them or split them, you can develop whatever
+        hypothesis you like and use whatever categories are necessary to test
+        your hypothesis.</p>
+      <h4>2. Translate your hypotheses into variables in Excel file</h4>
+      <p>The data set contains the log.kcal column, which is in column B, but it
+        is hidden from view in the spreadsheet to discourage you from using it
+        to develop your hypotheses (R will import it even though it's hidden,
+        not to worry). The idea is to use observable characteristics of the food
+        to come up with hypotheses to test about caloric content, so you
+        shouldn't look at the caloric content as you develop your hypotheses -
+        that would not be good science.</p>
+      <p>Once you have the hypotheses you want to test, your next task is to
+        translate your hypothesis into a categorical variable you can use as a
+        predictor in a linear model. For my "plant parts are different" example
+        hypothesis, I did the following:</p>
+      <ul>
+        <li>Based on the hypothesis that plant parts are different, I defined
+          the groupings as Flower, Fruit, Leaf, Root, Seed, Shoot, and Stem -
+          these groups define the plant parts that would be different if my
+          hypothesis describes the structure of the data well.</li>
+        <li>I then assigned each food to one of these groups (if you don't know
+          what the food is, remember that Google is your friend). Each food can
+          only belong to one category using a single predictor. As I was filling
+          in the H.example column with the plant parts of each food, I had to be
+          careful about spelling - if the group names are even a little
+          different (including having a space at the end of some and not others)
+          R will interpret them as different, and will use them as though they
+          are separate groups in the analysis.</li>
+      </ul>
       <p> </p>
       <p> </p>
       <p> </p>
-      <p> Once you have your two hypotheses in their columns in Excel save the
-        file, and then import the data into R again. Fit one model for each
-        hypothesis. For example, for H1 fit the model:</p>
+      <p>You should now run through the same process with your hypotheses -
+        decide what the groupings are that should be different if your
+        hypothesis is true, and enter one of your group names next to every food
+        for each of your hypotheses.<br>
+      </p>
+      <p>Once you have finished both the H1 and H2 column, save the Excel file
+        and import it into R - call the data set "hypotheses".</p>
+      <p><em><strong>3. Evaluate which hypothesis is best supported by the data.</strong></em></p>
+      <p>Now, make an empty model list for the three hypotheses you will compare
+        (make.food.hypotheses.list chunk of your <strong>Rmd file</strong>): </p>
+      <p class="rcmd">food.hypotheses.list &lt;- list()</p>
+      <p>In R, fit one model for each hypothesis. For H.example the command is
+        (make.H.example.model chunk of the <strong>Rmd file</strong>):</p>
       <p> </p>
       <p> </p>
       <p> </p>
-      <p> log.kcal ~ H1</p>
-      <p>and for H2 you would fit the model:</p>
-      <p>log.kcal ~ H2</p>
+      <p class="rcmd"> food.hypotheses.list$HL.example &lt;- lm(log.kcal ~
+        H.example, data = hypotheses)</p>
+      <p>To run the models for your two hypotheses, you will need to make your
+        own R code chunks. Rmd files are just text files, and the way that
+        RStudio knows how to interpret various components of the file as R code
+        is by using symbols that identify where the code chunks are. A code
+        chunk in an Rmd file has to have an opening and closing set of
+        back-ticks, and curly braces with the "r" code letter inside. You can
+        type these in by hand, like so: </p>
+      <p>```{r}</p>
+      <p>```</p>
+      <p>The back-ticks are on the same key as the tilde, ~, but without using
+        the SHIFT key. When you complete this set of codes you'll have a working
+        R code chunk, and RStudio will interpret whatever you put between the
+        sets of ``` as R code.</p>
+      <p>Alternatively, RStudio provides you with a menu-driven shortcut to
+        making a code chunk - at the top of the Rmd file window, you'll see an
+        "Insert" dropdown menu. If you drop this down and select "R" from the
+        list you will get an R code chunk inserted at the current cursor
+        location.</p>
+      <p>I have been labeling the code chunks to make it easier to match the
+        instructions with the Rmd file, but that isn't required. If you want to
+        label your code chunks, just add a label after the r in your header -
+        for example, to label the first one my.hypothesis.1 you would use {r
+        my.hypothesis.1}.</p>
+      <p>Run an lm() using H1 as a predictor for your first hypothesis, and H2
+        as a predictor for the second.</p>
+      <p>Then, make one last code chunk, and enter the commands from above that
+        extract r.squared and adj.r.squared for the models in
+        food.hypotheses.list. Pick whichever of your two models, either H1 or
+        H2, has the higher adjusted R<sup>2</sup>, and report its results to the
+        class database on our cc site. Specifically, you will enter:</p>
+      <ul>
+        <li>A statement of your hypothesis (mine would be "plant parts differ in
+          caloric content").</li>
+        <li>The adjusted R<sup>2</sup></li>
+        <li>The categories you used. You can get these quickly by making your
+          hypothesis columns into factors, and then getting the levels - for
+          H.example the command would be levels(factor(hypotheses$H.example))</li>
+      </ul>
+      <p>Once everyone has recorded their results we will look at which
+        hypothesis has the highest adjusted R<sup>2</sup>. See if you can beat
+        mine, it's pretty good - I've already entered it into the database, you
+        only need to report the best of your two hypotheses. We'll look over the
+        results when we meet the week after the exam.</p>
+      <p><br>
+      </p>
       <p> </p>
-      <p> </p>
-      <p> </p>
-      <p> <strong><em>Don't include any of the other predictors</em></strong>,
-        just the grouping variable that represents your hypothesis.</p>
-      <p> </p>
-      <p>Pick the model with the highest adjusted R<sup>2</sup> of the two, and
-        report the results to the class database. Enter the description of your
-        hypothesis from your worksheet, the adjusted R<sup>2</sup>, the number
-        of categories you used, and what the categories were. For example, the
-        "beans vs. other" hypothesis would have two categories. Once everyone
-        has recorded their results we will look at which hypothesis has the
-        highest adjusted R<sup>2</sup>.</p>
-      <p>That's it! Fill out the worksheet to complete the assignment. </p>
+      <p>That's it! Knit and upload your Word file to complete the assignment. </p>
     </div>
   </body>
 </html>
