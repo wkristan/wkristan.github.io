@@ -3,357 +3,1321 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>Post-hocs and contrasts</title>
-    <link href="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=02a5532ccf4574e49ae6e245b4a118252&amp;authkey=AcYXNyrvFGWnmf6cbl1qQQ4&amp;e=4170fc6099b74d3f94a7fdaade97010e"
-      rel="stylesheet" type="text/css">
-    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=04e5dfc4b7ee64a7dbacb487cddde06a0&authkey=AdStuSX7RsXlg4QXZtzjDfw&e=f5861611192540a4b0c28483e9e5baf0"></script>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script type="text/javascript" src="dunnett_orthog.js"></script>
   </head>
   <body>
     <div id="header">
       <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
-      <h1>Post-hoc procedures and orthogonal polynomial contrasts</h1>
+      <h1>Contrasts and post-hocs</h1>
     </div>
     <div id="navigation" style="display:none" onclick="navToggle()">
       <p><a href="#tukey">Tukey post-hocs</a></p>
       <p><a href="#orthog_poly">Orthogonal polynomials</a></p>
     </div>
     <div id="content">
-      <h2 class="part" id="tukey">Tukey post-hocs</h2>
-      <p>You learned to do Tukey post-hocs in Biol 215, so we won't spend too
-        much time on the simple application to a one-way ANOVA. But, R doesn't
-        make post-hocs as easy to do as MINITAB, so we need to learn how to get
-        post-hocs from R. We will also learn more about planned comparisons,
-        including orthogonal polynomial contrasts as a special case.</p>
+      <p>Recall from our statistics review that the ANOVA method of analyzing
+        three or more groups is to:</p>
+      <ul>
+        <li>Conduct an initial test for significant variation among group means
+          (the <strong>omnibus</strong> test of the predictor in an ANOVA
+          table)</li>
+        <li>If the predictor is statistically significant, then a follow-up, <strong>post-hoc
+            procedure</strong> is conducted to find out which pairs of means are
+          significantly different</li>
+      </ul>
+      <p>We do this odd two-step procedure to avoid excessive false positive
+        errors. We will review post-hoc procedures first, and then will learn
+        about another way of comparing means, orthogonal contrasts, which do not
+        suffer from the inflated Type I error problem, and are a good choice
+        when it is possible to make use of them.</p>
+      <h2>Post-hoc procedures</h2>
+      <p><img src="eels.png" alt="Eel larvae" style="width: 195px; height: 269px; float:left; padding-right: 10px">We
+        will be working with the conger eel data set we saw in lecture - it is a
+        study by Kawakami et al. 2009 of changes in water, neutral sugars, and
+        hyaluronan during larval development. Illustrations of the five larval
+        stages are shown to the left (two images are given for stages 2, 3, and
+        4). Because larval development is a process that occurs in sequence over
+        time, developmental stage is an ordinal categorical variable.</p>
+      <p>You already know about Tukey tests - the Tukey procedure compares every
+        possible pair of means, of which there are k(k-1)/2, or 10 with our five
+        stages of development. The amount of adjustment depends on the number of
+        tests, and with 10 comparisons it will take a pretty big difference to
+        be statistically significant - this will protect against Type I (false
+        positive) errors, but at the expense of missing smaller differences
+        (Type II, false negative errors). If we are only interested in when the
+        eels start to differ from their Stage 1 starting point we could use
+        Dunnett's tests, which compare each mean to a single group - with five
+        groups this means we will only have to correct for 4 comparisons if we
+        use Dunnett's tests, and smaller differences will be detectable.</p>
+      <br style="clear:both">
+      <p>Start R Studio and make a new project for today's assignment. The data
+        set is <a href="eels.xlsx">here</a>, and the R markdown file to use
+        today is <a href="posthocs.Rmd">here</a>. </p>
       <p> </p>
-      <p>For the assignment, make sure you copy all of your output (including
-        any graphs you produce) into a Word file for upload.</p>
+      <p>1. Import the eels.xlsx file into an R data set called "eels". Put the
+        commands in chunk eels.import.data of your <strong>Rmd file</strong>.</p>
       <p> </p>
-      <p>1. First, start R Studio and make a new project in a folder called
-        "posthocs". Import the allsp worksheet from the cuckoo data we used last
-        week, into an R data set called "allsp".</p>
-      <p>Start a new R script to use for all the commands you use today.</p>
+      <p>By default columns of text are imported as character data. R has a
+        special data type for variables that are meant to be used to define
+        groups in a model, called a <strong>factor</strong>, and we can convert
+        Stage to a factor before using it (in your Rmd file, just below your
+        read_excel() command):</p>
+      <p class="rcmd"> eels$Stage &lt;- factor(eels$Stage)</p>
+      <p>This command takes the text labels in eels$Stage, converts them to a
+        factor made up of levels (using factor(Stage)), and assigns the result
+        back into eels$Stage, thereby replacing the non-factor version with the
+        factor we just created.</p>
+      <p>2. You can now plot the means and 95% confidence intervals for
+        hyaluronan (HA) by developmental stage (Stage). We are going to focus on
+        HA for this exercise, since it has an interesting pattern of change
+        across the stages of development. We did this type of graphing last time
+        - use summarySE() from Rmisc to get the summary data to plot
+        (summarize.data chunk of your <strong>Rmd file</strong>), and use
+        ggplot2's ggplot() command to make your graph (plot.means.ci chunk of
+        your <strong>Rmd file</strong>).</p>
+      <p>Note that the stages are in order from 1 to 5, but this is only because
+        alphabetical order happens to also be chronological order for the factor
+        levels, Stage 1, Stage 2, Stage 3, Stage 4, and Stage 5. Don't let the
+        fact that they happen to be in order fool you - Stage is an unordered
+        factor as far as R is concerned, and the ordering will not be used in
+        this first set of analyses.</p>
       <p> </p>
-      <p>2. Now, we we are going to reorder the factor levels for species to
-        reflect the sizes of the birds. Based on their body weights, the species
-        (listed smallest to largest) are: wren, meadow pipit, robin, hedge
-        sparrow, tree pipit, and pied wagtail. To set the factor levels to this
-        order, use the command:</p>
-      <p class="rcmd">allsp$species &lt;- factor(allsp$species, levels =
-        c("Wren","Meadow Pipit","Robin","Hedge Sparrow","Tree Pipit", "Pied
-        Wagtail"))</p>
+      <p>3. Fit a linear model of HA as a function of Stage, and call it
+        eels.ha.lm - put the command in the fit.lm chunk of your <strong>R
+          markdown file</strong>. Once you have it, also get the ANOVA table
+        (enter the anova() command below the lm() command in the same chunk).</p>
       <p> </p>
-      <p>With the species in order by body size, you can now load gplots and
-        make a graph with plotmeans() that shows weights for the species, and
-        the x-axis will put the species in the order you specified.<br>
-      </p>
-      <p>Now fit a linear model of length as a function of species, and call it
-        allsp.bw.lm (where the "bw" is short for "body weight").</p>
+      <p>4. The command we will use to get Tukey tests from our GLM is part of
+        the "emmeans" package. If you're working on a computer on campus, or
+        through Cougar Apps it is already installed and just needs to be loaded
+        - you can load it using the command (in the load.emmeans chunk of your <strong>R
+          markdown file</strong>):</p>
       <p> </p>
-      <p>2. There is a TukeyHSD() command in R, but it's not flexible enough to
-        do everything we want for the rest of the semester, so we are going to
-        start learning an add-on package that we will need later. You can load
-        add-on packages (which R calls "libraries") with a command:</p>
+      <p><span class="rcmd">library(emmeans)</span></p>
       <p> </p>
-      <p><span class="rcmd">library(multcomp)</span></p>
+      <p> If you are working on your own computer you can install the emmeans
+        library first in the Packages tab, and then add the library(emmeans) to
+        your code.</p>
+      <p> The emmeans package is...amazing. We will use it throughout the
+        semester, for multiple comparison procedures, graphs, and estimates of
+        marginal means (or "least squares means" as they are sometimes called).</p>
+      <p>The emmeans library uses a single command, emmeans(), for all of its
+        post-hocs, with arguments that indicate the kind of post-hoc to return.
+        To get Tukey post-hocs, type the command (in the tukey.emmeans chunk of
+        your <strong>R markdown file</strong>): </p>
       <p> </p>
-      There are many kinds of post-hoc procedures, but we will primarily focus
-      on Tukey's, which works well for unplanned comparisons among all possible
-      pairs of means. The multcomp package uses a single command, glht(), for
-      all of its post-hocs, with arguments that indicate the kind of post-hoc to
-      return.<br>
-      <p> </p>
-      <p>To get Tukey post-hocs, type the command:</p>
-      <p> </p>
-      <p><span class="rcmd">allsp.bw.tukey &lt;- glht(allsp.bw.lm, linfct =
-          mcp(species = "Tukey"))</span></p>
-      <p> </p>
-      <p>This is a fairly complex command, so let's unpack it.</p>
-      <p> </p>
-      <p>The work is being done by the glht() function. The name, glht, stands
-        for "general linear hypothesis test". This function can do lots of
-        different things, and can take several different arguments that we don't
-        need to worry about. This is common in R functions - there will be
-        arguments that are required such that omitting them will cause an error,
-        but others are optional, and if they aren't specified then default
-        values are used.</p>
-      <p> </p>
-      <p>The first required argument for glht() is the name of the model we will
-        be working with - we used allsp.bw.lm.</p>
-      <p> </p>
-      <p>The next argument is "linfct", which stands for "linear function". This
-        is where we specify what kind of comparisons we will use. We are
-        specifying this argument using a function called mcp(), which stands for
-        "multiple comparison procedure". You can see that we are setting up
-        Tukey multiple comparisons between the levels of the species variable,
-        using mcp(species = "Tukey").</p>
-      <p> </p>
-      <p>To get the Tukey comparisons, now issue the command:</p>
-      <p> </p>
-      <p><span class="rcmd">summary(allsp.bw.tukey)</span></p>
-      <p> </p>
-      <p>You will see all fifteen of the comparisons that can be made between
-        the six species, along with their p-values, reported. When you use
-        post-hoc procedures like the Tukey test the correction for multiple
-        comparisons is done for you, and you can consider any p-values below
-        0.05 to be significant.</p>
-      <p> </p>
-      <p>3. A list of 15 comparisons is difficult to interpret. A simpler
-        presentation is the "compact letter display", which we can get with the
-        command:</p>
-      <p> </p>
-      <p><span class="rcmd">cld(allsp.bw.tukey)</span></p>
-      <p> </p>
-      <p>This will give you output that looks like this:</p>
-      <p> </p>
-      <p><span class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          Wren&nbsp; Meadow
-          Pipit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Robin Hedge
-          Sparrow&nbsp;&nbsp;&nbsp; Tree Pipit &nbsp;<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          "a"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          "b"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          "bc"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          "c"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          "c"&nbsp; <br>
+      <p><span class="rcmd">emmeans(eels.ha.lm, tukey ~ Stage) -&gt; eels.ha.emm</span></p>
+      <p><span class="rcmd">eels.ha.emm<br>
         </span></p>
-      <p><span class="rout">Pied Wagtail &nbsp;<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "bc"&nbsp;</span></p>
+      <p>You will see all ten of the comparisons that can be made between the
+        five stages, along with their p-values, reported: </p>
+      <p class="rout">$emmeans<br>
+        &nbsp;Stage&nbsp;&nbsp; emmean&nbsp;&nbsp; SE df lower.CL upper.CL<br>
+        &nbsp;Stage 1&nbsp;&nbsp;&nbsp; 564 36.4 15&nbsp;&nbsp;&nbsp;
+        486.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 641<br>
+        &nbsp;Stage 2&nbsp;&nbsp;&nbsp; 636 36.4 15&nbsp;&nbsp;&nbsp;
+        558.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 713<br>
+        &nbsp;Stage 3&nbsp;&nbsp;&nbsp; 406 36.4 15&nbsp;&nbsp;&nbsp;
+        328.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 483<br>
+        &nbsp;Stage 4&nbsp;&nbsp;&nbsp; 271 36.4 15&nbsp;&nbsp;&nbsp;
+        193.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 348<br>
+        &nbsp;Stage 5&nbsp;&nbsp;&nbsp; 104 36.4 15&nbsp;&nbsp;&nbsp;&nbsp;
+        26.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 181<br>
+        <br>
+        Confidence level used: 0.95 <br>
+        <br>
+        $contrasts<br>
+        &nbsp;contrast&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        estimate&nbsp;&nbsp; SE df t.ratio p.value<br>
+        &nbsp;Stage 1 - Stage 2&nbsp;&nbsp;&nbsp; -71.9 51.4 15&nbsp;
+        -1.397&nbsp; 0.6384<br>
+        &nbsp;Stage 1 - Stage 3&nbsp;&nbsp;&nbsp; 158.1 51.4 15&nbsp;&nbsp;
+        3.075&nbsp; 0.0513<br>
+        &nbsp;Stage 1 - Stage 4&nbsp;&nbsp;&nbsp; 292.8 51.4 15&nbsp;&nbsp;
+        5.695&nbsp; 0.0004<br>
+        &nbsp;Stage 1 - Stage 5&nbsp;&nbsp;&nbsp; 460.2 51.4 15&nbsp;&nbsp;
+        8.950&nbsp; &lt;.0001<br>
+        &nbsp;Stage 2 - Stage 3&nbsp;&nbsp;&nbsp; 230.0 51.4 15&nbsp;&nbsp;
+        4.472&nbsp; 0.0035<br>
+        &nbsp;Stage 2 - Stage 4&nbsp;&nbsp;&nbsp; 364.7 51.4 15&nbsp;&nbsp;
+        7.092&nbsp; &lt;.0001<br>
+        &nbsp;Stage 2 - Stage 5&nbsp;&nbsp;&nbsp; 532.1 51.4 15&nbsp;
+        10.348&nbsp; &lt;.0001<br>
+        &nbsp;Stage 3 - Stage 4&nbsp;&nbsp;&nbsp; 134.7 51.4 15&nbsp;&nbsp;
+        2.620&nbsp; 0.1163<br>
+        &nbsp;Stage 3 - Stage 5&nbsp;&nbsp;&nbsp; 302.1 51.4 15&nbsp;&nbsp;
+        5.876&nbsp; 0.0003<br>
+        &nbsp;Stage 4 - Stage 5&nbsp;&nbsp;&nbsp; 167.4 51.4 15&nbsp;&nbsp;
+        3.256&nbsp; 0.0365<br>
+        <br>
+        P value adjustment: tukey method for comparing a family of 5
+        estimates&nbsp;</p>
+      <p>The output is in two blocks:</p>
+      <ul>
+        <li>The first block is labeled $emmeans, and it gives the mean, standard
+          error, degrees of freedom, and confidence interval for each stage. </li>
+        <li>The second block is labeled $contrasts, and it gives the Tukey tests
+          comparing pairs of stages. The comparisons are, for example, Stage 1 -
+          Stage 2, which literally says that the mean for Stage 2 is subtracted
+          from the mean for Stage 1. A negative "estimate" of the difference
+          between means indicates that Stage 2 has a bigger mean than Stage 1.
+          The sign of the difference doesn't affect the p-value, because the
+          tests are all two tailed.</li>
+      </ul>
+      <p>Tukey post-hocs use a sampling distribution that changes shape
+        depending on the number of comparisons being done, so you can continue
+        to interpret Tukey p-values below 0.05 to be significant without
+        inflating your overall Type I error rate.</p>
       <p> </p>
-      <p>The compact letter display examines all the p-values generated by the
-        Tukey procedure, and assigns the same letters to species that are not
-        significantly different, and different letters to species that are
-        significantly different. Based on this output, you should see that wrens
-        are different from everyone, because only wrens are assigned the letter
-        "a". There are a couple more significant differences, can you see what
-        they are? <a href="javascript:ReverseDisplay('whodiff')">Click here to
-          see if you're right.</a> </p>
-      <div style="display:none;" id="whodiff">
-        <p style="border-style:solid;padding:10px;"> Meadow pipit only has an b,
-          and tree pipit and hedge sparrows only have a c, so meadow pipit is
-          different from those two species (but they are not different from each
-          other). Pied wagtail and robin have both an b and a c, so they are not
-          different from either meadow pipit, tree pipit, or hedge sparrow. </p>
+      <p> </p>
+      <p>5. A list of 10 comparisons is difficult to interpret. A simpler
+        presentation that is easier to understand is the "compact letter
+        display", which we can get with the command (put below the previous
+        commands in the same code chunk, in your <strong>R markdown file</strong>):</p>
+      <p> </p>
+      <p><span class="rcmd">multcomp::cld(eels.ha.emm)</span></p>
+      <p> </p>
+      <p>This style of command gives the name of a package, followed by two
+        colons, followed by the command within the package that you want to use.
+        If you are working at home, you may need to install the multcomp library
+        before you can use this command.</p>
+      <p>The cld() command gives you output that looks like this:</p>
+      &nbsp; <span class="rout">Stage&nbsp;&nbsp; emmean&nbsp;&nbsp; SE df
+        lower.CL upper.CL .group<br>
+        &nbsp;Stage 5&nbsp;&nbsp;&nbsp; 104 36.4 15&nbsp;&nbsp;&nbsp;&nbsp;
+        26.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 181&nbsp; 1&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;Stage 4&nbsp;&nbsp;&nbsp; 271 36.4 15&nbsp;&nbsp;&nbsp;
+        193.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 348&nbsp;&nbsp; 2&nbsp;&nbsp; <br>
+        &nbsp;Stage 3&nbsp;&nbsp;&nbsp; 406 36.4 15&nbsp;&nbsp;&nbsp;
+        328.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 483&nbsp;&nbsp; 23&nbsp; <br>
+        &nbsp;Stage 1&nbsp;&nbsp;&nbsp; 564 36.4 15&nbsp;&nbsp;&nbsp;
+        486.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 641&nbsp;&nbsp;&nbsp; 34 <br>
+        &nbsp;Stage 2&nbsp;&nbsp;&nbsp; 636 36.4 15&nbsp;&nbsp;&nbsp;
+        558.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 713&nbsp;&nbsp;&nbsp;&nbsp; 4 <br>
+        <br>
+        Confidence level used: 0.95 <br>
+        P value adjustment: tukey method for comparing a family of 5 estimates <br>
+        significance level used: alpha = 0.05 <br>
+        NOTE: Compact letter displays can be misleading<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; because they show NON-findings rather
+        than findings.<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Consider using 'pairs()', 'pwpp()', or
+        'pwpm()' instead. <br>
+      </span>
+      <p>The compact letter display assigns the same number in the .group column
+        to stages that are not significantly different, and assigns different
+        numbers to stages that are significantly different (why not letters?
+        Only the programmers know). If more than one number is assigned to a
+        stage that means that the stage isn't different from either of the
+        stages it shares a number with - for example, Stage 1 is assigned 3 and
+        4 (not 34), so it isn't different from stages that have a 3 (Stage 3) or
+        stages that have a 4 (Stage 2). From the output you can see that Stage 5
+        is different from all the others. Identify the rest of the differences
+        that are significant and record them in your R markdown file.</p>
+      <p>The somewhat snarky note you get when you use the cld() command on an
+        emmeans() results object indicates that statisticians do not always
+        agree - the "NOTE" warning you to use a better method reflects the fact
+        that the emmeans developers disagree with the multcomp developers about
+        the utility of a compact letter display. Personally, I find them helpful
+        in summarizing a long list of results in a more compact format.<br>
+      </p>
+      <p>6. Because post-hoc comparisons adjust for the number of different
+        p-values produced, each difference between means has to be a little
+        bigger to be statistically significant as you add more comparisons. This
+        is fine if you want to make all of the comparisons, but if there are
+        some that don't matter to you it is to your advantage to only compare
+        the groups you want to compare. </p>
+      <p>For example, if you are only interested in which stages differ from the
+        initial Stage 1, and don't need to compare the other stages to each
+        other, then Dunnett's comparisons are the ones to use.</p>
+      <p>You can get Dunnett's comparisons with emmeans by changing the tukey ~
+        Stage argument to dunnett ~ Stage. In the dunnett.emmeans chunk of your
+        <strong>R markdown file</strong> enter:</p>
+      <p><span style="font-family: &quot;Source Sans Pro&quot;,sans-serif;"></span><span
+          class="rcmd">eels.ha.dunnett &lt;- emmeans(eels.ha.lm, dunnett ~
+          Stage)</span></p>
+      <p><span class="rcmd">eels.ha.dunnett<br>
+        </span></p>
+      <p>You'll see that the output still reports all of the means in the
+        $emmeans section, but this time the comparisons in $contrasts are only
+        between Stage 1 and each of the other four. If you compare the p-values
+        for the comparisons of each stage to Stage 1 that you get with Dunnett
+        to the same comparison using Tukey tests, you'll see that Dunnett's
+        gives you smaller p-values for the same comparison. This is because
+        Dunnett's only conducted 4 of the 10 comparisons possible, whereas Tukey
+        tests compare all of them - the amount of difference needed to be
+        statistically significant is thus a little smaller for the Dunnett
+        tests. Consequently, the comparison of Stage 3 to Stage 1 is significant
+        using Dunnett's tests, but not using Tukey's because of this.</p>
+      <h2>Custom contrasts</h2>
+      <p>Tukey and Dunnett aren't specifically designed to ask questions about
+        the change that occurs as the eels develop through sequential stages. We
+        may want to ask a different question than either one of those procedures
+        lets us ask - for example, we might be interested in whether there are
+        changes between the adjacent groups.</p>
+      <p>There is actually an option in emmeans that will compare consecutive
+        levels against each other - we would just change our command from either
+        tukey ~ Stage or dunnett ~ Stage to consec ~ Stage. But, we will run
+        that analysis using custom contrasts first to learn how they work.</p>
+      <p>1. First we need to make a set of vectors that define the the mean for
+        each stage, given the order that emmeans() reports them (in increasing
+        order). For example, the mean of Stage 1 is identified with (in your
+        seq.comparisons code chunk of your <strong>R markdown</strong>
+        document): </p>
+      <p class="rcmd">s1 &lt;- c(1,0,0,0,0)</p>
+      <p>This set of weights has a 1 for the first level of Stage, which is
+        Stage 1, and a zero for the other four.</p>
+      <p>To make the remaining comparisons, you need a vector for each one (add
+        to your R markdown document, below s1):</p>
+      <p class="rcmd">s2 &lt;- c(0,1,0,0,0)</p>
+      <p class="rcmd">s3 &lt;- c(0,0,1,0,0)</p>
+      <p class="rcmd">s4 &lt;- c(0,0,0,1,0)</p>
+      <p class="rcmd">s5 &lt;- c(0,0,0,0,1)</p>
+      <p>Now below the s5 line, put the comparisons between the adjacent stages
+        into an R list:</p>
+      <p class="rcmd">list(s1vs2 = s1-s2, s2vs3 = s2-s3, s3vs4 = s3-s4, s4vs5 =
+        s4-s5) -&gt; seq.comparisons</p>
+      <p>Note that when we define the list we name each element in a way that
+        identifies what means are being compared, and then create the element by
+        subtracting the two vectors for the means to be compared. For example,
+        the first named element is s1vs2, and we assign to it the s1 vector
+        minus the s2 vector. Naming the elements of the list isn't necessary,
+        but it makes the output easier to interpret, since these names will be
+        used to label the output. What is in this list? In the <strong>console</strong>
+        enter seq.comparisons and you'll see:</p>
+      <p class="rout">$s1vs2<br>
+        [1]&nbsp; 1 -1&nbsp; 0&nbsp; 0&nbsp; 0<br>
+        <br>
+        $s2vs3<br>
+        [1]&nbsp; 0&nbsp; 1 -1&nbsp; 0&nbsp; 0<br>
+        <br>
+        $s3vs4<br>
+        [1]&nbsp; 0&nbsp; 0&nbsp; 1 -1&nbsp; 0<br>
+        <br>
+        $s4vs5<br>
+        [1]&nbsp; 0&nbsp; 0&nbsp; 0&nbsp; 1 -1</p>
+      <p>Each element has a 1 for the first mean to be compared, and a -1 for
+        the second - this causes the second mean to be subtracted from the first
+        for each contrast. We can use these to get our sequential comparisons in
+        the next step.<br>
+      </p>
+      <p>2. To use these to get multiple comparisons, use the following commands
+        (in your <strong>Rmd file</strong>, get.seq.comparisons chunk):</p>
+      <p class="rcmd">emmeans(eels.ha.lm, ~Stage) -&gt; eels.ha.contr.emm</p>
+      <p class="rcmd">contrast(eels.ha.contr.emm, contr.list, adjust = "mvt")</p>
+      <p>The output of this command is:</p>
+      <span class="rout">&nbsp;contrast estimate&nbsp;&nbsp; SE df t.ratio
+        p.value<br>
+        &nbsp;s1vs2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -71.9 51.4 15&nbsp;
+        -1.397&nbsp; 0.4820<br>
+        &nbsp;s2vs3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 230.0 51.4
+        15&nbsp;&nbsp; 4.472&nbsp; 0.0019<br>
+        &nbsp;s3vs4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 134.7 51.4
+        15&nbsp;&nbsp; 2.620&nbsp; 0.0651<br>
+        &nbsp;s4vs5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 167.4 51.4
+        15&nbsp;&nbsp; 3.256&nbsp; 0.0190</span>
+      <p> The first emmeans() command gets the estimated means and their
+        standard errors, and then the contrast() function compares the means
+        based on the contrasts we put in the contr.list object. We also tell
+        contrast() to adjust for multiple comparisons using the "mvt", or
+        multivariate, method, which is the default used by emmeans for
+        sequential contrasts. Since the contrasts are being corrected for
+        multiple comparisons you can interpret p-values less than 0.05 as being
+        statistically significant, because the tests have been corrected for
+        multiple comparisons. You can see that Stage 2 is different from Stage
+        3, and Stage 4 is different from Stage 5.</p>
+      <p>How does this compare to the built-in procedure used by emmeans()?
+        Below your contrast() statement, enter:</p>
+      <p class="rcmd">emmeans(eels.ha.lm, consec ~ Stage)</p>
+      <p>The output has an additional block of output, because it includes the
+        $emmeans block, but the comparisons of sequential means in the
+        $contrasts block are identical to the custom contrasts.</p>
+      <p>Now, this is a toy example - we made custom contrasts that reproduce
+        the results of a built-in option for emmeans() so you can see that the
+        custom contrast method works as expected, but we wouldn't go to all the
+        trouble of making custom contrasts to do something that can be
+        accomplished with a simple emmeans() command. However, we can extend
+        this approach to comparing any set of means, including groups of means -
+        for example, if we wanted to compare the average of the first two stages
+        with the average of the last three as one comparison, and only the mean
+        for stage 1 against stage 5 as the other, we could make a contrast list
+        like so (in the <strong>console</strong>):</p>
+      <p class="rcmd">list(first2vlast3 = (s1+s2)/2 - (s3+s4+s5)/3, s1vs5 =
+        s1-s5) -&gt; contr.list.2</p>
+      <p class="rcmd">contrast(eels.ha.contr.emm, contr.list.2, adjust = "mvt")</p>
+      <p>You'll get your two comparisons, adjusted for the number of comparisons
+        run:</p>
+      <p class="rout">&nbsp;contrast&nbsp;&nbsp;&nbsp;&nbsp;
+        estimate&nbsp;&nbsp; SE df t.ratio p.value<br>
+        &nbsp;first2vlast3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 340 33.2 15&nbsp;
+        10.233&nbsp; &lt;.0001<br>
+        &nbsp;s1vs5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        460 51.4 15&nbsp;&nbsp; 8.950&nbsp; &lt;.0001<br>
+        <br>
+        P value adjustment: mvt method for 2 tests </p>
+      <p>With a (relatively) simple set of steps you can do whatever comparison
+        you want, including ones that are not built in options for the emmeans
+        library, and have them appropriately adjusted for multiple comparisons.</p>
+      <h2>Planned comparisons: orthogonal contrasts</h2>
+      <p>Post-hoc procedures give up some statistical power in order to protect
+        the family-wise error rate. This protection against false positives
+        (Type I errors) comes at the cost of increased false negatives (Type II
+        errors). If in the name of keeping our Type I error rate at 0.05 we
+        require bigger differences between means, then real differences that are
+        small will be missed more often - increase our Type II error rate means
+        that we will more often miss real effects.</p>
+      <p><strong>Orthogonal contrasts</strong> do not suffer from this problem.
+        The reason we have had to adjust for multiple comparisons with the
+        procedures we've used so far is that none of comparisons have done have
+        been <strong>independent</strong> (orthogonal is another word for
+        independent). For example, a single mean that is unusually large or
+        small may trigger a Type I error for one comparison, and if so it will
+        also probably trigger Type I errors for other comparisons as well. There
+        are at most k - 1 independent contrasts possible, where k is the number
+        of groups - for the Stage variable there are at most 5-1 = 4 orthogonal
+        contrasts. Tukey's comparisons can't be independent because there are
+        more of them than there are levels of the predictor variable. We only
+        had 4 Dunnett's comparisons, but it turns out they are not independent
+        either - to be independent the contrasts need to meet some additional
+        criteria.</p>
+      <p>Contrasts are done by constructing a <strong>contrast matrix</strong>,
+        like the one below, that has a row for each group and a column for each
+        contrast. The matrix contains <strong>weights</strong> that determine
+        what the contrast is comparing. For example, entering a 1 for Stage 1
+        and a -1 for Stage 2 in the Contrast 1 column will result in a
+        comparison of Stage 1 and Stage 2. The zeros in the Contrast 1 column
+        for the other stages means that they are not used in the comparison. Go
+        ahead and enter these weights for the Contrast 1 column.</p>
+      <br>
+      <div id="wrapper_div" style="width:100%; clear: both">
+        <div id="wts_div" style="width: 600px; float: left">
+          <table id="dunnett" class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Factor levels</th>
+                <th>Contrast 1</th>
+                <th>Contrast 2</th>
+                <th>Contrast 3</th>
+                <th>Contrast 4</th>
+              </tr>
+              <tr>
+                <td align="left">Stage 1</td>
+                <td><input id="s1_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s1_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s1_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s1_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+              </tr>
+              <tr>
+                <td align="left">Stage 2</td>
+                <td><input id="s2_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s2_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s2_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s2_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+              </tr>
+              <tr>
+                <td align="left">Stage 3</td>
+                <td><input id="s3_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s3_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s3_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s3_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+              </tr>
+              <tr>
+                <td align="left">Stage 4</td>
+                <td><input id="s4_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s4_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s4_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s4_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+              </tr>
+              <tr>
+                <td align="left">Stage 5</td>
+                <td><input id="s5_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s5_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s5_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s5_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+              </tr>
+              <tr>
+                <td align="left">Column totals:</td>
+                <td id="c1_total">0</td>
+                <td id="c2_total">0</td>
+                <td id="c3_total">0</td>
+                <td id="c4_total">0</td>
+              </tr>
+              <tr>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="orthog_div" style="float: left; border: 1 px solid red">
+          <table id="sum_prods" class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Contrasts:</th>
+                <th>Sum of products</th>
+              </tr>
+              <tr>
+                <td align="left">C1 vs. C2</td>
+                <td id="c1_c2">0<br>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">C1 vs. C3</td>
+                <td id="c1_c3">0<br>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">C1 vs. C4</td>
+                <td id="c1_c4">0<br>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">C2 vs. C3</td>
+                <td id="c2_c3">0<br>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">C2 vs. C4</td>
+                <td id="c2_c4">0<br>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">C3 vs. C4</td>
+                <td id="c3_c4">0<br>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+      <br style="clear:both">
+      <p style="clear:both">The app will sum the weights in each column and give
+        you a column total - <strong>to be independent the sum of the weights
+          has to be 0 for each column</strong>.</p>
+      <p style="clear:both">If we want to make the contrast matrix that
+        represents Dunnett's comparisons, we will need to use a 1 for Stage 1 in
+        every column, and a -1 for the other stage that is being compared (Stage
+        3 for Contrast 2, Stage 4 for Contrast 3, and Stage 5 for Contrast 4).
+        Go ahead and enter these weights for the other three contrasts.</p>
+      <p style="clear:both">You will see that when you finish entering your
+        Dunnett's weights the table to the right of the contrast matrix is
+        reporting the sum of products of the two contrasts named (the first row
+        is summing the products of weights for Contrast 1 vs. Contrast 2, the
+        second row for Contrast 1 vs. Contrast 3, and so on). You'll see that
+        the numbers are all equal to 1, not 0, and thus they are not orthogonal.</p>
+      <p style="clear:both">You can do the same with our sequential comparisons
+        - entering 1 for the first stage and -1 for the second stage in each
+        comparison we made will give you column sums of 0, but some of the sums
+        of products of weights are not equal to 0, which means that sequential
+        comparisons are not independent either, and we were right to adjust for
+        multiple comparisons for those tests.</p>
+      <p>We now have two examples of sets of 4 comparisons that are not
+        orthogonal and require correction for multiple comparisons. The question
+        is, then, what sets of comparisons are orthogonal for these five groups?</p>
+      <p>Four possible sets of orthogonal contrasts for our five stages are
+        shown below. You'll notice that the weights are not all 0's and 1's now.
+        When weights are numerically the same between two stages we are using
+        the average of those means in that contrast. For example, Contrast 1 in
+        Set 1 is comparing the mean of Stage 1 and Stage 2 to the mean of Stage
+        3, Stage 4, and Stage 5. The weights are selected so that the sum of
+        weights is equal to zero - it doesn't matter that the weights on Stage 1
+        and Stage 2 are 3 and the weights on the rest are -2, provided that the
+        sum of the weights is zero. Since these are not simple comparisons
+        between means the last row, labeled "Interpretation", explains what is
+        being compared for each contrast.</p>
+      <p>Set 1:</p>
       <p> </p>
-      <h2 class="part" id="orthog_poly">Orthogonal polynomial contrasts</h2>
-      <p>When we put the species in body weight order that was enough to get our
-        plot of means in the order we wanted, and it's enough to get R to use
-        Wren as the baseline group when it fits the linear model (remember, this
-        means that the tests of the slope coefficients were tests of differences
-        between the other species and Wren).</p>
-      <p>It may seem counter-intuitive, but we didn't make an "ordered factor"
-        when we put the factor levels in body weight order. Analytically,
-        nothing was done differently except that wrens were set to be the
-        baseline group. An ordered factor is a kind of factor in which the order
-        of the factor levels are not just arbitrary, but instead reflect an
-        ordinal relationship. We are going to do the factor level re-ordering
-        again, but this time we are going to make an actual ordered factor. The
-        advantage of doing this is that by default R uses orthogonal polynomial
-        contrasts when you use an ordered factor in a linear model. We will be
-        able to test for various shapes of response across the ordinal factor
-        levels by seeing which of the orthogonal polynomial coefficients is
-        significant.</p>
-      <p>1. To make an ordered factor, you can make a copy of the factor()
-        command you used above, but add the "ordered = T" argument, like so:</p>
-      <p class="rcmd">allsp$species &lt;- factor(allsp$species, levels =
-        c("Wren","Meadow Pipit","Robin","Hedge Sparrow","Tree Pipit", "Pied
-        Wagtail"), ordered = T) </p>
-      <p>If you type allsp$species at the command prompt you'll see at the
-        bottom that the factor levels are separated by less than symbols, &lt;,
-        indicating the ordinal relationship between them.</p>
-      <p>2. We are going to fit a linear model again, and now that species is
-        ordered we will get orthogonal polynomial contrasts instead of dummy
-        coding. Let's take a look at what the orthogonal polynomial contrasts
-        actually do - enter the command:</p>
-      <p><span class="R-code">contr.poly(6)</span></p>
-      <p>This dumps a bunch of weights to the screen so you can look at them,
-        but hasn't changed any settings. If you look down each column, you'll
-        see the weights follow the pattern you would expect - the .L column
-        gives weights for a linear trend, and the start at -0.597, and increase
-        in equal intervals to 0.597. The quadratic term (.Q) starts high,
-        descends to a minimum, and then returns to the same high point (that is,
-        it's concave upwards). And so forth. These weights establish the basic
-        patterning that each contrast will be testing for in the data.</p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th>Factor levels</th>
+            <th>Contrast 1</th>
+            <th>Contrast 2</th>
+            <th>Contrast 3</th>
+            <th>Contrast 4</th>
+          </tr>
+          <tr>
+            <td align="left">Stage 1</td>
+            <td>3</td>
+            <td>1</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 2</td>
+            <td>3</td>
+            <td>-1</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 3</td>
+            <td>-2</td>
+            <td>0</td>
+            <td>2</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 4</td>
+            <td>-2</td>
+            <td>0</td>
+            <td>-1</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 5</td>
+            <td>-2</td>
+            <td>0</td>
+            <td>-1</td>
+            <td>-1</td>
+          </tr>
+          <tr>
+            <td align="left">Interpretation</td>
+            <td>Mean of 1, 2 vs. mean of 3, 4, 5</td>
+            <td>1 vs. 2</td>
+            <td>3 vs. mean of 4,5</td>
+            <td>4 vs. 5</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Set 2:</p>
+      <p> </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th align="left">Factor levels:</th>
+            <th>Contrast 1</th>
+            <th>Contrast 2</th>
+            <th>Contrast 3</th>
+            <th>Contrast 4</th>
+          </tr>
+          <tr>
+            <td align="left">Stage 1</td>
+            <td>4</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 2</td>
+            <td>-1</td>
+            <td>3</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 3</td>
+            <td>-1</td>
+            <td>-1</td>
+            <td>2</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 4</td>
+            <td>-1</td>
+            <td>-1</td>
+            <td>-1</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 5</td>
+            <td>-1</td>
+            <td>-1</td>
+            <td>-1</td>
+            <td>-1</td>
+          </tr>
+          <tr>
+            <td align="left">Interpretation</td>
+            <td>1 vs. mean of 2-5</td>
+            <td>2 vs. mean of 3-5</td>
+            <td>3 vs. mean of 4-5</td>
+            <td>4 vs. 5</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Set 3:</p>
+      <p> </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th align="left">Factor levels:</th>
+            <th>Contrast 1</th>
+            <th>Contrast 2</th>
+            <th>Contrast 3</th>
+            <th>Contrast 4</th>
+          </tr>
+          <tr>
+            <td align="left">Stage 1</td>
+            <td>4</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 2</td>
+            <td>-1</td>
+            <td>1</td>
+            <td>1</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 3</td>
+            <td>-1</td>
+            <td>1</td>
+            <td>-1</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 4</td>
+            <td>-1</td>
+            <td>-1</td>
+            <td>0</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 5</td>
+            <td>-1</td>
+            <td>-1</td>
+            <td>0</td>
+            <td>-1</td>
+          </tr>
+          <tr>
+            <td align="left">Interpretation</td>
+            <td>1 vs. mean of 2-5</td>
+            <td>Mean of 2,3 vs. mean of 4,5</td>
+            <td>2 vs. 3</td>
+            <td>4 vs. 5</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Set 4:</p>
+      <p> </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th align="left">Factor levels:</th>
+            <th>Contrast 1</th>
+            <th>Contrast 2</th>
+            <th>Contrast 3</th>
+            <th>Contrast 4</th>
+          </tr>
+          <tr>
+            <td align="left">Stage 1</td>
+            <td>4</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 2</td>
+            <td>-1</td>
+            <td>1</td>
+            <td>1</td>
+            <td>-1</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 3</td>
+            <td>-1</td>
+            <td>1</td>
+            <td>-1</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 4</td>
+            <td>-1</td>
+            <td>-1</td>
+            <td>1</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 5</td>
+            <td>-1</td>
+            <td>-1</td>
+            <td>-1</td>
+            <td>-1</td>
+          </tr>
+          <tr>
+            <td align="left">Interpretation</td>
+            <td>1 vs. mean of 2-5</td>
+            <td>Mean of 2,3 vs. mean of 4,5</td>
+            <td>Mean of 2,4 vs. mean of 3,5</td>
+            <td>Mean of 2,5 vs. mean of 3,4</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>You will see that every set of contrasts has to include comparisons
+        that combine stages together (at least one contrast has a non-zero
+        weight for every stage). Simple comparisons of pairs of means are not
+        orthogonal, and will require correction for multiple comparisons.</p>
+      <p>The problem with our contrasts, however, is that several of them don't
+        make much sense for our eel data, and we wouldn't want to use them -
+        having a statistically powerful analysis of questions we don't want to
+        ask is...unhelpful. Probably the set that is most appropriate for the
+        eel data is Set 2 which compares a single Stage with the mean of the
+        Stages after it - the first contrast compares Stage 1 to the mean of 2
+        through 5, the second compares Stage 2 to the mean of 3 to 5, and so on.
+        This is similar to our sequential comparisons, but it uses the mean of
+        subsequent stages, which allows us to define contrasts that are
+        orthogonal. We will use this set of contrasts next.</p>
+      <p>1. We will make four vectors, each with one of the sets of weights from
+        a column in the Set 2 contrast matrix above. To make the first, in the
+        make.contrast.vectors chunk of your <strong>R markdown file</strong>,
+        use:</p>
+      <p class="rcmd">Contrast.1 &lt;- c(4,-1,-1,-1,-1)</p>
+      <p>Now to make the second:</p>
+      <p class="rcmd">Contrast.2 &lt;- c(0,3,-1,-1,-1)</p>
+      <p>You should see that the numbers match the first two columns in Set 2 -
+        now complete this step by making the Contrast.3 and Contrast.4 vectors.</p>
+      <p>2. Now we want to combine the four contrast vectors into a <strong>contrast
+          matrix</strong>, but whereas we needed to bind the vectors as rows of
+        a matrix to use them in glht(), we need to bind them as columns of a
+        matrix to use them as contrasts. Use the cbind() command (short for
+        column bind - in the make.cotrast.matrix chunk of your <strong>R
+          markdown file</strong>):</p>
+      <p class="rcmd">cbind(Contrast.1, Contrast.2, Contrast.3, Contrast.4)
+        -&gt; set.2.contrasts</p>
+      <p>Take a look at the matrix by entering the set.2.contrasts name in the <strong>console</strong>.
+        You'll see that they look like this:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp; Contrast.1 Contrast.2 Contrast.3
+        Contrast.4<br>
+        [1,]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0<br>
+        [2,]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0<br>
+        [3,]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0<br>
+        [4,]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1<br>
+        [5,]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1</p>
+      <p>These weights match the ones in the Set 2 table above, and each column
+        is labeled by the contrast number.</p>
+      <p>3. We are now going to assign these custom contrasts to the Stage
+        variable. Unfortunately, once the contrasts are assigned there isn't an
+        obvious indication in R Studio, and we would have to remember that we
+        did it. To avoid confusion later, we will make a copy of Stage called
+        Stage.custom, and then we will assign the custom contrasts to the
+        duplicate copy. This way the Stage variable will continue to be a
+        conventional unordered factor that uses the default dummy coding when it
+        is used in a model, and the name Stage.custom will serve as a reminder
+        to us that we assigned custom contrasts to that column.</p>
+      <p>First, make a copy of Stage called Stage.custom and add it as a column
+        to the eels data set (in the make.copy.of.stage chunk of your <strong>R
+          markdown file</strong>):</p>
+      <p class="rcmd">eels$Stage.custom &lt;- eels$Stage</p>
+      <p>Now we can assign the set.2.contrasts matrix to this new Stage.custom
+        variable (in the assign.contrasts.to.stage chunk of the <strong>R
+          markdown file</strong>):</p>
+      <p class="rcmd">contrasts(eels$Stage.custom) &lt;- set.2.contrasts</p>
+      <p>Note that this is not the same command as you were using for custom
+        contrasts, above - this is contrasts (with an s), not contrast.</p>
+      <p>4. In the custom.contrasts.test chunk of your <strong>R markdown file</strong>,
+        fit a model using HA as a response variable, and Stage.custom as the
+        predictor. Get the summary() for the model, and you will see this:</p>
+      <p class="rout">Coefficients:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp; <br>
+        (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        395.938&nbsp;&nbsp;&nbsp;&nbsp; 16.261&nbsp; 24.349 1.79e-13 ***<br>
+        Stage.customContrast.1&nbsp;&nbsp; 41.966&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        8.131&nbsp;&nbsp; 5.162 0.000116 ***<br>
+        Stage.customContrast.2&nbsp;&nbsp; 93.896&nbsp;&nbsp;&nbsp;&nbsp;
+        10.497&nbsp;&nbsp; 8.945 2.12e-07 ***<br>
+        Stage.customContrast.3&nbsp;&nbsp; 72.813&nbsp;&nbsp;&nbsp;&nbsp;
+        14.844&nbsp;&nbsp; 4.905 0.000190 ***<br>
+        Stage.customContrast.4&nbsp;&nbsp; 83.705&nbsp;&nbsp;&nbsp;&nbsp;
+        25.711&nbsp;&nbsp; 3.256 0.005322 ** </p>
+      <p>The Intercept term is the grand mean of HA across all of the stages.
+        Below that are the tests of each of the four custom contrasts - you can
+        see that each is significant, meaning that each Stage is different from
+        the average of the Stages that follow. Because these are planned,
+        orthogonal contrasts you can assess significance of these tests at the
+        0.05 level without adjusting for multiple comparisons.</p>
+      <h2>Ordinal categorical variables and orthogonal polynomials:</h2>
+      <p>So far none of the methods we used made full use of the fact that Stage
+        is an ordinal variable. The closest we came was in our selection of
+        custom contrasts, which compared stages to those that came after them,
+        but there was no consideration of the pattern of change across the
+        levels. When we have numeric predictors we are primarily interested in
+        the pattern of change - we fit a line to the data and interpret the
+        slope of the line. Here we have levels that do not have a quantitative
+        relationship with one another, but they do have a natural order, and we
+        might want to know the pattern of change in HA across developmental
+        stages. To address that question we can use <strong>orthogonal
+          polynomial contrasts</strong>, and to get those we need Stage to be an
+        ordered factor.</p>
+      <p>R uses orthogonal polynomial contrasts by default when we use an
+        ordered factor in a linear model, so we don't need to construct a
+        contrast matrix this time - all we need to do is to make an <strong>ordered
+          factor</strong> out of Stage to get the contrasts we want. </p>
+      <p>1. We will use the same trick we used for our custom contrasts to make
+        an ordered factor - when we make Stage an ordered factor we will assign
+        it to a new variable name called Stage.ordered, so that Stage will
+        continue to function as an un-ordered factor.</p>
+      <p>To make an ordered factor called "Stage.ordered", you can add "ordered
+        = T" as an argument to the factor() command, like so (in the
+        stage.ordered chunk of your <strong>R markdown file</strong>):</p>
+      <p class="rcmd">eels$Stage.ordered &lt;- factor(eels$Stage, ordered = T) </p>
+      <p>If you type eels$Stage.ordered at the <strong>console</strong> you'll
+        see the stage names with the factor levels listed at the bottom - the
+        levels will be separated by less than symbols, &lt;, indicating that R
+        now knows that levels increase from left to right. </p>
+      <p>2. Before we run the analysis, let's take a look at what the orthogonal
+        polynomial contrasts actually do - enter the command in the
+        orthog.poly.weights chunk of your <strong>R markdown file</strong>:</p>
+      <p><span class="rcmd">contr.poly(5) -&gt; poly.wts</span></p>
+      <p><span class="rcmd">poly.wts<br>
+        </span></p>
+      <p>This will show you the weights used to make orthogonal polynomial
+        contrasts for 5 levels of a factor, like so:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        .L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        .Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        .C&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ^4<br>
+        [1,] -0.6324555&nbsp; 0.5345225 -3.162278e-01&nbsp; 0.1195229<br>
+        [2,] -0.3162278 -0.2672612&nbsp; 6.324555e-01 -0.4780914<br>
+        [3,]&nbsp; 0.0000000 -0.5345225 -4.095972e-16&nbsp; 0.7171372<br>
+        [4,]&nbsp; 0.3162278 -0.2672612 -6.324555e-01 -0.4780914<br>
+        [5,]&nbsp; 0.6324555&nbsp; 0.5345225&nbsp; 3.162278e-01&nbsp; 0.1195229</p>
+      <p> Instead of comparisons between specific group means, these weights
+        define the pattern of change expected for a factor with five levels. The
+        patterns are read down the columns, and the labels indicate the linear
+        trend (.L), quadratic trend (.Q), cubic trend (.C), and fourth (^4)
+        order trends. The patterns are:</p>
+      <ul>
+        <li>Linear (.L column) - starting with -0.598, and increasing to 0.598
+          by equal amounts across the six levels.</li>
+        <li>Quadratic (.Q column) - defines an upward-pointing parabola,
+          starting and ending with positive values, and declining to the
+          smallest, negative values for the two middle levels.</li>
+        <li>Cubic (.C column) - defines a sideways s-curve, starting negative,
+          increasing to a maximum, declining to a minimum, and increasing to a
+          positive end point (mind the exponents - the middle number in row 3 is
+          e-16, meaning that the decimal point is sixteen places to the left,
+          and the number is very close to zero).</li>
+        <li>Fourth degree (^4 column) - w-shaped, with a peak in the middle.</li>
+      </ul>
+      <img src="poly_wts.png" style="float:left; margin-right: 40px">
+      <p> </p>
+      <p>A graph of the weights is shown to the left. The exact values of the
+        weights aren't important, but there are a couple of rules for selecting
+        them: </p>
+      <ul>
+        <li>They should be centered on 0 - for example, the linear weights go
+          from -0.632 to +0.632, and are equal 0 at the middle stage, Stage 3.
+          As you look at each column you'll see they are all symmetrical around
+          0. This rule allows you to flip the trends around the x-axis by
+          multiplying the weights by -1.</li>
+        <li>They need to be orthogonal, so the columns should sum to 0 and the
+          sum of the products of any two sets of columns should be 0 as well.</li>
+      </ul>
+      <p>You can confirm the sum of products criterion with a quick calculation
+        - first, you can multiply the linear column by each of the others with
+        (in the <strong>console</strong>):</p>
+      <p class="rcmd">poly.wts[,1] * poly.wts[,-1]</p>
+      <p>This command multiplies the .L column from poly.wts (.L is column 1) by
+        every column except the .L column (column -1 omits .L). To confirm that
+        these sum to 0 use (in the <strong>console</strong>):</p>
+      <p class="rcmd">colSums(poly.wts[,1] * poly.wts[,-1])</p>
+      <p>You should get numbers such as -1.110223e-16. This is a number in R's
+        scientific notation format, and it means -1.110223 x 10<sup>-16</sup>,
+        which is a very small number, very close to 0 (it is only not exactly
+        zero because of rounding error). You can do the same calculation for any
+        of the columns 2 through 4 and you should see the same thing, confirming
+        that this set of weights produces independent contrasts.</p>
       <blockquote style="background: #f5f5fb; border: 1px solid; padding: 10px;">
-        <p>A little aside on R...</p>
-        <p>You can see what the default contrast types are by using the command:</p>
+        <h4>A little aside on contrasts in R for the curious.</h4>
+        <p>R refers to all of the coding methods as contrasts, whether they are
+          orthogonal or not. Dummy coding is also called "treatment contrasts",
+          for example. You can see what the default contrast types are by using
+          the command:</p>
         <p><span class="rcmd">options("contrasts")</span></p>
         <p>This should show you that the default contrasts are "contr.Treatment"
-          "contr.poly", which are the contrasts used for un-ordered factors and
-          for ordered factors, respectively. The "treatment" contrast type is
-          another name for dummy-coding.</p>
-        <p>So, we get polynomial contrasts because we are going to use an
-          ordered factor, but what if we wanted to get dummy-coded contrasts
-          back, so that we could compare all the species to wrens again? There
-          are two choices: change the default, or assign treatment contrasts to
-          species (which overrides the default polynomial contrasts).</p>
-        <p>To change the default value, we would use the command:</p>
+          "contr.poly", which are the contrasts used for unordered factors and
+          for ordered factors, respectively.</p>
+        <p>You can set the contrast type for factors in two different ways, by
+          setting them globally for all unordered and all ordered factors, or by
+          assigning the contrasts to a specific variable as a property of that
+          variable.</p>
+        <p>For example, to set the default type of contrast for all ordered
+          factors, we would use the command:</p>
         <p><span class="rcmd">options(contrasts = c("contr.treatment",
             "contr.treatment"))</span></p>
-        <p>This would set the contrast type to dummy-coded contrasts for both
-          unordered and ordered factors. Changing the default changes what R
-          will use for any ordered factor we choose, within this project. We
-          could then set it back to default with:</p>
+        <p>This changes the default for ordered factors to dummy-codes, which R
+          would then use for any ordered factor we use within this project. We
+          could restore the default with:</p>
         <p><span class="rcmd">options(contrasts = c("contr.treatment",
             "contr.poly"))</span></p>
-        <p>If we wanted to just override the orthogonal polynomials for species,
-          without affecting any other ordered factor we might use later, we
-          could set the contrasts for the species variable:</p>
-        <p><span class="R-code rcmd"> contrasts(allsp.bw$species) &lt;-
-            contr.treatment(6) </span></p>
-        <p>where the argument 6 in contr.treatment() says to dummy code for 6
-          different levels. To set the contrasts back to orthogonal polynomial
-          for species, you would use the command: </p>
-        <p><span class="R-code rcmd">contrasts(allsp.bw$species) &lt;-
-            contr.poly(6) </span></p>
+        <p>Changing the default affects every ordered factor we might want to
+          use, and it may be that we only need dummy-coded contrasts for
+          Stage.ordered. To just set the contrast type for Stage.ordered without
+          changing the default for any other ordered factors we might want to
+          use, we would use:</p>
+        <p><span class="R-code rcmd"> contrasts(eels$Stage.ordered) &lt;-
+            contr.treatment(5) </span></p>
+        <p>To set the contrasts to orthogonal polynomial for Stage.ordered, you
+          would use the command: </p>
+        <p><span class="R-code rcmd">contrasts(eels$Stage.ordered) &lt;-
+            contr.poly(5) <br>
+          </span></p>
+        <p><span>And to remove the setting from Stage.ordered so that the
+            default value is used you would assign NULL as the contrast type -
+            this deletes the property from Stage.ordered, and causes R to apply
+            the default for an ordered factor to the variable:</span></p>
+        <p><span class="rcmd">contrasts(eels$Stage.ordered) &lt;- NULL<br>
+          </span></p>
       </blockquote>
-      <p>Now, let's see what happens when we run the model with an ordered
-        factor for species:</p>
-      <p><span class="rcmd">allsp.op.lm &lt;- lm(length ~ species,
-          data=allsp.bw)</span></p>
+      <p>3. So, contr.poly(5) showed us what the polynomial weights that will be
+        used to analyze the data will look like. We don't need to use this
+        command to get polynomial contrasts, however, because polynomial
+        contrasts are the default for an ordered factor - as long as we use
+        Stage.ordered as the predictor we will get polynomial contrasts by
+        default. Now run a GLM model with an ordered factor as a predictor (in
+        the lm.with.polynomial.contrasts chunk of your <strong>R markdown file</strong>):</p>
+      <p><span class="rcmd">eels.op.lm &lt;- lm(HA ~ Stage.ordered, data=eels)</span></p>
       <p> </p>
       <p>This command fits exactly the same linear model as we used before, with
-        length predicted by species, but this time species is ordered. The
-        fitted model is assigned to allsp.op.lm. To see the coefficients, type
-        the name of the fitted model object:</p>
+        HA predicted by Stage, but this time using polynomial contrasts instead
+        of dummy codes to represent the group means. This choice has no effect
+        on the ANOVA table, and we can still get identical Tukey results from
+        this ordered factor that we got from the unordered Stage variable. Let's
+        confirm this to be true.</p>
+      <p>First, confirm that the ANOVA table isn't affected by the type of
+        contrasts you use - type in the anova.poly.weights chunk of your <strong>R
+          markdown file</strong>:</p>
+      <p class="rcmd">anova(eels.op.lm)</p>
+      <p>and you will get an ANOVA table that matches the one you got with Stage
+        as an unordered factor. Using orthogonal polynomial weights doesn't
+        change the ANOVA table.</p>
+      <p>Comparisons of pairs of means are also not affected - you can also
+        confirm that you can still get the same Tukey tests from this model (in
+        the tukey.poly.weights chunk of your <strong>R markdown file</strong>):</p>
+      <p class="rcmd">glht(eels.op.lm, linfct = mcp(Stage.ordered = "Tukey"))
+        -&gt; eels.op.tukey</p>
+      <p class="rcmd">summary(eels.op.tukey)</p>
+      <p>The comparisons of means is exactly the same as before, using
+        polynomial weights doesn't alter these results.</p>
+      <p>Where the results do differ between ordered and unordered factors is in
+        the coefficients, which you can see with the command (in the coefficient
+        tests.poly.weights chunk of your<strong> R markdown file</strong>):</p>
       <p> </p>
-      <p><span class="rcmd">summary(allsp.op.lm)</span></p>
+      <p><span class="rcmd">summary(eels.op.lm)</span></p>
       <p>The model output looks like this:</p>
-      <p class="rout">Call: <br>
-        lm(formula = length ~ species, data = allsp) <br>
-        &nbsp;<br>
-        Residuals: <br>
-        &nbsp;&nbsp;&nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        1Q&nbsp;&nbsp; Median&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        3Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Max&nbsp; <br>
-        -2.69333 -0.39333 -0.01429&nbsp; 0.50833&nbsp; 2.10667&nbsp; <br>
-        &nbsp;<br>
-        Coefficients: <br>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp;&nbsp; <br>
-        (Intercept) 22.50842&nbsp;&nbsp;&nbsp; 0.09003 249.997&nbsp; &lt; 2e-16
-        *** <br>
-        species.L&nbsp;&nbsp;&nbsp; 1.40456&nbsp;&nbsp;&nbsp;
-        0.22350&nbsp;&nbsp; 6.284 6.21e-09 *** <br>
-        species.Q&nbsp;&nbsp; -0.87529&nbsp;&nbsp;&nbsp; 0.23299&nbsp; -3.757
-        0.000273 *** <br>
-        species.C&nbsp;&nbsp;&nbsp; 0.08158&nbsp;&nbsp;&nbsp;
-        0.21155&nbsp;&nbsp; 0.386 0.700493&nbsp;&nbsp;&nbsp;&nbsp; <br>
-        species^4&nbsp;&nbsp; -0.14594&nbsp;&nbsp;&nbsp; 0.20734&nbsp; -0.704
-        0.482939&nbsp;&nbsp;&nbsp;&nbsp; <br>
-        species^5&nbsp;&nbsp;&nbsp; 0.21504&nbsp;&nbsp;&nbsp;
-        0.22629&nbsp;&nbsp; 0.950 0.343969&nbsp;&nbsp;&nbsp;&nbsp; <br>
-        --- <br>
-        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1 <br>
-        &nbsp;<br>
-        Residual standard error: 0.9052 on 114 degrees of freedom <br>
-        Multiple R-squared:&nbsp; 0.3143,&nbsp;&nbsp;&nbsp; Adjusted
-        R-squared:&nbsp; 0.2842&nbsp; <br>
-        F-statistic: 10.45 on 5 and 114 DF,&nbsp; p-value: 2.852e-08</p>
-      <p>If you compare the model output here to what you got with the unordered
-        version of species, the bottom section is identical - using an ordered
-        factor doesn't change the model fit. But, the coefficient tests are
-        tests of trend across the ordered species levels. You'll see that the
-        linear (.L) and quadratic (.Q) terms are significant, but the rest are
-        not.</p>
+      <p class="rout">Call:<br>
+        lm(formula = HA ~ Stage.ordered, data = eels)<br>
+        <br>
+        Residuals:<br>
+        &nbsp;&nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1Q&nbsp;
+        Median&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3Q&nbsp;&nbsp;&nbsp;&nbsp; Max <br>
+        -116.94&nbsp; -43.12&nbsp;&nbsp; 12.68&nbsp;&nbsp; 30.44&nbsp; 122.39 <br>
+        <br>
+        Coefficients:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp; &nbsp;<br>
+        (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        395.94&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 16.26&nbsp; 24.349 1.79e-13 ***<br>
+        Stage.ordered.L&nbsp; -406.41&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 36.36
+        -11.177 1.13e-08 ***<br>
+        Stage.ordered.Q&nbsp; -102.44&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 36.36&nbsp;
+        -2.817&nbsp;&nbsp; 0.0130 * &nbsp;<br>
+        Stage.ordered.C&nbsp;&nbsp;&nbsp; 85.11&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        36.36&nbsp;&nbsp; 2.341&nbsp;&nbsp; 0.0335 * &nbsp;<br>
+        Stage.ordered^4&nbsp;&nbsp; -62.74&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        36.36&nbsp; -1.726&nbsp;&nbsp; 0.1050&nbsp;&nbsp; &nbsp;<br>
+        ---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1<br>
+        <br>
+        Residual standard error: 72.72 on 15 degrees of freedom<br>
+        Multiple R-squared:&nbsp; 0.904,&nbsp;&nbsp; &nbsp;Adjusted
+        R-squared:&nbsp; 0.8785 <br>
+        F-statistic: 35.33 on 4 and 15 DF,&nbsp; p-value: 1.805e-07</p>
+      <p>If you compare the model summary output here to what you got with the
+        unordered version of stage, the bottom section is identical - using an
+        ordered factor doesn't change the fit, degrees of freedom, or overall
+        p-value for the model. But, the coefficient tests are now tests of trend
+        across the ordered stage levels. You'll see that the linear (.L),
+        quadratic (.Q), and cubic (.C) terms are significant, but the fourth
+        degree (^4) term is not.</p>
+      <img src="poly_wts_scaled.png" ,="" style="float: left; margin-right: 20px"
+        onclick="changeImage(this,['linear.png','quadratic.png','cubic.png','fourth.png','poly_wts_scaled.png'])">
+      <p>The graph on the left shows how the coefficients modify the weights to
+        fit to the HA data. The sign on the coefficient keeps the pattern the
+        same if it is positive, but it flips the pattern if it is negative. The
+        magnitude on the coefficient indicates how strong the pattern is. So,
+        for example, the linear trend (.L) has a negative sign, which flips the
+        trend from positive to negative, and it has the largest magnitude, so it
+        is the strongest pattern in the data - the straight line covers the
+        widest range of values along the y-axis in this graph.</p>
       <p>When you interpret orthogonal polynomials, remember that they add
-        together. The first, linear trend has a positive coefficient, which
-        tells us that there is also a tendency for the means to increase from
-        left to right on the graph. The second, quadratic trend has a negative
-        coefficient. Remember from the matrix of contrast weights that they
-        represented a parabola that is concave upwards, but the trend in the egg
-        length data reaches a peak and levels off or declines a little - the
-        negative coefficient flips the parabola so that it's concave downward.
-        Adding this trend to the linear one means that there is a tendency for
-        the means to increase to a peak and then decline as you go from left to
-        right on the graph. This matches our impression from looking at the
-        graph nicely, and provides us with some statistical support for claiming
-        that cuckoos adjust their egg sizes to the host species size, up to a
-        maximum egg size that the cuckoos are able to produce.</p>
-      <p>3. Feeling adventurous? If you're in the mood for a challenge, continue
-        (yes, this step is optional, but if you want to start fleshing out your
-        R skills you should opt to do it).</p>
-      <p>R is pretty powerful, it isn't just a tool for running canned
-        procedures. We know that in order to perfectly reproduce the means for
-        each species we need to use all of the contrasts, up to the 5th degree,
-        but only the linear and quadratic trends were statistically significant.
-        If we would like to see what the linear and quadratic trends actually
-        look like, we can use R to predict the means using those two sets of
-        contrast weights and coefficients.</p>
-      <p>We want to add points to your plot of means that indicate the predicted
-        values for the trends we've identified as significant. To do this, we
-        need to extract the coefficients from our fitted model, and the weights
-        from our factor. First the coefficients:</p>
-      <p><span class="rcmd">coef(allsp.op.lm) -&gt; species.coef</span></p>
+        together. So...</p>
+      <ul>
+        <li> If you click once on the graph it will show the mean HA for each
+          group (red dots) with the linear trend added to the graph - the linear
+          trend captures the general tendency for HA to decline from Stage 1 to
+          Stage 5.</li>
+        <li>If you click again you will see the sum of the linear weights and
+          the quadratic weights, which shows the increase between Stage 1 and
+          stage 2. Think of the test of significance for this trend as being
+          based on how much closer the predicted means get to the observed means
+          by adding the quadratic - there is still some space between predicted
+          and observed means, but less than with only the linear term, so adding
+          the quadratic was a significant improvement.</li>
+        <li>Click a third time and you'll see the sum of the linear, quadratic,
+          and cubic weights. The contribution of the cubic term adds the
+          sideways S pattern, which allows the weights to get closer to Stage 2
+          and Stage 3. Like with the quadratic term, adding the cubic gives us a
+          statistically significant improvement in our ability to predict the
+          actual means for each Stage.</li>
+        <li>The fourth degree term isn't significant, but if you click a fourth
+          time the line hits the means exactly - remember, with 4 columns we can
+          reproduce 5 means exactly, and that's what we're getting here. Even
+          though the means are reproduced perfectly, we came close enough with
+          the cubic term that the amount of additional variation explained by
+          adding the fourth order term wasn't enough for it to be statistically
+          significant.</li>
+      </ul>
+      <p>So, the orthogonal polynomial trend results match our impression from
+        looking at the graph nicely, and provide us with some statistical
+        support for claiming that HA peaks at the second stage and declines for
+        the remaining stages. They do not test for differences between any pair
+        of means, but if the question you are interested in is about the pattern
+        of change across ordinal categories, orthogonal polynomials are very
+        useful. </p>
+      <h2>Corrections for multiple comparisons outside of an ANOVA</h2>
+      <p>The contrasts and post-hoc procedures we've learned deal with a single
+        factor in an ANOVA. The data set we have for the eel study has three
+        different response variables, all measured from the same eels, and they
+        are correlated with one another (HA with NS has r = -0.77, HA with water
+        has r = 0.75, NS with water has r = -0.56). Since the variables are not
+        independent it seems we should make some sort of correction for multiple
+        comparisons, but if we are fitting three separate models it's not
+        straightforward to incorporate this into our post-hoc procedures.</p>
+      <p>When we are in this situation, we can account for the additional
+        chances of Type I errors by adjusting the alpha level instead of using a
+        post-hoc procedure. The simplest correction for the alpha level commonly
+        used is the Bonferroni. Bonferroni's correction sets a <strong>nominal</strong>
+        alpha level, or <strong>family-wise</strong> error rate, at a desired
+        level (usually the traditional 0.05) and then calculates the alpha level
+        used for each test by dividing the nominal level by the number of tests
+        conducted. If we were to test for differences among stages in water as
+        well as HA we would be producing two omnibus tests, with two p-values,
+        and could test each at 0.05/2 = 0.025 to avoid an increase in Type I
+        error rate. If we also tested NS, we could test at 0.05/3 = 0.0167.</p>
+      <p>However, Bonferroni's correction is stronger than absolutely necessary.
+        If we assume that each test has a 5% chance of a false positive, then it
+        also has a 95% chance of a correct negative. Across three comparisons
+        the chance of correct negatives on all of them is 0.95 x 0.95 x 0.95, or
+        (1 - 0.05)<sup>3</sup>. Any other possible outcome other than this would
+        include a false positive, Type I error in at least one comparison, so
+        the probability of one or more false positives across these five
+        comparisons is 1 - (1 - 0.05)<sup>3</sup>. If we wanted to achieve an
+        overall <strong>family-wise</strong> rate of 0.05, we could set this
+        quantity equal to 0.05, and then solve for the level that we would need
+        to test at to achieve a family-wise rate of the desired 0.05 value. In
+        other words:</p>
+      <p>0.05 = 1 - (1 - α)<sup>3</sup></p>
+      <p>α = 1-(1-0.05)<sup>1/3</sup> = 0.0169</p>
+      <p>This is called the Dunn-Sidak correction, and you can see it is a
+        little bit bigger than Bonferroni, and thus a little more easier to
+        achieve statistical significance with, without increasing the false
+        positive rate.</p>
+      <p>Let's see how correcting for multiple p-values affects our
+        interpretation of the data. Do the following steps in your <strong>R
+          markdown file</strong>.</p>
+      <p>1. Fit a model using water as a response, and Stage as a predictor
+        (chunk water.lm).</p>
+      <p>2. Fit a model using NS as a response, and Stage as a predictor (chunk
+        ns.lm).</p>
+      <p>3. Calculate the two corrections we could use - enter
+        (adjusted.alphas):</p>
+      <p class="rcmd">0.05/3</p>
+      <p class="rcmd">1 - (1-0.05)^(1/3)</p>
+      <p>The first calculation is the Bonferroni correction, and the second is
+        Dunn-Sidak. These two values are the corrected alpha-levels we should
+        use to assess if the p-values are statistically significant from our
+        three linear models. Compare the p-values from each of the models and
+        see if any of them are no longer significant after adjustment. The
+        variable that was significant at 0.05 but not at these adjusted levels
+        could be a Type I error if we were to use the 0.05 level.</p>
+      <h3>In summary...</h3>
+      <p>To wrap up this collection of procedures:</p>
+      <ul>
+        <li>Most of the comparisons we would typically want to make to help us
+          interpret our experiments are not independent, and require us to use a
+          post-hoc procedure that protects our family-wise Type I error rate.</li>
+        <ul>
+          <li>This includes the common, named procedures (Tukey, Dunnett), as
+            well as any set of simple comparisons between group means.</li>
+          <li>We would use the emmeans() command from the emmeans library for
+            most post-hocs, but use contrast() from the emmeans library for
+            custom contrasts that are not available as built-in options within
+            emmeans().</li>
+        </ul>
+        <li>It is possible to design comparisons that are independent (called
+          orthogonal contrasts), and which do not require correction for
+          multiple comparisons, but the rules for constructing them makes them
+          unusable for some of the comparisons we typically want to make</li>
+        <ul>
+          <li>A contrast matrix of weights that sum to 0 within a contrast, and
+            whose products sum to 0 for every pairing of contrasts is
+            independent (i.e. orthogonal)</li>
+          <li>There are at most k-1 orthogonal contrasts for a data set, and at
+            least some must combine information from more than one group</li>
+          <li>Polynomial contrasts that measure the shape of the trend across
+            levels of the predictor are useful for ordinal predictor variables</li>
+        </ul>
+        <li>If more than one variable is being analyzed from the same
+          experimental subjects they are not independent, and the alpha level
+          used to assess significance should be adjusted</li>
+        <ul>
+          <li>Bonferroni's correction, and Dunn-Sidak's correction both account
+            for the number of comparisons made</li>
+          <li>The omnibus test for the predictor variable is compared against
+            the adjusted alpha level, instead of the usual 0.05 level</li>
+        </ul>
+      </ul>
+      <h2>Optional - for the adventurous</h2>
+      <p>If you're in the mood for a challenge, continue (yes, this step is
+        optional, but if you want to flesh out your R skills you should opt to
+        do it). If you choose not to do this section just leave it blank in your
+        markdown file.</p>
+      <p>We know that in order to perfectly reproduce the means for each stage
+        we need to use all of the contrasts, up to the 4th degree, but only the
+        linear, quadratic, and cubic trends were statistically significant for
+        HA. If we would like to see what these significant trends look like we
+        can use the sets of contrast weights and coefficients to predict the
+        stage means and plot them, along with the observed means from the data.</p>
+      <p>To visualize what the significant trends look like we need to add
+        points to your plot of means that indicate the predicted values for the
+        linear, quadratic, and cubic trends. To do this, we need to extract the
+        coefficients from our fitted model, and the weights from our ordered
+        Stage factor. First the coefficients (in your <strong>R markdown file</strong>):</p>
+      <p><span class="rcmd">coef(eels.op.lm) -&gt; stage.coef</span></p>
       <p>This uses the coef() function to extract the coefficients, and then
-        assigns them to the species.coef object. Nothing will be displayed on
-        the screen, but to see what's in species.coef, just type the name of the
-        object and hit Enter.</p>
-      <p><span class="R-code rcmd">species.coef</span></p>
+        assigns them to the eels.coef object. Add the name of the object,
+        eels.coef, below your coef() command to see them displayed in your R
+        markdown file. You'll see that there is a coefficient for (Intercept),
+        and one for each of the trends up to the 4th degree. </p>
       <p>Now we need the contrast weights. We will use the same contrasts()
         function we used before, but this time instead of assigning contrasts
-        with it, we will be extracting the weights from species instead.</p>
-      <p><span class="R-code rcmd">contrasts(allsp$species) -&gt;
-          species.contrasts</span></p>
+        with it, we will be extracting the weights from Stage.ordered instead
+        (in your <strong>R markdown file</strong>).</p>
+      <p><span class="R-code rcmd">contrasts(eels$Stage.ordered) -&gt;
+          stage.contrasts</span></p>
       <p>Again, if you want to see what this did, enter the name of the
-        species.contrasts object we created:</p>
-      <p><span class="R-code rcmd">species.contrasts</span></p>
-      <p>You should see a matrix with the weights for each trend, and with rows
-        labeled by species names (if we had just used contr.poly(6) -&gt;
-        species.contrasts we would have gotten the same set of weights, but
-        using the species column gets R to count up the number of levels and
-        construct the contrasts accordingly).</p>
+        stage.contrasts object we created:</p>
+      <p><span class="R-code rcmd">stage.contrasts</span></p>
+      <p>You should see a matrix with the weights for each trend.</p>
       <p>Now we are going to use the coefficients and weights to calculate the
         linear trend.</p>
-      <p><span class="R-code rcmd">species.coef[1] +
-          species.coef[2]*species.contrasts[ ,1] -&gt; linear ; linear</span></p>
-      <p>This command will show you the result of our calculation, because I
-        added a "; linear" to the end of the command. The semicolon allows a
-        second command to be added to the line, and since the command just named
-        the object called "linear" we created with our calculation, it displays
-        the predicted linear trend values on the screen.</p>
-      <p>The actual calculation takes the intercept from species.coef (which we
-        indicated by giving its "index" number within the brackets - it's the
-        first coefficient in species.coef, so species.coef[1] is the intercept),
-        then adds to it the product of the slope (species.coef[2]) multiplied by
-        the weights for the linear trend (species.contrasts[ ,1]). The indexing
-        is different for species.contrasts because it is a matrix, so it has
-        both rows and columns. The numbers in the brackets indicate the row
-        number and the column number as [row number, column number]. We wanted
-        all of the rows for column 1, which we got by leaving the row index
-        blank, and by using a 1 for the column index. Note that what this
-        equation did was to take the single values for the intercept and slope
-        and then apply them to each row in the linear trend column.</p>
-      <p>Now, to add the linear trend to the graph, you need to use the command:</p>
-      <p><span class="R-code rcmd">points(linear, pch=21, bg="green")</span></p>
-      <p>This command adds points to the currently active plot - we used
-        "linear" as the argument, since that's the object that has the linear
-        trend numbers. The other two arguments control the appearance of the
-        points - pch is "point character", and number 21 is a filled circle; bg
-        is "background color", and we set the fill color to "green".</p>
-      <p>Next, let's calculate the quadratic trend. We already have the linear
-        trend, and as you learned in lecture these terms are meant to be
-        interpreted hierarchically - the quadratic trend is added to the linear
-        trend, it's not interpreted on its own. So, we just need to calculate
-        the quadratic part, and add it to our linear trend values.</p>
-      <p><span class="R-code rcmd">species.coef[3]*species.contrasts[,2] +
-          linear -&gt; quadratic ; quadratic</span></p>
-      <p>Like before, the coefficient for the quadratic term (species.coef[3])
-        is multiplied by each row in the second column of weights matrix
-        (species.contrasts[,2]), and this time the product is added to an
-        existing set of linear values; this is all then assigned to a new object
-        called "quadratic".</p>
-      <p>Try adding the points for the quadratic trend to your plot. Use "red"
-        for the bacground color this time. You should see that with this
-        quadratic term included the red dots are very close to the observed
-        means, including between Tree Pipit and Pied Wagtail where the size dips
-        a little.</p>
-      <p>We could keep adding on the cubic, 4th, and 5th order terms, but none
-        of those were statistically significant. If we did include all of them,
-        though, the predicted means would be equal to the measured group means,
-        instead of being only approximately close to them.</p>
-      <p><br>
-      </p>
-      <p>All done! Upload your Word file with all your output.</p>
+      <p><span class="R-code rcmd">stage.coef[1] +
+          stage.coef[2]*stage.contrasts[ ,1] -&gt; linear</span></p>
+      <p><span class="R-code rcmd">linear</span></p>
+      <p>The first line calculates the predicted means based on the linear
+        trend, and the second line (linear) displays them on the screen. The
+        calculation in the first line takes the intercept from stage.coef (which
+        we indicated by giving its index number within the brackets), then adds
+        to it the product of the slope (stage.coef[2]) multiplied by the weights
+        for the linear trend (stage.contrasts[ ,1]). Think for a minute about
+        what is happening here - the intercept and slope for the linear trend
+        are single numbers, but we have a whole column of weights in
+        stage.contrasts[ ,1], one for each stage. R does calculations like this
+        by applying slope and intercept repeatedly to each row in
+        stage.contrasts[ ,1] and returns each of the predicted means as a vector
+        of numbers. When you type linear you see the set of five predicted stage
+        means that were calculated with this command.</p>
+      <p>We will add the predicted means for each level of trend, but to do this
+        in ggplot2 we want to have all three of the statistically significant
+        trends calculated, put them together in a stacked data frame, and then
+        add them to our plot of means and confidence intervals.</p>
+      <p>So, to calculate the quadratic trend use the command (below the linear
+        trend calculation in your R markdown file:</p>
+      <span class="R-code rcmd">linear + stage.coef[3]*stage.contrasts[,2] -&gt;
+        quadratic</span>
+      <p>This works because each new trend is added to the previous one, so we
+        can start with the linear predicted means we calculated in the previous
+        step and add the contribution of the quadratic trend. The coefficient
+        for the quadratic trend is the third one in stage.coef (thus,
+        stage.coef[3]), and the weights in stage.contrasts are in the second
+        column (stage.contrasts[,2]) - multiplying the quadratic coefficient by
+        the quadratic weights and adding them to the linear predicted values
+        gives us our quadratic predicted values.</p>
+      <p>Now, do the cubic trend - call the result cubic. This is the last of
+        the statistically significant trends for HA.</p>
+      <p>We want to end up with a data frame that has these predicted means in
+        one column, and labels for which term is represented in another. We can
+        do this by first making a data frame of the three trends:</p>
+      <p class="rcmd">data.frame(linear, quadratic, cubic) -&gt; trends</p>
+      <p>and then stacking this data frame:</p>
+      <p class="rcmd">stack(trends) -&gt; trends.stacked</p>
+      <p>We will be adding these numbers to a graph of means and error bars,
+        that used "Stage" as the x-axis variable, and "mean" as the y-axis
+        variable, so we should have those names in this data frame as well. The
+        column called "ind" should be renamed to "Trend" to make it clearer what
+        the column represents. To do this, we first need to add the stage
+        labels:</p>
+      <p class="rcmd">data.frame(levels(eels$Stage.ordered), trends.stacked)
+        -&gt; trends.stacked</p>
+      <p>Then rename the columns - the columns are the stages, the mean HA, and
+        the trend types, so use:</p>
+      <p class="rcmd">names(trends.stacked) &lt;- c("Stage","mean","Trend")</p>
+      <p>Now, to add the linear trend to the graph, you need to re-write your
+        ggplot() command to be:</p>
+      <p class="rcmd">ggplot(eels.sumstats, aes(x = Stage, y = HA)) +
+        geom_errorbar(aes(ymin = HA - ci, ymax = HA + ci), width = 0.1) +
+        geom_point(size = 4) + geom_line(trends.stacked, mapping = aes(x =
+        Stage, y = mean, color = Trend, group = Trend))</p>
+      <p>Note that you may have called your summary statistics object something
+        other than eels.sumstats, so change the name of the data set as needed.</p>
+      <p> You'll see that the trends are plotted as lines and the actual stage
+        means are plotted as large black dots. The linear trend was significant
+        because there is a tendency for HA to decrease from left to right on the
+        graph, but clearly the straight line is not doing a great job of
+        following the pattern. Adding a quadratic term greatly improves the
+        prediction, since it allows the line to increase to a peak at Stage 2
+        and then decline through stages 3 through 5 - this was a sufficient
+        improvement in the predictions that the quadratic term was also
+        significant. The cubic trend further accounted for the uneven pattern of
+        decline after the second stage, and allowed the prediction to get closer
+        to each of the means - this was enough additional improvement over the
+        quadratic predictions to be statistically significant as well. At that
+        point the predictions were close enough the to observed means that
+        adding the fourth order term didn't improve the fit enough to be
+        statistically significant, even though the fourth order term would allow
+        the predictions to hit the observed means perfectly.</p>
+      <h2>Assignment<br>
+      </h2>
+      <p>All done! Save, knit, and upload your Word file with all your output.</p>
     </div>
   </body>
 </html>
