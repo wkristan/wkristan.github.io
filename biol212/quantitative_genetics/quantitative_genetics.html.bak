@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+
+
+
+
+
+
+    
+    <title>Quantitative genetics</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="main.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script type="text/javascript" src="quant_gen.js"></script>
+  </head>
+  <body onload="drawCharts()">
+    <div id="header">
+      <h1 style="text-align: center;">Quantitative genetics - the Breeder's Equation</h1>
+    </div>
+    <div id="content">
+      <p>
+        Predicting response to selection for a quantitative trait is done with the Breeder's Equation, R = h<sup>2</sup>S.</p>
+<ul>
+<li>R is the amount of change in the mean value of a trait from one generation to another</li>
+<li>h<sup>2</sup> is the heritability of the trait</li>
+<li>S is the selection differential, which is the amount of difference between the mean of the parent population and the mean of the parents who actually breed</li></ul>
+      <p>The app below shows a heritability estimation based on a linear regression of offspring body lengths against parent body lengths - the slope of the line is the narrow-sense heritability of the trait (this is in the graph to the left).</p>
+<p>In the graph to the right of the heritability graph you'll see a curve representing the population of parents (blue curve) and a population of parents that are selected to breed (green curve) - the difference between their means is the selection differential, which you can set. By default it is set to 10. The range indicator above the curves labeled S shows the selection differential.</p>
+<p>At first the offspring curve is hidden, but if you slide the "Visibility of offspring curve" slider to the right it will appear - the response to selection is the difference between the parent population and the offspring population (indicated by the R range indicator above the curves).</p>
+<p>Changing the heritability or the selection differential changes the response. Note the following:</p>
+<ul>
+<li>If heritability is 0 there is no additive genetic variation for the trait, and all of the variation in body length is due to phenotypic plasticity</li>
+<ul>
+<li>The relationship between offspring and parent is a flat line, because offspring phenotypes can't be predicted from parent phenotypes</li>
+<li>There is no response to selection, no matter how big S is</li></ul>
+<li>Higher heritability (up to a maximum of 1) means that more of the trait value is due to additive genetic variation</li>
+<ul>
+<li>The relationship between offspring and parent is a sloped line - if offspring are identical to parents the slope of the line is 1</li>
+<li>The offspring mean is equal to the mean of the breeders if heritability is 1, because the offspring are identical to their parents</li></ul>
+<li>Larger selection differentials produce larger responses as long as the heritability is over 0</li></ul>
+		<div id="heritability_wrapper_div" style="float: left; border: solid black 4px; margin-right: 20px; margin-bottom: 20px; padding: 5px; width: 410px;">
+        <div id="chart_div" style="width: 400px; height: 400px;"></div>
+        <p>Enter a value for h<sup>2</sup> (between 0 and 1)</p>
+      <div class="tooltip"><p> h<sup>2</sup> = <span class="tooltiptext">Heritability</span></p></div><input id="h2_val" min="0" max="1" value="0.5" step="0.01" oninput="drawCharts()" style="width: 50px;" type="number">
+        <p> </p>
+      </div>
+      <div id="response_wrapper_div" style="float: left; border: solid black 4px; margin-right: 20px; margin-bottom: 20px; width: 655px; padding: 10px">
+        <div id="parent_div" style="width: 650px; height: 400px;"></div>
+        <p>Enter a value for the selection differential</p>
+        <div class="tooltip"><p>S<span class="tooltiptext">Difference between the mean of the population, 
+          and the mean of the individuals selected to breed</span></p></div> = 
+        <input id="s_val" min="0" max="40" value="10" step="1" oninput="drawResponseCharts()" style="width: 50px;" type="number">
+        <label for="vis"><p><i>Visibility of offspring curve</i></p></label>
+        <p><input id="vis" name="vis" min="0" max="1" value="0" step="0.01" oninput="drawResponseCharts()" type="range"></p>
+      </div>
+</div>
+</body></html>

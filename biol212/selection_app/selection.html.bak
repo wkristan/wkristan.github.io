@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+
+
+
+
+
+
+
+
+    
+    <title>Effects of selection on allele and genotype frequencies</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+  <script type="text/javascript" src="selection.js"></script>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+  </head>
+  <body onload="runModel()">
+    <div id="header">
+      <h1>Effects on gene frequencies of natural selection on phenotypes</h1>
+    </div>
+    <div id="content">
+      <p>
+        This app allows you to explore how natural selection on phenotypes affects the frequencies of alleles and genotypes in populations.
+      </p>
+      <div id="genotypes_wrapper" style="float:left; width: 600px">
+      <div id="genotype_table_settings_div" style="float:left; width: 595px; margin-bottom: 20px">
+        <h2>
+          Genotypes
+        </h2>
+        <table class="tableLarge">
+          <tbody>
+            <tr>
+              <th><br></th>
+              <th><div class="tooltip">RR<span class="tooltiptext">R homozygotes</span></div></th>
+              <th><div class="tooltip">RS<span class="tooltiptext">Heterozygotes</span></div></th>
+              <th><div class="tooltip">SS<span class="tooltiptext">S homozygotes</span></div></th>
+            </tr>
+            <tr>
+              <td>
+<div class="tooltip">2. Initial parent genotype frequencies<span class="tooltiptext">Generation 0 - parent generation at birth, before selection, calculated from initial allele frequencies using Hardy-Weinberg.</span></div></td>
+              <td>
+<div class="tooltip"><span class="gt_init" name="rr" id="rr_init"></span><span class="tooltiptext">p<sup>2</sup></span></div></td>
+              <td>
+<div class="tooltip"><span class="gt_init" name="rs" id="rs_init"></span><span class="tooltiptext">2pq</span></div></td>
+							<td>
+<div class="tooltip"><span class="gt_init" name="ss" id="ss_init"></span><span class="tooltiptext">q<sup>2</sup></span></div></td>
+            </tr>
+            <tr>
+              <td>
+<div class="tooltip">3. Relative fitnesses (w<sub>i</sub>)<span class="tooltiptext">Relative fitnesses for the genotypes</span></div></td>
+							<td>
+<div class="tooltip"><input class="gt_fitness" name="rr" id="rr_fitness" value="1" step="0.01" min="0" max="1" style="width:50px" oninput="runModel()" type="number"><span class="tooltiptext">Relative fitness of RR</span></div></td>
+							<td>
+<div class="tooltip"><input class="gt_fitness" name="rs" id="rs_fitness" value="1" step="0.01" min="0" max="1" style="width:50px" oninput="runModel()" type="number"><span class="tooltiptext">Relative fitness of RS</span></div></td>
+							<td>
+<div class="tooltip"><input class="gt_fitness" name="ss" id="ss_fitness" value="0.8" step="0.01" min="0" max="1" style="width:50px" oninput="runModel()" type="number"><span class="tooltiptext">Relative fitness of SS</span></div></td>
+            </tr>
+            <tr>
+              <td>
+<div class="tooltip">4. Freq. x fitness<span class="tooltiptext">Genotype frequencies multiplied by relative fitnesses</span></div></td>
+							<td><span class="fxf" name="rr" id="fxf_rr"></span><br></td>
+							<td><span class="fxf" name="rs" id="fxf_rs"></span><br></td>
+							<td><span class="fxf" name="ss" id="fxf_ss"></span><br></td>
+            </tr>
+						<tr>
+              <td>
+<div class="tooltip">5. Average population fitness (w̄):<span class="tooltiptext">Weighted average fitness - sum of the Freq. x fitness values</span></div></td>
+              <td colspan="3"><span id="mean_fit">0.95</span></td>
+            </tr>
+            <tr>
+              <td>
+<div class="tooltip">6. Genotype frequencies of breeders:<span class="tooltiptext">Genotype frequencies after selection, of the actual breeders. Calculated as Freq. x fitness divided by w̄</span></div></td>
+							<td><span class="rel_cont" name="rr" id="rel_cont_rr"></span><br></td>
+							<td><span class="rel_cont" name="rs" id="rel_cont_rs"></span><br></td>
+              <td><span class="rel_cont" name="ss" id="rel_cont_ss"></span>
+<div class="tooltip">↘<span class="tooltiptext">Used to calculate allele frequencies of gametes.</span></div></td>
+            </tr>
+            <tr>
+<td><br></td>
+<td><br></td>
+<td><br></td>
+<td><br></td></tr>
+<tr>
+  <td>
+<div class="tooltip">8. Offspring genotype frequencies:<span class="tooltiptext">Generation 1 - offspring generation at birth, using allele frequencies of gametes, Hardy-Weinberg formulas</span></div></td>
+							<td>
+<div class="tooltip"><span class="gt_offspring" name="rr" id="rr_offspring"></span><span class="tooltiptext">Gamete p<sup>2</sup></span></div></td>
+							<td>
+<div class="tooltip"><span class="gt_offspring" name="rs" id="rs_offspring"></span><span class="tooltiptext">Gamete 2pq</span></div></td>
+							<td>
+<div class="tooltip"><span class="gt_offspring" name="ss" id="ss_offspring"></span><span class="tooltiptext">Gamete q<sup>2</sup></span></div></td>
+            </tr>
+					</tbody>
+				</table>
+      </div>
+                <p>
+          Each generation serves as the parents for the next generation.
+        </p>
+      <div id="genotype_table_div" style="height: 400px; width: 400px; overflow-y: auto; float: left">
+        
+      </div>
+    </div>
+
+      <div id="allele_table_wrapper" style="width: 500px; float: left">
+      <div id="allele_table_settings_div" style="float:left; width: 595px; margin-bottom: 20px">
+        <h2>
+          Alleles
+        </h2>
+        <table class="tableLarge">
+          <tbody>
+            <tr>
+              <th><br></th>
+              <th><div class="tooltip">p<span class="tooltiptext">Frequency of the R allele</span></div></th>
+              <th><div class="tooltip">q<span class="tooltiptext">Frequency of the S allele</span></div></th>
+            </tr>
+            <tr>
+              <td>
+<div class="tooltip">←&nbsp;<span class="tooltiptext">Used to calculate initial parent genotype frequencies</span></div>
+<div class="tooltip">1. Initial allele frequencies<span class="tooltiptext">Initial frequencies of alleles for parents at their birth</span></div></td>
+							<td><input class="allele_init" name="p" id="p_init" value="0.5" step="0.01" min="0" max="1" style="width:50px" oninput="runModel()" type="number"></td>
+              <td>
+<div class="tooltip"><span id="q_init"></span><span class="tooltiptext">Initial frequency of S allele (equal to 1-p)</span></div></td>
+            </tr>
+            <tr>
+<td><br></td>
+<td><br></td>
+<td><br></td></tr>
+<tr>
+<td><br></td>
+<td><br></td>
+<td><br></td></tr>
+<tr>
+<td><br></td>
+<td><br></td>
+<td><br></td></tr>
+<tr>
+<td><br></td>
+<td><br></td>
+<td><br></td></tr>
+<tr>
+  <td>
+<div class="tooltip">↙<span class="tooltiptext">Used to calculate offspring genotype frequencies</span></div>
+<div class="tooltip">7. Allele frequencies of gametes<span class="tooltiptext">Allele frequencies of gametes produced by breeders, after selection</span></div></td>
+              <td>
+<div class="tooltip"><span class="allele_gametes" name="p" id="p_gametes"></span><span class="tooltiptext">Frequency of RR + Frequency of RS/2</span></div></td>
+              <td>
+<div class="tooltip"><span class="allele_gametes" name="q" id="q_gametes"></span><span class="tooltiptext">Frequency of SS + Frequency of RS/2</span></div></td>
+						</tr>
+					</tbody>
+				</table>
+        <p>
+          Number of generations: <input id="generations" value="1000" min="1" oninput="runModel()" type="number">
+        </p>
+        <br><br>
+      </div>
+
+      <div id="allele_table_div" style="height: 400px; width: 400px; overflow-y: auto; float: left">
+      </div>
+    </div>
+      <div id="genotype_graph_div" style="width: 500px; float: left">
+        
+      </div>
+      <div id="alleles_graph_div" style="width: 500px; float: left">
+        
+      </div>
+    </div>
+</body></html>

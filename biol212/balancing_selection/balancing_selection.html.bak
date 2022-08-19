@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <title>Balancing selection</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+  <script type="text/javascript" src="balancing_selection.js"></script>
+  <script type="text/javascript" src="tabs.js"></script>
+  <link href="style.css" rel="stylesheet" type="text/css">
+  <link href="tab_style.css" rel="stylesheet" type="text/css">
+</head>
+  <body onload="runModel()">
+  <div id="header">
+      <h1>Frequency-dependent selection</h1>
+  </div>
+  <div id="content">
+  	<p>This app allows you to explore how balancing selection maintains genetic diversity in populations, using the example of frequency-dependent selection.</p>
+    <div id="freq_dep_intro" style="width:100%; clear:both">
+			<div id="fit_freqdep_graph" style="width: 600px; float: left">
+    	</div>
+    	<p>The graph on the left shows a case of frequency-dependent fitness of phenotypes. The frequency of the dominant phenotype is shown on the x-axis, and the frequency of the recessive phenotype is one minus the dominant - thus, when the dominant is rare (near zero, at 0.01 for example) the recessive is common (at 1 - 0.01 = 0.99). Thus, you can read the frequency of the dominant phenotype from the x-axis, and calculate the recessive frequency by subracting the dominant frequency from 1.</p>
+    	<p>The important point to note is that fitness (on the y-axis) is high when either phenotype is rare, and fitness declines when it becomes common. In the example we saw in lecture the fitness of the yellow and purple morphs of flowers, insects were attracted to yellow flowers particularly strongly when the yellow flowers were rare - you can think of these alleles as being flower color alleles (R for purple flowers, S for yellow flowers).</p>
+    	<p>We expect alleles to spread when the phenotypes they produce have the highest relative frequency, and no change is expected when the fitnesses are the same. If you hover over the graph you'll see that they are the same at a frequency of 0.5 for the dominant phenotype in this example - this is where the lines cross on the graph. </p>
+			<p>We expect then that the phenotypes will arrive at frequencies that give them equal fitness. We can see if that is the case with the model below. This model is much like our model of natural selection, but now the fitness of a phenotype depends on its frequency - we won't be able to set the fitnesses to values of our choosing, but they are calculated based on the frequencies of the phenotypes, using the curves in this first graph. Note that since this is an example for a gene that has a fully dominant allele the frequencies of RR and RS are added together as the frequencies of the dominant phenotype - consequently, the fitnesses are the same for RR and RS. Even though p and q start at 0.5, the initial frequencies of RR and RS are 0.25 and 0.5, which sum to 0.75 for the frequency of the phenotype; that is, even though the allele frequencies are the same the phenotype frequencies are not, and it is the phenotypes that are selected.</p>
+    </div>
+    <br style="clear:both">
+    <p>The model is the same as the selection model we used previously, except that the fitness of the phenotypes depends on their frequency in the population.</p>
+    <div id="genotypes_wrapper" style="float:left; width: 450px">
+    	<div id="genotype_table_settings_div" style="float:left; width: 445px">
+        <h2>Genotypes</h2>
+        <table class="tableLarge">
+          <tbody>
+            <tr>
+              <th><br></th>
+              <th><div class="tooltip">PP<span class="tooltiptext">P homozygotes (purple)</span></div></th>
+              <th><div class="tooltip">PY<span class="tooltiptext">Heterozygotes (purple)</span></div></th>
+              <th><div class="tooltip">YY<span class="tooltiptext">Y homozygotes (yellow)</span></div></th>
+            </tr>
+            <tr>
+              <td>
+								<div class="tooltip">2. Parent g.f.<span class="tooltiptext">Parent genotypes at birth.</span></div></td>
+              <td>
+								<div class="tooltip"><span class="gt_init" name="rr" id="rr_init"></span><span class="tooltiptext">p<sup>2</sup></span></div></td>
+              <td>
+								<div class="tooltip"><span class="gt_init" name="rs" id="rs_init"></span><span class="tooltiptext">2pq</span></div></td>
+							<td>
+								<div class="tooltip"><span class="gt_init" name="ss" id="ss_init"></span><span class="tooltiptext">q<sup>2</sup></span></div></td>
+            </tr>
+            <tr>
+              <td>
+								<div class="tooltip">3. Rel. fitness (w<sub>i</sub>)<span class="tooltiptext">Relative fitnesses for the phenotypes</span></div></td>
+							<td>
+								<div class="tooltip"><span id="fit_rr"></span><span class="tooltiptext">Relative fitness of PP (purple)</span></div></td>
+							<td>
+								<div class="tooltip"><span id="fit_rs"></span><span class="tooltiptext">Relative fitness of PY (purple)</span></div></td>
+							<td>
+								<div class="tooltip"><span id="fit_ss"></span><span class="tooltiptext">Relative fitness of YY (yellow)</span></div></td>
+            </tr>
+            <tr>
+              <td>
+								<div class="tooltip">4. Freq. x fitness<span class="tooltiptext">Genotype frequencies multiplied by relative fitnesses</span></div></td>
+							<td><span class="fxf" name="rr" id="fxf_rr"></span><br></td>
+							<td><span class="fxf" name="rs" id="fxf_rs"></span><br></td>
+							<td><span class="fxf" name="ss" id="fxf_ss"></span><br></td>
+            </tr>
+						<tr>
+              <td>
+								<div class="tooltip">5. Pop. fitness (w̄):<span class="tooltiptext">Population average fitness</span></div></td>
+              <td colspan="3"><span id="mean_fit"></span></td>
+            </tr>
+            <tr>
+              <td>
+								<div class="tooltip">6. Breeder g.f.:<span class="tooltiptext">Genotype frequencies of breeders</span></div></td>
+							<td><span class="rel_cont" name="rr" id="rel_cont_rr"></span><br></td>
+							<td><span class="rel_cont" name="rs" id="rel_cont_rs"></span><br></td>
+              <td><span class="rel_cont" name="ss" id="rel_cont_ss"></span>
+								<div class="tooltip">↘<span class="tooltiptext">Used to calculate allele frequencies of gametes.</span></div></td>
+            </tr>
+            <tr>
+							<td><br></td>
+							<td><br></td>
+							<td><br></td>
+							<td><br></td></tr>
+						<tr>
+  						<td>
+								<div class="tooltip">8. Offspring geno. freq:<span class="tooltiptext">Offspring genotype frequencies at birth</span></div></td>
+							<td>
+								<div class="tooltip"><span class="gt_offspring" name="rr" id="rr_offspring"></span><span class="tooltiptext">Gamete p<sup>2</sup></span></div></td>
+							<td>
+								<div class="tooltip"><span class="gt_offspring" name="rs" id="rs_offspring"></span><span class="tooltiptext">Gamete 2pq</span></div></td>
+							<td>
+								<div class="tooltip"><span class="gt_offspring" name="ss" id="ss_offspring"></span><span class="tooltiptext">Gamete q<sup>2</sup></span></div></td>
+            </tr>
+					</tbody>
+				</table>
+      </div>
+
+    </div>
+      <div id="allele_table_wrapper" style="width: 330px; float: left">
+      <div id="allele_table_settings_div" style="float:left; width: 325px">
+        <h2>
+          Alleles
+        </h2>
+        <table class="tableLarge">
+          <tbody>
+            <tr>
+              <th><br></th>
+              <th><div class="tooltip">p<span class="tooltiptext">Frequency of the P allele</span></div></th>
+              <th><div class="tooltip">q<span class="tooltiptext">Frequency of the Y allele</span></div></th>
+            </tr>
+            <tr>
+              <td>
+								<div class="tooltip">←&nbsp;<span class="tooltiptext">Used to calculate initial parent genotype frequencies</span></div>
+								<div class="tooltip">1. AF Initial.<span class="tooltiptext">Initial frequencies of alleles for parents at their birth</span></div></td>
+							<td><input class="allele_init" name="p" id="p_init" value="0.5" step="0.01" min="0" max="1" style="width:50px" oninput="runModel()" type="number"></td>
+              <td>
+								<div class="tooltip"><span id="q_init"></span><span class="tooltiptext">Initial frequency of Y allele (equal to 1-p)</span></div></td>
+            </tr>
+            <tr>
+							<td><br></td>
+							<td><br></td>
+							<td><br></td>
+            </tr>
+						<tr>
+							<td><br></td>
+							<td><br></td>
+							<td><br></td>
+            </tr>
+						<tr>
+							<td><br></td>
+							<td><br></td>
+							<td><br></td>
+            </tr>
+						<tr>
+							<td><br></td>
+							<td><br></td>
+							<td><br></td>
+            </tr>
+						<tr>
+  						<td>
+								<div class="tooltip">↙<span class="tooltiptext">Used to calculate offspring genotype frequencies</span></div>
+								<div class="tooltip">7. AF gametes<span class="tooltiptext">Allele frequencies of gametes produced by breeders, after selection</span></div></td>
+              <td>
+								<div class="tooltip"><span class="allele_gametes" name="p" id="p_gametes"></span><span class="tooltiptext">Frequency of PP + Frequency of PY/2</span></div></td>
+              <td>
+								<div class="tooltip"><span class="allele_gametes" name="q" id="q_gametes"></span><span class="tooltiptext">Frequency of YY + Frequency of PY/2</span></div></td>
+						</tr>
+					</tbody>
+				</table>
+        <p>
+          Generations: <input id="generations" value="10" min="1" oninput="runModel()" type="number">
+        </p>
+        <br><br>
+      </div>
+    </div>
+      <div class="tab"> 
+        <button id="fitness" class="tablinks" onclick="openApp(this, 'fitness_div')">
+          Fitness </button> 
+        <button id="genotype" class="tablinks" onclick="openApp(this, 'genotype_div')"> Genotypes </button>
+        <button id="allele" class="tablinks" onclick="openApp(this, 'allele_div')"> Alleles </button>
+
+      </div>
+     <div id="fitness_div" class="tabcontent">
+       <p>Selection causes the frequencies to change until the fitness of the phenotypes is equal.</p>
+      	<div id="fitness_table_div" style="height: 400px; width: 350px; overflow-y: auto; float:left">
+      	</div>
+      	<div id="fit_graph_div" style="width: 500px; float: left">
+        
+      	</div>
+    </div>
+
+      <div id="genotype_div" class="tabcontent">
+      	<p>The genotype frequencies respond to selection on the phenotypes.</p>
+      	<div id="genotype_table_div" style="height: 400px; width: 350px; overflow-y: auto; float: left">
+        </div>
+      <div id="genotype_graph_div" style="width: 500px; float: left">
+     	</div>
+      </div>
+      
+      <div id="allele_div" class="tabcontent">
+      	<p>Allele frequencies change as the genotype frequencies change, in response to selection on phenotypes</p>
+      	<div id="allele_table_div" style="height: 400px; width: 350px; overflow-y: auto; float: left">
+      	</div>
+      	<div id="alleles_graph_div" style="width: 500px; float: left">
+      	</div>
+     </div>
+
+    </div>
+</body></html>
