@@ -1,0 +1,932 @@
+---
+title: "Supplement for Tovar et al."
+author: "Supplement compiled by Bill Kristan from work by all authors"
+date: "2023-04-21"
+output:
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 3)
+library(tidyverse)
+library(Rmisc)
+library(readxl)
+library(emmeans)
+library(ggplot2)
+library(car)
+library(ggpubr)
+library(scales)
+library(ggpmisc)
+library(yacca)
+library(CCA)
+library(scales)
+
+```
+
+This supplement accompanies Tovar et al. "Like mother like daughter? Phenotypic plasticity, environmental covariation, and heritability of size in a parthenogentic wasp". Sections are organized by figure and table number.
+
+## Figure 3
+
+Box plots of host morphological variables, and significance tests by species and size.
+
+```{r import.host.data}
+
+host.data <-read_excel("tovar_etal.xlsx",sheet="host_size",range = "A1:J46" )
+host.data.mass <- read_excel("tovar_etal.xlsx",sheet="host_size",range = "L1:N47")
+
+```
+
+H. convergens and C. maculata are both smaller hosts, and are placed close together for graphing.
+
+```{r host.sp.factor}
+
+host.data$HostSpecies <- factor(host.data$HostSpecies, levels = c("H. convergens","C. maculata","C. septempunctata"))
+host.data$HostSize <- factor(host.data$HostSize, levels = c("Small","Large"))
+
+host.data.mass$HostSpecies <- factor(host.data.mass$HostSpecies, levels = c("H. convergens", "C. maculata","C. septempunctata"))
+host.data.mass$HostSize <- factor(host.data.mass$HostSize, levels = c("Small","Large"))
+
+```
+
+ANOVAs of host morphological variables by species, with Tukey HSD post-hocs for significant models. Tests of differences between small (H. convergens and C. maculata) and large (C. septempunctata) gruopings are also conducted, but do not require post-hocs:
+
+```{r anova.and.posthocs}
+
+grps <- data.frame(t(combn(levels(factor(host.data$HostSpecies)), 2)))
+names(grps) <- c("group1","group2")
+
+lm(BodyLengthD ~ HostSpecies, data = host.data) -> bld.lm
+anova(bld.lm)
+cat('\n')
+emmeans(bld.lm, "tukey" ~ HostSpecies) -> bld.emm; bld.emm
+data.frame(grps, data.frame(bld.emm$contrasts)) -> bld.ggp
+cat('\n')
+anova(lm(BodyLengthD ~ HostSize, data = host.data))
+
+lm(BodyWidthD ~ HostSpecies, data = host.data) -> bwd.lm
+anova(bwd.lm)
+cat('\n')
+emmeans(bwd.lm, "tukey" ~ HostSpecies) -> bwd.emm; bwd.emm
+data.frame(grps, data.frame(bwd.emm$contrasts)) -> bwd.ggp
+cat('\n')
+anova(lm(BodyWidthD ~ HostSize, data = host.data))
+
+lm(ElytronChordLengthL ~ HostSpecies, data = host.data) -> ecll.lm
+anova(ecll.lm)
+cat('\n')
+emmeans(ecll.lm, "tukey" ~ HostSpecies) -> ecll.emm; ecll.emm
+data.frame(grps, data.frame(ecll.emm$contrasts)) -> ecll.ggp
+cat('\n')
+anova(lm(ElytronChordLengthL ~ HostSize, data = host.data))
+
+lm(BodyDepthL ~ HostSpecies, data = host.data) -> bdl.lm
+anova(bdl.lm)
+cat('\n')
+emmeans(bdl.lm, "tukey" ~ HostSpecies) -> bdl.emm; bdl.emm
+data.frame(grps, data.frame(bdl.emm$contrasts)) -> bdl.ggp
+cat('\n')
+anova(lm(BodyDepthL ~ HostSize, data = host.data))
+
+lm(PronotumLengthL ~ HostSpecies, data = host.data) -> pll.lm
+anova(pll.lm)
+cat('\n')
+emmeans(pll.lm, "tukey" ~ HostSpecies) -> pll.emm; pll.emm
+data.frame(grps, data.frame(pll.emm$contrasts)) -> pll.ggp
+cat('\n')
+anova(lm(PronotumLengthL ~ HostSize, data = host.data))
+
+lm(PronotumWidthV ~ HostSpecies, data = host.data) -> pwv.lm
+anova(pwv.lm)
+cat('\n')
+emmeans(pwv.lm, "tukey" ~ HostSpecies) -> pwv.emm; pwv.emm
+data.frame(grps, data.frame(pwv.emm$contrasts)) -> pwv.ggp
+cat('\n')
+anova(lm(PronotumWidthV ~ HostSize, data = host.data))
+
+lm(AbdominalLengthV ~ HostSpecies, data = host.data) -> alv.lm
+anova(alv.lm)
+cat('\n')
+emmeans(alv.lm, "tukey" ~ HostSpecies) -> alv.emm
+alv.emm
+data.frame(grps, data.frame(alv.emm$contrasts)) -> alv.ggp
+cat('\n')
+anova(lm(AbdominalLengthV ~ HostSize, data = host.data))
+
+lm(AbdominalWidthV ~ HostSpecies, data = host.data) -> awv.lm
+anova(awv.lm)
+cat('\n')
+emmeans(awv.lm, "tukey" ~ HostSpecies) -> awv.emm
+awv.emm
+data.frame(grps, data.frame(awv.emm$contrasts)) -> awv.ggp
+cat('\n')
+anova(lm(AbdominalWidthV ~ HostSize, data = host.data))
+
+lm(Mass ~ HostSpecies, data = host.data.mass) -> mass.lm
+anova(mass.lm)
+cat('\n')
+emmeans(mass.lm, "tukey" ~ HostSpecies) -> mass.emm
+mass.emm
+data.frame(grps, data.frame(mass.emm$contrasts)) -> mass.ggp
+cat('\n')
+anova(lm(Mass ~ HostSize, data = host.data.mass))
+
+```
+
+Graph the boxplots:
+
+```{r boxplots}
+size.colors <- c("#DDCC77","#CC6677")
+size.labels <- c("Small","Large")
+
+ggplot(host.data, aes(x=HostSpecies, y= BodyLengthD))+
+  geom_boxplot(aes(fill = HostSize))+
+  labs(x="Host Species", y="Body Length (mm)")+
+  ggtitle("Host Body Lengths")+
+  theme_classic()+
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size**") + 
+  stat_pvalue_manual(bld.ggp, y.position = 8, step.increase = 0.1, label = "{scales::pvalue(p.value)}") + 
+  theme(axis.text.x = element_text(face = "italic"))
+
+ggplot(host.data, aes(x=HostSpecies, y= BodyWidthD))+
+  geom_boxplot(aes(fill=HostSize))+
+  labs(x="Host Species", y="Body Width (mm)")+
+  ggtitle("Host Body Widths")+
+  theme_classic()+
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size***") +
+  stat_pvalue_manual(bwd.ggp, y.position = 6, step.increase = 0.1, label = "{scales::pvalue(p.value)}") + 
+  theme(axis.text.x = element_text(face = "italic"))
+
+ggplot(host.data, aes(x=HostSpecies, y= ElytronChordLengthL)) + 
+  geom_boxplot(aes(fill=HostSize)) +
+  labs(x="Host Species", y="Elytron Chord Length (mm)") +
+  ggtitle("Host Elytron Chord Lengths") +
+  theme_classic() +
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size***")  + stat_pvalue_manual(ecll.ggp, y.position = 7, step.increase = 0.1, label = "{scales::pvalue(p.value)}") + 
+  theme(axis.text.x = element_text(face = "italic"))
+
+ggplot(host.data, aes(x=HostSpecies, y= BodyDepthL)) + 
+  geom_boxplot(aes(fill=HostSize)) +
+  labs(x="Host Species", y="Body Depth (mm)") +
+  ggtitle("Host Body Depths") + 
+  theme_classic() +
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size***")  +
+  stat_pvalue_manual(bdl.ggp, y.position = 3.2, step.increase = 0.1, label = "{scales::pvalue(p.value)}") + 
+  theme(axis.text.x = element_text(face = "italic"))
+
+ggplot(host.data,aes(x=HostSpecies, y= PronotumLengthL)) +
+  geom_boxplot(aes(fill = HostSize)) +
+  labs(x="Host Species", y="Pronotum Length (mm)") + 
+  ggtitle("Host Pronotum Lengths") + 
+  theme_classic() +
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size***")  +
+  stat_pvalue_manual(pll.ggp, y.position = 2.5, step.increase = 0.1, label = "{scales::pvalue(p.value)}") + 
+  theme(axis.text.x = element_text(face = "italic"))
+
+ggplot(host.data,aes(x=HostSpecies, y= PronotumWidthV)) +
+  geom_boxplot(aes(fill = HostSize)) +
+  labs(x="Host Species", y="Pronotum Width (mm)") +
+  ggtitle("Host Pronotum Widths") + 
+  theme_classic() +
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size***")  +
+  stat_pvalue_manual(pwv.ggp, y.position = 3.7, step.increase = 0.1, label = "{scales::pvalue(p.value)}") + 
+  theme(axis.text.x = element_text(face = "italic"))
+
+ggplot(host.data,aes(x=HostSpecies, y= AbdominalLengthV)) +
+  geom_boxplot(aes(fill = HostSize)) +
+  labs(x="Host Species", y="Abdominal Length (mm)") +
+  ggtitle("Host Abdominal Lengths") + 
+  theme_classic() +
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size***")  +
+  stat_pvalue_manual(alv.ggp, y.position = 5.8, step.increase = 0.1, label = "{scales::pvalue(p.value)}") + 
+  theme(axis.text.x = element_text(face = "italic"))
+
+ggplot(host.data,aes(x=HostSpecies, y= AbdominalWidthV)) +
+  geom_boxplot(aes(fill = HostSize)) +
+  labs(x="Host Species", y="Abdominal Width (mm)") +
+  ggtitle("Host Abdominal Widths") +
+  theme_classic() +
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size***")  +
+  stat_pvalue_manual(awv.ggp, y.position = 5.1, step.increase = 0.1, label = "{scales::pvalue(p.value)}") + 
+  theme(axis.text.x = element_text(face = "italic"))
+
+ggplot(host.data.mass,aes(x=HostSpecies, y= Mass)) +
+  geom_boxplot(aes(fill = HostSize)) +
+  labs(x="Host Species", y="Mass (mg)") +
+  ggtitle("Host Mass") +
+  theme_classic() +
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size***")  +
+  stat_pvalue_manual(mass.ggp, y.position = 29, step.increase = 0.1, label = "{scales::pvalue(p.value)}") + 
+  theme(axis.text.x = element_text(face = "italic"))
+
+```
+
+## Figure 4
+
+Boxplots of D. coccinellae that egressed from small or large hosts.
+
+```{r import.d.coccinellae.data}
+
+morphoNAR <- read_excel("tovar_etal.xlsx",sheet="wasp_v_host_type", range = "A1:H93")
+morphoNAR$HostSize <- factor(morphoNAR$HostSize, levels = c("Small","Large"))
+
+morphoNARmass <- read_excel("tovar_etal.xlsx",sheet="wasp_v_host_type", range = "J1:L76")
+morphoNARmass$HostSize <- factor(morphoNARmass$HostSize, levels = c("Small","Large"))
+
+```
+
+Boxplots of wasp morphological variables by host size:
+
+``` {r boxplot_WaspNAR}
+
+size.colors <- c("#DDCC77","#CC6677")
+size.labels <- c("Small","Large")
+
+ggplot(morphoNAR, aes(x = HostSize, y = WingLength))+
+  geom_boxplot(aes(fill = HostSize))+
+  labs(x="Host Size", y="Wing Length (mm)")+
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size") +
+  stat_anova_test(label = "p = {p.format}", label.x.npc = 0.4) +
+  theme_classic()
+
+ggplot(morphoNAR, aes(x = HostSize, y = WThoraxLength))+
+  geom_boxplot(aes(fill = HostSize))+
+  labs(x="Host Size", y="Thorax Length (mm)")+
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size") +
+  stat_anova_test(label = "p = {p.format}", label.x.npc = 0.4) +
+  theme_classic()
+
+ggplot(morphoNAR, aes(x = HostSize, y = WThoraxDepth))+
+  geom_boxplot(aes(fill = HostSize))+
+  labs(x="Host Size", y="Thorax Depth (mm)")+
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size") +
+  stat_anova_test(label = "p = {p.format}", label.x.npc = 0.4) +
+  theme_classic()
+
+ggplot(morphoNAR, aes(x = HostSize, y = WAbdomenLength))+
+  geom_boxplot(aes(fill = HostSize))+
+  labs(x="Host Size", y="Abdomen Length (mm)")+
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size") +
+  stat_anova_test(label = "p = {p.format}", label.x.npc = 0.4) +
+  theme_classic()
+
+ggplot(morphoNAR, aes(x = HostSize, y = WHeadDepths))+
+  geom_boxplot(aes(fill = HostSize))+
+  labs(x="Host Size", y="Head Depth (mm)")+
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size") +
+  stat_anova_test(label = "p = {p.format}", label.x.npc = 0.4) +
+  theme_classic()
+
+ggplot(morphoNAR, aes(x = HostSize, y = WHeadLengths))+
+  geom_boxplot(aes(fill = HostSize))+
+  labs(x="Host Size", y="Head Length (mm)")+
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size") +
+  stat_anova_test(label = "p = {p.format}", label.x.npc = 0.4) +
+  theme_classic()
+
+ggplot(morphoNARmass, aes(x = HostSize, y = WMass))+
+  geom_boxplot(aes(fill = HostSize))+
+  labs(x="Host Size", y="Mass (g)")+
+  scale_fill_manual(values=size.colors,labels=size.labels, name="Host Size") +
+  stat_anova_test(label = "p = {p.format}", label.x.npc = 0.4) +
+  theme_classic()
+
+```
+
+## Figure 5
+
+CCA of wasp and host morphology
+
+```{r import.cca.wasp.host.data}
+
+read_excel("tovar_etal.xlsx", sheet = "total_nomissing") -> wasp.host.morph
+
+```
+
+Lists of variables:
+
+```{r cca.wasp.host.variables}
+
+beetle.var <- c("BodyLengthD", "BodyWidthD", "ElytronChordLengthL", "BodyDepthL", "PronotumLengthL", "PronotumWidthV", "AbdominalLengthV", "AbdominalWidthV")
+
+wasp.var <- c("WingLength", "WThoraxLength", "WThoraxDepth", "WabdomenLength", "WHeadDepths", "WHeadLengths")
+
+cc(wasp.host.morph[beetle.var],wasp.host.morph[wasp.var]) -> wasp_beetle.cc
+
+cat("Canonical correlations\n")
+wasp_beetle.cc$cor
+
+```
+
+Put the scores into a data frame, and loadings into another:
+
+```{r cca.scores.and.loadings}
+
+data.frame(wasp_beetle.cc$scores$xscores) -> beetle.scores
+data.frame(wasp_beetle.cc$scores$yscores) -> wasp.scores
+
+names(beetle.scores) <- paste("CCA", seq(1:6), sep = "")
+names(wasp.scores) <- paste("CCA", seq(1:6), sep = "")
+
+beetle.scores$Group <- "Host"
+wasp.scores$Group <- "Wasp"
+
+rbind(beetle.scores, wasp.scores) -> ptscores
+
+data.frame(5*wasp_beetle.cc$scores$corr.X.xscores) -> beetle.loadings
+data.frame(5*wasp_beetle.cc$scores$corr.Y.yscores) -> wasp.loadings
+
+names(beetle.loadings) <- paste("CCA", seq(1:6), sep = "")
+names(wasp.loadings) <- paste("CCA", seq(1:6), sep = "")
+
+beetle.loadings$Group <- "Host"
+wasp.loadings$Group <- "Wasp"
+
+rbind(beetle.loadings, wasp.loadings) -> loadings
+c("BL","BW","ECL","BD","PL","PW","AL","AW","WL","TL","TD","AL","HD","HL") -> loadings$Var.abb
+
+```
+
+Make the biplot
+
+```{r plot.fig9}
+
+
+ggplot(ptscores, aes(x = CCA1, y = CCA2, color = Group)) + geom_hline(yintercept = 0, color = "gray") + geom_vline(xintercept = 0, color = "gray") + geom_point() +     geom_text(data = loadings, aes(label = Var.abb), show.legend = F) + theme_classic() + scale_color_manual(values = c("red","black")) + theme(legend.title = element_blank())
+
+
+```
+
+## Figure 6
+
+Import the data:
+
+```{r import.reg.cca.data}
+
+read_excel("tovar_etal.xlsx", sheet="regression_cca") -> wasp.data
+
+wasp.data$type <- factor(wasp.data$type, levels=c("Unilineal","Multilineal"))
+
+```
+
+Regressions - use sum contrasts so that the slope coefficient for the main effect of the parent's morphological variable is the overall regression with uni- and multilineal groups combined, and the interaction coefficients for uni- and multilineal test for differences from overall. If the interaction is significant then multi- and unilineal are different.
+
+Given that the linear predictor and categorical predictor is usually confounded to a degree in analysis of covariance models we ran sets of two models with the linear and categorical variables in reverse orders, and then tested each for significance with Type I (sequential) sums of squares. Large changes in significance for the parent morphological variable indicate that the relationship between parent and offspring morphology is confounded with the type of cross.
+
+```{r regressions}
+
+parent.offspring.lms <- list()
+
+parent.offspring.lms$wl$order1 <- lm(o.wl ~ p.wl*type, data = wasp.data, contrasts = list(type = contr.sum))
+parent.offspring.lms$wl$order2<- lm(o.wl ~ p.wl*type, data = wasp.data, contrasts = list(type = contr.sum))
+
+parent.offspring.lms$tl$order1 <- lm(o.tl ~ p.tl*type, data = wasp.data, contrasts = list(type = contr.sum))
+parent.offspring.lms$tl$order2 <-lm(o.tl ~ type*p.tl, data = wasp.data, contrasts = list(type = contr.sum))
+
+parent.offspring.lms$td$order1 <- lm(o.td ~ p.td*type, data = wasp.data, contrasts = list(type = contr.sum))
+parent.offspring.lms$td$order2 <- lm(o.td ~ type*p.td, data = wasp.data, contrasts = list(type = contr.sum))
+
+parent.offspring.lms$al$order1 <- lm(o.al ~ p.al*type, data = wasp.data, contrasts = list(type = contr.sum))
+parent.offspring.lms$al$order2 <- lm(o.al ~ type*p.al, data = wasp.data, contrasts = list(type = contr.sum))
+
+parent.offspring.lms$hd$order1 <- lm(o.hd ~ p.hd*type, data = wasp.data, contrasts = list(type = contr.sum))
+parent.offspring.lms$hd$order2 <- lm(o.hd ~ type*p.hd, data = wasp.data, contrasts = list(type = contr.sum))
+
+parent.offspring.lms$hl$order1 <- lm(o.hl ~ p.hl*type, data = wasp.data, contrasts = list(type = contr.sum))
+parent.offspring.lms$hl$order2 <- lm(o.hl ~ type*p.hl, data = wasp.data, contrasts = list(type = contr.sum))
+
+parent.offspring.lms$mass$order1 <- lm(o.m ~ p.m*type, data = wasp.data, contrasts = list(type = contr.sum))
+parent.offspring.lms$mass$order2 <- lm(o.m ~ type*p.m, data = wasp.data, contrasts = list(type = contr.sum))
+
+
+lapply(parent.offspring.lms, FUN = function(x) lapply(x, FUN = function(y) anova(y)))
+
+```
+
+The significant interaction for wl indicate differences in slope between unilineal and multilineal crosses. To get slope estimates, and test them against 0, the test() function from emmeans is used:
+
+```{r testing.regressions}
+
+test(emtrends(parent.offspring.lms$wl$order1, ~ type, var = 'p.wl'))
+
+```
+
+Multilineal crosses showed a significant parent/offspring relationship, but unilineal did not.
+
+To graph the lines for unilineal and multilineal relationships the slope and intercept coefficients are calculated using predict:
+
+```{r getting.regression.equation.coefficients}
+
+grps <- c("Multilineal","Unilineal")
+
+wl.coeff <- data.frame(p.wl = c(0,0), type = grps)
+predict(parent.offspring.lms$wl$order1, wl.coeff) -> wl.coeff$intercepts
+
+wl.coeff$p.wl <- c(1,1)
+predict(parent.offspring.lms$wl$order1, wl.coeff) - wl.coeff$intercepts -> wl.coeff$slopes
+
+tl.coeff <- data.frame(p.tl = c(0,0), type = grps)
+predict(parent.offspring.lms$tl$order1, tl.coeff) -> tl.coeff$intercepts
+
+tl.coeff$p.tl <- c(1,1)
+predict(parent.offspring.lms$tl$order1, tl.coeff) - tl.coeff$intercepts -> tl.coeff$slopes
+
+td.coeff <- data.frame(p.td = c(0,0), type = grps)
+predict(parent.offspring.lms$td$order1, td.coeff) -> td.coeff$intercepts
+
+td.coeff$p.td <- c(1,1)
+predict(parent.offspring.lms$td$order1, td.coeff) - td.coeff$intercepts -> td.coeff$slopes
+
+al.coeff <- data.frame(p.al = c(0,0), type = grps)
+predict(parent.offspring.lms$al$order1, al.coeff) -> al.coeff$intercepts
+
+al.coeff$p.al <- c(1,1)
+predict(parent.offspring.lms$al$order1, al.coeff) - al.coeff$intercepts -> al.coeff$slopes
+
+hd.coeff <- data.frame(p.hd = c(0,0), type = grps)
+predict(parent.offspring.lms$hd$order1, hd.coeff) -> hd.coeff$intercepts
+
+hd.coeff$p.hd <- c(1,1)
+predict(parent.offspring.lms$hd$order1, hd.coeff) - hd.coeff$intercepts -> hd.coeff$slopes
+
+hl.coeff <- data.frame(p.hl = c(0,0), type = grps)
+predict(parent.offspring.lms$hl$order1, hl.coeff) -> hl.coeff$intercepts
+
+hl.coeff$p.hl <- c(1,1)
+predict(parent.offspring.lms$hl$order1, hl.coeff) - hl.coeff$intercepts -> hl.coeff$slopes
+
+mass.coeff <- data.frame(p.m = c(0,0), type = grps)
+predict(parent.offspring.lms$mass$order1, mass.coeff) -> mass.coeff$intercepts
+
+mass.coeff$p.m <- c(1,1)
+predict(parent.offspring.lms$mass$order1, mass.coeff) - mass.coeff$intercepts -> mass.coeff$slopes
+
+```
+
+Graph of the relationships - models without a significant interaction term were plotted with a line only for the main effect (i.e. the overall relationship, not accounting for type), whereas the wl model included the overall relationship as a thick gray line in the background, with a line for each type as thin colored lines:
+
+```{r parent.offspring.regression.graphs}
+
+ggplot(wasp.data, aes(x = p.wl, y = o.wl, color = type, group = type)) +
+  geom_abline(intercept = 2.672, slope = 0.094, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = wl.coeff, aes(intercept = intercepts, slope = slopes, color = type), show.legend = F) +
+    geom_text_npc(label = expression(italic(y)==2.672+0.094~italic("x,"~R^2)==0.141), npcx = 0.05, npcy = 0.85, color = "black") +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label),
+                                 after_stat(rr.label), sep = "*\", \"*"))) +
+  labs(x = "Parent Wing Length", y = "Offspring Wing Length") +
+  scale_y_continuous(limits = c(2,4.5)) +
+  scale_color_discrete(name = "Type*", labels = c("Unilineal","Multilineal*")) +
+  theme_classic()
+
+ggplot(wasp.data, aes(x = p.tl, y = o.tl, color = type, group = type)) +
+  geom_abline(intercept = 1.3461, slope = 0.0341, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = tl.coeff, aes(intercept = intercepts, slope = slopes, color = type), show.legend = F) +
+  geom_text_npc(label = expression(italic(y)==1.346+0.034~italic("x,"~R^2)==0.053), npcx = 0.05, npcy = 0.85, color = "black") +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label),
+                                 after_stat(rr.label), sep = "*\", \"*")))+
+  labs(x = "Parent Thorax Length", y = "Offspring Thorax Length", color = "Type") +
+  scale_y_continuous(limits = c(1,1.9)) +
+  theme_classic()
+
+ggplot(wasp.data, aes(x = p.td, y = o.td, color = type, group = type)) +
+  geom_abline(intercept = 0.71393, slope = 0.22902, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = td.coeff, aes(intercept = intercepts, slope = slopes, color = type), show.legend = F) +
+  geom_text_npc(label = expression(italic(y)==0.714+0.229~italic("x,"~R^2)==0.125~symbol('*')), npcx = 0.05, npcy = 0.85, color = "black") +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label),
+                                 after_stat(rr.label), sep = "*\", \"*"))) +
+  labs(x = "Parent Thorax Depth", y = "Offspring Thorax Depth", color = "Type") +
+  scale_y_continuous(limits = c(0.5,1.5)) +
+  theme_classic()
+
+ggplot(wasp.data, aes(x = p.al, y = o.al, color = type, group = type)) +
+  geom_abline(intercept = 1.2713, slope = 0.3689, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = al.coeff, aes(intercept = intercepts, slope = slopes, color = type), show.legend = F) +
+  geom_text_npc(label = expression(italic(y)==1.271+0.369~italic("x,"~R^2)==0.115~symbol('*')), npcx = 0.05, npcy = 0.85, color = "black") +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label),
+                                 after_stat(rr.label), sep = "*\", \"*"))) +
+  labs(x = "Parent Abdomen Length", y = "Offspring Abdomen Length", color = "Type") +
+  scale_y_continuous(limits = c(1,3)) +
+  theme_classic()
+
+ggplot(wasp.data, aes(x = p.hd, y = o.hd, color = type, group = type)) +
+  geom_abline(intercept = 0.5842, slope = -0.0496, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = hd.coeff, aes(intercept = intercepts, slope = slopes, color = type), show.legend = F) +
+  geom_text_npc(label = expression(italic(y)==0.584-0.050~italic("x,"~R^2)==0.109), npcx = 0.05, npcy = 0.85, color = "black") +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label),
+                                 after_stat(rr.label), sep = "*\", \"*"))) +
+  labs(x = "Parent Head Depth", y = "Offspring Head Depth", color = "Type") +
+  scale_y_continuous(limits = c(0.4,0.9)) +
+  theme_classic()
+
+ggplot(wasp.data, aes(x = p.hl, y = o.hl, color = type, group = type)) +
+  geom_abline(intercept = 0.698, slope = 0.163, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = hl.coeff, aes(intercept = intercepts, slope = slopes, color = type), show.legend = F) +
+  geom_text_npc(label = expression(italic(y)==0.698+0.163~italic("x,"~R^2)==0.096), npcx = 0.05, npcy = 0.85, color = "black") +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label),
+                                 after_stat(rr.label), sep = "*\", \"*"))) +
+  labs(x = "Parent Head Length", y = "Offspring Head Length", color = "Type") +
+  scale_y_continuous(limits = c(0.6,1.25)) +
+  theme_classic()
+
+ggplot(wasp.data, aes(x = p.m, y = o.m, color = type, group = type)) +
+  geom_abline(intercept = 0.803, slope = 0.331, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = mass.coeff, aes(intercept = intercepts, slope = slopes, color = type), show.legend = F) +
+  geom_text_npc(label = expression(italic(y)==0.803+0.331~italic("x,"~R^2)==0.127), npcx = 0.05, npcy = 0.85, color = "black") +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label),
+                                 after_stat(rr.label), sep = "*\", \"*"))) +
+  labs(x = "Parent Mass", y = "Offspring Mass", color = "Type") +
+  scale_y_continuous(limits = c(0,3)) +
+  theme_classic()
+
+```
+
+## Figure 7
+
+Relationships between parent and offspring morphology, grouped by parent host species.
+
+```{r parent.offspring.parent.host.lm}
+
+parent.offspring.host.sp.lms <- list()
+
+parent.offspring.host.sp.lms$wl$order1 <- lm(o.wl ~ p.wl * p.host, data = wasp.data, contrasts = list(p.host = contr.sum))
+
+parent.offspring.host.sp.lms$wl$order2 <- lm(o.wl ~ p.host * p.wl, data = wasp.data, contrasts = list(p.host = contr.sum))
+
+parent.offspring.host.sp.lms$tl$order1 <- lm(o.tl ~ p.tl * p.host, data = wasp.data, contrasts = list(p.host = contr.sum))
+
+parent.offspring.host.sp.lms$tl$order2 <- lm(o.tl ~ p.host * p.tl, data = wasp.data, contrasts = list(p.host = contr.sum))
+
+parent.offspring.host.sp.lms$td$order1 <- lm(o.td ~ p.td * p.host, data = wasp.data, contrasts = list(p.host = contr.sum))
+parent.offspring.host.sp.lms$td$order2 <- lm(o.td ~ p.host * p.td, data = wasp.data, contrasts = list(p.host = contr.sum))
+
+parent.offspring.host.sp.lms$al$order1 <- lm(o.al ~ p.al * p.host, data = wasp.data, contrasts = list(p.host = contr.sum))
+parent.offspring.host.sp.lms$al$order2 <- lm(o.al ~ p.host * p.al, data = wasp.data, contrasts = list(p.host = contr.sum))
+
+parent.offspring.host.sp.lms$hd$order1 <- lm(o.hd ~ p.hd * p.host, data = wasp.data, contrasts = list(p.host = contr.sum))
+parent.offspring.host.sp.lms$hd$order2 <- lm(o.hd ~ p.host * p.hd, data = wasp.data, contrasts = list(p.host = contr.sum))
+
+parent.offspring.host.sp.lms$hl$order1 <- lm(o.hl ~ p.hl * p.host, data = wasp.data, contrasts = list(p.host = contr.sum))
+parent.offspring.host.sp.lms$hl$order2 <- lm(o.hl ~ p.host * p.hl, data = wasp.data, contrasts = list(p.host = contr.sum))
+
+lapply(parent.offspring.host.sp.lms, FUN = function(x) lapply(x, FUN = function(y) anova(y)))
+```
+
+Post-hocs and significance tests for models with significant parent morphology x parent host interactions - trends are compared between host species, and then each are compared to 0:
+
+```{r post-hoc.parent.host}
+
+emtrends(parent.offspring.host.sp.lms$hd$order1, tukey ~ p.host, var = 'p.hd')
+cat('\n')
+test(emtrends(parent.offspring.host.sp.lms$hd$order1, ~ p.host, var = 'p.hd'))
+
+```
+
+Calculation of slopes and intercepts for graphing:
+
+``` {r parent.offspring.phost.coeff.data.frames}
+
+p.host <- c("C. maculata","C. septempunctata", "H. convergens")
+
+wl.coeff <- data.frame(p.wl = c(0,0,0), p.host)
+predict(parent.offspring.host.sp.lms$wl$order1, wl.coeff) -> wl.coeff$intercepts
+wl.coeff$p.wl <- c(1,1,1)
+predict(parent.offspring.host.sp.lms$wl$order1, wl.coeff) - wl.coeff$intercepts -> wl.coeff$slopes
+
+tl.coeff <- data.frame(p.tl = c(0,0,0), p.host)
+predict(parent.offspring.host.sp.lms$tl$order1, tl.coeff) -> tl.coeff$intercepts
+tl.coeff$p.tl <- c(1,1,1)
+predict(parent.offspring.host.sp.lms$tl$order1, tl.coeff) - tl.coeff$intercepts -> tl.coeff$slopes
+
+td.coeff <- data.frame(p.td = c(0,0,0), p.host)
+predict(parent.offspring.host.sp.lms$td$order1, td.coeff) -> td.coeff$intercepts
+td.coeff$p.td <- c(1,1,1)
+predict(parent.offspring.host.sp.lms$td$order1, td.coeff) - td.coeff$intercepts -> td.coeff$slopes
+
+al.coeff <- data.frame(p.al = c(0,0,0), p.host)
+predict(parent.offspring.host.sp.lms$al$order1, al.coeff) -> al.coeff$intercepts
+al.coeff$p.al <- c(1,1,1)
+predict(parent.offspring.host.sp.lms$al$order1, al.coeff) - al.coeff$intercepts -> al.coeff$slopes
+
+hd.coeff <- data.frame(p.hd = c(0,0,0), p.host)
+predict(parent.offspring.host.sp.lms$hd$order1, hd.coeff) -> hd.coeff$intercepts
+hd.coeff$p.hd <- c(1,1,1)
+predict(parent.offspring.host.sp.lms$hd$order1, hd.coeff) - hd.coeff$intercepts -> hd.coeff$slopes
+
+hl.coeff <- data.frame(p.hl = c(0,0,0), p.host)
+predict(parent.offspring.host.sp.lms$hl$order1, hl.coeff) -> hl.coeff$intercepts
+hl.coeff$p.hl <- c(1,1,1)
+predict(parent.offspring.host.sp.lms$hl$order1, hl.coeff) - hl.coeff$intercepts -> hl.coeff$slopes
+```
+
+Graphs of the ANCOVA models:
+
+``` {r parent.offspring.phost.graphs}
+ggplot(wasp.data, aes(x = p.wl, y = o.wl, color = p.host)) +
+  geom_abline(intercept = 2.698, slope = 0.110, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = wl.coeff, aes(intercept = intercepts, slope = slopes, color = p.host), show.legend = F) +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label), after_stat(rr.label), sep = "*\", \"*"))) +
+  geom_text_npc(label = expression(italic(y)==2.70+0.110~italic("x,"~R^2)==0.184), npcx = 0.05, npcy = 0.8, color = "black") +
+  theme_classic() +
+  labs(color = "Parent host", x = "Parent wing length", y = "Offspring wing length") + theme(legend.text = element_text(face = "italic")) +
+  scale_y_continuous(limits = c(2,4.5))
+
+ggplot(wasp.data, aes(x = p.tl, y = o.tl, color = p.host)) +
+  geom_abline(intercept = 1.3339, slope = 0.0347, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = tl.coeff, aes(intercept = intercepts, slope = slopes, color = p.host), show.legend = F) +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label), after_stat(rr.label), sep = "*\", \"*"))) +
+  geom_text_npc(label = expression(italic(y)==1.334+0.035~italic("x,"~R^2)==0.05), npcx = 0.05, npcy = 0.8, color = "black") +
+  theme_classic() +
+  labs(color = "Parent host", x = "Parent thorax length", y = "Offspring thorax length") + theme(legend.text = element_text(face = "italic")) +
+scale_y_continuous(limits = c(1,1.9))
+
+ggplot(wasp.data, aes(x = p.td, y = o.td, color = p.host)) +
+  geom_abline(intercept = 0.776, slope = 0.162, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = td.coeff, aes(intercept = intercepts, slope = slopes, color = p.host), show.legend = F) +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label), after_stat(rr.label), sep = "*\", \"*"))) +
+  geom_text_npc(label = expression(italic(y)==0.776+0.162~italic("x,"~R^2)==0.19~"†"), npcx = 0.05, npcy = 0.8, color = "black") +
+  theme_classic() +
+  labs(color = "Parent host", x = "Parent thorax depth", y = "Offspring thorax depth") + theme(legend.text = element_text(face = "italic")) +
+  scale_y_continuous(limits = c(0.6, 1.5))
+
+ggplot(wasp.data, aes(x = p.al, y = o.al, color = p.host)) +
+  geom_abline(intercept = 1.859, slope = 0.082, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = al.coeff, aes(intercept = intercepts, slope = slopes, color = p.host), show.legend = F) +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label), after_stat(rr.label), sep = "*\", \"*"))) +
+  geom_text_npc(label = expression(italic(y)==1.859+0.082~italic("x,"~R^2)==0.22~"†"), npcx = 0.05, npcy = 0.8, color = "black") +
+  theme_classic() +
+  labs(color = "Parent host", x = "Parent abdomen length", y = "Offspring abdomen length") + theme(legend.text = element_text(face = "italic")) +
+  scale_y_continuous(limits = c(1,3.1))
+
+
+ggplot(wasp.data, aes(x = p.hd, y = o.hd, color = p.host)) +
+  geom_abline(intercept = 0.4973, slope = 0.117, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = hd.coeff, aes(intercept = intercepts, slope = slopes, color = p.host), show.legend = F) +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label), after_stat(rr.label), sep = "*\", \"*"))) +
+  geom_text_npc(label = expression(italic(y)==0.497+0.117~italic("x,"~R^2)==0.36), npcx = 0.05, npcy = 0.8, color = "black") +
+  theme_classic() +
+  labs(color = "Parent host", x = "Parent head depth", y = "Offspring head depth") + theme(legend.text = element_text(face = "italic")) +
+  scale_y_continuous(limits = c(0.4,0.9)) +
+  scale_color_discrete(name = "Parent host*", labels = c("C. maculata (a*)","C. septempunctata (b*)","H. convergens (ab)"))
+
+ggplot(wasp.data, aes(x = p.hl, y = o.hl, color = p.host)) +
+  geom_abline(intercept = 0.669, slope = 0.201, color = "gray90", linewidth = 4) +
+  geom_point() + 
+  geom_abline(data = hl.coeff, aes(intercept = intercepts, slope = slopes, color = p.host), show.legend = F) +
+  stat_poly_eq(aes(label = paste(after_stat(eq.label), after_stat(rr.label), sep = "*\", \"*"))) +
+  geom_text_npc(label = expression(italic(y)==0.669+0.201~italic("x,"~R^2)==0.25), npcx = 0.05, npcy = 0.8, color = "black") +
+  theme_classic() +
+  labs(color = "Parent host", x = "Parent head length", y = "Offspring head length") + theme(legend.text = element_text(face = "italic")) +
+  scale_y_continuous(limits = c(0.6,1.25))
+
+```
+
+
+## Figure 8
+
+CCA of parent/offspring morphology.
+
+First import the data, make lists of variables, and an empty list to add cca models to for the final comparison between them:
+
+```{r import.data.make.variable.lists}
+
+mother.var <- c("p.wl","p.tl","p.td","p.al","p.hd","p.hl")
+daughter.var <- c("o.wl","o.tl","o.td","o.al","o.hd","o.hl")
+
+cca.models <- list()
+
+```
+
+Standardize the variables:
+
+```{r pairs.mother.daughter, results='hide'}
+
+mother.std <- scale(wasp.data[mother.var])
+daughter.std <- scale(wasp.data[daughter.var])
+
+```
+
+### Initial CCA - correlation of mother morphology and daughter morphology without accounting for either host
+
+This first analysis will establish the pattern of correlation between mothers and daughters - since the host the mothers developed in and that the daughters developed in are not accounted for any correlation between them could be due either to mothers assessment of her own state (e.g. her size or shape), or to a reaction by the mother to either host:
+
+```{r initial.cca}
+
+cca(mother.std, daughter.std) -> cca.models$nopartial
+
+F.test.cca(cca.models$nopartial)
+
+cca.models$nopartial
+
+```
+
+Only the first canonical correlation is statistically significant.
+
+## Calculating residuals for use in partial CCA
+
+To assess whether the size of the first canonical correlation is affected by parent host species, offspring host species or combinations of the two we calculated residuals for models using either mother or daughter morphology as responses and hosts as responses. These residuals were then subjected to CCA.
+
+The residuals for each set of morphology data are calculated for each host type here:
+
+
+```{r get.residuals}
+
+scale(residuals(lm(as.matrix(wasp.data[mother.var])~p.host, data = wasp.data))) -> mom.phost.resid
+scale(residuals(lm(as.matrix(wasp.data[daughter.var])~p.host, data = wasp.data))) -> daughter.phost.resid
+scale(residuals(lm(as.matrix(wasp.data[mother.var])~o.host, data = wasp.data))) -> mom.ohost.resid
+scale(residuals(lm(as.matrix(wasp.data[daughter.var])~o.host, data = wasp.data))) -> daughter.ohost.resid
+scale(residuals(lm(as.matrix(wasp.data[mother.var])~interaction(p.host,o.host), data = wasp.data))) -> mom.phostxohost.resid
+scale(residuals(lm(as.matrix(wasp.data[daughter.var])~interaction(p.host,o.host), data = wasp.data))) -> daughter.phostxohost.resid
+
+```
+
+### Accounting for mother's host
+
+The partial CCA that removed the effect of mother's host:
+
+```{r cca.mother.host.partialed}
+
+cca(mom.phost.resid, daughter.phost.resid, xcenter=T, ycenter=T, xscale=T, yscale=T) -> cca.models$phost
+
+F.test.cca(cca.models$phost)
+
+cat("Canonical correlations\n")
+summary(cca.models$phost)$corr
+cat("\n")
+c(parent.redundancy = summary(cca.models$phost)$xrd, offspring.redundancy = summary(cca.models$phost)$yrd)
+
+```
+
+The size of the canonical correlation is virtually unchanged, as is the redundancy.
+
+### Accounting for offspring host
+
+The CCA that removed the effect of offspring host:
+
+```{r cca.offspring.host.partialled}
+
+cca(mom.ohost.resid, daughter.ohost.resid, xcenter=T, ycenter=T, xscale=T, yscale=T) -> cca.models$ohost
+
+F.test.cca(cca.models$ohost)
+
+cat("Canonical correlations\n")
+summary(cca.models$ohost)$corr
+cat("\n")
+c(parent.redundancy = summary(cca.models$ohost)$xrd, offspring.redundancy = summary(cca.models$ohost)$yrd)
+```
+
+The results are again relatively unchanged overall in terms of the size and significance of the canonical correlations, and the redundancy between the matrices.
+
+### Accounting for combinations of mother and daughter host
+
+CCA accounting for both mother and daughter host:
+
+```{r cca.offspring.parent.host.partialled}
+
+cca(mom.phostxohost.resid, daughter.phostxohost.resid, xcenter=T, ycenter=T, xscale=T, yscale=T) -> cca.models$phostxohost
+
+F.test.cca(cca.models$phostxohost)
+
+cat("Canonical correlations\n")
+summary(cca.models$phostxohost)$corr
+cat("\n")
+c(parent.redundancy = summary(cca.models$phostxohost)$xrd, offspring.redundancy = summary(cca.models$phostxohost)$yrd)
+
+```
+
+Accounting for both the parent and offspring host increases the size of the canonical correlation, and increases the redundancy coefficients.
+
+### Controlling for mother's host in mother's data, offspring host in offspring data
+
+Next, controlling for mother's host on mother's morphology, and for offspring host on offspring morphology; this does not partial out the effect of host, since there can be some effect of mother's host on offspring morphology, but it accounts for the host that is most likely to be affecting each morphological matrix.
+
+CCA:
+
+```{r cca.offspring.host.parent.host.accounted.for}
+
+cca(mom.phost.resid, daughter.ohost.resid, xcenter=T, ycenter=T, xscale=T, yscale=T) -> cca.models$phost.mom.ohost.daughter
+
+F.test.cca(cca.models$phost.mom.ohost.daughter)
+
+cat("Canonical correlations\n")
+summary(cca.models$phost.mom.ohost.daughter)$corr
+cat("\n")
+c(parent.redundancy = summary(cca.models$phost.mom.ohost.daughter)$xrd, offspring.redundancy = summary(cca.models$phost.mom.ohost.daughter)$yrd)
+
+```
+
+This analysis reduces the redundancy somewhat, but the pattern in the loadings is unchanged.
+
+### Controlling for mother host in mother data, and mother/daughter host combinations in daughter
+
+Finally, since offspring morphology can be affected by mother host, but mother morphology cannot be affected by offspring host, this analysis accounts for mother host in the mother's data, and both mother and offspring host in the daughter's data.
+
+CCA:
+
+```{r cca.offspring.parent.daughter.host.parent.host.mother.accounted.for}
+
+cca(mom.phost.resid, daughter.phostxohost.resid, xcenter=T, ycenter=T, xscale=T, yscale=T) -> cca.models$phost.mom.phostxohost.daughter
+
+F.test.cca(cca.models$phost.mom.phostxohost.daughter)
+
+cat("Canonical correlations\n")
+summary(cca.models$phost.mom.phostxohost.daughter)$corr
+cat("\n")
+c(parent.redundancy = summary(cca.models$phost.mom.phostxohost.daughter)$xrd, offspring.redundancy = summary(cca.models$phost.mom.phostxohost.daughter)$yrd)
+
+```
+
+The canonical correlation and redundancy are higher than when only offspring host was accounted for in the daughter's data, but not as high as when both parent and offspring hosts were accounted for in both of mother and daughter's data. The pattern in the loadings is unchanged.
+
+A table of canonical correlations:
+
+```{r can.cors.all.models}
+
+data.frame(CC = sapply(cca.models, FUN = function(x) round(x$corr[[1]], digits = 2))) -> all.cc
+all.cc$Model <- rownames(all.cc)
+all.cc$lab <- paste("R = ", all.cc$CC)
+
+```
+
+A graph of the CCA1 loadings for each model - first combine the loadings across the models, so that they can be faceted in the graph (some loadings needed to be flipped to align them on the graphs across models, so some are multiplied by -1):
+
+```{r rbind.loadings}
+
+cca.models$nopartial$xstructcorr <- -1*cca.models$nopartial$xstructcorr
+cca.models$nopartial$ystructcorr <- -1*cca.models$nopartial$ystructcorr
+
+cca.models$phost$xstructcorr <- -1*cca.models$phost$xstructcorr
+cca.models$phost$ystructcorr <- -1*cca.models$phost$ystructcorr
+
+cca.models$ohost$xstructcorr <- -1*cca.models$ohost$xstructcorr
+cca.models$ohost$ystructcorr <- -1*cca.models$ohost$ystructcorr
+
+cca.models$phost.mom.ohost.daughter$xstructcorr <- -1*cca.models$phost.mom.ohost.daughter$xstructcorr
+cca.models$phost.mom.ohost.daughter$ystructcorr <- -1*cca.models$phost.mom.ohost.daughter$ystructcorr
+
+cca.models$phost.mom.phostxohost.daughter$xstructcorr <- -1*cca.models$phost.mom.phostxohost.daughter$xstructcorr
+cca.models$phost.mom.phostxohost.daughter$ystructcorr <- -1*cca.models$phost.mom.phostxohost.daughter$ystructcorr
+
+
+stack(lapply(cca.models, FUN = function(x) x$xstructcorr[,1])) -> parent.loadings
+colnames(parent.loadings) <- c("Loadings","Model")
+parent.loadings$Variable <- rownames(cca.models$nopartial$xstructcorr)
+parent.loadings$Generation <- c("Parent")
+
+stack(lapply(cca.models, FUN = function(x) x$ystructcorr[,1])) -> offspring.loadings
+colnames(offspring.loadings) <- c("Loadings","Model")
+offspring.loadings$Variable <- rownames(cca.models$nopartial$ystructcorr)
+offspring.loadings$Generation <- c("Offspring")
+
+rbind(parent.loadings, offspring.loadings) -> cca.loadings
+
+data.frame(Variable = c(daughter.var, mother.var), Var = c("WL","TL","TD","AL","HD","HL","WL","TL","TD","AL","HD","HL")) -> var.labs
+
+mod.name.levels <- c("No partial", "P host","O host","P x O","P host P, O host O", "P host P, P x O host O")
+
+data.frame(Model = names(cca.models), Mod.name = mod.name.levels) -> mod.labs
+
+merge(cca.loadings, var.labs, by = c("Variable","Variable")) -> cca.loadings
+merge(cca.loadings, mod.labs, by = c("Model","Model")) -> cca.loadings
+
+cca.loadings$Mod.name <- factor(cca.loadings$Mod.name, levels = c("No partial","P host","O host","P x O", "P host P, O host O", "P host P, P x O host O"))
+
+split(cca.loadings, cca.loadings$Generation) -> cca.loadings.split
+
+merge(all.cc, mod.labs, by = c("Model","Model")) -> all.cc
+all.cc$Loadings = c(1, 1, 1, 1, 1, 1)
+
+```
+
+Graph the loadings:
+
+```{r graph.of.loadings}
+
+ggplot(cca.loadings, aes(x = Loadings, y = as.numeric(Mod.name))) +
+  geom_hline(yintercept = seq(1,6), color = "gray") +
+  geom_vline(xintercept = 0) +
+  geom_point(aes(color = Generation)) + 
+  geom_text(data = cca.loadings.split$Offspring, aes(label = Var), nudge_y = 0.2, color = "red") + 
+  geom_text(data = cca.loadings.split$Parent, aes(label = Var), nudge_y = -0.2, color = "black") + 
+  scale_x_continuous(limits = c(-0.5,1.1)) +
+  scale_color_manual(values = c("red","black")) +
+  scale_y_continuous(breaks = seq(1,6), labels = levels(cca.loadings$Mod.name)) +
+  labs(x = "CCA 1") +
+  geom_text(data = all.cc, aes(label = lab, y = as.numeric(factor(Mod.name, levels = mod.name.levels))), nudge_y = 0.2) +
+  theme_classic() +
+  theme(axis.title.y = element_blank())
+
+```
+
+The canonical correlations are very consistent across all the models, but increase slightly when parent host, offspring host, or combinations of the two are accounted for in either parent or offspring morphology.
