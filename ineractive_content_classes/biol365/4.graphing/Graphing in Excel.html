@@ -1,0 +1,729 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Graphing in Excel</title>
+    <link href="trendline_image_map_relative.css" rel="stylesheet" type="text/css">
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+    <title>Graphing in Excel</title>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Exercise 4 - graphing</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#graphing">Graphing in Excel</a></p>
+      <p><a href="#prelims">Preliminaries</a></p>
+      <p><a href="#wt_by_sex">Graphing weight by sex</a></p>
+      <p><a href="#scaling">Scaling relationships</a></p>
+      <p><a href="#comparing_lines">Comparing lines</a></p>
+      <p><a href="#line_scatter">Line vs scatter with connecting lines</a></p>
+      <p><a href="#pivotchart">Pivot chart</a></p>
+      <p><a href="#radar">Radar chart</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div>
+      <h2 class="part" id="graphing">Graphing in Excel</h2>
+      <p> If you recall from lecture, there are two major reasons to graph data: 1) to increase your own understanding
+        of your data, and 2) to produce a clear presentation of the data for others. Today we will work with graphs that
+        serve at least one of these purposes, sometimes both. </p>
+      <p> </p>
+      <h2 id="prelims" class="part">Preliminaries</h2>
+      <p> Download <a href="bears.xlsx">this</a> file to a new folder in your OneDrive and open it in Excel.</p>
+      <p>The data set we will use contains measurements of sizes and shapes of bears captured over the course of one
+        active season, between their emergence from hibernation in the spring and return to hibernation again in the
+        fall. At each capture, bears were tranquilized for measurement. The variables recorded, and their variable
+        types, are: </p>
+      <p> </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th>Variable<br>
+            </th>
+            <th>Variable definition</th>
+            <th>Variable type</th>
+          </tr>
+          <tr>
+            <td>ID<br>
+            </td>
+            <td>A unique identifier for individuals<br>
+            </td>
+            <td>Numbers are used as ID's, but are meant to be labels - treat as categories<br>
+            </td>
+          </tr>
+          <tr>
+            <td>Age<br>
+            </td>
+            <td>Age in months<br>
+            </td>
+            <td>Numeric, discrete<br>
+            </td>
+          </tr>
+          <tr>
+            <td>Month<br>
+            </td>
+            <td>Numeric month<br>
+            </td>
+            <td>Numeric, discrete, circular scale. Can be used as an ordinal set of categories (as though the names of
+              the months were used instead of numbers)<br>
+            </td>
+          </tr>
+          <tr>
+            <td>Sex<br>
+            </td>
+            <td>Sex of each bear<br>
+            </td>
+            <td>Categorical<br>
+            </td>
+          </tr>
+          <tr>
+            <td>Head length<br>
+            </td>
+            <td>Length of head in cm<br>
+            </td>
+            <td>Numeric, continuous<br>
+            </td>
+          </tr>
+          <tr>
+            <td>Head width</td>
+            <td>Width of head in cm</td>
+            <td>Numeric, continuous</td>
+          </tr>
+          <tr>
+            <td>Neck girth</td>
+            <td>Distance around the neck in cm</td>
+            <td>Numeric, continuous</td>
+          </tr>
+          <tr>
+            <td>Weight</td>
+            <td>Weight in kg</td>
+            <td>Numeric, continuous</td>
+          </tr>
+          <tr>
+            <td>Observation number</td>
+            <td>A sequential number indicating which measurement the row represents for bears measured more than once</td>
+            <td>Numeric, but meant to indicate an order - treat as an ordinal label</td>
+          </tr>
+          <tr>
+            <td>Name</td>
+            <td>Name of the bear</td>
+            <td>Categorical</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Knowing the variable types allows us to pick appropriate graph types. Be aware that the variable type is
+        sometimes different than it appears to be - Month, ID, and Observation Number are all represented as numbers,
+        but we will be using them as though they were ordinal categories that could be replaced with non-numeric labels
+        with no loss of information (for example, month can be indicated by words instead of numbers without changing
+        the interpretation of the variable).</p>
+      <p>Keep in mind that sometimes nominal categorical variables - that is, categories without a natural ordering to
+        them - are represented with numeric codes, but that doesn't make them either numeric data or ordinal categories.
+        For example, Sex might be coded as 1 for male and 2 for female, but there is no natural ordering to the male and
+        female levels, and we could have just as easily used 2 for male and 1 for female. It wouldn't make sense to do
+        calculations on the numbers, such as calculating the mean of the 1's and 2's, even though it would be possible
+        to do so. If numeric codes are used to indicate un-ordered categories they should be analyzed as though they are
+        un-ordered categories, not numeric variables.</p>
+      <h2>The questions we will address with our graphs</h2>
+      <p>Today we will make graphs that will help us address the following questions:</p>
+      <p> </p>
+      <p> 1. What is the nature of the relationship between weight (a volumetric variable) and various measured lengths
+        (all of which are linear variables)?</p>
+      <p> 2. Is there a difference in the length/weight relationship between males and females?</p>
+      <p>3. What are the average weights of males and females?</p>
+      <p></p>
+      <p> 4. How does body weight vary from month to month for each sex?</p>
+      <p> </p>
+      <p> The first and second questions are analytical - we need to know the nature of the relationship between weight
+        and length before we can compare this relationship between the sexes, so we need to answer the first question
+        before we can answer the second. The third and fourth questions would normally be addressed analytically by
+        conducting t-tests or analysis of variance (ANOVA) to test for differences in means between groups, and the
+        graphs would be used to help communicate the results in a way that is easy to understand - we won't do the
+        statistical hypothesis testing today, but will learn to make the graphs that support those analyses.</p>
+      <h2>Organizing the data for plotting<br>
+      </h2>
+      <p>Programs that are written to primarily be graphing packages would be less fussy than Excel is about data
+        organization. For example, when we build a graph we would be able to assign any column we want to the x-axis and
+        the y-axis, and would be able to group by a categorical variable for assigning colors and symbols. </p>
+      <p>Excel doesn't give us these conveniences. We will be producing several scatter plots with these data, in which
+        the weight of the bears is the x-axis. By default Excel uses the left-most column in the range of selected data
+        as x, so to make the graphing easier it's helpful to move the Weight column to be the left-most of the data
+        columns.</p>
+      <p>To move Weight:</p>
+      <ul>
+        <li>Click on the J in the gray column letters to select the entire Weight column</li>
+        <li>Right-click somewhere inside of the selected column and select "Cut"</li>
+        <li>Select all of column E by clicking on the E column label. </li>
+        <li>Right-click and select "Insert cut cells". This will make space for the Weights in column E, paste them into
+          column E, and move all the columns that were in E, F, G, H, and I over one to fill thee space.</li>
+      </ul>
+      <p>You should now have Weights in column E, and all the rest of the data columns to the right of it with no blank
+        columns.</p>
+      <p> </p>
+      <h2 class="part" id="scaling">1. What is the nature of the relationship between weight and measured lengths?</h2>
+      <p> Lengths and volumes of simple geometric objects, like cubes and spheres, have power function relationships.
+        Power functions relate one variable to a second variable that is raised to an exponent. </p>
+      <table border="0" width="100%">
+        <tbody>
+          <tr>
+            <td><img alt="Cube on linear-linear axes" src="cube_lin_lin.png" style="float:left; margin-right: 10px"><img
+                alt="Cube on log-log axes" src="cube_log_log.png" style="float: right; margin-left: 10px">
+              <p>For example, the volume of a cube is v = l<sup>3</sup>, where l is the length of one side. Since length
+                is a variable, and it is being raised to an exponent, this is a power function relationship. </p>
+              <p>Equivalently, we can express the relationship between volume and length as l = v<sup>1/3</sup> , and
+                again since volume is being raised to an exponent this is also a power function (using 1/3 in the
+                exponent is the same as ∛<span style="text-decoration:overline">v</span>). A plot of length vs. volume
+                is shown to the left.</p>
+              <p>If we take the log of both sides of the equation, we get:</p>
+              <p> log(l) = 1/3 log(v)</p>
+              <p>which is the equation for a straight line with an intercept of 0 and a slope of 1/3. To get this
+                straight line formula out of our power function relationship we needed to put both length and volume are
+                on a log scale, so when we put the graph on a log scale for both axes the curved line that related
+                volume to length straightens out, like the example on the right. If we ask Excel to fit a power function
+                trend line to the data it tells us that y = x<sup>0.3333</sup>, which is the relationship we were
+                expecting.</p>
+            </td>
+          </tr>
+          <tr>
+            <td><img alt="Cube on linear-linear axes" src="sphere_lin_lin.png" style="float:left; margin-right: 10px"><img
+                alt="Cube on log-log axes" src="sphere_log_log.png" style="float: right; margin-left: 10px">
+              <p>Similarly, we can derive the relationship between diameter and volume of a sphere in the same way:
+                volume of a sphere is v = 4/3 π (d/2)<sup>3</sup>, where d is the diameter of the sphere through the
+                center to the surface (d/2 is the radius from the center to any point on the surface). The relationship
+                between volume and radius is thus d = 2(3/(4π)<sup>1/3</sup>)v<sup>1/3</sup>. The coefficient (i.e. the
+                constant being multiplied by v) is fearsome looking, but 2(3/(4π)<sup>1/3</sup>) is just a constant,
+                equal to 1.2407. </p>
+              <p>On a log scale this power function becomes:</p>
+              <p>log(d) = log(2(3/(4π)<sup>1/3</sup>))+ 1/3 log(v)</p>
+              <p>The value log(2(3/(4π)<sup>1/3</sup>)) is the log of 1.2407 (equal to 0.09367), and will be the
+                intercept for a straight line on a log-log plot. The fact that the intercept is not zero for a sphere
+                will make the line intersect the y-axis higher than the the line for the cube did, but both the cube and
+                the sphere have a slope of 1/3, so they would be parallel with one another on the graph with log-scale
+                axes.</p>
+              <p>The trend line's equation on the log-log plot on the right shows that the exponent is still 0.3333 just
+                like the cube, and the only difference is that the constant is equal to 1.2407, as we were expecting.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>So, with simple, solid geometric objects we expect the exponent on the power function that relates a linear
+        measurement to a volumetric one to be 1/3, and the only difference between objects will be the intercept term.</p>
+      <p>In principle we could calculate the volume of bears by submerging them in water and recording the volume of
+        water displaced, but this is hard to measure in the field. However, weight is relatively easy to measure on an
+        anesthetized bear, and we have weight data available.</p>
+      <p>Weight is not volume but should be proportional to volume, so we can consider weight to be a "volumetric"
+        measurement. We would expect a power function relationship between bear weights and linear dimensions with an
+        exponent of 1/3, if bears were simple geometric objects. Bears are not, however, simple geometric objects - the
+        relationship will probably be a power function but we can't be certain that the exponent will be exactly 1/3. </p>
+      <p>Studying the scaling relationships between different body dimensions and weight is called <strong>allometry</strong>,
+        so we will be estimating the allometric scaling relationship between length and weight of these bears.</p>
+      <h3>Graphing length vs weight</h3>
+      <p>We will start by making a scatter plot of the lengths of the bears vs. their weights, and will then change the
+        axes to log scales to confirm that a power function is the right relationship between length and weight. Once we
+        are confident this is the case, we can use Excel's trend lines to give us the equation that describes the
+        relationship.</p>
+      <p> <input name="cb7" type="checkbox">A. To begin, you will make the basic plot of length vs. weight, with weight
+        on the x-axis, and length the y-axis:</p>
+      <p> </p>
+      <ul>
+        <li>Select the cells that have the weights - these are in cells E1 through E144 (including the column label).
+          You can do this by clicking and holding on E1 and then dragging down to E144 and releasing, or you can click
+          E1, scroll down to E144, and then click on E144 while holding down the SHIFT key.</li>
+        <li>Select the cells that have the lengths, while keeping the weights selected - these cells are <strong>discontinuous</strong>
+          with the weights, so to select them hold down the CTRL key, click and hold on cell I1, then drag down to I144
+          while holding the mouse button. Release when you get to I144. You should now have both the weights and the
+          lengths selected.</li>
+        <li>Switch to the "Insert" tab, and from the Charts block of buttons select "Scatter", then "<span class="popup">Scatter
+            with points only<img class="popupimage" src="scatterplot1.jpg"></span>". You'll see that since we moved
+          Weight to the left it is used as the x-axis, and length is used as the y-axis. By default both axes are
+          linear, so you'll see that the points on the graph follow a curvilinear relationship rather than a straight
+          line (if they were straight you'd conclude the relationship between weight and length was linear, which we
+          don't expect it will be here)</li>
+        <li>Click on the + to the right of the graph border and check "Axis titles" to add both x- and y-axis titles</li>
+        <ul>
+          <li>Change the x-axis title to "Weight", and the y-axis title to "Length"</li>
+        </ul>
+        <li>Change the graph title from "Length" to "Linear Relationship". </li>
+      </ul>
+      <p>The scatter of points should look like it follows a curved line - if you imagine a line running through the
+        cloud of points as you move from left to right along the x-axis the line would need to curve to stay in the
+        middle. The relationship is not linear (<strong>linear</strong> means a straight line, not a curved line).</p>
+      <p>To record a picture of this version of the graph that won't change when you change the graph in the following
+        steps:</p>
+      <ul>
+        <li>Tight click on the graph and select Copy</li>
+        <li>Select a cell below the graph by left-clicking once into it (any cell will do)</li>
+        <li>Right-click, and select the "Paste Options" with the "Picture" (it looks like a clipboard with a picture on
+          it, like <span class="popup">this<img class="popupimage" src="paste_picture.png"></span>). </li>
+      </ul>
+      <p>You should now have a picture of your graph that will not change as you change the graph.</p>
+      <p> </p>
+      <p> </p>
+      <p><input name="cb9" type="checkbox">B. Now to help us determine the relationship between weight and length we're
+        going to change the axis scaling for one axis at a time. We'll start by changing the y-axis scaling only:</p>
+      <ul>
+        <li>On the original version of the graph, click on one of the numbers on the y-axis - this will select the axis
+          so that we can change its properties.</li>
+        <li>Right-click and select "Format axis"</li>
+        <ul>
+          <li>In the Format Axis panel on the right side of the Excel window find the "Logarithmic scale" check box, and
+            chick it - you'll see the graph now has a base 10 logarithmic y-axis, such that each tick indicates a
+            10-fold change in length. </li>
+          <li>If the data looked like they followed a straight line with a log y-axis and a linear x-axis then they
+            would have an exponential relationship between them, so change the title to "Exponential". But, the data
+            don't follow a straight line, so the relationship is not actually exponential.</li>
+        </ul>
+        <li>Copy the exponential graph and paste it as a picture below the linear scale graph. </li>
+      </ul>
+      <p> </p>
+      <p>Now we'll set the x-axis scale to logarithmic, and the y-axis scale back to linear:</p>
+      <ul>
+        <li>Select the y-axis numbers again, and set the y-axis back to a linear scale by un-checking the "Logarithmic
+          scale" check box.</li>
+        <li>Select the x-axis numbers, format the axis, and check to box to make it a logarithmic axis.</li>
+        <li>If the points followed a straight line with a logarithmic x-axis and a linear y-axis the relationship would
+          be logarithmic - change the title to "Logarithmic". </li>
+        <li>Copy and paste the graph as a picture below your exponential graph's picture.</li>
+      </ul>
+      <p>The data are closer to a logarithmic relationship than an exponential relationship, but we have one more to go
+        (the one we expect will work best for our data) - now we'll set both axes to be logarithmic, and if the points
+        follow a straight line we'll conclude they have a power function relationship.</p>
+      <p> </p>
+      <p> </p>
+      <ul>
+        <li>Click on the Y-axis numbers, right-click and select "Format axis", and set it again to be a logarithmic
+          scale. </li>
+        <li>The range of numbers displayed is too great, and we can't see the data well - by default logarithmic axes
+          start at 1, but since there aren't any weights or lengths below 10 it's harder to see the data than it should
+          be - click on one of the axes, and in the Axis options tab (select it by clicking on the <span class="popup">bar
+            chart icon<img class="popupimage" src="chart_icon_in_format_axis.png"></span> if you don't see it) change
+          the Minimum to 10. Then select the other axis and do the same.</li>
+      </ul>
+      <p>You now have both axes on logarithmic scales, so this is a <strong>log-log plot</strong> (the graphs with only
+        one log-scale axis were <strong>semi-log plots</strong>). We expected a power function relationship between
+        weight and length, and the data are straightest in this graph compared to the others, indicating that there is
+        in fact a power function relationship between length and weight. </p>
+      <p>Change the title to "Power" - don't copy/paste as picture, though, since we're going to make some changes in
+        the next steps.</p>
+      <p> </p>
+      <p>Now that we have reason to think the variables do in fact have a power function relationship we can use Excel
+        to fit a trend line and give us the equation.</p>
+      <h3>Trend lines</h3>
+      <p>The four different possible functional relationships we explored by changing x and y axes to log scale are
+        shown below. Hover over each in the image below to see the functions relating y to x for each one, and why they
+        straighten out depending on the x and y axis scaling selected.</p>
+      <div id="trendlinemap" style="clear: both"> <a href="#" id="exponential" class="eqn"><span>Exponential
+            relationships have the form
+            <p>y = a10<sup>bx</sup></p>
+            <p>Taking the log of both sides gives us:</p>
+            <p> log(y) = log(a) + bx.</p>
+            <p>Exponential relationships become straight lines on a plot when y is graphed on a log scale with x on a
+              linear scale</p>
+          </span></a> <a href="#" id="linear" class="eqn"><span>Linear relationships have the form:
+            <p>y = a + bx</p>
+            <p>Linear relationships give straight lines on a plot with both y and x on a linear scale</p>
+          </span></a> <a href="#" id="logarithmic" class="eqn"><span>Logarithmic relationships have the form:
+            <p>10<sup>y</sup> = ax<sup>b</sup></p>
+            <p>Taking the log of both sides gives us:</p>
+            <p>y = log(a) + b log(x)</p>
+            <p>Logarithmic relationships become straight lines on a plot when y is graphed on a linear scale, with x
+              graphed on a log scale</p>
+          </span></a> <a href="#" id="power" class="eqn"><span>Power functions have the form:
+            <p>y = ax<sup>b</sup></p>
+            <p>Taking the log of both sides gives us:</p>
+            <p>log(y) = log(a) + b log(x)</p>
+            <p>Power functions become straight lines on a plot when both y and x are graphed on a log-log scale.</p>
+          </span></a> </div>
+      <br style="clear:both">
+      <p>We know now based on our graphs that the relationship we need is a power relationship, so we can add a power
+        function trend line to the graph</p>
+      <ul>
+        <li>Select any one of the points on the graph (left-click on a point once), then right-click and select "Add
+          trendline"</li>
+        <ul>
+          <li>In the "Format Trendline" panel that pops up, select "Power"</li>
+          <li>Also check "Display equation on chart" (you may need to scroll down a little to see it).</li>
+        </ul>
+        <li>Switch to the "Fill and line" section (click on the pouring paint can) - we'll style the line to make it
+          easier to see:</li>
+        <ul>
+          <li>Change the color of the line to black</li>
+          <li>Change the "Dash type" to a solid, un-dashed line</li>
+          <li>Increase the width of the line to 2</li>
+        </ul>
+        <li>Select the equation and drag it into the white background of the graph where you can read it</li>
+      </ul>
+      <p>The equation is expressed in its un-transformed form, and you'll see it's y = 17.004x<sup>0.2494</sup>.&nbsp;
+        Remember that with a simple geometric solid the scaling relationship between length and volume of a simple
+        geometric shape would have a 1/3 exponent, but here the relationship is 0.2494. The exponent is different from
+        1/3 both because the bear is an irregular object and because the units differ between length and weight.</p>
+      <p>We used log axis scaling to find the right trend line function to use for our data, but it's perfectly
+        acceptable to plot on linear axes once you have that figured out. Un-check the logarithmic axes boxes for both x
+        and y, and your final graph will be a curved line with the power function equation next to it.</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <h2 class="part" id="comparing_lines">2. Is there a difference in the length/weight relationship of male and
+        female bears?</h2>
+      <p> To compare the length/width relationship we will need to plot two different sets of points on the same graph,
+        one for each sex. If you remember making graphs in your stat class, we could just identify a grouping variable
+        to automatically separate the data for plotting, but Excel can't do this. In Excel you either need to re-arrange
+        your data so that each sex is in a different column, or you need to plot one sex first, and then add the other
+        to the graph manually. We will use the second approach since it doesn't require us to rearrange our data: we
+        will plot the females first, then add the male data manually.</p>
+      <p> </p>
+      <p> <input name="cb11" type="checkbox">A. To make it easy to select the male and female data separately we'll
+        sort the data by sex:</p>
+      <ul>
+        <li>Select cell D1 (which should have the column label Sex)</li>
+        <li>On the "Home" tab click on "Sort and Filter" → "Sort A to Z". Since all of the columns are touching this
+          will sort the whole data set.</li>
+      </ul>
+      <p> <input name="cb12" type="checkbox">B. Now we can make the initial plot of Length against Weight for females.
+      </p>
+      <ul>
+        <li>Select the Weight data for the females, including the column label (so, cells E1 to E45)</li>
+        <li>Hold down the CTRL key, and select the Length data (I1 to I45)</li>
+        <li>Switch to the "Insert" tab, and select a "Scatter" plot with no connecting lines.</li>
+        <li>Add an x-axis label (Weight (lb)) and a y-axis label (Length (in)). Change the plot title to "Length/weight
+          by sex". </li>
+      </ul>
+      <p> <input name="cb15" type="checkbox">C. Now we'll add the male data - this is done in several steps:</p>
+      <ul>
+        <li> Right-click somewhere in the graph and choose "Select data"</li>
+        <ul>
+          <li>In the window that pops up, select "<span class="popup">Add<img class="popupimage" src="add_series1.jpeg"></span>"
+            for the "Legend Entries (Series)" box. </li>
+        </ul>
+        <ul>
+          <ul>
+            <li> In the "Edit Series" window that pops up, write Males as the series name. </li>
+            <li>Click on the "zoom box" (the little <span class="popup">up-arrow icon<img class="popupimage" src="zoom_box.png"></span>
+              next to the Series name: box) for the "Series X values", and select the weights for the males (these are
+              in cells E46 to E144)</li>
+            <li>Click on the "zoom box" for the "Series Y values" and select the cells with lengths for the males (these
+              are in cells I46 to I144)</li>
+            <li>Click "OK" to return to the "Select Data Source" window.<br>
+            </li>
+          </ul>
+        </ul>
+        <li>&nbsp; We can also rename the female series here (which is called "Length" currently) - select the female
+          series and select "Edit"</li>
+        <ul>
+          <li>Change the name of the series to "Females"</li>
+          <li>Close the edit series window</li>
+        </ul>
+        <li>Add a legend to the graph - there are now two sets of points with different colors, one for each sex, and
+          the legend identifies which sex is assigned which color. Click on the + and check the "Legend" box.</li>
+        <li>Add a trend line for females - click on the scatter for one of the female points, right-click and select
+          "Add trendline"</li>
+        <ul>
+          <li>Select a "Power" curve</li>
+          <li>Select "Display equation on chart"</li>
+        </ul>
+        <li>Add a trend line for males (repeat the steps you used for females)</li>
+        <li>Move the equations so that they are both readable.</li>
+      </ul>
+      <p>You'll see that the line for males is steeper than for females - at lighter weights the males are shorter than
+        females, but at heavier weights the males are longer.</p>
+      <h2 id="wt_by_sex" class="part">3. What are the average weights of males and females?</h2>
+      <p>Graphing means for groups of data is a very common graph type in the sciences. Column charts are a good choice
+        for this kind of graph.</p>
+      <p>You will produce a column chart of weights for each sex. The easiest way to do this is to first produce a pivot
+        table with the needed data, then use the "PivotChart" to graph the data. PivotCharts make charts from
+        PivotTables, and allow you to modify the charts by dragging fields around, like we do with PivotTables.</p>
+      <p> <input name="cb4" type="checkbox">A. You know how to do PivotTables already, but just to remind you...</p>
+      <ul>
+        <li>Select a cell within the data set (A2 would be good)</li>
+        <li>Start a Pivot Table (click on the "Insert" tab, and insert a pivot table).</li>
+        <ul>
+          <li>Use "sex" as the row labels, and "weight" as the data variable. </li>
+          <li>Change the value field settings from "Sum" to "Average" for weight </li>
+          <li>The table should look like <span class="popup">this<img class="popupimage" src="pivot_table_weight_by_sex.jpeg"></span>.</li>
+        </ul>
+      </ul>
+      <p> <input name="cb4" type="checkbox">B. Now we'll use the PivotTable as the basis for the column PivotChart.</p>
+      <ul>
+        <li>With any cell of the pivot table selected, switch to the PivotTable Analyze tab, and select "<span class="popup">PivotChart<img
+              class="popupimage" src="pivot_chart_select.jpeg"></span>".</li>
+        <li>From the "Insert Chart" chart type selector, choose the "Column Chart" type (the first option for the row).
+          A chart will be placed in the worksheet. </li>
+      </ul>
+      <p>PivotCharts are designed for exploring your data, rather than for final presentation. PivotCharts are linked to
+        the Pivot Table, and as you change the table the chart will change to reflect its new contents. The gray button
+        that says "Average of Weight" gives the variable you are graphing, and the "Sex" drop down allows you to filter
+        and sort the levels of sex.</p>
+      <p> <input name="cb6" type="checkbox">C. Although the basic chart is fine, the default choice of title is poor,
+        there are no axis labels, no error bars, and it uses a legend that is unneeded since there is only one variable
+        being graphed. To fix those issues:</p>
+      <ul>
+        <li>Double-click on the title and change it to "Average weights of bears".</li>
+        <li>To change the chart properties, click on the + outside of the graph on the right side (next to the
+          paintbrush tool) </li>
+        <ul>
+          <li>Find the "Axis Titles" option, and click on the black triangle/arrowhead to the right side</li>
+          <ul>
+            <li>Check the "Primary vertical" option (like <span class="popup">this<img class="popupimage" src="vertical_title.jpeg"></span>).
+              You will see that "Axis Title" is now showing on the y-axis. </li>
+          </ul>
+          <li>Double click the inserted Y-axis title and change it to "Weight (kg)".</li>
+        </ul>
+        <li>Add error bars - displaying means without error bars is not acceptable in scientific graphs - select one of
+          the bars, click on the + and select "Error bars" &gt; "Standard error" - you will now have error bars showing
+          ± one standard error around each mean.</li>
+        <ul>
+          <li>The minus error bar is overlapping the columns, which looks bad and isn't needed - if you click "More
+            Options..." in the Error Bars chart elements popup, you have the option of displaying both plus and minus
+            error bars, only minus, or only plus - select the Plus option.</li>
+        </ul>
+        <li>Select the legend (the blue square with Total next to it) and delete it.</li>
+        <li>Copy and paste this graph as a picture below your PivotChart to record your progress.</li>
+      </ul>
+      <p> </p>
+      <h2 class="part" id="line_scatter">4. How does body weight vary from month to month?</h2>
+      <p>If we want to see how males and females vary in their weights over time we can modify our column chart to graph
+        the averages for each sex by month. We can make this kind of graph in a couple of different ways in Excel, using
+        columns or using points (the latter is actually a line graph without the lines). We'll see how each of these is
+        done.</p>
+      <h3>Plotting means using column graphs</h3>
+      <p>We basically already have this, so we'll modify the graph of means by sex that we just made to add a grouping
+        for month.</p>
+      <p><input name="cb18" type="checkbox">A. First we will update the PivotTable to group by both sex and month:</p>
+      <ul>
+        <li>Select a cell in the PivotTable, and open the PivotTable <span class="popup">fields<img class="popupimage"
+              src="pivot_table_fields.png"></span> if necessary</li>
+        <ul>
+          <li>Drag Sex from the Rows to the Columns</li>
+          <li>Drag Month into the Rows</li>
+        </ul>
+        <li>Add axis titles (Month for x, and Weight for y)</li>
+        <li>Add error bars, and show only the plus side (you will need to do this once for each sex)</li>
+        <li>Add a title - Weight by month</li>
+      </ul>
+      <p>You now have a graph of the mean weight of bears of each sex by month.</p>
+      <p>The sexes are grouped together for each month with space between the columns for each month to make it easier
+        to see which columns are from which month - this is a clustered bar chart, and is a good choice for displaying
+        the means.</p>
+      <p>The one disadvantage of using column charts is that the columns show the space from 0 to the number being
+        displayed. If the means we were displaying were all large numbers, with differences between them that were small
+        compared with the size of the numbers, most of the graph would be filled with empty space and the actual data
+        would be clustered up at the very top to the point that the differences between the groups would be hard to see.</p>
+      <p>Another alternative is to display the means using points - with no columns on the graph it's acceptable to have
+        the y-axis start someplace other than 0, and it becomes easier to see the actual data.</p>
+      <ul>
+      </ul>
+      <h3>Plotting mean symbols - line charts without the lines</h3>
+      <p>To graph the means as symbols, with error bars around them, we start with a line graph and then remove the
+        lines.</p>
+      <p> <input name="cb19" type="checkbox">A. The data are exactly the same as the grouped column chart we just made,
+        so we can use the same PivotTable. Select a cell in the PivotTable, insert a new PivotChart, but this time
+        select a line graph with <span class="popup">markers showing<img class="popupimage" src="line_graph.jpeg"></span>.
+      </p>
+      <p>Even though a line graph has a categorical x-axis, we have measurements for each month of the study with none
+        missing, so the spacing between months is correct.</p>
+      <p> Add a chart title ("Weights by month - line"), x-axis title ("Month"), and y-axis title ("Weight").</p>
+      <p> <input name="cb19" type="checkbox">B. We want to add error bars to the graph for each mean:</p>
+      <ul>
+        <li>Select the female line</li>
+        <li>Click the + to the right of the graph, select "Error bars" &gt; <span class="popup">"Standard error"<img class="popupimage"
+              src="std_error.png"></span></li>
+        <li>Select the male line and add error bars to it as well</li>
+      </ul>
+      <p>Next we can remove the lines from the graph so that we only have the points, without the lines - we used a line
+        chart to get our months on the x-axis as a set of categories, but connecting the means each month with a line is
+        not necessarily a good choice because the lines are conspicuous features of the graph that are not actually
+        data. If we just want to have the means displayed we should remove the lines.</p>
+      <ul>
+        <li>Select the female line</li>
+        <li>Click on the "Fill and line" formatting options (the paint can icon in the "Format Data Series" settings on
+          the right side of the spreadsheet)</li>
+        <ul>
+          <li>In the "Line" settings select the "No line" option</li>
+        </ul>
+        <li>Select the male line and do the same to remove its line as well</li>
+        <li>Copy the graph and paste it as a picture below</li>
+      </ul>
+      <p>You should now have a graph with means represented by points, with error bars indicating 1 standard error above
+        and below the points.</p>
+      <p>Drag the line-based graph you just made below the grouped column graph of the same data - you'll see that one
+        of the differences between them is that the line-based graph we just made put the male and female means for the
+        same month at the same position along the x-axis, such that they are vertically aligned. In the column chart
+        they are sitting next to each other.</p>
+      <p>The y-axis scaling is still starting at 0 for the line-based graph, but this is because the means are not very
+        big - if the values were much bigger Excel would start higher than 0 on the y-axis.</p>
+      <ul>
+      </ul>
+      <blockquote>
+        <h3>Line graphs and column graphs have categorical x-axes</h3>
+        <p>It's important to remember that Excel makes assumptions about your data based on the <strong>graph type</strong>,
+          not based on the data values you are using. If you look at the x-axis on either the line graph or the column
+          graph you just made it sure looks like a numeric axis - it's made up of numbers, they're in the right order,
+          and they are each 1 unit apart.</p>
+        <p>But, the order and spacing of the numbers is a side-effect of the way month is represented in the data - by
+          recording the months as numbers the months sort in the correct order. Since there is data from every month
+          between April and November there are no gaps in the time series, and each month is 1 away from the previous
+          month and the next month in the series.</p>
+        <p>When we tell Excel to use a line graph for these data, it treats the month numbers as categories. This isn't
+          a problem with these data, but could be if we didn't have a month of data recorded - you can see what Excel
+          would do in this instance by:</p>
+        <ul>
+          <li>Drop down the filter button next to the Row Labels in your PivotTable</li>
+          <li>Un-check 7 - this will remove the July data from the table</li>
+        </ul>
+        <p>You'll see both of the PivotCharts update to reflect the new structure of the table, and rather than leaving
+          a blank for 7 it just puts 6 and 8 together. This would not have happened if the x-axis was numeric - if the
+          x-axis numeric it would show a gap at 7 rather than just sliding 8 over to be next to 6.</p>
+        <p>The other way this can cause problems is if you want to use these graphs with categorical x-axes to get trend
+          lines. Excel lets you get a trend line and an equation from graphs, which seems like a nice shortcut compared
+          to running regression in Jamovi, Minitab, or R to get the equation. But, since the x-axis is categorical Excel
+          doesn't use the month numbers to get the trend line - instead, it assigns a number from 1 to 8 for the eight
+          month categories, and uses these as the x data for the the regression. The equation you get for the trend line
+          would not be the same as if you actually did the regression using the month numbers, but there would not even
+          be a warning that the trend line isn't what it appears to be.</p>
+        <p>This is bad, and I have no idea why Excel does this - it should refuse to fit a trend line on a graph with a
+          categorical axis, or at least give a clear warning message indicating what the trend line actually is. </p>
+        <p>But, since Excel is happy to do the wrong thing in this case, this is one of those instances where you have
+          to accept the responsibility of knowing how your tools work so that you can use them properly.</p>
+        <p>If you need the x-axis to be numeric then you would need to use a scatter plot as the graph type. There are
+          some additional steps needed to make this work, since Excel will not make a scatter plot as a PivotChart. To
+          reproduce the graph as a scatter plot you would need to:</p>
+        <ul>
+          <li>Make the PivotTable with the means for each group by month</li>
+          <li>Add a column of standard deviations and sample sizes for each month</li>
+          <li>Copy the PivotTable, and paste-special as values someplace else in the spreadsheet</li>
+          <li>Calculate the standard errors for each month by sex (standard error is standard deviation divided by the
+            square root of the sample size)</li>
+          <li>Make the scatter plot using month on the x-axis and mean weight for each sex as a data series for the
+            y-axis</li>
+          <li>Specify the error bars as cells in the table, and select the standard errors you calculated</li>
+        </ul>
+        <p>When you have data like these with a numeric x-axis variable with every number represented it's much more
+          convenient to use a bar chart or line graph.</p>
+      </blockquote>
+      <h2 class="part">5. In what month are most of the measurements made in the data set?</h2>
+      <p>We are going to generate some counts of numbers of observations by month, and then look at our graphing options
+        for this kind of data. We usually treat counts of categories as <strong>compositional</strong> data - that is,
+        data that represents parts of a whole. The total numbers of observations may be of interest, since it might tell
+        us something about which month the bears are most active. Or, alternatively we may want to focus on whether it
+        is primarily males or females that are active each moth, in which case the relative number of each sex that is
+        present may be what we want to know. We'll learn how to graph absolute numbers and relative numbers in Excel.</p>
+      <p><input name="cb101" type="checkbox">A. Switch back to the data set in Sheet1 and make a new pivot table in a
+        new worksheet</p>
+      <ul>
+        <li>Use Month as both the rows and as the value field</li>
+        <li>Change the value field setting to count</li>
+      </ul>
+      <p>Counts of levels of a categorical variable are called <strong>frequencies</strong>, so our counts are
+        frequencies of observations by month.</p>
+      <p><input name="cb102" type="checkbox">B. Make a pivot chart, and this time pick the 2-D pie chart type. </p>
+      <p>The size of the slices in a pie chart are set by the <strong>relative frequency</strong> of the category in
+        the data - relative frequencies are just frequencies converted to proportions (each frequency is divided by the
+        total number of observations).</p>
+      <p>When you display counts in a pie chart the purpose is to get a visual impression of which months were most
+        common in the data set. With no y-axis to show the values the actual counts are not displayed, however, which
+        makes it impossible to tell what the actual number of data points is.&nbsp; The pie chart solution to this
+        problem is to add the counts as labels:</p>
+      <ul>
+        <li>Select the pie chart, click on the +, and select "Data labels" (if you click on the triangle next to "Data
+          labels" you'll see you have some choices about where to put them - the default position inside the slices is
+          fine).</li>
+        <li>Change the graph name to "Months that bears were observed"</li>
+        <li>Copy the graph and paste as a picture below the graph. </li>
+      </ul>
+      <p><input name="cb103" type="checkbox">C. If we wanted the pie chart to express the data as percentages, we need
+        to change the settings on the labels to show percentages.</p>
+      <ul>
+        <li>In the graph click on +, then "Data labels", then click the triangle and select "More options". </li>
+        <li>Click on the bar chart icon, open the Label Options, and check the box next to "Percentage" - the values are
+          now shown as percentages instead of counts. You can change the separator to period as well (it defaults to a
+          comma, which is the European convention for the decimal point).</li>
+      </ul>
+      <p>Copy and paste a picture of this graph below the other pie chart picture.</p>
+      <p><input name="cb104" type="checkbox">D. A pie chart is fine for a single set of frequencies, but if we want to
+        compare the frequencies between the sexes we'll need a different chart type. </p>
+      <ul>
+        <li>Select the pie chart, right-click and select "Change chart type"</li>
+        <ul>
+          <li>Select the Stacked Column option in the Column chart types (not the 100% Stacked Column, that comes later)</li>
+          <li>Click "OK"</li>
+        </ul>
+        <li>Select the stacked column PivotChart you just made, and open the PivotChart Fields</li>
+        <ul>
+          <li>Add Sex as a "Legend" field - this will split the data by sex</li>
+        </ul>
+        <li>Add the y-axis title, and change it to "Count"</li>
+        <li>Add the x-axis title and change it to "Month"</li>
+        <li>Since we have a y-axis now we can see what the counts are without needing the columns labeled - click + and
+          un-check data labels</li>
+      </ul>
+      <p>The chart should update to show how many observations were made by sex each month, with the male and female
+        columns stacked on top of one another. The total number of observations is the combined height of male and
+        female columns, but the number observed for each sex can still be seen as well.</p>
+      <p>Copy and paste this graph below your last pie chart.</p>
+      <p><input name="cb105" type="checkbox">E. If we want to focus on the <em>relative</em> number of each sex
+        observed every month, instead of <em>absolute</em> counts of observations, we should express the data as a
+        percentage of the total observations made each month. There are two different ways to do this:</p>
+      <h3>Method 1: change the PivotTable field</h3>
+      <ul>
+        <li>Select a cell in the PivotTable, and edit the value field settings for Count of Month</li>
+        <ul>
+          <li>Select the "Show Values As" tab</li>
+          <li>Drop down the menu for "Show values as" and select "% of Row Total" - since the rows are all of the
+            observations in a month this will give the percentage of female observations each month, and the percent of
+            male observations each month</li>
+        </ul>
+      </ul>
+      <p>You'll see the bars are now Change the y-axis label to "Percent", change the title to "Setting percent in
+        PivotTable" and copy/paste a picture below your previous graph.</p>
+      <h3>Method 2: use the 100% Stacked column chart option</h3>
+      <p>The other way to get the same graph is to change the chart type to one that displays the data as percentages of
+        x-axis groupings.</p>
+      <ul>
+        <li>Change the Count of Month value field settings back to "No Calculation" - your bars should have different
+          heights again, and the y-axis should be displaying counts (the label will still say "Percent", but leave it
+          that way - it will be correct again in a moment)</li>
+        <li>Right-click the graph and select "Change Chart Type"</li>
+        <ul>
+          <li>Select the <span class="popup">"100% Stacked"<img class="popupimage" src="stacked_column_100.png"></span>
+            option </li>
+        </ul>
+      </ul>
+      <p> You should now have the same graph you had before, but the percentages are all being calculated internally -
+        the PivotTable still shows the counts.</p>
+      <h2 class="part" id="radar">6. How do the sexes compare across all of the variables?</h2>
+      <p> </p>
+      <p> </p>
+      <p>We have six different measurements of the sizes of the bears, so to compare them across all six variables we
+        need a graph with six dimensions. Radar charts are just such a graph, so we will give them a try next.</p>
+      <p><input name="cb107" type="checkbox">A. Make one more pivot table, this time with:</p>
+      <ul>
+        <li> sex as the column labels</li>
+        <li>weight, head.w, head.l, neck.g, length, and chest.g as value fields</li>
+        <ul>
+          <li>Change all of these value field settings from sum to average</li>
+          <li>Set all of the value fields in the "Show Values As" tab to "% of row total" (the graph doesn't work well
+            if you're plotting variables with different units, so since we want to compare males and females we can
+            divide each sex's mean by the mean overall - since percentages are unit-less ratios this puts all the
+            variables on a common scale and makes the graph easier to interpret).&nbsp;</li>
+        </ul>
+        <li>Drag the sigma values button into the rows so that each average is in its own row.</li>
+      </ul>
+      <p><input name="cb108" type="checkbox">B. Insert a pivot chart, and select the "Radar" option. You'll see that
+        each ray on the radar is a different variable axis, with all of them starting at 0 in the center. The means for
+        each sex is plotted on each axis, and then the means are connected with lines to make it easy to compare the
+        sexes. You can see that the female's line is completely inside of the male's line, which means the males are
+        bigger on every variable, but the amount of difference is especially big for weight.</p>
+      <blockquote>
+        <h3>Yes, but what about those ugly gray boxes?</h3>
+        <p>I like PivotCharts a lot for their convenience and flexibility. The problem with them is that they put those
+          ugly gray boxes into your graph, which would need to be removed. </p>
+        <p>The easiest way to get rid of them is just to copy the graph and paste it into another MS Office product,
+          such as PowerPoint or Word - the pasted version does not have the gray boxes.</p>
+      </blockquote>
+      <h2 class="part" id="assignment">Assignment</h2>
+      <p> That's it! When you are done, save your spreadsheet and upload it to the class web site.</p>
+      <br>
+    </div>
+  </body>
+</html>
