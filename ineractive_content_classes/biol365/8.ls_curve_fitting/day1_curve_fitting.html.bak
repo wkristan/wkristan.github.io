@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Least squares curve fitting</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Exercise 8a - least squares curve fitting</h1>
+    </div>
+    <div onclick="navToggle()" style="display:none" id="navigation">
+      <p><a href="#curve_fitting">Curve fitting</a></p>
+      <p><a href="#get_estimates">Fit the curve, get the Solver estimates</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <p> Today you will learn how to fit non-linear functions to data using least squares in order to obtain estimates
+        of the function's coefficients.</p>
+      <br>
+      <table style="width: 100%">
+        <tbody>
+          <tr>
+            <td>
+              <p><img src="6400_instr.png" alt="Instrument" hspace="10" align="left">We will use the same kind of
+                photosynthesis data used as an example in lecture. Net photosynthesis can be measured at varying light
+                levels by a portable photosynthesis system like the one pictured to the left. A leaf is placed in the
+                machine's chamber, and light levels are set by the machine. The rate of depletion of CO<sub>2</sub> from
+                the chamber is a measure of carbon fixation through photosynthesis, so the data produced by the system
+                is a set of light levels and photosynthesis rates. Thus, both light level and net photosynthesis are
+                known quantities.</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p> <img alt="Curve" style="width: 218px; height: 192px;" src="typical_photosynth_curve.jpg" vspace="5" hspace="10"
+                  align="left">Light level is set by the machine, making it the independent variable (x-axis), and net
+                photosynthesis is measured in response (y-axis). However, the shape of the response between these two
+                variables is not a straight line, as you can see from the graph of a typical photosynthesis curve shown
+                to the left. Photosynthesis rises quickly at very low light levels because the leaf can't
+                photosynthesize at all without it. Photosynthesis asymptotically approach a maximum when the
+                photosynthetically active tissue is fixing carbon as quickly as it possibly can. Photosynthesis is thus
+                limited by light availability at low light levels, which causes the curve to drop rapidly below a value
+                of about 500.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>To better understand why the curve is shaped this way a model of how plants convert light into fixed carbon has
+        been developed:</p>
+      <p> </p>
+      <p> <img src="equation.jpg" alt="Equation"></p>
+      <p> You'll see that two of the terms in the equation are data values:</p>
+      <p> </p>
+      <ul>
+        <li> Q = light intensity (the independent variable, set by the photosynthesis system)</li>
+        <li> Pnet = net photosynthesis (the response variable, measured by the photosynthesis system)</li>
+      </ul>
+      <p>The other three terms are biophysical properties of the leaf that allow it to convert light energy into fixed
+        carbon:</p>
+      <ul>
+        <li> φ = lower-case Greek Phi = maximum quantum yield (measure of efficiency of conversion from light energy to
+          chemical energy)</li>
+        <li> θ = lower-case Greek Theta = Convexity of the curve (a dimensionless constant)</li>
+        <li> P<sub>marea</sub> = maximum area-based rate of net photosynthesis (CO<sub>2</sub> per m<sup>2</sup> per s)</li>
+      </ul>
+      <p> </p>
+      <p> We will fit data taken from leaves at the bottom of a tree to this curve today.</p>
+      <h2 class="part" id="get_estimates">Fit the curve to the data to obtain estimates of Φ, θ, and P<sub>marea</sub></h2>
+      <p> <strong><input name="Step 1" type="checkbox">Step 1 - Download <a href="curve_fit_data.xlsx">this</a> file,
+          and save it to OneDrive. </strong></p>
+      <p>Or wherever you're saving files for this class, that is.</p>
+      <p>You'll see that you have two worksheets, one with data from a leaf at the bottom of a tree that has only light
+        level (column A, which is Q in the photosynthesis equation) and net photosynthesis (column B, P<sub>net</sub> in
+        the photosynthesis equation). The other has data from a leaf at the top of the same tree, which we won't use
+        until part 2.</p>
+      <p> </p>
+      <p> <strong><input name="step2" type="checkbox">Step 2 - Set up the "Bottom" sheet for curve fitting. </strong></p>
+      <p><input name="step2a" type="checkbox">In cell A15 type "Parameter", and in B15 type "Values". </p>
+      <p> </p>
+      <p> <input name="step2b" type="checkbox">Select A16, switch to the "Insert" tab, and click on "Symbol". On the
+        Symbol selector that pops up, select "Greek and Coptic" as the "Subset", and find capital <span class="popup">
+          Phi<img class="popupimage" src="insert_phi.jpeg"></span> - select it, and click "Insert".</p>
+      <p> </p>
+      <p> <input name="step2c" type="checkbox">Select cell A17 and type "Pmarea". </p>
+      <p> </p>
+      <p> </p>
+      <p> <input name="step2b" type="checkbox">Select cell A18 and insert lower case <span class="popup">theta<img class="popupimage"
+            src="insert_theta.jpeg"></span>, using the "Insert" "Symbol" method you used for Phi. </p>
+      <p> </p>
+      <p> <input name="step2d" type="checkbox">We will need to provide starting values for these parameters, but for
+        now just type in 1's for each parameter (1 for B16, B17, and B18).</p>
+      <p> </p>
+      <p> <input name="step2e" type="checkbox">We will be entering the rather complicated equation, above, as a cell
+        formula next, so to make this easier we are going to <strong>assign names</strong> to each of the parameters we
+        can refer to in the formula. </p>
+      <ul>
+        <li> Click on cell B16 (the Phi parameter), and right-click. </li>
+        <li> In the menu that pops up, select "Define name...". </li>
+        <li> In the "New name" window that opens, the "Name" will already show the Greek Phi symbol - this looks like it
+          would be ideal, but we want to use something that's easy to enter into a cell formula, and don't want to have
+          to do to the symbol selector each time we want to use this parameter. Change the Phi symbol to the word "phi",
+          change the "Scope" to "Bottom" (that is, just use this name in the Bottom worksheet) and click "OK". </li>
+        <li> Now repeat this cell naming process for cell B17 - name B17 "Pmarea".</li>
+        <li> Finally, right-click on B18, and name it "theta". </li>
+      </ul>
+      <p>We can now use these descriptive names instead of cell references in our formulas, which will make it easier to
+        spot mistakes. Named cells are absolute references, so we won't need to worry about using $ in our formulas
+        either.</p>
+      <p> </p>
+      <p> <strong><input name="step3" type="checkbox">Step 3. Calculate predicted Pnet. </strong></p>
+      <p><input name="step3a" type="checkbox">In cell C1 type "Pnet predicted". We will want to enter the formula that
+        predicts Pnet in C2, but the equation is pretty hairy - hard to translate into a cell formula, and easy to make
+        entry errors while doing it. We can make this easier by breaking the equation down into parts that are easy to
+        enter, and then making the final calculation at the end using the parts.</p>
+      <p>I've color coded the parts for you here:</p>
+      <img src="equation_color_coded.png" alt="Color coded">
+      <p>If we have a cell that calculates each of these four color coded parts of the calculation then the final
+        calculation will just be:</p>
+      <img src="equation_simplified.png" alt="Simplified">
+      <p>That's not so hard, right?</p>
+      <p>Let's do these one step at a time...</p>
+      <ul>
+        <li>In cell A27 enter the letter A</li>
+        <li>In cell B27 enter the formula that calculates the blue-coded part of the equation:</li>
+        <ul>
+          <li><span class="Excel">=phi*a2+Pmarea</span> - note that since we named phi and Pmarea we can type in the
+            names as though they were cell references. The only normal cell reference in the formula is A2, which is
+            pointing to the light level (Q) for the first row of data.</li>
+          <li>This formula is multiplying phi by 0 and adding Pmarea, which is currently set to 1, so the formula will
+            show a 1 if it's entered correctly</li>
+        </ul>
+        <li>In cell A28 enter the letter B</li>
+        <li>In cell B28 enter the formula for the red-coded part of the equation:</li>
+        <ul>
+          <li><span class="Excel">=(phi*a2+Pmarea)^2</span> </li>
+          <li>This should also give you a value of 1</li>
+        </ul>
+        <li>In cell A29 enter the letter C</li>
+        <li>In cell B29 enter the formula for the purple-coded part of the equation:</li>
+        <ul>
+          <li><span class="Excel">=4*theta*phi*a2*Pmarea</span></li>
+          <li>This one multiplies theta, phi, and Pmarea by the 0 in cell a2, so it will be a value of 0</li>
+        </ul>
+        <li>In cell A30 enter the letter D</li>
+        <li>In cell B30 enter the formula for the green-coded part of the equation:</li>
+        <ul>
+          <li><span class="Excel">=2*theta</span></li>
+          <li>Since theta is set to 1 you'll get a 2 here</li>
+        </ul>
+      </ul>
+      <p>Now we can put them all together</p>
+      <ul>
+        <li>In cell A31 enter "Full Pnet formula"</li>
+        <li>In cell B31 enter the formula that combines A, B, C, and D as they're shown in the simplified equation above</li>
+        <ul>
+          <li><span class="Excel">=(b27-sqrt(b28-b29))/b30</span></li>
+          <li>This will be equal to 0 if all went well</li>
+        </ul>
+      </ul>
+      <p>Okay, that got us the first Pnet calculated, but we need it for every light level, and we don't want to have to
+        do an A, B, C, and D calculation for every row in the data. Now that we have the pieces entered correctly,
+        though, we can assemble them into a single cell in C2. The process we'll use is to set each of the A, B, C, and
+        D cells into edit mode one at a time, copy the formula inside of them, and then paste them into C2 to assemble
+        the full formula in all its glory. The steps you'll complete look like this:</p>
+      <img src="assemble_predicted1.gif" alt="First step"></div>
+    <div>
+      <p>Note that to make the animated image easier to see I'm hiding some rows - row 10 through 13 and row 19 through
+        25 are hidden from view, your sheet will have some blank rows showing in those ranges.</p>
+    </div>
+    <div>
+      <p>The steps are:
+      </p>
+      <ul>
+        <li>Double-click B27 to set it to edit mode</li>
+        <li>Select the contents, including the = sign and copy it (either CTRL+C or right-click and copy)</li>
+        <li>VERY IMPORTANT - to avoid changing the cell value click the red X on the left of the formula bar to get out
+          of edit mode</li>
+        <li>Select cell C2 and paste the formula - it should still point to A2, since copying the text of the formula
+          like this doesn't trigger an update to the cell references (selecting the entire cell, copying and pasting it
+          elsewhere does make the cell references update, which we don't want here)</li>
+      </ul>
+      <p>Now we'll get the B component into the formula - to do this we'll need to copy what we have entered for B, then
+        subtract the square root of B from what we just entered for A, like so:</p>
+      <img src="assemble_predicted2.gif" alt="Step 2">
+      <p>The steps are:</p>
+      <ul>
+        <li>Double-click B28 to set it to edit mode</li>
+        <li>Select everything <em><strong>except the =</strong></em>, and copy it (either CTRL+C or right-click and
+          copy)</li>
+        <li>Hit the red X to exit editing mode</li>
+        <li>Double-click C2 to get it into edit mode</li>
+        <ul>
+          <li>Since B is inside of a square root, which is being subtracted from A, enter -sqrt( and then paste the B
+            formula contents you just copied - close the parentheses for the sqrt() and hit ENTER</li>
+          <li>You should still have a 0 in C2</li>
+        </ul>
+      </ul>
+      <p>Next we need to subtract C from B inside of the sqrt():</p>
+      <img src="assemble_predicted3.gif" alt="Step 3">
+      <p>The steps are:</p>
+      <ul>
+        <li>Double-click B29 to set it to edit mode</li>
+        <li>Select everything except the = and copy it</li>
+        <li>Activate C2 for editing, and after the B part of the formula inside of the sqrt() enter a minus sign, -, and
+          paste the C part that you just copied (after the 2 you should have a - and then the pasted C part of the
+          formula)</li>
+        <li>The cell value should still be 0</li>
+      </ul>
+      <p>And finally, we need to divide everything currently in C2 by the D part of the formula</p>
+      <img src="assemble_predicted4.gif" alt="Step 4">
+      <p>The steps are:</p>
+      <ul>
+        <li>Double-click on B30 to activate it, and select everything but the = sign</li>
+        <li>Copy the selected formula</li>
+        <li>Hit the red X</li>
+        <li>Activate C2, and after the closing parenthesis for sqrt() enter a division symbol, /, and then paste the
+          contents of the D part of the formula that you just copied</li>
+        <li>To make sure that we're dividing the entire numerator by the entire denominator, put parentheses around the
+          A, B, and C part of the formula (that is , an open parenthesis, (, before the first phi right after = , and a
+          closing parenthesis, ), after the sqrt() closing parenthesis), and then also enclose the 2*theta in the
+          denominator</li>
+      </ul>
+      <p>You final formula will look like this:</p>
+      <img src="photosynth_excel.png" alt="Formula">
+      <p> </p>
+      <p>Hopefully you got all the pieces assembled correctly, but make any changes needed to make the cell in C2 match
+        this formula. </p>
+      <p> </p>
+      <p> <input name="step3b" type="checkbox">Copy and paste the formula from C2 to the rest of the data rows, C3 to
+        C9. The predicted Pnet values should be 1 for the rest of the cells.</p>
+      <p> </p>
+      <p> <strong><input name="step4" type="checkbox">Step 4. Graph the data. </strong></p>
+      <p>At this point we want to pick better starting values for our parameters so that the predicted values come as
+        close as we can get them to the observed values before starting Solver - the closer we are to the correct values
+        when we start the more likely that Excel will find the correct values for us.</p>
+      <p><input name="CheckBox1" type="checkbox">Select cells A1 through C9, and insert a scatter plot with only
+        markers. Then, select the predicted Pnet series on the graph, right-click, and select "Format data series" from
+        the popup menu. In the "Fill and Line" options (the paint bucket), choose "Solid line" as the line style, and
+        then switch to "Marker" and use in "Marker options" use "None" - this will make the predicted values show only
+        as a line on the graph.</p>
+      <p> </p>
+      <p> <input name="step4a" type="checkbox">Add axis labels - use "Light" as the x-axis label, and "Pnet" as the
+        y-axis label.</p>
+      <p> </p>
+      <p> Your graph should look like <span class="popup">this<img class="popupimage" src="fit_bad_start.jpeg"></span>.
+      </p>
+      <p> </p>
+      <p> Now we can use the graph to help us pick some better starting parameters.</p>
+      <ul>
+        <li>
+          <p>The parameter that sets the level at which the curve plateaus is Pmarea. Look at where the actual Pnet data
+            levels off, and set that as the starting value for Pmarea in B17 (3 is good).</p>
+        </li>
+        <li>
+          <p>Quantum yield (Phi) controls the curvature of the graph. Try values of Phi that increase the curvature, and
+            decrease the stair-step appearance of the graph. Start at 0.05.</p>
+        </li>
+        <li>
+          <p>Theta controls the convexity. Try out values of theta in cell b18 that bring the Pnet predicted values as
+            close to the observed Pnet as possible. Start at 0.5.</p>
+        </li>
+      </ul>
+      <p> </p>
+      <p> Once you have the line as close to the data as you can get it, you can move on to the next step.</p>
+      <p> </p>
+      <p> <strong><input name="step5" type="checkbox">Step 5 - Calculate the sum of squared deviations between Pnet and
+          predicted Pnet. </strong></p>
+      <p>We can calculate the sum of squared differences between observed Pnet and predicted Pnet in a single cell if we
+        use an array formula. In cell B11 type "SumSq", and in cell C11 type the array formula:</p>
+      <p> </p>
+      <p class="Excel"> =sum((b2:b9-c2:c9)^2)</p>
+      <p> </p>
+      <p> Don't forget to CTRL-SHIFT-ENTER. You should see curly braces around the formula. If you used my suggested
+        starting values this will be a small number, 0.206831 (we're starting pretty close to the final solution).</p>
+      <p> </p>
+      <p> <strong><input name="step6" type="checkbox">Step 6 - Use Solver to find the parameter estimates. </strong></p>
+      <p>Turn on the Solver if it isn't already present in the Data tab. Click on Solver, and have it set cell C11 (the
+        sum of squared deviations) to Min by changing cells B16:B18 (the parameters). Click "Solve".</p>
+      <p> </p>
+      <p> You'll see that the parameters are now a little different than before, and the curve goes nicely through the
+        data in the graph.</p>
+      <blockquote>
+        <p>If you have trouble getting Solver to give you the right solutions bear in mind that these non-linear fits
+          are a little fussy... it's really important to start as close to the final solution as possible. Try using
+          0.01 for phi and 0.6 for theta and run Solver again.</p>
+      </blockquote>
+      <p>Now is a good time to save your work!</p>
+      <p> </p>
+      <h2 class="part" id="assignment">Assignment</h2>
+      <p> </p>
+      <p> That's all for today - save your Excel file, we'll use it next time to get the standard errors.</p>
+    </div>
+  </body>
+</html>

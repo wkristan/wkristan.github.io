@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+
+
+    
+    <title>Likelihood - curve fitting</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Exercise 9 - curve fitting with likelihoods</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#curve">Curve fitting with maximum likelihood</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <p>Likelihoods are used in a wide range of applications in biology. A major application of likelihood
+        is in estimation - for example, we can use likelihood to fit a curve to data instead of using least squares,
+        which we used last week. Another reason to use likelihood is that it is possible to compare different competing
+        hypotheses that explain a data set against one another.</p>
+      <p>Our first application of likelihood will be to fit the Pnet curve to light intensity using maximum likelihood
+        as an alternative to using least squares, which is what we used last week. For this approach, we will use the same curve
+        as last time, but instead of minimizing the squared differences between observed and predicted values, we will
+        maximize the likelihood of phi, Pmarea, and theta given the data.</p>
+      <p><input name="cb12" type="checkbox"><strong>Step 1. Calculate residuals.</strong></p>
+      <p>Download <a href="likelihood_data.xlsx">this file</a> to wherever you're keeping class files, and open it.</p>
+<p>On worksheet CurveFit I have already predicted the net photosynthesis using the formula we used last week. The
+        least squares estimates we came up with last week are recorded for your reference in
+        cells A23 through B25 as the "Least squares estimates".</p>
+      <p>The predicted values of Pnet are coming from the parameter values in the "ML Estimates" section, cells B16 through 18. We will use
+        Solver to change these until the likelihood maximizes. So, we need to calculate the likelihood.</p>
+      <p>As a first step, calculate the residuals. In cell D1 type "Residuals", and in D2 type <span class="Excel">=b2-c2</span>.
+        Copy and paste this to the rest of the predicted Pnets.</p>
+      <p><strong><input name="cb13" type="checkbox">Step 2. Calculate likelihoods for each data point.</strong></p>
+      <p>In cell e1 type "LogLikelihood". To calculate the likelihood, we will assume the residuals are normally
+        distributed. </p>
+<p>When you fit a line to data, the line represents the mean y-value expected for a given x. Residuals around the predicted values are thus differences from means. If the residuals are normally distributed they will be symmetrical around the line, with equal numbers of positive and negative differences. The likelihood for a residual will be calculated using the normal distribution, with 0 as the mean. We also need to specify the standard deviation, which is unknown, so we will use the "s of resid" in cell
+        B19 as the standard deviation - we'll estimate this standard deviation at the same time as we get estimates for phi, Pmarea, and theta.</p>
+      <p><input name="cb14" type="checkbox">In cell e2 type <span class="Excel">=normdist(d2, 0, b$19, 0)</span>. The
+        structure is: normdist(value, mean, std. deviation, cumulative), where value is the residual, the mean is set to 0, the standard deviation is to be estimated (currently set
+        to 0.1, and in cell B19), and "cumulative" indicates whether we want the probability from negative infinity up
+        to the value (cumulative set to 1) or just the probability density of the value itself (cumulative set to 0, which is
+        what we want).</p>
+      <p><input name="cb15" type="checkbox">This gives us the likelihood, but we would like to work with
+        log-likelihoods. So, modify the formula in E2 to be <span class="Excel">=ln(normdist(d2,0,b$19,0))</span>. This
+        takes the natural log of the normal probability. Copy and paste this to the rest of the cells.</p>
+      <p><strong><input name="cb16" type="checkbox">Step 3. Calculate the likelihood of the entire data set.</strong></p>
+      <p> </p>
+      <p>Now, sum the log likelihoods you just calculated in E2 to E9 in cell E12.</p>
+      <p><strong><input name="cb16" type="checkbox">Step 4. Use Solver to find the ML estimates.</strong></p>
+      <p>Start Solver, and set it to maximize the log-likelihood in cell E12 by changing the parameters in B16-B18, and
+        the standard deviation of the residuals in cell B19.</p>
+      <p>In a cell below the graph, mention any difference in the ML and least squares estimates (or tell me they are
+        identical if you don't get any differences).</p>
+<h2 class="part" id="assignment">Assignment</h2>
+      <p>That's it! We'll move on to using likelihood for analysis of DNA fingerprints next time.</p>
+<h2>Optional - profile likelihood confidence intervals</h2>
+<p>At this point you might be asking, so what? Demonstrating that likelihood can be used as an alternative to least squares is fine, but it doesn't really show any advantage to doing so. There are actually many advantages, but I'm going to just show you one. This gets a little deeper into the statistics than I want to require for class, but if you're interested read on.</p>
+<p>We saw that a likelihood function has a curvature to it, and the place where it maximizes is the location of the estimate for the parameter. If we take the negative of the log-likelihood the maximum likelihood becomes the minimum log-likelihood.</p>
+<p>We can vary just one of the three parameters at a time, and see how the likelihood changes if we change one parameter and not the others - for example, if we vary φ we see:</p><img src="phi_profile_likelihood.png" alt="Phi"></div>
+<div>
+<p>The curve reaches a minimum at the maximum likelihood estimate for φ of 0.03241, and rises as you move to lower or higher values. There is a connection between negative log-likelihoods and the Chi-square probability distribution (you may remember it from you statistics classes), and we can use the Chi-square distribution to pick the value for the negative log-likelihood that is expected to capture 95% of the possible estimate for φ - there are two possible values of φ where the negative log-likelihood has a value of 3.84/2 = 1.92, and these two values of φ are the upper and lower limits of a 95% confidence interval for φ. That is:</p><img src="phi_profile_likelihood_limits.png" alt="Phi limits"></div>
+<div>
+<p>The horizontal line at a -LogLikelihood of 1.92 intersects the likelihood function at a value for φ of approximately 0.03 and 0.035, and these are the upper and lower limits for the 95% confidence interval for φ.</p>
+<p>Likewise, we can find the upper and lower limits for Pmarea:</p><img src="pmarea_profile_likelihood_limits.png" alt="Pmarea limits"></div>
+<div>
+<p>and for <span style="font-family: &quot;Open Sans&quot;,sans-serif;"></span>θ:</p><img src="theta_profile_likelihood_limits.png" alt="Theta limits"></div>
+<div>
+<p>You may be able to tell from the graph for θ that the upper limit is not as far away from the ML estimate as the lower limit because of the curvature of the likelihood function - the structure of the curve we fit to the data makes this so, and using a method that calculates a single value of uncertainty and adds and subtracts it from the ML estimate would not be able to correctly reflect this asymmetry.</p>
+<p>Now all we need to do is find these values!</p>
+<ul>
+<li>Record the current value for the log likelihood - copy cell E12 and paste-special the value in E13</li>
+<li>Label this value "Max. like." in cell D13</li>
+<li>Calculate the difference between the value we just recorded and the current value of the likelihood - since we haven't taken the negative of these values we'll subtract the current value from the maximum to keep this difference positive - enter =e13-e12 in cell e14</li>
+<li>Label this difference "Diff" in cell D14</li>
+<li>Record the current values of the ML estimates - copy A15 to B19 and paste them into cells A28 (it will paste into A28 through B32)</li>
+<li>Start up Solver and set it to:</li>
+<ul>
+<li>Set the objective to E14, and have it make E14 equal 1.92 by varying the value of φ in cell B16</li>
+<li>Run Solver, and you will get one of the two confidence limits (my value was greater than the ML estimate, so it was the upper limit)</li></ul>
+<li>Enter the labels "Lower" and "Upper" in cells C28 and D28, the copy the value you just found for φ into the appropriate place (Upper if you got the estimate I did, of 0.03503)</li>
+<li>Copy the ML estimate for φ from B29 and paste it into B16 - this will set the likelihood back to its ML values.</li>
+<li>Now to find the other (presumably lower) limit change the φ value by a little in the direction you want to go - trye changing the φ value in B16 to 0.03</li>
+<li>Run Solver again, and again have it set the Diff in E14 to 1.92 by changing B16 - you should now have the other (lower) limit of 0.03002 - copy this and paste it into the Lower cell (C29).</li></ul>
+<p>You can set the value for φ back to its ML value, and then repeat this process for Pmarea - have Solver set the Diff to 1.92 by changing the value for Pmarea in B17 (the only change in Solver needed is the cell to change). Note that Solver has some trouble with this unless you get Pmarea a little closer to its final value - try 2.9 for the value of B17 before you run it. To find the other (upper) limit try 2.96 as a starting value.</p>
+<p>Set Pmarea back to its ML value, and run through this for θ - start at 0.6 before running Solver to get the lower limit, and 0.65 for the upper limit.</p>
+<p>There are some other ways that we can use likelihood, but it's very much beyond the scope of this class - I encourage you to take my Biol 531 class next spring if you're interested!</p></div>
+</body></html>

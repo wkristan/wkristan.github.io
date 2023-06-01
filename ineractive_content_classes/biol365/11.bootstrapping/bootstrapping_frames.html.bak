@@ -1,0 +1,689 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Bootstrapping</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Exercise 11 - bootstrapping</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#bootstrapping_excel">Bootstrapping in Excel</a></p>
+      <p><a href="#bootstrap_ci_mean">Bootstrap CI for mean</a></p>
+      <p><a href="#bootstrap_odds_ratio">Bootstrap an odds ratio</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="bootstrapping_excel">Bootstrapping confidence
+        intervals</h2>
+      <p> Another resampling technique that is used commonly in the biological
+        sciences is bootstrapping. The bootstrap can be used in a very similar
+        fashion to randomization testing, but it is also a suitable method for
+        calculating confidence intervals. The procedure you've learned in
+        introductory biostatistics was first developed by Jerzy Neyman and Karl
+        Pearson in the 1930's, and uses the formula:</p>
+      <p>x̄ ± t s<sub>x̄</sub> </p>
+      <p>where x̄ is the sample mean, t is a critical value obtained from a
+        t-distribution, and&nbsp;s<sub>x̄</sub> is the standard error. The
+        product t s<sub>x̄</sub> is called the "uncertainty" of the estimate of
+        x̄, and the upper limit is thus the uncertainty added to x̄, and the
+        lower limit is the uncertainty subtracted from x̄.</p>
+      <p>This simple procedure works well for many data sets, but not all of
+        them. The first problem is that it requires the ability to calculate a
+        standard deviation, which may not be possible for cases in which we
+        calculate a single statistic from the data, and individual data values
+        cannot be used to calculate a standard deviation.&nbsp;As you learned in
+        lecture, quantities that are calculated as a composite of all the data
+        (such as Shannon-Wiener diversity calculations) don't have any
+        individual-level values that we can use to calculate a standard
+        deviation. </p>
+      <p>The other problem with the Neyman-Pearson confidence interval approach
+        is that the formula produces symmetrical confidence intervals. For data
+        types such as proportions that are near either the "basement" value of 0
+        or the "ceiling" value of 1, confidence intervals around the estimate
+        would not be symmetrical.</p>
+      <p>What these two different examples have in common is that there isn't an
+        analytical solution that is theoretically the best. There are several
+        ways to calculate approximate confidence intervals for proportions, but
+        none of them are exact, all have strengths and weaknesses, and none is
+        clearly better than the others. Given that this is the case, it is often
+        better to use a resampling procedure, like bootstrapping, to generate
+        approximate confidence intervals.</p>
+      <p> </p>
+      <p> The most important difference between bootstrapping and the
+        randomization testing procedure we used previously is that bootstrapping
+        involves resampling from our data <span style="font-weight: bold; font-style: italic;">with
+          replacement</span>. This means that in each iteration we can include
+        some observations more than once, and not include others at all. The
+        sample of randomly selected data points is the "bootstrap sample" for
+        that iteration. The VBA code we write will be very similar to last
+        week's randomization test macro, in that we'll take our recorded macro
+        and modify it to loop through the operations 1,000 times and record an
+        observed statistic each time through. But, the setup in Excel will be
+        quite different because we won't be able to simply shuffle the data by
+        sorting on a column of random numbers. Instead, we will use a method
+        that will allow us to randomly select a bootstrap sample with
+        replacement from our observed data each iteration.</p>
+      <p> </p>
+      <p> If you're curious, the "bootstrap" was one of the earliest
+        applications of computationally intensive methods in statistics. It was
+        a very different approach than traditional methods of working with
+        analytical equations to derive formulas for confidence intervals. Since
+        it was a novel method of solving some particularly thorny statistical
+        problems, the developers of the method likened it to pulling yourself up
+        by your bootstraps when everything else you've tried has failed. Thus
+        the name.</p>
+      <p> </p>
+      <h2 class="part" id="bootstrap_ci_mean">Bootstrapping in Excel</h2>
+      <p><strong> <input name="cb1" type="checkbox">Step 1. Download <a href="bootstrap_exercise.xlsm">this</a>
+          file and save it to your H: drive. </strong></p>
+      <p>Open the file and you'll find that the first sheet, SockeyeColor, has
+        the data for skin color of sockeye salmon that we worked with last time.
+        This time, rather than comparing sockeye to kokanee skin color, we are
+        going to bootstrap a confidence interval for the mean sockeye color -
+        the mean is in cell B19, and you will fill in the upper and lower limits
+        once you find them.</p>
+      <p> </p>
+      <p> The worksheet has two columns. The second column has the actual skin
+        color data. To help us in selecting our bootstrap sample, each
+        observation is numbered ("Sockeye number") in the first column.</p>
+      <p> </p>
+      <p><strong> <input name="cb2" type="checkbox">Step 2. Generate random
+          sockeye numbers. </strong></p>
+      <p>The way we will select our bootstrap sample is to generate sockeye
+        numbers at random that will match the numbers in column A. These numbers
+        will then be used in the next step to put the skin colors for the
+        randomly selected salmon number into the bootstrap sample. </p>
+      <p> </p>
+      <p> In column D1 type "Random salmon number". There are 16 sockeye in the
+        sample, so each of our bootstrap samples should have 16 skin colors in
+        it. To select a skin color at random, we need to generate sockeye
+        numbers from 1 to 16 at random. The formula that will do that for you is
+        called "randbetween()":</p>
+      <p> </p>
+      <p class="Excel"> =randbetween(1,16)</p>
+      <p> </p>
+      <p> Type this into cell D2, and copy/paste it to D3 through D17. You will
+        now have 16 numbers that are between 1 and 16. Since each number is
+        being independently generated, some will repeat and some numbers between
+        1 and 16 won't occur - if you look at the numbers generated you'll see
+        some duplication. If you type F9 to recalculate the worksheet, you'll
+        see that a new set of random salmon numbers are selected each time.</p>
+      <p> </p>
+      <p><strong> <input name="cb3" type="checkbox">Step 3. Select skin colors
+          for the bootstrap sample. </strong></p>
+      <p>In cell E1 type "Bootstrap sample". Now that we have random sockeye
+        numbers, we need to place the corresponding skin colors in the cells
+        next to them. In cell E2, type the function:</p>
+      <p> </p>
+      <p class="Excel"> =lookup(d2, a$2:a$17, b$2:b$17)</p>
+      <p> </p>
+      <p> The lookup function takes a value (the lookup value, d2, which is the
+        first random sockeye number), compares it to a list of values (the
+        lookup vector, a$2:a$17, which contains the sockeye numbers), and
+        returns the corresponding value from another list (the result vector,
+        b$2:b$17, which contains the skin colors). The lookup value is a
+        relative reference so that this formula can be copied and pasted to the
+        rest of the cells in E, but both the lookup vector and result vector use
+        absolute references so those ranges don't change when you copy and paste
+        the formula.</p>
+      <p> </p>
+      <p> Copy the formula in E2 and paste it to E3 through E17,which should
+        give you a set of randomly selected skin colors, sampled with
+        replacement from the data set. Check that duplicate random salmon
+        numbers are giving you the same skin color values in your bootstrap
+        sample, and that they match the numbers in the original data set.</p>
+      <p> </p>
+      <p> Note that if you wanted to you could generate the random numbers
+        within the lookup function by replacing "d2" with "randbetween(1,16)".
+        Doing so would make the worksheet more compact and easier to read, but
+        it would make the formula more difficult to debug - we wouldn't be able
+        to check whether the lookup was working correctly if we didn't know what
+        the random salmon number was, for example. It's usually a good idea to
+        develop your spreadsheet with each step separated into a different
+        column initially, so you can pick up on errors more easily, and then
+        combine them into more compact forms once you know you have your
+        formulas right. For this exercise, you can keep the steps separated into
+        different columns.</p>
+      <p> </p>
+      <p><strong> <input name="cb4" type="checkbox">Step 4. Calculate the mean
+          of the bootstrap sample. </strong></p>
+      <p>Label the mean for the bootstrap sample in D19, and calculate it in
+        E19. This is the value that will change each time we re-calculate and
+        generate a new bootstrap sample, and we will be recording this value
+        each iteration.</p>
+      <p> </p>
+      <p><strong> <input name="cb5" type="checkbox">Step 5. Name a column to
+          receive means of repeated bootstrap samples. </strong></p>
+      <p>In G1 type "Bootstrap means".</p>
+      <p> </p>
+      <p><strong> <input name="cb6" type="checkbox">Step 6. Start the macro
+          recorder, and record the needed operations. </strong></p>
+      <p>This will be an extremely simple program, so all we'll use the macro
+        recorder for is to create a blank macro for us, but we will write all
+        the commands we need by hand.</p>
+      <p>Click on "Record Macro". Call the macro "BootstrapCI", and give it the
+        shortcut key ctrl+shift+B. Click OK to start the recorder, and then stop
+        it immediately, before selecting any cells. You should now have a blank
+        macro to edit.</p>
+      <p> </p>
+      <p><strong> <input name="cb7" type="checkbox">Step 7. Write the macro. </strong></p>
+      <p>Click on "Macros", "View macros", then edit the "BootstrapCI" macro you
+        just created.</p>
+      <p>To start, add a couple of blank lines below the last comment character
+        (') and before End Sub.</p>
+      <p>We will be generating a new bootstrap sample 1000 times, and recording
+        the mean in column G. Since we will be executing the operation a fixed
+        number of times we need a For...Next loop. To begin the loop type:</p>
+      <p> </p>
+      <p> For i = 1 to 1000</p>
+      <p>Add a blank line, and end the loop with:</p>
+      <p> </p>
+      <p> </p>
+      <p> Next i</p>
+      <p> </p>
+      <p>Now, between the For and Next statements, we want to add a line that
+        will put the current value of the bootstrap mean into the correct cell
+        of column G. We'll use the same trick as last time, in that we'll use i
+        + 1 to indicate the row of the G column to record the mean in. Type the
+        line:</p>
+      <p> </p>
+      <p> </p>
+      <p> Range("G" &amp; i + 1) = Range("E19").Value</p>
+      <p>This will enter the current value of your bootstrap mean from cell E19
+        into row i + 1 of column G.</p>
+      <p>To make things run a little faster, enter the line:</p>
+      <p>Application.ScreenUpdating = FALSE</p>
+      <p>before the loop starts, and:</p>
+      <p>Application.ScreenUpdating = TRUE</p>
+      <p>after the end of the loop, before End Sub.</p>
+      <p> </p>
+      <p> And that's all there is to it! Save your work!</p>
+      <p> </p>
+      <p><strong> <input name="cb8" type="checkbox">Step 8. Debug. </strong></p>
+      <p>Put the spreadsheet and VBA code window side by side, select the VBA
+        code window, and hit F8 repeatedly to step through the commands in the
+        macro. The program itself is very similar to the randomization test you
+        did last week, but even simpler because there's no need for a sort of
+        the data.</p>
+      <p> </p>
+      <p><strong> <input name="cb9" type="checkbox">Step 9. Run the macro. </strong></p>
+      <p>Once you're sure that everything is running correctly, switch to your
+        spreadsheet and type ctrl+shift+B. When it finishes you'll have 1000
+        bootstrap means in column G. It should only take a few seconds to run.</p>
+      <p> </p>
+      <p><strong> <input name="cb10" type="checkbox">Step 10. Sort the
+          bootstrap means, and find the confidence interval endpoints. </strong></p>
+      <p>When you did the randomization testing exercise you did this step by
+        hand, but why work that hard? We can sort and record the interval upper
+        and lower limits in code instead. After the loop has finished, we can
+        sort column G with the command:</p>
+      <p>Columns("G").Sort key1:=Range("G2"), order1:=xlAscending, header:=xlYes</p>
+      <p>This will sort column G using the data in G2 as the sort "key" (which
+        is the first data value for sorting). The sorting will be in ascending
+        order (order1), and there is a header row that shouldn't be included in
+        the sort (header).</p>
+      <p>Next, we can record the 25th bootstrap mean as the lower limit (which
+        is in row 26, since the first row is a column label) with the command:</p>
+      <p>Range("B20") = Range("G26").Value</p>
+      <p>And finally we can record the 975th bootstrap mean as the upper limit:</p>
+      <p>Range("B21") = Range("G976").Value</p>
+      <p><strong><input name="cb10" type="checkbox">Step 11. Debugging using
+          break points</strong></p>
+      <p>So far the way we know to debug code is to hit F8 to step through the
+        lines of code one by one. Debugging the lines of code we just added is
+        difficult using this method, because they are only executed after the
+        For...Next loop is done. Fortunately, there is a much better way of
+        debugging these lines than hitting the F8 key thousands of times to get
+        through the loop - we can use a break point instead.</p>
+      <p>Break points are added to the code at a point where you want automatic
+        execution of the code to stop, so that you can step through the lines
+        using F8. What we want to do is to add a break at the sort line, so that
+        after all 1000 of the bootstrap means are produced the program will
+        pause and let us use F8 to ensure that the final few lines are working
+        correctly.</p>
+      <p>To add a break, position in the gray vertical band to the left of the
+        Columns("G").Sort command and left click. You will see a red dot will
+        appear next to the line.</p>
+      <p>Now, you can run the program by hitting the "Run" button in the VBA
+        window, <img src="run.png" alt="Run">. The program will execute at full
+        speed until the break point is encountered, and then it will pause. At
+        that point you can use F8 to step through the sort command, and the
+        commands that record the lower and upper limits.</p>
+      <p>To remove the break after you are sure the program is working just
+        click on it again.</p>
+      <p> </p>
+      <h2 class="part" id="bootstrap_odds_ratio">Bootstrap an odds ratio</h2>
+      <p> <img src="manduca_caterpillar.jpg" alt="Caterpillar" style="float: left"><img
+          src="manduca_adult.jpg" alt="Adult" style="float: left; margin-right: 10px">Next,
+        we will use the bootstrap approach to test whether moths can remember
+        things that they learned as caterpillars. This example is taken from
+        lecture notes developed by Dolph Schluter at the University of British
+        Columbia, which in turn were based on an experiment by Blackiston et al.
+        (2008, PLoS One 3: e1736).</p>
+      <p> </p>
+      <p> As you no doubt aware, moths and butterflies begin life as
+        caterpillars, which look nothing like moths and butterflies.
+        Caterpillars become adult moths through a process called
+        "metamorphosis". The changes in body architecture during metamorphosis
+        are dramatic, to the point that many caterpillar tissues
+        un-differentiate, and then re-differentiate into different tissues as
+        adults. It's possible that the brain tissue also undergoes a substantial
+        re-formation, but if this is the case any learning that took place as a
+        caterpillar should be lost as an adult.</p>
+      <p> </p>
+      <p>Blackiston and colleagues wanted to see whether the things caterpillars
+        learn are remembered by adult moths. To test this, they conditioned a
+        group of tomato hornworm (<span style="font-style: italic;">Manduca
+          sexta</span>) caterpillars to avoid the smell of ethyl acetate (EA) by
+        stimulating them with a mild electrical shock when they were exposed to
+        the chemical. These caterpillars developed an aversion to the smell, and
+        would crawl away when EA was presented. Another group of caterpillars
+        used as controls were exposed to EA but were not shocked, and thus did
+        not develop an aversion to the smell. After each set of caterpillars
+        underwent metamorphosis to adults, they were tested for aversion to the
+        smell of EA by putting them in a chamber with clean air piped into one
+        side, and EA infused air piped into the other. The direction they moved
+        was an indication of whether they avoided EA. The summarized data are
+        here:</p>
+      <p>Table 1. Responses to EA air by adults trained as caterpillars to avoid
+        EA, compared with untrained controls.</p>
+      <table class="tableLarge" style="width: 383px; height: 234px;">
+        <tbody>
+          <tr>
+            <th><br>
+            </th>
+            <th colspan="2">Caterpillar treatment </th>
+          </tr>
+          <tr>
+            <th>Adult response </th>
+            <th>Control</th>
+            <th>Trained to avoid EA</th>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">Chose clean air<br>
+            </td>
+            <td style="vertical-align: top; text-align: center;">25<br>
+            </td>
+            <td style="vertical-align: top; text-align: center;">32<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">Chose EA air<br>
+            </td>
+            <td style="vertical-align: top; text-align: center;">21<br>
+            </td>
+            <td style="vertical-align: top; text-align: center;">9<br>
+            </td>
+          </tr>
+          <tr>
+            <td style="vertical-align: top;">Totals<br>
+            </td>
+            <td style="vertical-align: top; text-align: center;">46<br>
+            </td>
+            <td style="vertical-align: top; text-align: center;">41<br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+      <p> To test whether there is a difference in selection of air types by
+        trained or control animals, we will bootstrap the <strong>odds ratio</strong>
+        for each treatment. <span style="font-weight: bold;">Odds</span> are
+        ratios of the probability of an event occurring divided by the
+        probability of an event not occurring. So, in this case, the odds of
+        choosing clean air for trained caterpillars would be: </p>
+      <p>(32/41)/(9/41), or 32/9 = 3.55. </p>
+      <p>The odds of choosing clean air for the controls would be 25/21 = 1.19.
+      </p>
+      <p> </p>
+      <p> An <span style="font-weight: bold;">odds ratio</span> is the ratio of
+        odds for one group divided by odds for another group. The odds ratio for
+        trained to control caterpillars would then be (32/9) / (25/21) = 2.99.
+        This means that the odds that a trained caterpillar will choose clean
+        air is 2.99 times as large as the odds that a control caterpillar will
+        choose clean air. If trained caterpillars and controls behaved in
+        exactly the same way the odds ratio would be 1. </p>
+      <p>We now want to know whether the observed odds ratio of 2.99 is
+        significantly different from 1. We can assess this by calculating a
+        confidence interval for the observed odds ratio of 2.99, and if the
+        interval includes 1 then we can't be certain that the odds are different
+        for trained and control caterpillars. If the interval doesn't include 1,
+        then we have evidence that the odds of avoiding EA air are higher for
+        moths that were trained to avoid EA air as caterpillars, and thus that
+        moths are remembering what they learned as caterpillars.</p>
+      <p> </p>
+      <p><strong> <input name="cb1a" type="checkbox">Step 1. Switch to sheet
+          "MothLearning". </strong></p>
+      <p>You'll see three columns, the first giving an ID number for the moth,
+        the second identifying the treatment type (trained to avoid EA or
+        control), and the third identifying the adult response (clean air or EA
+        air). Each row is the result for a single moth. The table above was
+        generated from data like this.</p>
+      <p> </p>
+      <p><strong><input name="cb2a" type="checkbox"> Step 2. Generate random
+          numbers. </strong></p>
+      <p>In cell D1 type "Random numbers", and in cell D2 write a formula that
+        generates integer numbers between 1 and 41. Copy and paste this formula
+        JUST to cells D2 through D42 - these will be used to select bootstrap
+        samples for the trained group only.</p>
+      <p> </p>
+      <p> Next, in cell D43, write another formula that selects numbers between
+        42 and 87. These will be used to select a bootstrap sample from the
+        control animals only. Copy and paste the function to cells D44 through
+        D88.</p>
+      <p> </p>
+      <p><strong><input name="cb3a" type="checkbox">Step 3. Select the bootstrap
+          sample. </strong></p>
+      <p>In cell E1 type "Bootstrap sample", and in E2 use the "lookup" function
+        to select a sample from the trained moths. The formula will be:</p>
+      <p> </p>
+      <p class="Excel"> =lookup(d2,a$2:a$88, c$2:c$88)</p>
+      <p> </p>
+      <p> Copy this and paste it through cell E88. This formula takes the moth
+        ID randomly selected in column D and selected the adult response
+        associated with it. Since you're generating the random numbers
+        separately for trained and control animals, we can use just one lookup()
+        function, and we can let the random number formulas take care of
+        sampling from the right group.</p>
+      <p> </p>
+      <p><strong><input name="cb4a" type="checkbox"> Step 4. Set up a pivot
+          table to calculate the frequencies.</strong></p>
+      <p>Insert a pivot table that counts the Adult Responses (rows) by the
+        Treatments (columns), and use adult responses as the Values (use "count"
+        as the statistic). Start the pivot table in cell H1.</p>
+      <p>The pivot table will look the same as the table above.</p>
+      <p> </p>
+      <p><strong><input name="cb5a" type="checkbox"> Step 5. Calculate the odds
+          ratio. </strong></p>
+      <p>The odds of an event is the probability the event will occur divided by
+        the probability that it will not occur. In cell H8 type "Odds of
+        choosing clean air", and in I8 type:</p>
+      <p> </p>
+      <p class="Excel"> =i3/i4</p>
+      <p> </p>
+      <p> This first calculation gives the odds of selecting clean air for the
+        controls. Copy and paste to J8 to get the odds of selecting clean air
+        for the trained moths.</p>
+      <p> </p>
+      <p> Now, to calculate the ratio of these odds, in cell I10 type:</p>
+      <p> </p>
+      <p class="Excel"> =j8/i8</p>
+      <p> </p>
+      <p> and type the label "Odds ratio" in cell H10. The value should be 2.99,
+        which is our observed experimental result. </p>
+      <p>Copy it and paste-special the observed odds ratio's value to I12, and
+        label it "Observed odds ratio" in H12. Here again, we don't really need
+        this value to get our confidence interval, but it's useful to have it to
+        help you interpret the results.</p>
+      <p>Type "Lower" and "Upper" into cells H13 and H14, respectively - we will
+        be putting the lower and upper limits of the confidence intervals into
+        I13 and I14 when we write the macro.</p>
+      <p> </p>
+      <p><strong><input name="cb6a" type="checkbox"> Step 6. Modify the pivot
+          table to use the bootstrap samples. </strong></p>
+      <p>Replace "Adult responses" with "Bootstrap sample" in both the row
+        labels and Values. The odds ratio in cell I10 now reflects the bootstrap
+        sample counts rather than the actual data counts.</p>
+      <p> </p>
+      <p><strong><input name="cb7a" type="checkbox"> Step 7. Name a column to
+          receive the bootstrap values. </strong></p>
+      <p>In cell M1 type "Bootstrap odds ratios".</p>
+      <p> </p>
+      <p><strong><input name="cb8a" type="checkbox"> Step 8. Start the macro
+          recorder, and record the needed operations. </strong></p>
+      <p>Click on "Record macro", and call it "BootstrapOdds", and give it the
+        shortcut key ctrl+shift+O. </p>
+      <p> </p>
+      <p> While the macro recorder is running, do the following:</p>
+      <p> </p>
+      <p> </p>
+      <ul>
+        <li>
+          <p>Select a cell within the pivot table, right-click, and refresh.</p>
+        </li>
+      </ul>
+      <p> </p>
+      <ul>
+        <li>
+          <p> Select the odds ratio in i10, right-click and copy it.</p>
+        </li>
+      </ul>
+      <p> </p>
+      <ul>
+        <li>
+          <p> Select cell M2, right-click and paste-special the value.</p>
+        </li>
+      </ul>
+      <p> </p>
+      <p> Stop the recorder.</p>
+      <p> </p>
+      <p><strong><input name="cb9a" type="checkbox"> Step 9. Modify the macro to
+          add a loop, and record the results. </strong></p>
+      <p>Open the new macro "BootstrapOdds" for editing. You'll see that it is
+        added below the bootstrap macro you already programmed.</p>
+      <p> </p>
+      <p> Add the loop by putting the "For i = 1 to 1000" before the first
+        "Range..." statement, and the "Next i" after
+        the"Selection.PasteSpecial..." statement.</p>
+      <p> </p>
+      <p> Modify the "Range("M2").Select" statement to increment each time the
+        loop runs, and to enter the value in cell I10. The line should read:</p>
+      <p>Range("M"&amp; i + 1) = Range("I10").Value</p>
+      <p>This command does the work of the selection and copying of I10, as well
+        as the ActiveSheet.PasteSpecial command, so you can delete these lines.</p>
+      <p>You don't actually need to select a cell to refresh the PivotTable, so
+        delete the first selection statement, just before your pivot table
+        refresh.</p>
+      <p>When you are done, all that will be left will be the loop, with a line
+        for refreshing the pivot table, and the line given above that places the
+        bootstrap odds ratio into cell Mi+1.</p>
+      <p>You can add a line to sort column M, and to write the 26th row and
+        976th row of M into the lower and upper limits cells (cells I13 and
+        I14).</p>
+      <p>You can also add a line before the loop to turn off screen updating,
+        and another after the loop to turn it back on.</p>
+      <p>Save your work, and then run through the loop a few times in debug mode
+        (F8) to make sure it's working. Then put a break at the sorting line so
+        that you can check to see that sorting and recording results are
+        working.</p>
+      <p> </p>
+      <p><strong><input name="cb10a" type="checkbox"> Step 10. Run the macro. </strong></p>
+      <p>Switch to the worksheet and type ctrl+shift+O. It should take about 10
+        seconds to complete.</p>
+      <p> </p>
+      <p>In cell H15 tell me whether, based on this analysis, you can say that
+        training as caterpillars carried over into the behavior of the adults.</p>
+      <h2>Making decisions in code</h2>
+      <p>For our last macro we will learn how to use If...then...else statements
+        to make decisions based on data values. This macro will also use
+        variables that we declare and initialize, and will only interact with
+        the worksheet to record the final results at the end.</p>
+      <p>We are going to write a macro that produces the counts of adult moths
+        that either chose clean air or EA, depending on whether they were
+        trained to avoid EA as caterpillars. This will reproduce the observed
+        pivot table counts in Table 1.</p>
+      <p><strong><input name="cb10a" type="checkbox">Step 1. Open the macro
+          editor.</strong></p>
+      <p>The first thing you need to do is to open your macros for editing -
+        select "Macros" → "View macros". In the Macro window select
+        "BootstrapOdds" and select "Edit" - this will open the macro editor.</p>
+      <p><strong><input name="cb10a" type="checkbox">Step 2. Start a new
+          subroutine.</strong></p>
+      <p>We will write a new macro without starting the macro editor this time -
+        below the "End Sub" line at the bottom of the macro editor window start
+        a new line and enter the line:</p>
+      <p>Sub Table()</p>
+      <p>You will see a horizontal line will appear separating this new macro
+        you are creating and the End Sub that ends the BootstrapOdds() macro
+        above.</p>
+      <p>Add a few blank lines and type:</p>
+      <p>End Sub</p>
+      <p>Now you will write your macro in between the Sub and End Sub lines.</p>
+      <p><strong><input name="cb10a" type="checkbox">Step 3. Define variables.</strong></p>
+      <p>The way the macro will work will be to work down the rows of the Adult
+        responses column (C). If the adult response is "Chose clean air" we will
+        add 1 to a variable that counts the number of times adult moths chose
+        clean air. We will then look at the Treatment column for that same row
+        (B) and if the Treatment is "Trained to avoid EA" we will add 1 to a
+        variable that counts how often an adult who chose clean air was trained
+        to avoid EA. If the Treatment is not "Trained to avoid EA" we will add 1
+        to a variable that counts how often an adult who chose clean air was not
+        trained to avoid EA. We will thus need 3 variables for the cases in
+        which the adult response is "Chose clean air". If the adult did not
+        choose clean air, we will need a variable to record how often adults
+        chose EA, and one to record those that chose EA that were trained to
+        avoid EA, and one to record those that chose EA and were not trained to
+        avoid EA. We thus will need to declare six variables.</p>
+      <p>Type the lines:</p>
+      Dim adClean as Integer<br>
+      Dim adEA as Integer
+      <p>These first two lines will be the variables that count the total number
+        of adults that chose clean air, and the total number of adults that
+        chose EA air. The next four lines will count up combinations of adult
+        choice and caterpillar treatment:</p>
+      Dim adClean_trClean As Integer <br>
+      Dim adClean_trEA As Integer <br>
+      Dim adEA_trClean As Integer<br>
+      Dim adEA_trEA as integer<br>
+      <p>If you enter them exactly as shown here, you'll see the final line
+        doesn't use the correct capitalization for "as" and "integer", but the
+        macro editor recognizes these as key words used to define variables, and
+        capitalizes them for you automatically. Note that we're using a naming
+        convention that will help you remember what each variable is - the first
+        part of the name is the adult response, and "ad" is used to indicate
+        this. The second part of the name after the underscore indicates how the
+        caterpillars were trained, and "tr" is used to indicate this. The two
+        variables that record total numbers of adult responses of each type have
+        only the "ad" but not the "tr" part in their names. Using variable names
+        that are self-explanatory is very helpful in helping you use them
+        properly in the programs you write.</p>
+      <p><strong><input name="cb10a" type="checkbox">Step 4. Initialize
+          variables</strong></p>
+      <p>Now that you have six variables, which should all be set to 0 to start.
+        Make a blank line after your last Dim statement and then type the lines:</p>
+      adClean = 0 <br>
+      adEA = 0 <br>
+      adClean_trClean = 0 <br>
+      adClean_trEA = 0 <br>
+      adEA_trClean = 0 <br>
+      adEA_trEA = 0
+      <p><strong><input name="cb10a" type="checkbox">Step 5. Write the
+          For...Next loop</strong></p>
+      <p>After your last initialization, enter a blank line, and then type:</p>
+      For i = 2 to 88
+      <p>The data are in rows 2 to 88, so this sets us up to work through all of
+        the data. Make a couple of blank lines, and then type:</p>
+      Next i
+      <p><strong><input name="cb10a" type="checkbox">Step 6. Write the code that
+          does the counting</strong></p>
+      <p>Within the loop you just made, enter the lines (note that the lines
+        starting with an apostrophe are comments from me to you that explain
+        what the code is doing. You do not need to write the comments into your
+        program):</p>
+      <p>'First, start an If...then that will take the first value in column C
+        and ask if it is equal to "Chose clean air"</p>
+      If Range("C" &amp; i).Value = "Chose clean air" Then
+      <p>'Next, write the lines that will be executed if this comparison comes
+        back as TRUE. First, you will want to add 1 to the adClean variable.</p>
+      adClean = adClean + 1
+      <p>'Next, we need another If...then to decide whether the caterpillar was
+        trained to avoid EA or not</p>
+      <p>'This second If...then is nested inside of the first, so it will only
+        be executed on adults that chose clean air</p>
+      If Range("B" &amp; i).Value = "Trained to avoid EA" Then
+      <p>'Now we need to add 1 to the adClean_trEA variable</p>
+      adClean_trEA = AdClean_trEA + 1
+      <p>'There are only two possible treatments, so we can handle the controls
+        with an Else statement that executes only if the If...Then comes back as
+        FALSE</p>
+      Else<br>
+      adClean_trClean = adClean_trClean + 1<br>
+      End If
+      <p>'The End If ends the second If...then that only applies to moths that
+        chose clean air. We now return to the first If...then that pertained to
+        the adult choice.</p>
+      <p>'Since the first If...then asked if the adult chose clean air, we can
+        use an Else for the cases in which the adult chose EA air</p>
+      Else<br>
+      adEA = adEA + 1</div>
+    <div>
+      <p>'Now that we are dealing with adults that chose EA, we need to ask
+        again if they were trained as caterpillars to avoid EA</p>
+      If Range("B" &amp; i).Value = "Trained to avoid EA" Then</div>
+    <div>adEA_trEA = adEA_trEA + 1</div>
+    <div>Else</div>
+    <div>adEA_trClean = adEA_trClean + 1</div>
+    <div>End If</div>
+    <div>
+      <p>'We have finished counting for the adults that chose clean air or chose
+        EA, so we need to close the first If...then with a matching End If </p>
+      End If</div>
+    <div>
+      <p><strong><input name="cb10a" type="checkbox">Step 7. Writing readable
+          code - indenting levels.</strong></p>
+      <p>Before you go on to the next step, assuming you got everything entered
+        correctly above, your code probably looks something like <span class="popup">this<img class="popupimage" src="no_indenting.png"></span>. Code
+        that is formatting this way is hard to read, because it's hard to find
+        the matching If...Else...End If lines in the code. In general, it's a
+        good idea to use indenting as a way of making it clear where the
+        beginning and ending of loops and if...then statements are found.</p>
+      <p>Start with the For...Next loop as un-indented, and then indent the
+        first If...Then by one tab stop. Indent the matching Else and End If
+        statements to the same level as the If. </p>
+      <p>Set each of the nested If...Then...Else...End If's to two tab stops, so
+        that they match each other.</p>
+      <p>Finally, set the commands within the interior If...Else...End If's to
+        three tab stops.</p>
+      <p>When you are done, your code should look like <a class="link" style="display: none"
+          href="indenting.png">this.</a> <span class="ipt">this.<span class="ip"><img
+              src="indenting.png"></span></span> Code that is properly indented
+        is much easier to read, because the Else and End If that pair with the
+        first If are all at the same indenting level, and the Else and End If's
+        that pair with the two If's nested inside of the first are also at the
+        same indent level. Indenting the statement that are within each of the
+        If's also makes it easy to see which commands are executed depending on
+        whether the logical conditions come back TRUE or FALSE.</p>
+      <p>Note that indenting levels are not interpreted by Excel, they are just
+        used to make the code easier to read by programmers.</p>
+      <p><strong>Step 8. Report the counts to the worksheet.</strong></p>
+      <p>We now have counts for all combinations of caterpillar training and
+        adult choice, as well as totals for the two adult choices. We will now
+        write them back into the MothLearning worksheet. We have been using
+        pivot tables with adult choice as the row labels, and caterpillar
+        training as the columns, so to lay out your results in the same way type
+        the lines:</p>
+      Range("I18") = adClean_trClean <br>
+      Range("J18") = adClean_trEA <br>
+      Range("K18") = adClean <br>
+      Range("I19") = adEA_trClean <br>
+      Range("J19") = adEA_trEA <br>
+      Range("K19") = adEA
+      <p>We should also add some labeling:</p>
+      Range("I17") = "Control" <br>
+      Range("J17") = "Trained to avoid EA" <br>
+      Range("K17") = "Total" <br>
+      Range("H17") = "Adult choices:" <br>
+      Range("H18") = "Chose clean air" <br>
+      Range("H19") = "Chose EA air"
+      <p>And some column totals:</p>
+      Range("I20") = Range("I18").Value + Range("I19").Value <br>
+      Range("J20") = Range("J18").Value + Range("J19").Value <br>
+      Range("K20") = Range("K18").Value + Range("K19").Value
+      <p><strong>Step 9. Assign a keyboard combination, and run your program.</strong></p>
+      <p>Switch to your worksheet, and select "Macros" → "View macros". You
+        should see "Table" listed as one of the macros. Select it, and click
+        "Options", and then assign the key combination of CTRL+SHIFT+T.</p>
+      <p>If you close the macros settings, and hit CTRL+SHIFT+T you should see a
+        table of counts for adult choices (rows) by treatments (columns) that
+        matches the table of observed counts above.</p>
+      <h2 class="part" id="assignment">Assignment</h2>
+      <p> </p>
+      <p> Save your work and upload...all done!</p>
+    </div>
+  </body>
+</html>
