@@ -1,0 +1,356 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Solver for numerical analysis</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Exercise 7 - using the Solver for numerical analysis</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#numerical_analysis">Numerical analysis</a></p>
+      <p><a href="#prop_jacks">Expected proportion of jacks</a></p>
+      <p><a href="#data">The data - salmon</a></p>
+      <p><a href="#size_appropriate">Size-appropriate behaviors</a></p>
+      <p><a href="#lifetable">Finding solutions iteratively - growth rate from a life table</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <p>Numerical analysis is a general term for methods that yield approximate solutions to problems, instead of
+        analytical ones. Analytical solutions come from developing equations to describe a system, and then solving for
+        some quantity of interest. Analytical solutions are mathematically correct, which means they have an infinite
+        precision - you can calculate analytical solutions to as many decimal places as you need, and the answer will be
+        accurate.</p>
+      <p>In contrast, numerical methods are sophisticated versions of trial and error. Numerical solutions have a fixed
+        level of precision, meaning that they are only expected to be accurate to a specified number of decimal places.
+        We get to specify the precision, up to a point - remember, in Excel we get 15 significant digits to play with.
+        In the majority of cases you would encounter, a solution that is accurate to 15 significant digits is more than
+        accurate enough. If you only require a solution to a few significant digits anyway, numerical solutions can be
+        found that are identical to analytical ones to that level, either approach will work equally well. For some
+        equations analytical solutions don't exist, in which case numerical methods are the only option.<br>
+      </p>
+      <p>We actually have two goals for today.</p>
+      <p> </p>
+      <ul>
+        <li>
+          <p> Learn to use numerical analysis to find solutions to problems. </p>
+        </li>
+        <li>
+          <p>Learn how to translate equations expressed in mathematical notation into cell formulas in Excel.</p>
+        </li>
+      </ul>
+      <p>The second goal will emerge from working on the first. As you work through the problems, I will start by giving
+        you examples of how to do the translation, and then will give you only advice about how to make the translation,
+        and will end by only giving you the mathematical notation and telling you to do the translation yourself. Don't
+        hesitate to ask for help if you get stuck, but do try it yourself each time first.<br>
+      </p>
+      <p> </p>
+      <h2 class="part" id="data">Jack and hooknose male salmon</h2>
+      <img src="jack_hooknose.jpg" alt="Male salmon" style="width: 360px; height: 167px;" vspace="2" hspace="5" align="left">
+      <p>Chinook salmon are a species of Pacific salmon that hatched in freshwater streams, move out to the ocean to
+        develop into adults, and then return to their natal streams to spawn. Chinook males are found in two different
+        morphs, "jacks" and "hooknoses". Hooknoses are the large males with the curved upper jaw that you probably think
+        of when you picture a salmon. Jacks are small males that more closely resemble females in size and color, and
+        lack the curved upper jaw. The picture to the left shows the two different kinds of males - the jacks are very
+        different.</p>
+      <p> </p>
+      <p> For a long time jacks were thought to be "runts" that didn't reproduce. Further study has shown, however, that
+        jacks come from the largest juveniles that reach sexual maturity early, and return to spawn a year or more
+        younger than the hooknoses, but at a smaller body size. </p>
+      <p>Female salmon lay unfertilized eggs into depressions in the gravel at the bottom of a stream (called "redds"),
+        which are then fertilized externally by a male. The large, hooknosed males defend females at redds, and chase
+        away rival males. Jacks are not able to defend females against the larger, older hooknose males by fighting, but
+        they can instead use their small body size as an advantage. Jack salmon will hide in proximity to a female and
+        her intended hooknose male mate, and then rush in and fertilize the eggs while the hooknose male is busy
+        defending against other big males in the area.</p>
+      <p> </p>
+      <p> The success of the jack and hooknose male reproductive strategies depends on how common each is in the
+        population. When there are few jacks in the population, the hooknose males are constantly distracted by
+        challenges from other hooknose males, and since the jacks are more easily overlooked they have much higher
+        success in sneaking in and fertilizing eggs. When jacks are very common, and thus the hooknose males are
+        relatively less common, the hooknose males can focus on defending against jacks, and can fertilize the eggs as
+        soon as they are laid by the females; jacks end up fertilizing very few eggs when there are too many jacks
+        around. </p>
+      <p>Jacks and hooknose males are thus an example of <strong>frequency dependent</strong> selection, because the
+        success of each reproductive strategy depends on how common it is. Frequency dependent selection tends to lead
+        to a <strong>stable polymorophism</strong>, meaning that more than one morphology is found in the population;
+        because both male morphologies become highly successful when they are rare, they are protected from being
+        eliminated from the population.</p>
+      <h2 class="part" id="prop_jacks">Expected proportion of jack males in the population</h2>
+      <p> </p>
+      <p> </p>
+      <table style="width: 100%">
+        <tbody>
+          <tr>
+            <td>
+              <p><img alt="Equilibrium" src="equilibrium.jpg" hspace="5" align="left">We will use what is already known
+                from studies of breeding success in jacks and hooknose males to estimate the proportion of jacks we
+                would expect to find in a population, given the reproductive fitness of each type of male at a
+                particular proportion of jacks in the population. Fitness here refers to Darwinian fitness, which is a
+                measure of an individual's genetic representation in the next generation. Fitness includes both survival
+                and reproduction, but we can use reproduction as an index of fitness (all of the salmon die after
+                spawning, so neither has a long-term survival advantage in any event).</p>
+              <p>According to this graph, both strategies depend on the percent jacks in the population. As you move
+                along the x-axis, you'll see that at nearly every point one strategy is better than the other. When the
+                percent jacks is low, the jack strategy is better, and jacks will have higher fitness. Higher fitness
+                implies that more of the offspring produced will be jacks, and in the next generation the percent jacks
+                will be higher. Eventually the percent jacks will get large enough that the hooknose strategy starts to
+                have higher fitness, and hooknoses will start to increase in frequency. The only place where neither
+                strategy has an advantage is at p*, because the fitnesses are the same there - p* is thus the
+                equilibrium percent jacks, which is the point where no change in percent jacks is expected. Populations
+                should generally approach this equilibrium. Since the equilibrium isn't at 0 or 100%, we expect that
+                there will always be a mix of the two male strategies in populations - thus, a stable polymorphism.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p> </p>
+      <p>Let's see how we can use numerical analysis to estimate this equilibrium point.<br>
+      </p>
+      <p><input value="step1value" name="step1" type="checkbox"><strong>Step 1. Download data. </strong></p>
+      <p>Download <a href="jack_salmon_demog.xlsx">this</a> file and open it. The first worksheet (called "Prop jacks
+        graphs") has three columns, one labeled "Proportion jacks", one "Jack fitness", and one "Hooknose fitness".
+        Proportions of males that are jacks from 0 to 1 are given (which is the range of all possible values - we can't
+        have negative proportions, or proportions greater than 1). Fitness will be represented by the number of
+        offspring per male on average.</p>
+      <p> </p>
+      <p><input value="step2value" name="step2" type="checkbox"><strong>Step 2. Calculate the fitnesses of jacks and
+          hooknoses.</strong></p>
+      <p>From studies of breeding success for these different male morphs, the following equations predict the fitness
+        of each morph:</p>
+      <p> </p>
+      <p> Jack males: fitness = 3.5 e <sup>-3 (prop. jacks)</sup></p>
+      <p> </p>
+      <p> Hooknose males: fitness = 0.5 e <sup>2 (prop. jacks)</sup></p>
+      <p> </p>
+      <p>To do the calculations you will need to translate these equations into Excel formulas - I'll give you the first
+        one for jack male fitness, which you'll enter into cell B2:</p>
+      <p><span class="Excel">=3.5*exp(-3*a2)</span></p>
+      <p>Copy and paste it to the rest of the Proportion jacks (through cell b12). </p>
+      <p>Now you can translate the equation for hooknose males and enter it into C2, and copy/paste to the rest of the
+        hooknose male cells (if you enter it correctly you'll get 0.5 as the value in cell C2).</p>
+      <p> </p>
+      <p> <input value="step3value" name="step3" type="checkbox"><strong>Step 3. Plot jack fitness and hooknose male
+          fitness against proportion jacks. </strong></p>
+      <p> <input value="step3a.value" name="step3a" type="checkbox">Select the three columns, and insert a scatter plot
+        showing only smooth lines (no symbols). If your equations were entered correctly, your graph should look like <a
+          class="link" style="display: none" href="graph1_fitness.jpeg">this</a> <span class="ipt">this:</span></p>
+      <p><span class="ipt"><span class="ip"><img src="graph1_fitness.jpeg"></span></span> </p>
+      <p>(this is the default graph, without changing the x-axis scaling, and without adding axis labels - not okay for
+        a final product). </p>
+      <p> </p>
+      <p> <input value="step3b.value" name="step3b" type="checkbox">Once you have your graph, find the place(s) where
+        the lines cross. In cell B14 enter how many times the lines cross - this will tell us how many equilibrium
+        solutions we need to find. </p>
+      <p><input name="step3c" type="checkbox">In B15 enter the approximate equilibrium proportion jacks you expect based
+        on your interpretation of the graph - in other words, at about what x-axis value does the line crossing occur?</p>
+      <p> </p>
+      <p> <input value="step4value" name="step4" type="checkbox"><strong>Step 4. Set up conditions for the Solver to
+          solve. </strong></p>
+      <p>Switch to the worksheet called "Prop jacks equil", and you will see labels for "Proportion of jacks" (B3),
+        "Fitness of jacks" (B5), "Fitness of hooknoses" (B7), "Difference in fitness" (B9), and "Analytical solution"
+        (B12). To set up the worksheet to find the equilibrium proportion of jacks do the following:</p>
+      <ul>
+        <li>In cell C3, enter the proportion of jacks you expect will be the equilibrium, which you entered in cell B15
+          of the "Prop jacks graph" sheet. This will be your starting value for Solver to work with.</li>
+        <li>In cell C5 enter the expected fitness of jacks, given this beginning proportion of jacks. This is the same
+          formula you entered in the previous sheet for fitness of jacks, but you will use C3 from this sheet as the
+          proportion of jacks (so, you can copy and paste the formula from the "Prop jacks graphs" sheet, but then
+          change the cell reference to point to c3 instead of a2 in your exp() function).</li>
+        <li>In cell C7 enter the fitness of hooknoses, given this beginning proportion of jacks. Use the formula you
+          entered in the "Prop jacks graphs" sheet, but use C3 as the proportion jacks.</li>
+        <li>In the "Difference in fitness" cell, cell C9, calculate the difference between the fitnesses. </li>
+      </ul>
+      <p>Since fitnesses are always non-negative, we can simply take the difference here - the difference will only be
+        zero when the fitnesses are equal, and when it's zero we've found the equilibrium proportion of jacks expected
+        in the population.</p>
+      <p>Now everything is set, we just need to use Solver to find the equilibrium proportion of jacks.</p>
+      <p> </p>
+      <p> <input value="step5value" name="step5" type="checkbox"><strong>Step 5. Use the Solver to calculate the
+          equilibrium proportion of jacks. </strong></p>
+      <p>If it's activated the Solver is found at the right side of the ribbon in the Data tab. </p>
+      <p>If you don't see a Solver option, do the following: </p>
+      <ul>
+        <li> Select "File", and find the "Options" at the bottom of the green field on the left side of the window. </li>
+        <li> At the bottom of the "Excel Options" window will be a selection called "Add-Ins", which you should select.
+        </li>
+        <li> At the bottom of the "Add-ins" window is the "Manage" "Excel Add-ins" area - click the "Go" button. </li>
+        <li> Finally, check the box next to "Solver Add-in" and click "OK". </li>
+      </ul>
+      <p>Now when you switch to "Data" you should see the solver option at the right side of the ribbon. </p>
+      <p> </p>
+      <p><input name="Step5.c2" type="checkbox">Start the Solver by clicking on it in the Data tab. </p>
+      <p>There are several things we need to do to set up Solver:</p>
+      <ul>
+        <li><strong>Tell Solver where its objective cell is</strong>. To do this, enter $C$9 into the "Set Target Cell"
+          box - the objective is the difference in fitnesses between the strategies that we want to be zero. </li>
+        <li> <strong>Tell Solver what its goal is</strong>. Click on the "Value of" button for the "To:" option and
+          enter 0 as the value - in other words, we're telling Solver we want the differences to be 0. </li>
+        <li> <strong>Tell solver what cells to change in order to meet the objective</strong>. Enter $C$3 into the "By
+          Changing Variable Cells" box - this will alter the proportion of jacks. Excel will change this cell until the
+          difference is 0 (or, more correctly, until it is as close to 0 as we've asked it to get). </li>
+        <li> <strong>Tell solver what numbers it's allowed to use when it changes the variable cells</strong>. We know
+          that the proportion jacks can't be lower than 0 or greater than 1, but Solver has no way to know this. We can
+          tell solver to only try out proportion jack values to numbers between 0 and 1 by setting constraints</li>
+        <ul>
+          <li>Click on "Add" next to the "Subject to the constraints" area</li>
+          <li>Set the cell reference to C3 and use &lt;= 1 as the constraint (click "OK" to apply the constraint). </li>
+          <li>Repeat this operation to add the constraint that cell C3 must be &gt;= 0.&nbsp;</li>
+          <li>Both constraints should now be in the Subject to the Constraints list.</li>
+        </ul>
+        <li>When you're done with the setup, your solver parameters should look like <span class="popup">this<img class="popupimage"
+              src="solver.jpeg"></span>. Click on "Solve". </li>
+      </ul>
+      <p> </p>
+      <p> Note that the difference in fitness is not exactly equal to 0. This is a numerical solution, and Solver quits
+        when it gets sufficiently close to its objective (how close can be set by you with the "Precision" and
+        "Convergence" options, but the default is usually adequate).</p>
+      <p> </p>
+      <p> <input value="step6value" name="step6" type="checkbox"><strong>Step 6. Confirm this is the correct answer by
+          calculating the analytical solution<br>
+        </strong></p>
+      <p>We could have used an analytical solution for this problem - if we set the equations equal to each other:</p>
+      <p>0.5 e <sup>2 (prop. jacks)</sup> = 3.5 e <sup>-3 (prop. jacks)</sup> </p>
+      <p> </p>
+      <p>and take the log of both sides:</p>
+      <p>ln(0.5) + 2 (prop. jacks) = ln(3.5) - 3 (prop jacks)</p>
+      <p>we can solve for the proportion jacks:</p>
+      <p>prop jacks = (ln(3.5) - ln(0.5))/5</p>
+      <p>You can do this calculation easily in Excel - in cell C12 enter: </p>
+      <p class="Excel">=(ln(3.5)-ln(0.5))/5</p>
+      <p>It should match your Solver solution to several decimal places, which shows you that numerical methods are
+        viable alternatives to analytical approaches.</p>
+      <p> </p>
+      <h2 class="part" id="lifetable">Finding population growth rate from a life table</h2>
+      <p>Now that we've confirmed that Solver can find solutions that are match the analytical solution we will switch
+        to an example that has no analytical solution. As you learned in lecture, we can calculate a population growth
+        rate from a life table using the Euler equation, which is Σl<sub>x</sub>b<sub>x</sub>e<sup>-rx</sup>. The value
+        we want to calculate is r, and it isn't possible to solve for r. We will use Solver to estimate r numerically.</p>
+      <p>On the sheet "Life table", you have data on Chinook salmon survival and reproduction. The first column,
+        "Stage", gives a name to each row of the table - the first row represents eggs laid, and the second row
+        represents juvenile salmon that migrate to sea. The rest of the rows are the numbers of individuals that are
+        adults for one year, two years, three years, and so on. The age (in years) that corresponds with each stage is
+        in column B, and the number of individuals of each age is in C, labeled n(x). The numbers are standardized to
+        start at 100,000 eggs laid, and you can see that for 100,000 eggs only 4800 juveniles will survive, only 336
+        will make it to their first year of adulthood, and only 57 live to be ten years old. The next column (D, labeled
+        b(x)) is births per spawning adults.</p>
+      <p>To calculate population growth rate, we will need a column for survivorship (lx), the product of survivorship
+        and birth rate (lxbx), and then the Euler equation calculation for each row (l<sub>x</sub>b<sub>x</sub>e<sup>-rx</sup>).
+        We will use a cell in the spreadsheet (G13) to specify the growth rate (r) in the Euler equation. We will then
+        sum the Euler column. With this setup, any time we change the value of r in cell G13 we will change the sum of
+        the Euler values. By telling Solver to change the growth rate in G13 until the Euler sum in G15 is equal to 1,
+        we can estimate the growth rate.</p>
+      <p><strong><input name="dem1" type="checkbox">Step 1. Calculate lx</strong></p>
+      <p>lx is the proportion of the total number originally in the population that is still alive at age x. In cell e2
+        type:</p>
+      <p class="Excel">=c2/c$2</p>
+      <p>Copy and paste this to the rest of the cells in column E. Using an absolute reference to the second row for the
+        denominator means that every value in the n(x) column is divided by the original number of salmon in value C2.</p>
+      <p><strong><input name="dem2" type="checkbox">Step 2. Calculate lxbx</strong></p>
+      <p>This is just the product of the lx and the bx column. For each cell, multiply the lx by the bx value in the
+        same row. You can do this, make it so!</p>
+      <p><strong><input name="dem3" type="checkbox">Step 3. Calculate the Euler value</strong></p>
+      <p>Enter a starting value for r of 0 into cell G13.</p>
+      <p>Translate the Euler formula, (l<sub>x</sub>b<sub>x</sub>e<sup>-rx</sup>), into an Excel spreadsheet formula in
+        cell G2, then copy and paste to the rest of the cells. Use G$13 as the value of r, and use the ages in column B
+        for the value of x inside of your exp() function. Don't forget the minus sign on -rx.</p>
+      <p>Then, sum the values in G2 through G11 in cell G15.</p>
+      <p>If all went well, the sheet should look like <span class="popup">this<img class="popupimage" src="life_table.jpg"></span>.</p>
+      <p><strong><input name="dem4" type="checkbox">Step 4. Use Solver to find r.</strong></p>
+      <p>Now, use Solver to find the growth rate for this population. To do this:</p>
+      <ul>
+        <li>Start Solver</li>
+        <li>Use G15 as the objective</li>
+        <li>Have Solver set the objective to 1 </li>
+        <li>Change the growth rate in G13</li>
+        <li>Growth rates can be negative, so un-check the box that says "Make Unconstrained Variables Non-Negative" (you
+          don't need any constraints on this one either)</li>
+      </ul>
+      <p>Let Solver find a solution. You should see that it's a negative value (-0.09695), which is probably correct -
+        most species of Pacific salmon are declining.</p>
+      <p> <strong><input name="dem4" type="checkbox">Step 5. Check for other possible solutions.</strong></p>
+      <p>We can use our array formula skills for this step. We want to confirm that there is only one value of r that
+        results in an Euler sum of 1, so let's start by making a range of possible r values in column i:</p>
+      <ul>
+        <li>Enter "r" in i1</li>
+        <li>Enter the value -1 in i2</li>
+        <li>Enter the value -0.9 in i3</li>
+        <li>Select i2 and i3 and use the fill handle to extend the series to cell i22 - the value in i22 should be 1</li>
+      </ul>
+      <p>Next enter the formula to calculate the Euler sum for r of -1:</p>
+      <ul>
+        <li>Enter "Sum Euler" in J1</li>
+        <li>Enter the formula =sum(f$2:f$11*exp(-i2*b$2:b$11)) in cell J2 and use CTRL+SHIFT+ENTER to record it as an
+          array formula - this does the same calculation we did in cell G15, but this time using the growth rate in i2</li>
+        <li>Copy the cell and paste it to the rest of the cells below, J3 through J22 - since the only cell reference
+          that's not absolute is the one pointing to i2, where the first growth rate is, as you copy and paste the
+          formula you get the Euler sum for each growth rate</li>
+      </ul>
+      <p>You'll see that the sum gets close to 1 at a growth rate of -0.1, which is value closest to the estimate in G13
+        of -0.09695 in our series of possible r values. As we move away from -0.1 the values diverge from 1 - below -0.1
+        the sums become huge, and above -0.1 they approach zero. Given this only one value of r gives us an Euler sum of
+        1 - our estimate of -0.09695 is the only solution we need to find.</p>
+      <h3>Improving birth rate to stabilize the population</h3>
+      <p>We can use numerical analysis to answer hypothetical questions as well - for example, this population is
+        evidently in deep trouble, and if we wanted to do something about it we would need to improve survival or
+        reproductive success, or both. We can use Solver to help us determine how much of an improvement in these
+        demographic rates we would need to stabilize the population.</p>
+      <p>We'll start with improvements needed to reproduction.</p>
+      <p><strong>Step 1: make a copy of the life table worksheet</strong></p>
+      <p>We don't want to alter the actual table, so let's make a copy we can mess around with.</p>
+      <ul>
+        <li>Right-click on the "Life table" tab, and select "Move or copy"</li>
+        <li>Check the "Create a copy" box, and select [move to end]</li>
+        <li>Click "OK"</li>
+        <li>Double-click on the new tab and change the name to "Reproduction"</li>
+      </ul>
+      <p><strong>Step 2: copy the b(x) column</strong></p>
+      <p>We'll record a copy of the b(x) column in the cells below them.</p>
+      <ul>
+        <li>Select cells D2 through D11</li>
+        <li>Copy</li>
+        <li>Paste to cell D14 (select D14 and paste - the entire set of b(x) values will be pasted in D14 through D23)</li>
+        <li>Enter the label "Original b(x)" in cell D13</li>
+      </ul>
+      <p><strong>Step 3: Enter a multiplier that represents the amount of improvement needed</strong></p>
+      <p>In cell D25 enter the value 1, and in C25 enter the label "Improvement needed"</p>
+      <p><strong>Step 4: make the b(x) values equal to the originals multiplied by the improvement needed</strong></p>
+      <p>In cell D2 enter a formula that multiplies D14 by D25 - use an absolute reference for the multiplier in D25,
+        and copy/paste the formula to the rest of the b(x) cells in D3 through D11.</p>
+      <p>To confirm this all worked, you should initially see the same b(x) values as before, because you're multiplying
+        them all by 1. Set the improvement needed to 2 and you should get all the b(x) values in the table doubled.</p>
+      <p>Set the improvement needed back to 1 before moving to the next step.</p>
+      <p><strong>Step 5: use Solver to find the amount of improvement in births or survival needed to stabilize the
+          population</strong></p>
+      <p>Now we're going to find the amount of improvement in birth rates needed to stabilize the population.</p>
+      <p>A stable population has a growth rate of 0, so enter 0 into cell G13.</p>
+      <p>Start Solver, and this time:</p>
+      <ul>
+        <li>Use the sum Euler cell (G15) as the objective again, and have Solver set it to 1</li>
+        <li>Change the Improvement needed in cell D25, but not the growth rate</li>
+      </ul>
+      <p>Solver will now find the birth rates that cause the Euler sum to be 1 when growth rate is 0. You'll see that
+        the improvement needed to stabilize the population is 1.775221 - this means that we need to increase
+        reproduction by 77.5% to stabilize the population.</p>
+      <h3>Improving survival to stabilize the population</h3>
+      <p>Make another copy of the Life table sheet, move it to the end of the workbook, and re-name it "Survival".</p>
+      <p>Copy cells E2 through E11 - paste their values into cells C14 through C23, and label them in C13 "Original lx"</p>
+      <p>Enter the improvement needed in C25, and label it as "Improvement needed" in cell B25.</p>
+      <p>Now enter the formulas to make the lx values equal the originals multiplied by the improvement needed - in cell
+        E3 multiply the lx for migrants in cell c15 by the improvement needed in cell c25 (use an absolute cell
+        reference for the rows of c25). Why not start with the eggs? Because the life table sets lx to 1 for eggs, and
+        we can't do better than 100% survival.</p>
+      <p>Enter a growth rate of 0 (in cell g13), and then use Solver to find the improvement in survival needed to get
+        the Euler sum back to 1.</p>
+      <p>You'll see that it would also take a 77.5% improvement in survival to stabilize the population.</p>
+      <h2 class="part" id="assignment">Assignment</h2>
+      <h2> </h2>
+      <p> </p>
+      <p> Done! Upload your completed spreadsheet to the course web site.</p>
+    </div>
+  </body>
+</html>
