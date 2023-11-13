@@ -1,0 +1,1358 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Genetic drift simulation - step 1</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Genetic drift simulation - stages 1 and 2</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Intro</a></p>
+      <p><a href="#stage1">Stage 1 - initial run of 500 generations</a></p>
+      <p><a href="#stage2">Stage 2 - repeat 100 times</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div>
+      <h2 class="part" id="intro">Genetic drift simulation</h2>
+      <p> For the final two weeks of class, you will build a simulation model of
+        genetic drift. Genetic drift is important to evolutionary biology, plant
+        and animal breeding, biotechnology, and biological conservation. We will
+        focus on the conservation applications in this case, and as such we will
+        focus on how genetic drift affects allelic diversity (which is important
+        for a species' ability to adapt to its environment) and heterozygosity
+        (which is important for avoiding genetic diseases, and for an
+        individual's ability to fight off wide ranges of infectious diseases). </p>
+      <p>We will break the work down into four stages:</p>
+      <p> </p>
+      <p> </p>
+      <ul>
+        <li>
+          <p>Initial setup of the spreadsheets, and simulation of a single run
+            of 500 generations. This is your goal for this week.</p>
+        </li>
+      </ul>
+      <p> </p>
+      <ul>
+        <li>
+          <p>Modification to run the simulation 100 times, collect data from
+            each. This is the goal for next Monday.</p>
+        </li>
+      </ul>
+      <p> </p>
+      <ul>
+        <li>
+          <p>Increase population size</p>
+        </li>
+      </ul>
+      <p> </p>
+      <ul>
+        <li>
+          <p>Add immigration. These last two are easy, and can both be done on
+            the last day of class.</p>
+        </li>
+      </ul>
+      <p> You should be able to complete these four versions of the model by the
+        end of the final day of class, on May 11th. When you've completed the
+        simulations you will write up the results and submit your writeup and
+        simulation models in place of a final exam for the class. </p>
+      <p> </p>
+      <h2 class="part" id="stage1">Stage 1: Setting up the simulation model</h2>
+      <p>The model will be general, and is not meant to model a particular
+        species. However, we have some choices to make about how to construct
+        the simulation that need to be guided by biological characteristics. So,
+        in a general sense, the "species" we are simulating will have the
+        following properties:</p>
+      <p> </p>
+      <p> </p>
+      <ul>
+        <li>
+          <p>Diploid (meaning there are two alleles per gene, one inherited from
+            the mother and one from the father) </p>
+          <p> </p>
+        </li>
+      </ul>
+      <p> </p>
+      <ul>
+        <li>
+          <p>Sexually reproducing</p>
+        </li>
+      </ul>
+      <p> </p>
+      <ul>
+        <li>
+          <p>Random mating</p>
+        </li>
+      </ul>
+      <p> </p>
+      <p> The model will be <strong>individual-based</strong>, meaning that our
+        model will simulate individuals in the population in our model, and will
+        be a <strong>simulation model</strong>, meaning that we will study the
+        virtual individuals to understand how drift affects the gene pool rather
+        than writing equations and finding the solutions for particular
+        variables (our model would be analytical instead of stochastic if we
+        analyzed equations to find solutions). Random changes in gene frequency
+        (i.e. genetic drift) will emerge from the process of random mating
+        between our simulated individuals, which will randomly select some
+        individuals to produce offspring while others produce none. The fact
+        that mates will be selected at random from the population will make the
+        model <strong>stochastic</strong>, and each simulation run will be
+        somewhat different from any other. Our model will thus be a <strong>stochastic
+          individual-based simulation model</strong>.</p>
+      <p>Although we don't need to specify a particular species that our model
+        represents, the type of random mating we will simulate is easiest to
+        imagine from "<span class="popup"><img class="popupimage" src="ecs23340-fig-0001-m.jpg"
+            style="width:300px">broadcast spawning</span>", which is common in
+        attached marine invertebrates like the coral polyps in the example
+        image. Species such as anemones are not capable of moving around to find
+        a mate, and both males and females release their gametes into the water
+        column, where fertilization occurs. There is little opportunity in
+        broadcast spawning for individuals to select mates, and random mixing of
+        alleles is the best model of how it works.</p>
+      <p> </p>
+      <p> To keep the simulation relatively simple we will only concern
+        ourselves with a single gene with 5 different alleles. Any single
+        individual can only have two alleles, one of which was inherited from
+        its mother and one from its father, but different individuals in a
+        population can have different ones - the five alleles in the population
+        will be labeled A, B, C, D, and E.</p>
+      <p>The simulation model will use Excel to store all the data, and to do
+        much of the work of the simulation, including the random mating and
+        calculation of summary statistics, such as allele frequencies,
+        heterozygosity, and allelic diversity. We will write VBA macros to
+        simulate change over time across generations, and to record results each
+        generation of each model run.</p>
+      <p> </p>
+      <p> The first thing we need to do is to establish our initial populations
+        of individuals. We will only use two properties of each individual: sex
+        and genotype.</p>
+      <p> </p>
+      <h3><input name="cb1" type="checkbox">Step 1. Set up the basic spreadsheet
+        layout for the initial parent population.</h3>
+      <p>We need to set up the genotypes for the parent population, which will
+        establish the starting allele frequencies for the population's gene
+        pool. We'll refer to these as the initial conditions, and each time we
+        run the simulation we'll return the population to this starting point.
+        First we'll set up the layout.</p>
+      <p><input name="cb1.a" type="checkbox">1. Open Excel to a blank
+        spreadsheet. In cell A1 write "Parent population".</p>
+      <p> </p>
+      <p> <input name="cb1.b" type="checkbox">2. In cell A4 of the first
+        worksheet (Sheet1) write "ID", and in cell A5 through A54 enter
+        sequential numbers from 1 to 50 (you can use the "fill series" trick, or
+        enter numbers 1 and 2, then extend them with the fill handle).</p>
+      <p> </p>
+      <p> <input name="cb1.c" type="checkbox">3. In cell C3 write "Males", and
+        in cell C4 write "Allele 1". In cell D4 write "Allele 2".</p>
+      <p> </p>
+      <p> <input name="cb1.d" type="checkbox">4. In cell F3 write "Females",
+        and in cell F4 write "Allele 1". In cell G4 write "Allele 2".</p>
+      <p> </p>
+      <p> <input name="cb1.e" type="checkbox">5. Double-click on the "Sheet1"
+        tab and rename the sheet "Simulation".</p>
+      <p> </p>
+      <p> <input name="cb1.f" type="checkbox">6. Save the spreadsheet as a <span
+          style="color: magenta;"> <span style="font-weight: bold;">macro-enabled
+            spreadsheet called "drift_simulation_n100" - use "File" → "Save as",
+            and then make sure you select "Excel Macro-Enabled Workbook" from
+            the "Save as type:" drop-down menu</span>.</span></p>
+      <p><span style="color: red;"><span style="color: black;">If you don't save
+            as a macro-enabled worksheet your macro won't be saved...don't let
+            this happen to you! <br>
+          </span></span></p>
+      <p><span style="color: red;"><span style="color: black;">At this point
+            your worksheet should look like this:</span></span></p>
+      <img src="step1_basic_setup.png" alt="First step">
+      <h3><input name="cb2" type="checkbox">Step 2. Initial conditions:
+        establish the genotypes of the first 100 individuals in the population</h3>
+      <p> We will begin this population all five of the alleles (A, B, C, D, and
+        E) at a frequency of 0.2, which means that each of the five will
+        represent 20% of the total alleles in the population. </p>
+      <p>We can translate gene frequencies into genotype frequencies using the
+        Hardy-Weinberg formula. Hardy-Weinberg translates allele frequencies
+        into genotype frequencies by assuming that alleles combine at random, in
+        proportion to their frequencies in the population. We can see how it
+        works using a version of a Punnett square, with each parental allele in
+        a row and column label, which then combine to form genotypes of
+        offspring:</p>
+      <table class="tableLarge" style="width: 562px; height: 154px;">
+        <tbody>
+          <tr>
+            <th><br>
+            </th>
+            <th>A<br>
+              (0.2)</th>
+            <th>B<br>
+              (0.2)</th>
+            <th>C<br>
+              (0.2)</th>
+            <th>D<br>
+              (0.2)</th>
+            <th>E<br>
+              (0.2)</th>
+          </tr>
+          <tr>
+            <th>A (0.2)</th>
+            <td>AA<br>
+              (0.2<sup>2</sup>)</td>
+            <td>AB<br>
+              (0.2)(0.2)</td>
+            <td>AC<br>
+              (0.2)(0.2)</td>
+            <td>AC<br>
+              (0.2)(0.2)</td>
+            <td>AE<br>
+              (0.2)(0.2)</td>
+          </tr>
+          <tr>
+            <th>B (0.2)</th>
+            <td>AB<br>
+              (0.2)(0.2)</td>
+            <td>BB<br>
+              (0.2<sup>2</sup>)</td>
+            <td>BC<br>
+              (0.2)(0.2)</td>
+            <td>BD<br>
+              (0.2)(0.2)</td>
+            <td>BE<br>
+              (0.2)(0.2)</td>
+          </tr>
+          <tr>
+            <th>C (0.2)</th>
+            <td>AC<br>
+              (0.2)(0.2)</td>
+            <td>BC<br>
+              (0.2)(0.2)</td>
+            <td>CC<br>
+              (0.2<sup>2</sup>)</td>
+            <td>CD<br>
+              (0.2)(0.2)</td>
+            <td>CE<br>
+              (0.2)(0.2)</td>
+          </tr>
+          <tr>
+            <th>D (0.2)</th>
+            <td>AD<br>
+              (0.2)(0.2)</td>
+            <td>BD<br>
+              (0.2)(0.2)</td>
+            <td>CD<br>
+              (0.2)(0.2)</td>
+            <td>DD<br>
+              (0.2<sup>2</sup>)</td>
+            <td>DE<br>
+              (0.2)(0.2)</td>
+          </tr>
+          <tr>
+            <th>E (0.2)</th>
+            <td>AE<br>
+              (0.2)(0.2)</td>
+            <td>BE<br>
+              (0.2)(0.2)</td>
+            <td>CE<br>
+              (0.2)(0.2)</td>
+            <td>DE<br>
+              (0.2)(0.2)</td>
+            <td>EE<br>
+              (0.2<sup>2</sup>)</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Homozygotes are produced when the same allele is contributed by each
+        parent, which means that if the frequency of the allele is p, then the
+        homozygous genotype should be produced at a frequency of p x p, or p<sup>2</sup>
+        - there is only one way in the table for each homozygous combination to
+        occur, so p<sup>2</sup> is the final calculation of the frequency of the
+        genotype. Since all of the alleles have a frequency of 0.2, this means
+        homozygotes occur at a frequency of 0.04. </p>
+      <p>When two different alleles combine their frequencies are also
+        multiplied - if the frequency of the first is p and the frequency of the
+        second is q, then the frequency of the heterozygote would be pq. If you
+        look at the table, though, each heterozygote occurs twice in the table,
+        and must be added together. Equivalently, pq + pq is 2pq, so every
+        heterozygote occurs at a frequency of 2 x 0.2 x 0.2 = 0.08.</p>
+      <p>There are 50 males in the population, and 50 x 0.04 = 2, so each
+        homozygote will occur two times. Each heterozygote will occur 50 x 0.08
+        = 4 times. The genotype frequencies we need to use are shown in the
+        table below.</p>
+      <table width="100%">
+        <tbody>
+          <tr>
+            <td>
+              <table class="tableLarge" style="width: 100px; margin-right: 10px">
+                <tbody>
+                  <tr>
+                    <th>Genotype<br>
+                    </th>
+                    <th>Frequency<br>
+                    </th>
+                    <th>Number of males<br>
+                    </th>
+                  </tr>
+                  <tr>
+                    <td>AA<br>
+                    </td>
+                    <td>0.04<br>
+                    </td>
+                    <td>2<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>AB<br>
+                    </td>
+                    <td>0.08<br>
+                    </td>
+                    <td>4<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>AC<br>
+                    </td>
+                    <td>0.08</td>
+                    <td>4<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>AD<br>
+                    </td>
+                    <td>0.08</td>
+                    <td>4<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>AE<br>
+                    </td>
+                    <td>0.08</td>
+                    <td>4<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>BB<br>
+                    </td>
+                    <td>0.04<br>
+                    </td>
+                    <td>2<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>BC<br>
+                    </td>
+                    <td>0.08</td>
+                    <td>4<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>BD<br>
+                    </td>
+                    <td>0.08</td>
+                    <td>4<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>BE<br>
+                    </td>
+                    <td>0.08</td>
+                    <td>4<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>CC<br>
+                    </td>
+                    <td>0.04</td>
+                    <td>2<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>CD<br>
+                    </td>
+                    <td>0.08</td>
+                    <td>4<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>CE<br>
+                    </td>
+                    <td>0.08</td>
+                    <td>4<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>DD<br>
+                    </td>
+                    <td>0.04</td>
+                    <td>2<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>DE<br>
+                    </td>
+                    <td>0.08</td>
+                    <td>4<br>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>EE<br>
+                    </td>
+                    <td>0.04</td>
+                    <td>2<br>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+            <td><br>
+              <p> </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p> </p>
+      <p> <input name="cb2a" type="checkbox">1. With this information we can
+        set up the initial population - start with Allele 1. </p>
+      <ul>
+        <li>For the first 18 males enter an A for Allele 1 - as you can see from
+          the table, if you sum up the number of males with genotypes starting
+          with an A, there are 18 of them.</li>
+        <li>For the next 14 males enter a B for Allele 1 - if you refer to the
+          table there are 14 males with a B for Allele 1</li>
+        <li>For the next 10 males enter a C for Allele 1</li>
+        <li>For the next 6 males enter a D for Allele 1</li>
+        <li>For the final 2 males enter an E for Allele 1</li>
+      </ul>
+      <p> </p>
+      <p> <input name="cb2b" type="checkbox">2. Set up Allele 2's. Now, use the
+        "Number of Males" for each genotype to assign Allele 2. </p>
+      <ul>
+        <li>For the first 2 males enter A for Allele 2 - this will produce 2 AA
+          genotypes, as indicated in the table</li>
+        <li>For the next 4 males enter B for Allele 2</li>
+        <li>For the next 4 males enter C for Allele 2</li>
+        <li>Continue this process, using the table as your guide, until you
+          enter 2 E's for the final two males</li>
+      </ul>
+      <p> </p>
+      <p> <input name="cb2c" type="checkbox">3. The females are no different
+        from the males genetically, so copy the genotypes for the Males and
+        paste them to the Females. You now have a population with five alleles
+        at equal frequencies, with exactly equilibrium numbers of homozygotes
+        and heterozygotes.</p>
+      <p>If all went well the sheet should look like this (rows 4 through 26, at
+        least - the last row will be 54, with an ID of 50):</p>
+      <img src="step2_initial_alleles.png" alt="Alleles"></div>
+    <div>
+      <p>Each row of this sheet represents a separate individual, with the
+        genotypes of the 50 males in the population in columns C and D, and the
+        genotypes of the females in the population in columns F and G. Since the
+        model tracks the properties of individuals in the population it is
+        individual-based.</p>
+    </div>
+    <div>
+      <p> </p>
+      <p> <input name="cb2d" type="checkbox">4. Create a new sheet (click on
+        the "Insert Worksheet" button, which is the plus inside a circle next to
+        the Simulation tab). Double-click the tab at the bottom that says Sheet2
+        and re-name it "Original". </p>
+      <p>Copy the male and female allele frequencies from the "Simulation" tab
+        (c3:g54, including the labels), and paste them in the "Original" tab, in
+        cells a1:e52. We will use this copy to record the initial conditions so
+        we can easily reset the population to this state by just copying and
+        pasting the genotypes from the Original sheet into the Simulation sheet.
+        At this point you should see:</p>
+      <img src="step3_original.png" alt="Original allele frequencies">
+      <p> </p>
+      <p> <input name="cb2e" type="checkbox">5. Save your work. I'll remind you
+        to do this at the end of each major step, but saving is a Good Thing,
+        particularly after you have made a change and are sure it's right - feel
+        free to save each time you successfully complete a step.</p>
+      <p> </p>
+      <h3><input name="cb3" type="checkbox">Step 3. Measure the genetic
+        composition of the population</h3>
+      <p> The next thing we want to do is to measure relevant characteristics of
+        the population's gene pool as the simulation progresses. There are
+        several different things we could measure, but the primary issues we
+        would be interested in from a conservation perspective are changes in
+        allele frequencies and changes in heterozygosity. </p>
+      <p>We will track the frequencies of the alleles over time, and keep a
+        count of the alleles that are still present - the count of alleles is <strong>allelic
+          diversity</strong>. If any allele goes to <strong>fixation</strong>
+        that means it has reached a frequency of 1, and is the only allele left
+        in the population. This is the always the expected end result of genetic
+        drift, given enough time, and we are interested in how long it takes to
+        reach fixation, if it occurs. If a single allele goes to fixation, all
+        the others have gone to a frequency of 0 and are lost from the
+        population. The allelic diversity is at its minimum point when this
+        happens.</p>
+      <p>We're also concerned about <strong>heterozygosity</strong>, which is
+        the proportion of individuals that are heterozygous for this gene. This
+        is also an important measure from a conservation perspective, and
+        although we know that it has to go to 0 if an allele reaches fixation
+        (since all individuals have to be homozygous if there is only one allele
+        in the population) it can decline to low levels before this happens. We
+        expect the highest levels of heterozygosity when the allele frequencies
+        are all the same, and as some alleles become more common (and others
+        necessarily become relatively less common) heterozygosity will decline
+        on average. It is possible for up to 100% of the individuals to be
+        heterozygous, and random mating can cause heterozygosity to increase
+        above what we would expect it to be, but on average we expect
+        heterozygosity to decline as the allele frequencies move away from equal
+        numbers.</p>
+      <p> </p>
+      <p> <input name="cb3a" type="checkbox">1. Add another new sheet, which
+        will be called Sheet3. Double-click on the "Sheet3" tab, and rename the
+        sheet "Statistics". We will use this sheet to gather information from
+        the simulation each generation.</p>
+      <p> </p>
+      <p> <input name="cb3b" type="checkbox">2. First we want to calculate gene
+        frequencies. In cell A1 type "Allele", and in cell A2 type "Frequency".
+        Enter A, B, C, D, and E in row 1 of the columns to the right of
+        "Allele". </p>
+      <p>Now, in cell B2, we will enter a formula that counts up the each letter
+        for the male and female data in cells C5:G54 in the Simulation sheet,
+        and divide by the total number of alleles (which is 200, since we have
+        100 individuals with 2 alleles each). You can do the counting with
+        a"countif()" function - countif() will count up all the cells that meet
+        a "logical test" that you specify. So, for example, to count up how many
+        "A" alleles are in the population you would enter the formula:</p>
+      <p class="Excel">=countif(Simulation!$C$5:$G$54, Statistics!B1)/200</p>
+      <p> </p>
+      <p>This formula counts the letters in C5 through G54 if they are equal to
+        the letter in B1. This count is then divided by 200 to give us the
+        allele frequency.<br>
+      </p>
+      <p>You'll see that the sheet name has to be included in the cell
+        references because we're referring to cells in two different sheets.
+        This makes the cell references a little harder to read, but splitting
+        the simulation from the statistics will make the model results easier to
+        see. If you enter the cell references by switching to the sheet and
+        selecting the cells with the mouse then the sheet name will be entered
+        automatically. If you are writing the references by hand, you'll need to
+        add the sheet name and exclamation point yourself. A reference without a
+        sheet name is assumed to refer to the same sheet that the function is
+        in.</p>
+      <p>Copy and paste cell B2 to cell C2 through F2 to get frequencies for
+        alleles B through E.</p>
+      <p>Frequencies are proportions of a total - if you've done the calculation
+        correctly each frequency should be 0.2 for each allele. As the
+        simulation runs, the frequencies will change but will always sum to 1.</p>
+      <p> </p>
+      <p> </p>
+      <p> <input name="cb3d" type="checkbox">3. Now we will calculate the
+        frequency of heterozygotes in the population. </p>
+      <p>In the Statistics sheet, label cell A5 "Male heterozygous", and cell B5
+        "Female heterozygous".</p>
+      <p>To count up how many males and females have different alleles using a
+        single formula we need to make a pretty complex formula - let's build it
+        in steps to make sure it's working.</p>
+      <ul>
+        <li>In cell A6 use the formula"<span class="Excel">=Simulation!C5&lt;&gt;Simulation!D5</span>"
+          - this formula checks if the first male is heterozygous (the
+          "&lt;&gt;" symbol means "not equal", so if the alleles are different
+          you will get a "TRUE" for this formula). The first male has the
+          genotype AA, so asking if the alleles in C5 and D5 are different will
+          return FALSE. Copy and paste cell A6 down a couple of lines and you'll
+          see it becomes TRUE for the third male, because it has the genotype
+          AB. Delete all but cell A6 before you proceed.</li>
+        <li>Change the formula again to <span class="Excel">=if(Simulation!C5&lt;&gt;Simulation!D5,1,0)</span>
+          - this changes replaces FALSE with a 0 and TRUE with a 1. To be honest
+          I'm not sure why this is needed, we should be able to sum Boolean
+          values as though they were 0 and 1, but this seems not to work when
+          you use them in an array formula, as we will in the final version of
+          the formula - still a mystery to me, but using an if() function to
+          convert the TRUE/FALSE to 1/0 works around the problem.</li>
+        <li>Change the formula again to <span class="Excel">=sum(if(Simulation!C5&lt;&gt;Simulation!D5,1,0))</span>
+          - this sums the 0 or 1 that is being produced by the if() function.</li>
+        <li>Next, change the formula one more time to do the comparison across
+          all 50 males, as an array formula - make it <span class="Excel">=sum(if(Simulation!C5:Simulation!C54&lt;&gt;Simulation!D5:Simulation!D54,1,0))</span>,
+          and enter it with CTRL+SHIFT+ENTER. You should get a sum of 40,
+          indicating that 40 males are heterozygous. Using the ranges of Allele
+          1 and Allele 2 in an array formula makes an array of 1's and 0's for
+          all 50 of them, and then uses sum() to add them up.</li>
+      </ul>
+      <p>Now that you have this for males, use the same formula for the number
+        of female heterozygotes, which are in columns F and G of Simulation.</p>
+      <p> </p>
+      <p> Finally, in cell G1 type "Heterozygosity". In cell G2 sum the number
+        of male heterozygotes and the number of female heterozygotes, then
+        divide by the total number of individuals (which is ... what?). To
+        begin, 80% of the individuals are heterozygotes, so this should be 0.8
+        if you did everything correctly.</p>
+      <p> </p>
+      <p> <input name="cb3e" type="checkbox">4. Now we will count the number of
+        alleles present in the population (allelic diversity). This one's easy -
+        we just need to count up the number of "Frequencies" numbers that are
+        not equal to 0 in the "Statistics" sheet. </p>
+      <p>Label H1 "Allelic diversity", and in H2 use a countif() to count how
+        many rows in B2:F2 of the Statistics sheet are greater than 0. The
+        function is:</p>
+      <p><span class="Excel">=countif(b2:f2, "&gt;0")</span></p>
+      <p>The criteria in the second argument is in quotes, and says to only
+        count the cell if the value is greater than 0, which all will be
+        initially - you should get a 5 as your allelic diversity.</p>
+      <p>Your statistics sheet should look like this:</p>
+      <img src="step4_statistics_layout.png" alt="Statistics">
+      <p> </p>
+      <p> <input name="cb3f" type="checkbox">5. Save your work.</p>
+      <h3><input name="cb4" type="checkbox">Step 4. Set up the results
+        worksheet.</h3>
+      <p> Now that we have frequencies of all the alleles, heterozygosity, and
+        allelic diversity calculated for this initial generation, we need to set
+        up a place to record all of this information as each generation passes.</p>
+      <p> </p>
+      <p> <input name="cb4a" type="checkbox">1. Add another worksheet, and
+        double-click on its tab to re-name it "Results".</p>
+      <p> </p>
+      <p> <input name="cb4b" type="checkbox">2. Label A1 "Generation". Label
+        the next five columns "F.A", "F.B", "F.C", "F.D", "F.E" to represent the
+        frequencies for each allele.</p>
+      <p> </p>
+      <p> <input name="cb4c" type="checkbox">3. Label G1 "Heterozygosity", and
+        H1 "Allelic diversity".</p>
+      <p>Your Results sheet should look like this:</p>
+      <img src="step5_results_layout.png" alt="Results">
+      <p>The layout is the same as the Statistics sheet to makes recording of
+        the results easy.</p>
+      <p> <input name="cb4d" type="checkbox">4. Save your work.</p>
+      <h3><input name="cb5" type="checkbox">Simulate reproduction<br>
+      </h3>
+      <p> You're now ready to simulate production of the next generation. We
+        will do this first for the male offspring by doing the following:</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <ul>
+        <li>
+          <p>Randomly select which males and which females will reproduce</p>
+          <p> </p>
+        </li>
+      </ul>
+      <p> </p>
+      <ul>
+        <li>
+          <p>Randomly select which of the two alleles each individual carries
+            will be passed on to the offspring</p>
+        </li>
+      </ul>
+      <p>This is done with spreadsheet formulas in the Simulation sheet.</p>
+      <ul>
+      </ul>
+      <p> </p>
+      <p> </p>
+      <p> <input name="cb5a" type="checkbox">1. Switch to the Simulation sheet.
+      </p>
+      <ul>
+        <li>
+          <p>Label I1 "Breeders". </p>
+        </li>
+        <li>
+          <p>Label J3 "Fathers" and N3 "Mothers". </p>
+        </li>
+        <li>
+          <p>Label I4 "Rand males" and M4 "Rand females". </p>
+        </li>
+        <li>
+          <p>Label J4 "Allele 1" and K4 "Allele 2". </p>
+        </li>
+        <li>
+          <p>Label N4 "Allele 1" and O4 "Allele 2".</p>
+        </li>
+      </ul>
+      <p> </p>
+      <p> <input name="cb5b" type="checkbox">2. We will generate random ID
+        numbers to randomly select which males and females will breed. </p>
+      <ul>
+        <li>In cell I5 randomly select a number between 1 and 50 (use
+          randbetween())</li>
+        <li>Copy and paste this function to I6:I54. </li>
+      </ul>
+      <p>You now have a random sample of the numbers of the males that will
+        breed, some of which will breed repeatedly, and some of which will not
+        breed at all (this is just like our bootstrapping examples). </p>
+      <p> </p>
+      <p> </p>
+      <p> <input name="cb5c" type="checkbox">3. Randomly select females to mate
+        the same way as you selected the males. Generate random numbers in
+        column M to select the female breeders, just like you did for the males.</p>
+      <p> </p>
+      <p> <input name="cb5d" type="checkbox">4. Use a lookup() function to copy
+        the alleles for each selected male into the Allele 1 and Allele 2
+        columns for the breeders. </p>
+      <ul>
+        <li>In cell J5, write a lookup command that will look up the random ID
+          number in I5 from the list of IDs in A$5:A$54, and return the Allele 1
+          for the matching male from C$5:C$54.</li>
+        <li>In cell K5 enter the same lookup function, except use the Allele 2
+          column as the return values (column D instead of C for the returns)</li>
+        <li>Once you have J5 and K5 entered correctly (check that the random
+          male number corresponds with the correct Allele 1 and Allele 2 that
+          are returned!), copy and paste J5 and K5 to the rest of the rows.</li>
+        <li>Repeat this procedure for the females - look up the random female
+          number from the parent population IDs, and return Allele 1 for the <strong>female</strong>
+          breeder Allele 1 column, and Allele 2 for the <strong>female</strong>
+          breeder Allele 2 column (don't use the males, or you'll simulate
+          selfing!).</li>
+      </ul>
+      <p>You should now have a set of alleles for the 50 randomly selected males
+        and females that make up the breeders.</p>
+      <ul>
+      </ul>
+      <p> </p>
+      <p> <input name="cb5e" type="checkbox">5. Now we will mate the randomly
+        selected males and female breeders to produce the male offspring. </p>
+      <ul>
+        <li>In cell R1 write "Offspring"</li>
+        <li>In cell R3 write "Males"</li>
+        <li>In R4 write "Allele 1", and in S4 write "Allele 2"</li>
+        <li>In cell U3 write "Females", and then copy/paste the Allele 1 and
+          Allele 2 labels to U4 and V4.</li>
+      </ul>
+      <p> </p>
+      <p> The parents for each offspring are the randomly selected male and
+        female in the same row. To mate them we now just need to randomly select
+        which of their two alleles each parent passes on to their offspring.</p>
+      <ul>
+        <li>in cell R5 enter <span class="Excel">=if(rand() &gt; 0.5, J5, K5)</span>
+          - this generates a random number between 0 and 1 (rand()) and compares
+          it to 0.5. If the number is over 0.5 then rand() &gt; 0.5 returns TRUE
+          and Allele 1 is selected from the father (J5). If rand() is less than
+          0.5 then rand() &gt; 0.5 is FALSE, and allele 2 (K5) is selected from
+          the father</li>
+        <li>In cell S5 use the same formula, but select from the mother's
+          alleles (N5 and O5)</li>
+        <li>Copy and paste these formulas to the rest of the 50 male offspring
+          produced</li>
+      </ul>
+      <p>You now have a set of randomly generated male offspring.</p>
+      <p> </p>
+      <p> <input name="cb5e3" type="checkbox">6. To generate the female
+        offspring we don't want to just use the same parents, because we want
+        every offspring to be produced by a different set of parents (this is a
+        more realistic choice to simulate broadcast spawning, since there is no
+        pair formation between the parents - their gametes are just randomly
+        encountering each other in the water above them). </p>
+      <p>We could use another set of four columns to generate the fathers and
+        mothers for the females, using a new set of randomly generated ID
+        numbers, but we can accomplish the same thing without any additional
+        columns of formulas...</p>
+      <p>Male offspring and female offspring are produced the same way, so the
+        male offspring we've just generated could just have easily have been our
+        female offspring instead. We will take advantage of this fact to:</p>
+      <ul>
+        <li>Copy all of the male offspring - select R5 to S54 and copy them</li>
+        <li>Paste-special as values under the female Allele 1 and Allele 2
+          columns (just select U5 and paste-special as values, they'll fill up
+          the appropriate rows and columns)</li>
+      </ul>
+      <p>The set of genotypes that were originally generated in the male Allele1
+        and Allele2 columns by spreadsheet formulas are now entered as letters
+        (not formulas) in the female Allele1 and Allele2 columns. When you
+        pasted the values the whole worksheet recalculated, so a new set of
+        breeders are selected, which generates a new set of male offspring. As a
+        result, you now have a set of male offspring generated from one randomly
+        selected group of parents, and a set of female offspring generated from
+        a different randomly selected group of parents without having to have a
+        second set of breeder columns for the females.</p>
+      <p>You've completed the first generation of mating - your sheet should
+        look like this (columns A through G will have the same entries, bu I
+        through V are generated with random numbers, and will not have identical
+        ID or allele entries):</p>
+      <img src="step6_simulation_after_breeding.png" alt="After breeding">
+      <p> </p>
+      <p> <input name="cb5f" type="checkbox">6. Everything is set up, we just
+        need to simulate some change over time now. First we'll complete the
+        process of a change in generation manually, and then we'll write a macro
+        to complete these steps for us in the next step.</p>
+      <ul>
+        <li>Switch to the Statistics sheet</li>
+        <li>Copy cells B2 through H2, switch to Results and paste-special the
+          values to B2 through H2 - this records the allele frequencies,
+          heterozygosity, and allelic diversity for the initial conditions</li>
+        <li>Enter a 1 for A2 - this is the generation number, which&nbsp; will
+          increase each time we complete one generation cycle</li>
+        <li>Switch to Simulation</li>
+        <li>Copy the male offspring in R5 through S54 and paste-special as
+          values into the female offspring columns</li>
+        <li>Copy the male and the female offspring from R5 through V54 and
+          paste-special them over the males and females in the parent population
+          in C5 through G54 (select C5 and paste-special values, the rest will
+          go where they're supposed to)</li>
+      </ul>
+      <p>And with that you've started a new generation. Since the offspring
+        generation from the first round just became the parent population for
+        the second round all of the allele frequencies have changed - if you
+        switch to Statistics you'll see they aren't all 0.2 any more, and
+        heterozygosity will have changed as well (it may have gone up or down a
+        little, but will probably not be 0.8 anymore). Allelic diversity almost
+        certainly will still be 5 - there are 20 copies of each allele in the
+        population, so unless none of the 200 randomly selected parents used to
+        produce the 50 male and 50 female offspring had one of the alleles all
+        five will still be present. As you run through the simulation for
+        multiple generations alleles will be lost, but it will take several
+        generations.</p>
+      <p>If we were to do this repeatedly 500 times we could simulate 500
+        generations of drift due to random mating. That's way too tedious,
+        though - good work for a computer, bad work for a person. We'll write a
+        macro that does these steps repeatedly so that we don't have to.</p>
+      <p>To put everything back to initial conditions switch to Original, copy
+        the male and female alleles from A2 to E52, switch to Simulation, and
+        paste them over the parent population's alleles (you don't need to
+        paste-special, they're not formulas).</p>
+      <ul>
+      </ul>
+      <p>Save your work!</p>
+      <p> </p>
+      <p> </p>
+      <h3><input name="cb6" type="checkbox">Step 6. Record the macro<br>
+      </h3>
+      <p> Now you're ready to record a macro that you'll use as your first
+        simulation. There are several steps that you'll need to record, and as
+        you've found out in previous exercises, every mouse click and window
+        scroll is recorded once you turn on the macro recorder. Read through the
+        numbered steps below a couple of times so that you have them in mind
+        before turning on the macro recorder.</p>
+      <p> </p>
+      <p> <input name="cb6a" type="checkbox">1. Switch to the Simulation sheet.
+        Go the the View tab and turn on the macro recorder. Call the macro
+        "DriftSimN100", and give it the shortcut key CTRL+SHIFT+D. In the
+        Description write "Genetic drift simulation with no immigration and a
+        population size of 100". Click OK to start recording.</p>
+      <p> </p>
+      <p> <input name="cb6b" type="checkbox">2. Switch to the Statistics sheet.
+        Select B2:H2, and copy the cells (the allele frequencies).</p>
+      <p> </p>
+      <p> <input name="cb6c" type="checkbox">3. Switch to the Results sheet.
+        Select cell B2, then right-click and paste-special as values.</p>
+      <p> <input name="cb6e" type="checkbox">4. Switch to the Simulation sheet.
+        Select cells R5:S54 and copy them. Select cell U5 and paste-special as
+        values.</p>
+      <p> </p>
+      <p> <input name="cb6f" type="checkbox">5. Still in the Simulation sheet,
+        copy all of the offspring in cells R5:V54, select cell C5 and
+        paste-special as values.</p>
+      <p> </p>
+      <p> <input name="cb6g" type="checkbox">6. Turn off the macro recorder.</p>
+      <p> </p>
+      <p> <input name="cb6h" type="checkbox">7. Save your work.</p>
+      <p>If you open your macro for editing it should at this point look (more
+        or less) like this:</p>
+      <img src="step7_initial_macro.png" alt="Initial macro">
+      <p>There are a couple of unneeded lines that we'll get rid of later. The
+        important things to make sure your macro has are:</p>
+      <ul>
+        <li>The first step is to switch to the Statistics sheet</li>
+        <ul>
+          <li>While in Statistics you select B2:H2 and copy it</li>
+        </ul>
+        <li>Switch to Results</li>
+        <ul>
+          <li>Select B2 and paste-special the values there</li>
+        </ul>
+        <li>Switch to Simulation</li>
+        <ul>
+          <li>Select R5:S54 (the male offspring alleles) and copy those cells</li>
+        </ul>
+        <ul>
+          <li>Paste-special to U5 to make the female offspring alleles (and a
+            new set of males when the sheet auto-calculates)</li>
+        </ul>
+        <ul>
+          <li>Select the male and female offspring alleles in R5:V54 and copy
+            them</li>
+        </ul>
+        <ul>
+          <li>Paste-special the offspring in cell C5 to make them the parents
+            for the next generation</li>
+        </ul>
+      </ul>
+      <p>As long as you can identify all those steps in your macro you're ready
+        to go on.</p>
+      <h3><input name="cb7" type="checkbox">Step 7. Edit the macro to repeat for
+        500 generations<br>
+      </h3>
+      <p> You are now ready to add a loop.</p>
+      <p> </p>
+      <p> <input name="cb7a" type="checkbox">1. Add a For...Next loop that
+        encloses the entire macro recording - put the For after the comment
+        lines, and the Next before End Sub. Have the for loop iterate from i = 1
+        to 500.</p>
+      <p> </p>
+      <p> <input name="cb7b" type="checkbox">2. Now you need to edit a cell
+        reference to make sure the allele frequencies, heterozygosities, and
+        allelic diversities get put in the right place each generation.</p>
+      <p>Look for the line in your code where you change to the "Results" sheet.
+        Once you're in Results you should have selected cell B2 as the location
+        to paste the statistics you copied, but we want this to increase by one
+        each time we run through the loop, so change this to:</p>
+      <p>Range("B" &amp; i + 1).Select</p>
+      <p>Now when the paste-special as values happens each generation the
+        results will go into a new row.</p>
+      <p> </p>
+      <p> <input name="cb7d" type="checkbox">3. We are not yet recording the
+        generation number, so we need to add this command (not recorded by the
+        macro recorder, so this will be a new line):</p>
+      <p> </p>
+      <p> Sheets("Results").Range("A" &amp; i+1).Value = i</p>
+      <p> </p>
+      <p> Since you're using i as the counter on your For...next loop you can
+        use it to record the generation number. The first time through the loop
+        i is equal to 1, so this will assign a 1 to cell A2, the second time
+        through a 2 to A3, and so on.</p>
+      <p> </p>
+      <p> <input name="cb7e" type="checkbox">4. We should do a couple of
+        housekeeping tasks that will need to be done each time the macro is run.
+      </p>
+      <p>Before the simulation runs we should make sure that we're at initial
+        conditions. Add a blank line before your For loop starts, and add the
+        command:</p>
+      <p>Sheets("Original").Range("A3:E52") =
+        Sheets("Simulation").Range("C5:G54").Value</p>
+      <p>The other thing we should do is clear any old simulation runs from the
+        Results sheet to make room for the run we are about to do. On the next
+        line, still before the For loop starts, enter:</p>
+      <p>Sheets("Results").Range("A2:H501").Clear</p>
+      <p>Save your work before going on to the next step.</p>
+      <h3>The need for speed - easy stuff that helps a lot<br>
+      </h3>
+      <p>Excel is primarily meant to be used in an interactive mode, and any
+        change in the contents of the sheet cause the whole sheet to
+        recalculate, and the sheet display is redrawn so you can see the result
+        of the change. However, when you are running a macro all of this visual
+        feedback flashes by too fast to see anyway, yet it slows down the macro
+        dramatically. It's a good idea before you run the macro to turn off the
+        visual screen updating, and then turn it back on when the macro is
+        finished.<br>
+      </p>
+      <p>Make a blank line after the comment lines but before the
+        Sheets("Original")... line, and add the command:</p>
+      <p> </p>
+      <p> Application.ScreenUpdating = False</p>
+      <p> </p>
+      <p> Turn screen updating back on by putting the command:</p>
+      <p>Application.ScreenUpdating = True</p>
+      <p>just before the EndSub.</p>
+      <p> </p>
+      <h3>Debug to make sure all is well<br>
+      </h3>
+      <p> If you haven't done so already, debug - arrange the code editor and
+        the spreadsheet so you can see the Results sheet and hit F8 repeatedly
+        to run through the simulation, at least twice through the loop to make
+        sure it works consistently. </p>
+      <p>Then switch to the Simulation sheet and make sure the copying and
+        pasting is working right - you want to confirm that the male offspring
+        are copied and pasted to the female columns first, then the male and
+        female offspring are copied and pasted to become the parents each time
+        through the loop.</p>
+      <p><em><strong>Run the macro, interpret the results</strong></em></p>
+      <p> </p>
+      <p> </p>
+      <p> Once you're confident everything is working hit CTRL+SHIFT+D to run
+        the simulation.</p>
+      <p>Depending on how fast your computer is this could take anywhere from
+        less than a minute to several minutes. If you debugged successfully and
+        you see a busy cursor don't interrupt. If it has been more than five
+        minutes let me know and we'll check on it.</p>
+      <p> </p>
+      <p> When the simulation has finished, the Results tab will have all the
+        gene frequency, allelic diversity, and heterozygosity results for all
+        500 generations. Now it's time to interpret the results.</p>
+      <p> </p>
+      <p> A good way to explore a simulation like this is to graph the results
+        over generations. </p>
+      <ul>
+        <li>Create a graph (line or scatter with connected lines) that shows how
+          the allele frequencies for all five alleles changed over time</li>
+        <li>Create a graph for heterozygosity over generations</li>
+        <li>Create a graph for allelic diversity over generations</li>
+      </ul>
+      <p>You'll want a separate graph for allele frequencies, heterozygosity,
+        and allelic diversity because the y-axis is different (especially for
+        allelic diversity). Since generations are all equally spaced, you can
+        use either a line graph or a scatter plot with lines connecting and they
+        will look the same. Title each one appropriately, and label the axes.</p>
+      <p> </p>
+      <p> </p>
+      <p> Most of you will have a single allele become fixed - the allele
+        frequency will go to 1 for one of the alleles, and all the other alleles
+        will be lost from the population (i.e. their frequencies will go to 0).
+        If this happens, you'll see that although there is initially variation
+        in the allele frequencies, with both some increases and decreases in
+        numbers, each allele drops out of the population one at a time,
+        eventually leaving four of them at a frequency of 0 and one at fixation
+        (i.e. at a frequency of 1). Make note of which allele is fixed for your
+        population. </p>
+      <p>Since the only thing affecting these frequencies is random chance, we
+        would expect that which allele goes to fixation is also random - if you
+        run the model repeatedly you should get different alleles going to
+        fixation. If you run the macro again there's a good chance a different
+        allele will become fixed.</p>
+      <p><strong><em>Stage 1 complete!</em></strong></p>
+      <p>Congratulations! You're done with the first model, which simulates a
+        single run of 500 generations - this is the hard part, the rest of the
+        models are modifications of this initial one (some very minor
+        modifications at that). </p>
+      <p>Time to move on to the next model, which will repeat this process 100
+        times.</p>
+      <p> </p>
+      <h2 class="part" id="stage2">Stage 2: Repeat the simulation 100 times<br>
+      </h2>
+      <p> We can learn a lot about how the process of genetic drift works by
+        looking at the results from a single run of 500 generations - you can
+        see the unpredictability of changes in frequency over time, for example.
+        Some of you may even have a case in which an allele drops to low
+        frequency and then goes on to increase to fixation.</p>
+      <p>If you ran the simulation a second time you'll see that the patterns
+        are different each time you run the simulation, and which allele went to
+        fixation was probably different in the two runs. In fact, we would
+        expect to get a different random pattern of change in gene frequencies
+        every time we run the simulation.</p>
+      <p>The implication of this unpredictability is that we can't rely on a
+        single run to tell us what to expect, because the answer we get will
+        depend on which run we look at. </p>
+      <p>We know, however, that random outcomes (like tossing coins or rolling
+        dice) can be completely unpredictable at the level of a single trial,
+        but become highly predictable at the level of multiple trials. A single
+        coin toss will either land Heads or Tails, and we can't predict in
+        advance which it will be, but if we toss the coin 100 times we can
+        expect to get about 50 Heads and 50 Tails.</p>
+      <p>Similarly, if we run the simulation 100 times we can see what typically
+        happens, so that we don't have to rely on a single run - the average
+        time to fixation across 100 runs will be a better predictor of the
+        expected effects of drift than any single run could be. We will also get
+        a fuller set of possible outcomes to look at, and we may find that some
+        runs go to fixation vary quickly while others don't go to fixation at
+        all - we can use the full set of runs to tell us what is typical, and
+        what the range of possibilities are.</p>
+      <p> </p>
+      <p> Given this, we need to modify our program so that it will run the
+        simulation repeatedly and record results from each run. </p>
+      <p><span style="font-weight: bold; font-style: italic;">Before you start</span>,
+        use "Save as..." to save a copy of your spreadsheet, and call it
+        "drift_sim_n100_time_to_fixation". Use this new version of the sheet for
+        this part of the exercise. Make sure to still use the macro-enabled
+        spreadsheet option so your macro will be saved.</p>
+      <h3>The need for speed 2 - more speed needed</h3>
+      <p>Turning off screen updating is probably the single most effective thing
+        we can do to speed things up, but now we need to squeeze as much speed
+        out of our macro as we can. A single run that takes 1 min to complete is
+        not a big problem, and the time we would spend programming it to run
+        faster could easily exceed the time gain we get. But, if we repeat a
+        simulation that takes 1 min to run 100 times then we wait for 100 min,
+        which is longer than a class period. The time we put into making the
+        code fast will pay off as we move into the second, third, and fourth
+        models, each of which repeat the drift simulations 100 times.</p>
+      <p> </p>
+      <p><input name="cb4.alt" type="checkbox">1. A version of the model that
+        runs in about 2 seconds on my computer is here:</p>
+      <img src="fast_code.png" alt="Fast code">
+      <p> </p>
+      <p>The green comments above each line of code mostly explain what's going
+        on, but note a couple of things:</p>
+      <ul>
+        <li>The name of the Sub is now DriftSimN100TTF() (where TTF is short for
+          "time to fixation")</li>
+        <li>There are no unneeded commands - no scrolling, selecting, or copying
+          and pasting</li>
+        <ul>
+          <li>Instead of selecting, the Sheets() argument is added to every
+            Range() so that we can specify the sheet and cells we're working
+            with instead of switching to the sheet first</li>
+          <li>Instead of copying and pasting as values we can just assign the
+            value from cells that contain formulas to other cells - this has the
+            same effect as copy/paste-special as values but it's much faster</li>
+        </ul>
+      </ul>
+      <p>The one command that might be a little hard to understand is the first
+        one in the loop - let's break down what it's doing:</p>
+      <ul>
+        <li>On the right side of the = sign we are identifying the cells that
+          hold the allele frequencies, heterozygosity, and allelic diversity
+          (B2:H2) in the Statistics sheet, all of which are cell formulas, and
+          are extracting just their Value to record</li>
+        <li>On the left side of the = sign we are identifying the sheet to
+          receive these statistics (Sheets("Results")), and then identifying the
+          range. This is similar to what we have done before - we are
+          constructing a cell reference by putting the column in quotes, and
+          then concatenating the row number using &amp; i + 1. The twist here is
+          that we have to specify a range of cells, so after "B" &amp; i + 1 we
+          have to use a second &amp; and then add the rest of the cell reference
+          - a range of cells is indiciated with a : between the start and end,
+          so we add on ":H" &amp; i + 1 to finish the cell range reference. The
+          first time through the loop when i+1 is equal to 2 this reference
+          becomes B2:H2, the next time through when i+1 is 3 it becomes B3:H3
+          and so on.</li>
+      </ul>
+      <p><em><strong>More speed - switch to a Do...while loop</strong></em></p>
+      <p>We can also speed up a lot if we don't continue the simulation after
+        one of the five alleles has gone to fixation - that is, if one allele is
+        the only one present there won't be any additional change in allele
+        frequency over time to simulate, and there is no point in continuing the
+        remaining generations at that point. </p>
+      <p>The version with a Do While... loop looks like this (comments
+        explaining the changes from the previous version in green, and explained
+        further below):</p>
+      <img src="dowhile_version.png" alt="Do while">
+      <p>The changes are:</p>
+      <ul>
+        <li>Dim i as Integer - in order to use Do While we had to give up our i
+          variable, which was used to count iterations through the For...Next
+          loop before. To account for this we had to define a variable i to hold
+          the current generation number</li>
+        <li>i = 1 - sets the generation number to 1 initially</li>
+        <li>Sheets("Statistics").Range("J2") = i - sets the generation number in
+          J2 to 1, which is needed so that the Do While loop will know that it
+          isn't finished yet</li>
+        <li>Do While Sheets("Statistics").Range("K2") = False - we will be
+          setting up a spreadsheet formula that will check whether any of the
+          alleles have a frequency of 1 or we have reached 500 generations - if
+          neither of these conditions have been met we keep going. If either of
+          these conditions have been met, such that K2 is TRUE, we stop.</li>
+        <li>i = i + 1 - takes the current value of i and adds a 1 to it, then
+          replaces the old value of i with the new one - this increases the
+          value of i by 1 each time through the loop</li>
+        <li>Sheets("Statistics").Range("J2") = i - write the updated generation
+          number into the Statistics sheet</li>
+        <li>Loop - this is the end of the Do While loop</li>
+      </ul>
+      <p>DON'T RUN THIS MACRO - this will not work yet, because we don't have
+        the formula in cell K2 of Statistics that's testing if we're all done
+        yet. We need to add that now before running the macro.</p>
+      <p><input name="cb4.alt" type="checkbox">2. To add a test of whether any
+        of the alleles has gone to fixation to the Excel file we need to: </p>
+      <ul>
+        <li>Switch to the Statistics worksheet in the Excel file, and in cell I1
+          type the label "Fixed".</li>
+      </ul>
+      <p> </p>
+      <p>If xlookup was available when we used it in previous labs then do the
+        following:</p>
+      <ul>
+        <li>In cell I2 enter <span class="Excel">=xlookup(1, b2:f2, b1:f1,
+            "None")</span> - this looks up 1 in the allele frequencies in row 2
+          of columns B through F, and if it finds a 1 it returns the allele that
+          has gone to fixation. If it doesn't find 1 it returns "None"</li>
+      </ul>
+      <p>You now have a cell formula that checks if an allele has gone to
+        fixation, reports the allele if it has, and reports "None" if not.</p>
+      <ul>
+      </ul>
+      <blockquote>
+        <p>If xlookup did not work for you then you can use a more complicated
+          option - ONLY DO THIS IF YOU'RE USING AN OLDER VERSION OF EXCEL THAT
+          DOESN'T HAVE XLOOKUP</p>
+        <ul>
+          <li>Copy the Allele label and the five allele numbers from A1 through
+            F1 and paste them into row 10 (A10 to F10)</li>
+          <li>In G10 enter "None"</li>
+          <li>In Row A11 enter "Frequency"</li>
+          <li>In cell B11 enter the formula <span>=b2</span>, and then copy B11
+            and paste it to C11 through F11 - each cell should point to the
+            appropriate allele frequency</li>
+          <li>In cell G11 enter the number 1</li>
+          <li>In cell I2 enter the formula <span class="Excel">=choose(match(1,
+              B11:G11, 0), "A", "B", "C", "D", "E", "None")</span></li>
+        </ul>
+        <p> The match() function finds the first occurrence of a 1 in cells
+          B2:G2 and returns its relative position in the range of cells entered
+          as its second argument (if the first occurrence of 1 it finds is in
+          cell B11 match returns 1, because B11 is the first cell it's told to
+          check for, but if it's in C11 it returns 2, and so on). The final
+          argument, 0, just tells match() it has to be an exact match. The
+          position number from match() gets passed to choose(), which uses it to
+          pick the correct allele from the list of alleles that follow the
+          match() function. Since match() finds the first matching value, it
+          will continue to return "None" as long as none of the alleles goes to
+          fixation, but once one of them does its frequency goes to 1, and
+          match() will return that allele. Only a single allele can go to
+          fixation at a time, so this will always return the only allele with a
+          frequency of 1. </p>
+      </blockquote>
+      <p><input name="cb4.alt" type="checkbox">3. Now we will enter the formula
+        in K2 that tests if we are either at generation 500 or are one of the
+        alleles has a frequency of 1.</p>
+      <ul>
+        <li>In K1 type "All done?"</li>
+        <li>In K2 use the formula <span class="Excel">=or(i2&lt;&gt;"None", j2
+            &gt; 500)</span></li>
+      </ul>
+      <p>The formula in K2 checks is an or() function, which returns TRUE if
+        either argument is TRUE, and FALSE if both are FALSE. The two things
+        that are being checked are whether whether either I2 has changed from
+        "None" to something else (which would be the letter of a fixed allele),
+        <strong>or</strong> if we have completed 500 generations. If either of
+        these conditions are true cell K2 will become "TRUE". Each time through
+        the Do...While loop we check if cell K2 has become TRUE, and if it is we
+        can stop the Do...While loop.</p>
+      <p><em><strong>Run the macro to check that the Do While loop is working</strong></em></p>
+      <p>If you got the worksheets set up right, and updated your macro to match
+        the one above you can run it by switching to the Excel file and hitting
+        CTRL+SHIFT+D - it should finish in a couple of seconds.</p>
+      <p>If you run it repeatedly with the Statistics sheet selected you'll see
+        that an allele goes to fixation most runs, but which one goes to
+        fixation is unpredictable. The amount of time it takes to get to
+        fixation will change (J2 will show a different generation between runs).</p>
+      <p>If you aren't getting the expected results, or if it takes more than a
+        few seconds for the macro to run, check with me before you go on.</p>
+      <h3>Now, repeat the loop 100 times</h3>
+      <p> </p>
+      <p> Now that we have each simulation running about as fast as possible we
+        will add another loop that repeats the simulation 100 times. The
+        statistics from individual runs won't matter so much anymore - this time
+        we want to focus on the typical time to fixation and allele that becomes
+        fixed across the 100 runs, so we will record the generation number at
+        the end of the run (which will either be the generation at which
+        fixation happened or 500 if fixation didn't occur at all), and the
+        allele that went to fixation (which will be A, B, C, D, or E, or None if
+        fixation didn't occur). We will then be able to see how often fixation
+        occurs, how long it typically takes for fixation to occur when it does,
+        and confirm our impression that which allele goes to fixation is
+        unpredictable.</p>
+      <p>To do this we will now:</p>
+      <p> </p>
+      <p> </p>
+      <ul>
+        <li> Add another For loop to make the simulation execute 100 times<br>
+        </li>
+        <li>Each of the 100 times through the simulation, record which allele
+          was fixed and the generation at which it happened<br>
+        </li>
+      </ul>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> <input name="cb8a" type="checkbox">1. We can repeat the simulation
+        100 times by adding an additional For..Next loop that encloses the Do
+        While loop. The macro that accomplishes all of this is (changes in
+        green, explanations below):</p>
+      <img src="first_complete_model.png" alt="Completed first n100">
+      <p>The changes are:</p>
+      <ul>
+        <li>For j = 1 to 100 - start the new loop that will run the simulation
+          100 times</li>
+        <li>Sheets("Simulation").Range("C5:G54") =
+          Sheets("Original").Range("A3:E52").Value - set the parent population
+          back to initial conditions. This has to be done each time through the
+          simulation, so we move into the start of the For...Next loop. We'll
+          only be recording the allele frequencies, heterozygosity, and allelic
+          diversity once for the final run, so we clear cells A2:H501 just once,
+          before entering the For...Next loop</li>
+        <li>i = 1 - reset the generation number inside of the For...Next loop,
+          so that each time through the generation number will start at 1 (note
+          this doesn't have to be done right after the Dim statement, it can be
+          removed from there)</li>
+        <li>Sheets("Statistics").Range("J2") = 1 - sets the generation number in
+          Statistics to 1 to start the next simulation run, which then causes a
+          re-calculation and changes the All done? cell to FALSE</li>
+        <li>Application.StatusBar = "Run number " &amp; j &amp; " in progress" -
+          this adds a progress indicator to the lower left corner of the Excel
+          spreadsheet while the macro is running, to tell you how many of the
+          100 runs have been completed (you'll be very glad to have this)</li>
+        <li>If j = 100 Then - the two commands between this line and the End If
+          below it record the allele frequencies and the generation number in
+          the Results sheet, just like we have been doing in every run
+          previously. Since every run would over-write these values it doesn't
+          do us any good to record them in any run but the final one, so we skip
+          these steps unless we're on j = 100. This helps the program run
+          faster.</li>
+        <li>Sheets("Results").Range("K" &amp; j + 1 &amp; ":L" &amp; j + 1) =
+          Sheets("Statistics").Range("I2:J2").Value - records the allele that
+          went to fixation (or None if none did) and the generation number at
+          which it happened (or 501 if no fixation). This line is only executed
+          after the Do While has completed, but is within the For...Next loop,
+          so this command is only executed once for each of the 100 runs.</li>
+        <li>Sheets("Results").Range("J" &amp; j + 1) = j - writes the run number
+          into column J of the Results sheet (again, once per run)</li>
+        <li>Next j - end of the For...Next loop, and back for the next run until
+          j equals 100 (when j = 100 the For...Next loop stops and the rest of
+          the lines are executed)</li>
+        <li>Application.StatusBar = False - turns off the progress indicator
+          after we're all done</li>
+      </ul>
+      <p>Once you've finished updating your macro you just need a little more
+        labeling before you run it...<span style="font-family: &quot;Crimson Text&quot;,serif;"></span>in
+        the Results sheet, label J1 "Run number", K1 "Allele fixed", and L1
+        "Generation".</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> <input name="cb8f" type="checkbox">2. You're going to want to run
+        through the simulation a few times in debugging mode to make sure
+        everything is working - it takes a couple of minutes to run this thing
+        on my computer, and may take longer on yours, so you don't want to wait
+        for 5-10 minutes for the simulation to finish and only then find out
+        something wasn't programmed correctly. That's just frustrating.</p>
+      <p>You should be fairly confident that the Do While loop is working, so
+        primarily what you want to check is that the year of fixation and allele
+        fixed is recorded each time through the For...Next loop, and that
+        everything gets reset properly between the end of one run and beginning
+        of the next. So, do the following:</p>
+      <ul>
+        <li>Set a breakpoint at the first command after Loop, like so:<img src="breakpoint.png"
+            alt="breakpoint"> - this is the command that writes the generation
+          of fixation and allele fixed into the Results sheet</li>
+        <li>Run the program and let it hit the breakpoint - use the run button
+          in the button bar in the macro editor (small green triangle, <img src="run_button.png"
+            alt="Run">. - it will complete one run of the simulation before it
+          gets to the breakpoint, and will pause before writing the generation
+          of fixation and allele fixed into Results</li>
+        <li>Arrange the code editor window and your Excel file so that you can
+          see columns J, K, and L of the Results sheet, and only then hit F8 (or
+          whatever key combination works on the Mac...you can also select
+          "Debug" → "Step Into" if you can't find the key combination) and you
+          should see a new row of alleles and generations to fixation added.
+          Step one more time and the run number should be added</li>
+        <li>Hit the run button again, and then F8 through these steps a second
+          time - the new output should appear below the previous, in row 3. Try
+          this a couple more times, and make sure new output is put below the
+          previous consistently. Watch for anything weird (like getting exactly
+          the same numbers every time, or never going to fixation, or getting
+          generations of fixation of 1 every time, etc.)</li>
+      </ul>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> <input name="cb8f" type="checkbox">2.<span style="font-family: &quot;Open Sans&quot;,sans-serif;">
+        </span>Once you're confident that everything is working, run the
+        simulation! It takes about 2-3 minutes on my computer. As long as
+        debugging went well, and the progress indicator is showing progress, let
+        it run until it finishes. </p>
+    </div>
+    <div>
+      <p> When the simulation completes you'll have all of the allele frequency
+        data you had previously for the final run (run 100). Additionally,
+        you'll have the time to fixation for all 100 runs, which are in columns
+        J, K, and L. You'll want to know a few things:</p>
+      <ul>
+        <li>How often each allele went to fixation - you can get this with a
+          PivotTable of columns J, K, and L from the Results sheet, using the
+          alleles fixed as the row labels and as the value field (set the value
+          field to count them)</li>
+        <ul>
+          <li>Percentage of time an allele went to fixation - this is the same
+            table, but divide the sum of the number of times that an allele want
+            to fixation by 100 (you can set this as a display option - you can
+            express the count as a percentage of the total)</li>
+        </ul>
+        <li>Time to fixation statistics</li>
+        <ul>
+          <li>Get the average time to fixation - you can use the same
+            PivotTable, but use generation of fixation as a value field, and set
+            it to average. You can just use the Grand Total cell for this, the
+            average by allele isn't needed.</li>
+          <li>Get the minimum time to fixation - as with average time to
+            fixation, use generation of fixation as the value field, and set it
+            to minimum instead of average. Also just use the Grand Total value,
+            minimum by allele isn't needed. </li>
+        </ul>
+      </ul>
+      <h3>Part I and II complete</h3>
+      <p>Congratulations! Save your first two files someplace safe, you're going
+        to make modifications of this basic model for the next two steps.</p>
+    </div>
+  </body>
+</html>
