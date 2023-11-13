@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Relational databases</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Exercise 3: Relational databases</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#pkey">Primary keys</a></p>
+      <p><a href="#joining">Joining tables</a></p>
+      <p><a href="#query">Queries</a></p>
+      <p><a href="#exporting">Exporting to Excel</a></p>
+      <p><a href="#forms">Forms</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <p class="part" id="intro"> We are only going to spend one week on relational databases, but we could easily spend
+        the entire semester on them. We will focus on what is probably the feature that is most likely to be of use to
+        you, and that Excel does not support well: one to many relational joins. Unless you decide to learn more about
+        MS Access on your own, outside of class, you will probably enter data in Excel, import it into Access, join your
+        tables, then export the joined tables back into Excel. That is what we will do today.</p>
+      <p class="part"> <input name="cb2" type="checkbox">1. <strong>Start MS Access and make a blank database</strong>.
+        Before we do any importing of data from Excel, we'll make a blank database in which to put the data. Note that
+        Access is not available for the Mac, so if you're using your own Mac you'll need to use Citrix for today.</p>
+      <p class="part">Start Access 365 and you will see a fairly cluttered startup screen that looks <span class="popup">like
+          this<img class="popupimage" style="width: 400px" src="access_startup.jpeg"></span>. We are going to ignore
+        much of the clutter, but most of it is providing easy access to templates for a variety of common business
+        databases (Access is marketed heavily towards business users). </p>
+      <p>All we need is to click the "Blank database" button, which will bring up a "Blank database" creation window.
+        Click on the "open folder" icon next to the file name field, and then navigate to the location on OneDrive, name
+        the database "mice" and click "OK". </p>
+      <p> Then, back in the "Blank database" window click "Create" to make the new, empty database. You will now see the
+        Access interface with a new, blank table called Table1 (it will look <span class="popup">like this<img class="popupimage"
+            style="width: 400px" src="access_interface.jpeg"></span>). We'll import the data from an Excel file, which
+        we'll go download now.</p>
+      <p> <input name="cb1" type="checkbox">2. <strong>Download the data</strong>. Download this spreadsheet (<a href="mice.xlsx">mice.xlsx</a>),
+        and save it to your OneDrive (it's convenient to put it in the same place as your mice.accdb that you just
+        created). Once you have it downloaded open mice.xlsx in Excel to see how the data are organized.</p>
+      <ul>
+        <li> The data represent an experiment in which ten different mice were assigned different diets, and their body
+          weights were measured daily for a period of 10 days. There are two worksheets with data in them:</li>
+        <li>Mouse - this sheet records several characteristics of each mouse, such as age, sex, and the diet they were
+          fed on.</li>
+        <li>Weights - the daily weights measured for each mouse, once for each of the 10 days of the study.</li>
+      </ul>
+      <p>Since there will only ever be one row in the Mouse table for each mouse, but there will be 10 rows for each
+        mouse in the Weights table, there is a <strong>one to many relationship</strong> between the Mouse and the
+        Weights table.</p>
+      <p> </p>
+      <p>Be sure to <strong>close Excel</strong> before you proceed - Access won't open this file while Excel has it
+        open. </p>
+      <p> <input name="cb3" type="checkbox">3. <strong>Import the first worksheet, Mouse, into Access</strong>. To
+        import the data we'll use the "External Data" import tools.</p>
+      <ul>
+        <li>Click on the "External Data" tab, and then click on "New Data Source" → "From File" → "<span class="popup">Excel<img
+              class="popupimage" src="import_excel.png"></span>". </li>
+        <li>Browse to the "mice.xlsx" Excel spreadsheet you downloaded and select it. You will be importing the data
+          into a new table, which is the default option, so click "OK"</li>
+        <li>The "Import Spreadsheet Wizard" that pops up will lead you through the process of importing the data. You
+          will only be able to do one sheet at a time, so start with "Mouse" - click "Next".</li>
+        <ul>
+          <li>The next step asks whether the first row of the sheet contains the column headings. These will be used as
+            the field names in Access - the sheet does include names for the columns, so click "Next".</li>
+          <li>The next step allows you to set the data type for each of the columns. It will make a guess based on the
+            contents of the file, but you may not like the choices made and you need to check. Use the variable types:</li>
+          <ul>
+            <li>Mouse ID is numeric, but it only contains numbers up to 10 with no decimals, so change the Data Type
+              from "Double" to "Integer" ("single" and "double" are both floating-point data types used for decimal
+              numbers; double can record more significant digits than single).</li>
+          </ul>
+          <ul>
+            <li>Ages are all integer numbers, so change the type to "Integer" (ages are in months, and none are greater
+              than 255). </li>
+          </ul>
+          <ul>
+            <li>The last two columns are short text, which you can confirm Access guessed correctly.</li>
+          </ul>
+          <li>Once you have the variable types assigned correctly click "Next"</li>
+          <li>The next screen allows you to create a "<strong>primary key</strong>" for the table. A primary key is a
+            unique identifier for every record in the data table, and relational databases need to have a unique
+            identifier for every record (that is, every row in a table). Access will allow you to create a new variable
+            to use as a primary key, and populate it with sequential numbers for you, but if you have a unique
+            identifier in your data set already you can use that instead. Since the mouse table will only ever have a
+            single record for each mouse we can use Mouse ID as the primary key - click on "Choose my own primary key"
+            and select "Mouse ID"; using Mouse ID as a primary key will cause Access to help us make sure we don't
+            accidentally use the same ID for more than one mouse. Click "Next".</li>
+          <li>Finally, you are given the chance to change the name of the table if you choose - "Mouse" is fine, so
+            don't change anything. Click "Finish". </li>
+          <li>If you are prompted to save the import steps you don't need to - this is only useful if you repeatedly
+            import data with the same organization, such as updating a database with new data each day. </li>
+        </ul>
+      </ul>
+      <p>With the import completed you will see a new table called "Mouse" in the list on the left of the screen, and if
+        you double-click it the table will open and show you the data (it should look <span class="popup">like this<img
+            class="popupimage" src="mouse_table.jpeg"></span>).</p>
+      <p> <input name="cb5" type="checkbox">4.<strong> Import the Weights sheet from the Excel file</strong>. Repeat
+        the import steps you just completed, but this time import sheet Weights. When you are asked to define the data
+        types for the fields use:</p>
+      <ul>
+        <li>Mouse ID = integer</li>
+        <li>Measurement Day = integer</li>
+        <li>Weight = double (double refers to double-precision floating point numbers, which is a good choice for
+          decimal data).</li>
+      </ul>
+      <p>Allow Access to create a primary key for this table - since there are multiple records for weights of the same
+        mice we can't use Mouse ID as a primary key for the weights table.</p>
+      <p>When you're done you'll see a second new table, Weights, in your list. Double-click it and you'll <span class="popup">see
+          this<img class="popupimage" src="weights_table.jpeg"></span>.</p>
+      <h3 class="part" id="joining">Relational joins and queries</h3>
+      <p> <input name="cb6" type="checkbox">5. <strong>Joining the tables using a query</strong>. Now we will join the
+        Mouse and Weights data based on matching Mouse ID's. Joining is done in a <strong>query</strong>, which is a
+        term that refers to all manner of operations that retrieve data from a database. Queries can be designed and
+        then saved, so we use "query" both as a verb (to query the database is to retrieve data from it) and a noun (a
+        query is a set of commands that retrieve the data). We will design a query (noun) in order to query the joined
+        mouse and weights data (verb).</p>
+      <p>To open the query design view switch to the "Create" tab, and select the "<span class="popup">Query Design<img
+            class="popupimage" src="query_design.jpeg"></span>" option. In the query designer form that pops up do the
+        following:</p>
+      <ul>
+        <li>From the list of tables (Add Tables), select and add both the Mouse and Weights tables by dragging them into
+          the gray box underneath the label Query1.</li>
+        <li>Join the tables next - you'll see that since we have a field called "Mouse ID" in each table, Access guessed
+          (correctly) that this is the column that's common between the tables, and should be the basis for joining them
+          together. You can see this as a black line that connects the two tables, like <span class="popup">this<img class="popupimage"
+              src="relationship.jpeg"></span>. It's nice when Access guesses the relationship correctly, but you need to
+          learn to do this yourself - so, click on the black line to select it, then hit the "delete" key to remove the
+          relationship. To make the connection yourself, click on the "Mouse ID" label in the "Mouse" table, drag it to
+          the "Weights" table, and then drop it on top of the "Mouse ID" label there - your link joining the two tables
+          should reappear as it was before.</li>
+        <ul>
+          <li>Check the kind of join being used now - if you double-click on the black line, you'll see that there are
+            different ways to make the link between tables. The difference between them has to do with which records
+            will be displayed in the event that there are Mouse ID's in one that aren't found in the other. The choices
+            are:</li>
+          <ul>
+            <li>Only include rows where the joined fields from both tables are equal - any Mouse IDs that don't appear
+              in both tables are dropped from the results. This is the default, and the one you want to use, so keep it
+              selected. FYI the other options are...</li>
+            <li>Include ALL records from "Mouse" and only those records from "Weights" where the joined fields are equal
+              - every Mouse record will appear even if it doesn't have any weights recorded, but weights will only be
+              reported if they match a record in the Mouse table</li>
+            <li>Include ALL records from "Weights" and only those records from "Mouse" where the joined fields are equal
+              - all of the Weights will be reported even if they don't have a matching mouse ID, but mice will only be
+              reported if they match a record in the Weights table</li>
+            <li>Include all of the records from both tables - include all of the Mouse and all of the Weight records,
+              even if they don't match between tables</li>
+            <li>You can click on the "Cancel" button to close the Join Properties.</li>
+          </ul>
+        </ul>
+        <li>Build the query now - double click on the following fields to add them to the query:</li>
+        <ul>
+          <li>Mouse table - Mouse ID, Age, Sex, and Diet (we'll only include Mouse ID once, and it doesn't matter which
+            table it comes from since it's in both)</li>
+          <li>Weight table - Measurement Day, and Weight</li>
+        </ul>
+        <li>Run the query now - click on "<span class="popup">View<img class="popupimage" src="view.jpeg"></span>" to
+          switch from design view (in which you build the query) to datasheet view (in which you see the result). You
+          should see a table with the weights for each day, but now with all the Mouse table fields repeated for each
+          day of weighing (<span class="popup">like this<img class="popupimage" style="width: 400px" src="query_result.jpeg"></span>).</li>
+        <li>Right-click on the query's tab and save it - call it "JoinedFiles"</li>
+      </ul>
+      <p>Note that this query has all the ages, sexes, and diets repeated for each day of measurement, without having to
+        actually enter this information multiple times.</p>
+      <p>Also, be aware that while the tables are permanently stored on disk, the query is a temporary, on-the-fly
+        reporting of data from the tables. Queries can be saved and re-executed to re-create a view of the joined files,
+        and queries can even be used as though they are tables in other queries. It's possible to use queries to combine
+        data from tables for viewing, and only if the data need to be combined together permanently is it necessary to
+        make a new table with the query output.</p>
+      <p>To use the query-joined data to do some analysis in another program, such as Excel, you will need to export the
+        query. That's what you'll do next.</p>
+      <h3 class="part" id="exporting">Moving the data from an Access query to an Excel spreadsheet</h3>
+      <p> <input name="cb11" type="checkbox">6. <strong>Copy and paste the query data to Excel</strong>. The simplest,
+        quickest way to get the data back into Excel is to copy and paste it. To do this:</p>
+      <ul>
+        <li>Open the mouse.xlsx file in Excel</li>
+        <li>Switch to Access and click on the box in the upper left corner of the Access query (<span class="popup">here<img
+              class="popupimage" src="select_records.jpeg"></span>) to select all the records. </li>
+        <li>Right-click and copy the joined data</li>
+        <li>Switch to Excel and paste them in sheet 3, which is blank. Save the file. </li>
+      </ul>
+      <p> Another way to get the data out of Access and into Excel is to export the query as an Excel file - we'll do
+        that next, after learning to filter the data based on one of the query fields. </p>
+      <p><input name="cb12" type="checkbox">7. <strong>Filter the data based on sex, and then export to an Excel file</strong>.
+        In addition to using queries to pick which fields we want to export we can also filter the data within a
+        variable like we did in Excel. To do this:</p>
+      <ul>
+        <li>Go back to the Design view for your Joined files query</li>
+        <li>Under the Sex query field enter Females as the "Criterion".</li>
+        <li>Switch back to datasheet view and you'll see that you now only get the females reported by the query.</li>
+        <li>Right-click the query's tab and save it again.</li>
+      </ul>
+      <p>You can now export this version of the query by:</p>
+      <ul>
+        <li> Right-clicking on the name of the query in the All Access Objects list</li>
+        <li>Select "Export" → "Excel"</li>
+        <li>Name the file "females.xlsx" and save it to your OneDrive</li>
+        <li>The rest of the settings are fine as their defaults - click "OK" to complete the export</li>
+      </ul>
+      <p>If you open the file in Excel you'll see the female data in it.</p>
+      <h2>Relational joins in Excel</h2>
+      <p>Although the relational database management capabilities of Excel are much more limited than in Access, it is
+        possible to establish relationships between tables based on matching columns, and then use the joined tables as
+        though they are one in a PivotTable. Let's briefly see how this is done, using the mouse.xlsx file.</p>
+      <p><input name="cb1" type="checkbox">1. <strong>Open the mouse.xlsx file in Excel</strong>. Since we imported our
+        data from mouse.xlsx into Access for joining, it is already in the right format to set up a join in Excel. In
+        general, though, to join tables in Excel they have to be organized as stacked data - rows that indicate
+        individual observations, columns that indicate variables.</p>
+      <p><input name="cb1" type="checkbox">2. <strong>Format the Mouse data as a table</strong>. To use data for
+        relational joins we first have to format the data sets as tables, and give them names. To do this:</p>
+      <ul>
+        <li>Select a cell within the Mouse data, and click the <span class="popup">"Format as Table"<img class="popupimage"
+              src="format_as_table.png"></span> button in the Styles block of buttons in the Home tab.</li>
+        <ul>
+          <li>First, you will see a drop-down list of possible formats - the appearance you pick won't affect the
+            outcome, feel free to pick whichever one you find appealing.</li>
+          <li>Next, the "Create Table" window will pop up, identifying the range of data that will be used for the table
+            - it should found the contiguous rows and columns and lit them in the "Where is the data for your table?"
+            field. Your table has column names, so leave the "My table has headers" box checked. </li>
+          <li>Click "OK".</li>
+        </ul>
+        <li>Your data will now have filters enabled, and will have whatever formatting choices you made applied, such as
+          shaded cell backgrounds, and border lines. </li>
+        <li>A new tab of controls will also have been activated, the "Table Design" tab, which has a variety of tools we
+          don't need at this point. On the left side, though, is the "Table Name", which will be set to "Table1" -
+          change that to "mouse" and hit ENTER. </li>
+      </ul>
+      <p>Now, do the same for the data in the Weights sheet - call the table you create "weight".</p>
+      <p><input name="cb1" type="checkbox">3. <strong>Establish the relationship between mouse and weight</strong>.
+        Next we need to tell Excel how our tables are related:</p>
+      <ul>
+        <li>Switch to the "Data" tab, and click <span class="popup">"Relationships"<img class="popupimage" src="relationships_excel.png"></span>.</li>
+        <li>When the "Manage Relationships" window opens click on "New". </li>
+        <ul>
+          <li>Drop down the "Table" selector and pick "mouse", then set the "Column (Foreign)" to "Mouse ID". </li>
+          <li>Then drop down the "Related Table" list and select "weight", with "Mouse ID" as the "Related Column
+            (Primary)". </li>
+          <li>Then click "OK", and "Close" the "Manage Relationships" window.</li>
+        </ul>
+      </ul>
+      <p>The relationship between the tables is now established, and we can use it to make a PivotTable that uses data
+        from both of them.</p>
+      <p><input name="cb1" type="checkbox">4. <strong>Use the joined tables in a PivotTable</strong>. To use the joined
+        data we will insert a PivotTable, but with one difference from our previous ones...</p>
+      <ul>
+        <li>Switch to the "Insert" tab, and drop down the PivotTable menu and select <span class="popup">"From Data
+            Model"<img class="popupimage" src="pivot_from_data_model.png"></span>. Instead of using the data in cells
+          we've selected, the "From Data Model" option uses our joined tables from the previous step.</li>
+        <li>In the "PivotTable from Data Model" window accept the "New Worksheet" default choice by clicking "OK". </li>
+      </ul>
+      <p>You will get a blank PivotTable with both of your tables listed in the PivotTable Fields. You can drag these
+        into row, column, and sigma-values boxes as you like to make a PivotTable that uses the joined data. For
+        example, if we want to calculate the average weights for male and female mice you can drag Sex from mouse into
+        the rows, and Weight from weights into the Σ Values field, then change the value field settings to Average -
+        this will use the sexes from one table for grouping, and the weights in the other table for the calculation.</p>
+      <p>There are some potential pitfalls, though, in using Excel for this - we can see the problem if we use the
+        PivotTable to count up the number of measurement for each mouse. Let's make a new PivotTable to explore this:</p>
+      <ul>
+        <li>Select a cell outside of the current PivotTable, and Insert PivotTable from data model again. </li>
+        <li>In this new PivotTable you can get a count of how many observations there are for each mouse by dragging
+          Mouse ID from the weights table into rows, dragging it again into Σ Values, and then setting the value field
+          setting to "Count" - you'll see there are 10 observations per mouse.</li>
+        <li>Now, if you drag the Mouse ID from weight out of both boxes, and re-do the table using Mouse ID from mouse
+          instead, you'll see you only get a 1 for each mouse.</li>
+      </ul>
+      <p>Why are these two counts of sample sizes different? Because the PivotTable still treats the joined data as two
+        separate tables, and counts how many rows there are with the same Mouse ID in whichever table you've used - one
+        for Mouse, and ten for weights.</p>
+      <p>This would not happen in Access, because the joined data reported by the query is treated as a single table.
+        When the query is run and Mouse ID is reported there are ten repetitions of each ID, regardless of whether Mouse
+        ID came from the Mouse table or the Weights table.</p>
+      <p>The other thing to be aware of in using joins in Excel is that they are limited to joining two tables at a
+        time, whereas any number of tables can be joined in Access. We only had two tables to join, but if we had
+        additional ones we could have joined them as well as long as they had a matching column with one of the tables.
+      </p>
+      <h2 id="assignment" class="part">Assignment</h2>
+      <p>When you're done, post a copy of your Access database file, the Excel files with your exported query data, and
+        your mouse.xlsx file with the joined tables and PivotTable to the class web site.</p>
+    </div>
+  </body>
+</html>
