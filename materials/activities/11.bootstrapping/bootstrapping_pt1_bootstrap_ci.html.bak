@@ -1,0 +1,232 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Bootstrapping part I - confidence interval</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Exercise 11a - bootstrapping a confidence interval</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#bootstrapping_excel">Bootstrapping in Excel</a></p>
+      <p><a href="#bootstrap_ci_mean">Bootstrap CI for mean</a></p>
+      <p><a href="#bootstrap_odds_ratio">Bootstrap an odds ratio</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="bootstrapping_excel">Bootstrapping confidence intervals</h2>
+      <p> Another resampling technique that is used commonly in the biological sciences is bootstrapping. The bootstrap
+        can be used in a very similar fashion to randomization testing, but it is also a suitable method for calculating
+        confidence intervals. The procedure you've learned in introductory biostatistics was first developed by Jerzy
+        Neyman and Karl Pearson in the 1930's, and uses the formula:</p>
+      <p>x̄ ± t s<sub>x̄</sub> </p>
+      <p>where x̄ is the sample mean, t is a critical value obtained from a t-distribution, and&nbsp;s<sub>x̄</sub> is
+        the standard error. The product t s<sub>x̄</sub> is called the "uncertainty" of the estimate of x̄, and the
+        upper limit is thus the uncertainty added to x̄, and the lower limit is the uncertainty subtracted from x̄.</p>
+      <p>This simple procedure works fine in many cases, but not always. Bootstrapping works fine in cases where the
+        Neyman-Pearson method is appropriate, but also works well in cases where Neyman-Pearson fails. We'll focus on a
+        case today where either could be used, and will move on next time to a case where bootstrapping is a much better
+        alternative.</p>
+      <p>The most important difference between bootstrapping and the randomization testing procedure we used previously
+        is that bootstrapping involves resampling from our data <span style="font-weight: bold; font-style: italic;">with
+          replacement</span>. This means that in each iteration we can include some observations more than once, and not
+        include others at all. The sample of randomly selected data points is the "bootstrap sample" for that iteration.
+        The VBA code we write will be very similar to last week's randomization test macro, in that we'll take our
+        recorded macro and modify it to loop through the operations 1,000 times and record an observed statistic each
+        time through. But, the setup in Excel will be quite different because we won't be able to simply shuffle the
+        data by sorting on a column of random numbers. Instead, we will use a method that will allow us to randomly
+        select a bootstrap sample with replacement from our observed data each iteration. </p>
+      <p> </p>
+      <p> If you're curious, the "bootstrap" was one of the earliest applications of computationally intensive methods
+        in statistics. It was a very different approach than traditional methods of working with analytical equations to
+        derive formulas for confidence intervals. Since it was a novel method of solving some particularly thorny
+        statistical problems, the developers of the method likened it to pulling yourself up by your bootstraps when
+        everything else you've tried has failed. Thus the name.</p>
+      <p> </p>
+      <h2 class="part" id="bootstrap_ci_mean">Bootstrapping in Excel</h2>
+      <p><strong> <input name="cb1" type="checkbox">Step 1. Download <a href="bootstrap_exercise.xlsm">this</a> file
+          and save it where you're saving class files. </strong></p>
+      <p>Open the file and you'll find that the first sheet, SockeyeColor, has the data for skin color of sockeye salmon
+        that we worked with last time (we won't worry about the kokanee this time). </p>
+      <p>The first column is an ID number that we'll use in our bootstrapping to make random selection easy. The data
+        for skin color are in column B, and the mean for the 16 measurements is in cell B19. It is this mean we will be
+        finding a 95% confidence interval for.</p>
+      <p> </p>
+      <p> </p>
+      <p><strong> <input name="cb2" type="checkbox">Step 2. Generate random sockeye numbers. </strong></p>
+      <p>The way we will select our bootstrap sample is to generate sockeye numbers at random that will match the
+        numbers in column A. </p>
+      <p> </p>
+      <ul>
+        <li> In cell D1 type "Random salmon number". There are 16 sockeye in the sample, so each of our bootstrap
+          samples should have 16 skin colors in it.</li>
+        <li>In cell D2 enter the formula <span class="Excel">=randbetween(1,16)</span> - this will generate a random
+          salmon number.</li>
+        <li>Copy and paste D2 to the rest of the cells, D3 through D17 - this will generate 16 random salmon numbers,
+          equal to the number of measurements in the data set.<span style="color: #4d0099;"><span style="font-family: &quot;Lato&quot;,sans-serif;">
+            </span></span>Since each number is being independently generated, some will repeat and some numbers between
+          1 and 16 won't occur - if you look at the numbers generated you'll see some duplication. If you type F9 to
+          recalculate the worksheet, you'll see that a new set of random salmon numbers are selected each time.</li>
+      </ul>
+      <p>This selects the salmon numbers in our bootstrap sample, now we need to use these to get the skin color
+        measurements.</p>
+      <p> </p>
+      <p><strong> <input name="cb3" type="checkbox">Step 3. Select skin colors for the bootstrap sample. </strong></p>
+      <p>To get the skin color measurements for the randomly selected salmon:</p>
+      <ul>
+        <li>In cell E1 type "Bootstrap sample". </li>
+        <li>In cell E2, type the function <span class="Excel">=lookup(d2, a$2:a$17, b$2:b$17)</span> - this looks up
+          the salmon number from A2 to A17, and returns the skin color from B2 to B17. Since we've used absolute
+          references to the rows we can copy and paste this to the rest of the rows to get the skin colors for every
+          randomly selected salmon number.</li>
+        <li>Copy E2 and paste it to E3 through E17</li>
+      </ul>
+      <p>You now generate a bootstrap sample of skin colors each time the sheet recalculates. Double check that skin
+        colors in the bootstrap sample match the random salmon numbers (that is, if the random salmon number is 1 you
+        get a color of 0.98 returned for it).</p>
+      <p>Note that we're using a column to randomly generate the numbers, and another to return the skin color data. To
+        make this more compact would could replace d2 in the lookup() function with randbetween(1,16), and we would only
+        need one column to generate the bootstrap sample - in other words, if we used =lookup(randbetween(1,16),
+        A$2:A$17, B$2:B$17) we could get our skin color for a randomly selected salmon in a single cell. We didn't do it
+        that way to make the program easier to debug - we can see that the random numbers are being generated correctly,
+        and that the correct skin colors are being returned. If we put the random numbers into the lookup() function we
+        would get only the skin colors, and wouldn't be able to tell which salmon was being selected, or whether the
+        right values were being returned for the random salmon number generated. Separating them makes the spreadsheet a
+        little more complicated, but makes errors easier to spot.</p>
+      <p> </p>
+      <p> </p>
+      <p><strong> <input name="cb4" type="checkbox">Step 4. Calculate the mean of the bootstrap sample. </strong></p>
+      <p>Label the mean for the bootstrap sample in D19, and calculate it in E19. </p>
+      <p>The mean of the bootstrap sample changes every time a new random sample is selected, and we will record this
+        mean each for each of the 1000 iterations we use in our program.</p>
+      <p> </p>
+      <p><strong> <input name="cb5" type="checkbox">Step 5. Name a column to receive means of repeated bootstrap
+          samples. </strong></p>
+      <p>In G1 type "Bootstrap means".</p>
+      <p>At this point your sheet should look like <a href="layout_of_sheet.png" title="Layout of the worksheet" target="_blank">this</a>
+        - don't be concerned if the bootstrap sample is different, it's a random selection from the data and no two will
+        be alike.</p>
+      <p> </p>
+      <p><strong> <input name="cb6" type="checkbox">Step 6. Write the macro. </strong></p>
+      <p>To get to the VBA macro editor we need to enable a new tab on our ribbon...</p>
+      <ul>
+        <li>Hover over any of the tabs (Home is good), right-click, and select "Customize the Ribbon"</li>
+        <li>In the Excel Options window, with Customize Ribbon selected, you'll see two sets of controls - in the
+          "Customize the Ribbon" controls on the right, find the "Developer" tab and check the box to enable it</li>
+        <li>Click "OK"</li>
+      </ul>
+      <p>You should now have a new tab called "Developer" in the ribbon ("developer" refers to software developer, aka
+        programmer).</p>
+      <p>If you switch to the Developer tab the button on the far left says "Visual Basic" - click on this to open the
+        VBA editor.</p>
+      <p>The scripts we write are functions that <strong></strong> perform specific tasks, which Visual Basic calls <strong>subroutines</strong>.
+        It is possible to have more than one subroutine needed to perform a task - these are bundled together in a
+        single file called a <strong>module</strong>, and when you open the VBA editor it will open a blank module,
+        called Module1, for you to write your code into.</p>
+      <p>Before writing code, let's write the set of steps that need to be accomplished by this macro - this is called
+        "pseudo-code", in that it lays out the way that the program will work, but uses natural language instead of
+        computer code. Once we know what we want to do it's much easier to write a program to do it. To get a bootstrap
+        confidence interval we need to:</p>
+      <ul>
+        <li>Copy the mean of the bootstrap sample from cell E19 and paste it into the next cell in column G</li>
+        <li>Repeat 1000 times</li>
+        <li>Sort the bootstrap means in column G from smallest to largest</li>
+        <li>Find the 25th bootstrap mean and enter it in cell B20</li>
+        <li>Find the 975th bootstrap mean and enter it in cell B21</li>
+      </ul>
+      <p>That's actually it - Excel recalculates when you enter a value in a cell, so writing entering the bootstrap
+        mean into a cell in column G causes a new set of random salmon numbers to be generated, and the mean is
+        calculated for them each time. </p>
+      <p>The program that does this looks like this:</p>
+      <img src="bootstrap_ci_script.png" alt="Script">
+      <p> </p>
+      <p>Write this into your blank module. What does it do? One row at a time...</p>
+      <ul>
+        <li>Sub BootstrapCI() - this starts the function we are writing, and gives it a name. The name must have open
+          and close parentheses after it, with no spaces, and can't have certain special characters, but letters and
+          numbers are fine. Using a name that suggests what the function does is a good idea. Every Sub is accompanied
+          by an End Sub that completes the program, which you'll see is the last line.</li>
+        <li>The next five lines in green are comments - they start with an apostrophe, which in VBA indicates that
+          everything to the right is a comment that should be ignored. The BootstrapCI Macro line is just a (admittedly
+          very brief) description of what this function does. </li>
+        <li>One exception to the rule that comments are ignored by Excel...the Keyboard Shortcut: line is actually used,
+          in that it defines the key combination you can use to execute the function. If you run the function any other
+          way it's ignored, but Excel does make note of the key combination and runs the program if you use it.</li>
+        <li>Application.ScreenUpdating = False - this turns off the visual feedback every time a new entry is made. This
+          is really slow, and if you have Excel update the screen every time a new bootstrap sample is generated it will
+          take ten times longer for the program to run. We turn it off at the beginning of the program and turn it back
+          on at the end.</li>
+        <li>The loop that does most of the work is in the next three lines of code - it is a For...Next loop, meaning
+          that it executes as many times as we specify in the For line. Specifically:</li>
+        <ul>
+          <li>For i = 1 to 1000 - this starts the loop, and tells it to repeat (i.e. iterate) 1000 times, and to use a
+            variable called i to store the current iteration</li>
+          <li>Range("G" &amp; i + 1) = Range("E19").Value - this takes the numeric value for the mean of our bootstrap
+            sample in E19 and enters it into a cell in column G, with the row equal to i + 1. Since i is increasing by 1
+            each time we run through the loop this causes each bootstrap sample mean to be entered in the next cell down
+            from the previous one each time we iterate through the loop.</li>
+          <li>Next i - this increases i by 1, and sends us back to the start of the loop for the next iteration.</li>
+        </ul>
+        <li>Columns("G").Sort - once the loop is completed we will have 1000 bootstrap means in column G, and we need to
+          sort them from smallest to largest. The sort command specifies the columns to sort, and then uses the .Sort
+          "method" (which is an operation that columns know how to perform, which is specified by a period followed by
+          the name of the operation) to sort the column. Everything that follows is an argument that tells the sort
+          method how to sort the data:</li>
+        <ul>
+          <li>key1:=Range("G2") - it's possible to sort on more than one column, but we're just sorting on one, so we
+            specify the sort "key" with the first row of data in the column we'll sort by (if we were going to sort on
+            both column G and column H we would have a key2 argument as well)</li>
+          <li>order1:=xlAscending - sort the data in G in ascending order</li>
+          <li>Header:=xlYes - the first row of column G should be used as text labels, and not sorted in with the data
+            values</li>
+        </ul>
+        <li>Range("B20") = Range("G26").Value - once the data are sorted the 25th largest bootstrap mean is in cell G26
+          (since the first row is a label, not a data value), so we assign the value of the contents of G26 to cell B20.
+          We could select, copy, and paste-special the value to B20, the way we would if we were doing this by hand, but
+          it isn't necessary - assigning the value this way is much faster.</li>
+        <li>Range("B21") = Range("G976").Value - same idea, but this time we're recording the value of cell G976 (which
+          has the 975th largest bootstrap mean) to cell B21</li>
+        <li>Application.ScreenUpdating = True - turn screen updating back on so that Excel will work as expected after
+          the BootstrapCI() is done</li>
+        <li>End Sub - indicates that the function is complete</li>
+      </ul>
+      <p>And that's all there is to it! Save your work!</p>
+      <p> </p>
+      <p><strong> <input name="cb8" type="checkbox">Step 7. Debug. </strong></p>
+      <p>Put the SockeyeColor sheet and VBA code window side by side so that you can see both - you need to be able to
+        see column G, where the bootstrap means are recorded, as well as the VBA window for this to be useful to you.</p>
+      <p>Once you can see both the macro and the worksheet, select the VBA code window to activate it and hit F8
+        repeatedly to step through the commands in the macro. You should see that each time you run through the loop a
+        new bootstrap mean is entered in the next row of column G, below the previous one.</p>
+      <p>Running through all 1000 of the runs through the loop by hitting F8 is a little tedious, so once you're sure
+        it's working you can add a <strong>break point</strong> to the code window, like so:</p>
+      <p> <img src="breakpoint.png" alt="Breakpoint"></p>
+      <p>The red dot in the gray band on the left side of the window is the breakpoint - enter it by clicking next to
+        the Columns("G" &amp; i+1).Sort line where the red dot appears in my example. You can now click the Continue
+        button:</p>
+      <p><img src="continue.png" alt="Continue">&nbsp; </p>
+      <p>This will cause the program to run normally until it hits your break point, and then it will pause. We've
+        paused at the sorting step, so if you hit F8 again you'll see that the values in G are now in ascending order.</p>
+      <p>With only a few more lines to go you can step through the rest of them with F8, and the 25th and 975th means
+        will be entered into B20 and B21, respectively, and our 95% CI bootstrap is completed.</p>
+      <p>Click on the red dot to remove the breakpoint so that the program will run without interruption.</p>
+      <p><strong> <input name="cb9" type="checkbox">Step 8. Run the macro. </strong></p>
+      <p>Once you've debugged and are sure that everything is running correctly, switch to your SockeyeColor sheet and
+        type ctrl+shift+B. When it finishes you'll have 1000 bootstrap means in column G. It should only take a few
+        seconds to run.</p>
+      <p>If it doesn't run, switch to the View tab, and in the Macros menu select "View Macros". Then select the
+        BootstrapCI macro from the list, and click the "Options..." button. Click into the box in the "Shortcut Key"
+        option, hold down the Shift key and enter a B. You should now see Ctrl+Shift+B as the shortcut key for the
+        macro. Click OK, click "Cancel" to close the macro editor window, and then try running the macro again.</p>
+    </div>
+    <div>
+      <h2 class="part" id="assignment">Assignment</h2>
+      <p> </p>
+      <p> Save your work - we'll use this spreadsheet for part 2 and 3 over the next couple of class meetings.</p>
+    </div>
+  </body>
+</html>

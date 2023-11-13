@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    
+    <title>Bootstrapping III - making decisions</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Exercise 11c - making decisions in code</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#bootstrapping_excel">Bootstrapping in Excel</a></p>
+      <p><a href="#bootstrap_ci_mean">Bootstrap CI for mean</a></p>
+      <p><a href="#bootstrap_odds_ratio">Bootstrap an odds ratio</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div>
+      <p>For our last macro before moving on to our genetic drift simulation we will learn how to use If...then...else
+        statements to make decisions based on data values. This macro will also use <strong>variables</strong> that we declare and
+        initialize, and will only interact with the worksheet to record the final results at the end.</p>
+      <p>We are going to write a macro that produces the counts of adult moths that either chose clean air or EA,
+        depending on whether they were trained to avoid EA as caterpillars. This will reproduce the observed pivot table
+        counts in Table 1, which is how we will know we did it right.</p>
+      <p><strong><input name="cb10a" type="checkbox">Step 1. Open the Excel file, and open the macro editor.</strong></p>
+      <p>The first thing you need to do is to open your macros for editing - select "Macros" → "View macros". In the
+        Macro window select "BootstrapOdds" and select "Edit" - this will open the macro editor.</p>
+<p>The final version of the macro will look like this - the steps needed to write it are explained below, but the full program is here for your reference:</p><img src="table_program.png" alt="Table program">
+      <p>
+        Note the indenting - as you enter your code use tabs to indent the code to match this example. The reason for this is that it makes the code much more readable - several parts of the program, such as the For...Next loop and the If...then...else statements have beginning and ending lines of code, with commands that are executed in the middle. If you indent the lines between the beginning and end statements it's much clearer which commands are within the loops and if...then...else commands.</p>
+<p>
+      </p><p><strong><input name="cb10a" type="checkbox">Step 2. Start a new subroutine.</strong></p>
+      <p>We will write a new macro below the "End Sub" line from your bootstrapped odds ratio confidence interval macro
+        from last time. To begin a new macro enter the line:</p>
+      <p>Sub Table()</p>
+      <p>You will see a horizontal line will appear separating this new macro you are creating and the End Sub that ends
+        the BootstrapOdds() macro above.</p>
+      <p>Add a few blank lines and type:</p>
+      <p>End Sub</p>
+      <p>Now you will write your macro in between the Sub and End Sub lines.</p>
+      <p><strong><input name="cb10a" type="checkbox">Step 3. Define variables.</strong></p>
+      <p>The pseudo code describing how the macro will work is:</p>
+      <ul>
+        <li>Define variables to count up several things:</li>
+        <ul>
+          <li>Total number of adults that chose clean air</li>
+          <li>Total number of adults that chose EA air</li>
+          <li>Total adults that chose clean air that were trained to avoid EA air</li>
+          <li>Total adults that chose EA air that were trained to avoid EA air</li>
+        </ul>
+        <li>Start at the first adult response in cell C2</li>
+        <ul>
+          <li>Check the adult response for that row, and add 1 to the appropriate variable</li>
+          <ul>
+            <li>Check the caterpillar training for that row, and add 1 to the appropriate variable</li>
+          </ul>
+          <li>Repeat until every row has been counted</li>
+        </ul>
+        <li>Write the counts into worksheet cells</li>
+      </ul>
+      <p>We will be keeping track of total number of adults that chose clean air, and total number of adults that chose
+        EA air, so we'll need a variable for each of these. Type the lines:</p>
+      Dim adClean as Integer<br>
+      Dim adEA as Integer
+      
+
+
+<p>The Dim command is short for "dimension", which is how VB defines variables. The name of the variables are adClean and adEA, and they are both type Integer - the only data type we can assign into them are integer numbers (if we tried to assign a floating point number to an integer variable the decimal would be dropped, with unpredictable results, and a text value would cause the program to crash).</p>
+<p>Additionally we will count up how many of the adults who chose clean air were trained to avoid EA, and how many
+        of the adults who chose EA air were trained to avoid EA. We need two additional variables for these to sums:</p>
+      Dim adClean_trEA As Integer <br>
+      Dim adEA_trEA As integer<br>
+      <p>Note that we're using a naming convention that will help you remember what each variable is - the first part of
+        the name is the adult response, and "ad" is used to indicate this. The second part of the name after the
+        underscore indicates how the caterpillars were trained, and "tr" is used to indicate this. The two variables
+        that record total numbers of adult responses of each type have only the "ad" but not the "tr" part in their
+        names. Using variable names that are self-explanatory is very helpful in helping you use them properly in the
+        programs you write.</p>
+      <p>There are actually two additional possible combinations - adults that chose clean air that were controls, and
+        the adults that chose EA air that were controls. We don't need to count these, though, because we have the total
+        adults who chose clean air (adClean), and the number of those that were trained to avoid EA (adClean_trEA), so
+        we can get the adults who chose clean air but were int the control group as adClean - adClean_trEA. Same for
+        adults that chose EA that were in the control group, which is adEA - adEA_trEA.</p>
+      <p><strong><input name="cb10a" type="checkbox">Step 4. Initialize variables</strong></p>
+      <p>Now that you have six variables, which should all be set to 0 to start. Make a blank line after your last Dim
+        statement and then type the lines:</p>
+      adClean = 0 <br>
+      adEA = 0 <br>
+      adClean_trEA = 0 <br>
+      adEA_trEA = 0 </div>
+<div>
+<p>The equal sign is how we <strong>assign</strong> values to variables. Assignment works from right to left - the 0 on the right side of the = is assigned as the value of the variable on the left side.</p>
+<p><strong><input name="cb10a" type="checkbox">Step 5. Write the For...Next loop</strong></p>
+      <p>After your last initialization, enter a blank line, and then type:</p>
+      For i = 2 to 88
+      
+
+
+<p>The data are in rows 2 to 88, so this sets us up to work through all of the data. Make a couple of blank lines,
+        and then type:</p>
+      Next i
+      
+
+
+<p><strong><input name="cb10a" type="checkbox">Step 6. Write the code that does the counting</strong></p>
+      <p>Within the loop you just made, enter the lines (note that the lines starting with an apostrophe are comments
+        from me to you that explain what the code is doing. You do not need to write the comments into your program):</p>
+      <p>'First, start an If...then that will take the first value in column C and ask if it is equal to "Chose clean
+        air"</p>
+      If Range("C" &amp; i).Value = "Chose clean air" Then
+      
+
+
+<p>'Next, write the lines that will be executed if this comparison comes back as TRUE. First, you will want to add
+        1 to the adClean variable.</p>
+      adClean = adClean + 1
+      
+
+
+<p>'Next, we need another If...then to decide whether the caterpillar was trained to avoid EA or not</p>
+      <p>'This second If...then is nested inside of the first, so it will only be executed on adults that chose clean
+        air</p>
+      If Range("B" &amp; i).Value = "Trained to avoid EA" Then
+      
+
+
+<p>'If this animal was trained to avoid EA we need to add 1 to the adClean_trEA variable</p>
+      &nbsp;&nbsp;&nbsp; adClean_trEA = AdClean_trEA + 1<br>
+      End If
+      
+
+
+<p>'The End If ends the second If...then that only applies to moths that chose clean air. We now return to the
+        first If...then that pertained to the adult choice.</p>
+      <p>'There are only two choices the adults could make, so if the the If...then is not "Chose clean air" it must be "Chose EA air" - we can use an Else for the cases in which the
+        adult chose EA air</p>
+      Else<br>
+      &nbsp;&nbsp;&nbsp; adEA = adEA + 1</div>
+    <div>
+      <p>'Now that we are dealing with adults that chose EA, we need to ask again if they were trained as caterpillars
+        to avoid EA</p>
+      If Range("B" &amp; i).Value = "Trained to avoid EA" Then</div>
+    <div>&nbsp;&nbsp;&nbsp; adEA_trEA = adEA_trEA + 1</div>End If
+    
+
+
+<div>
+      <p>'We have finished counting for the adults that chose clean air or chose EA, so we need to close the first
+        If...then with a matching End If </p>
+      End If</div>
+<div>
+<p><strong>Step 7. Report the counts to the worksheet.</strong></p>
+      <p>We now have counts for all combinations of caterpillar training and adult choice, as well as totals for the two
+        adult choices. We will now write them back into the MothLearning worksheet. We have been using pivot tables with
+        adult choice as the row labels, and caterpillar training as the columns, so to lay out your results in the same
+        way type the lines:</p>
+      Range("I18") = adClean - adClean_trEA <br>
+      Range("J18") = adClean_trEA <br>
+      Range("K18") = adClean <br>
+      Range("I19") = adEA - adEA_trEA <br>
+      Range("J19") = adEA_trEA <br>
+      Range("K19") = adEA
+      
+
+
+<p>We should also add some labeling:</p>
+      Range("I17") = "Control" <br>
+      Range("J17") = "Trained to avoid EA" <br>
+      Range("K17") = "Total" <br>
+      Range("H17") = "Adult choices:" <br>
+      Range("H18") = "Chose clean air" <br>
+      Range("H19") = "Chose EA air"
+      
+
+
+<p>And some column totals:</p>
+      Range("I20") = Range("I18").Value + Range("I19").Value <br>
+      Range("J20") = Range("J18").Value + Range("J19").Value <br>
+      Range("K20") = Range("K18").Value + Range("K19").Value
+      
+
+
+<p><strong>Step 8. Assign a keyboard combination, and run your program.</strong></p>
+      <p>Switch to your worksheet, and select "Macros" → "View macros". You should see "Table" listed as one of the
+        macros. Select it, and click "Options", and then assign the key combination of CTRL+SHIFT+T.</p>
+      <p>If you close the macros settings, and hit CTRL+SHIFT+T you should see a table of counts for adult choices
+        (rows) by treatments (columns) that matches the table of observed counts above.</p>
+      <h2 class="part" id="assignment">Assignment</h2>
+      <p> </p>
+      <p> Save your work and upload...once you're done with this part you have all three parts of this assignment done.</p>
+    </div>
+</body></html>
