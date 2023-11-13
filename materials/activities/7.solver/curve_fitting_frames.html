@@ -1,0 +1,380 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Least squares curve fitting</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Exercise 8 - least squares curve fitting</h1>
+    </div>
+    <div onclick="navToggle()" style="display:none" id="navigation">
+      <p><a href="#curve_fitting">Curve fitting</a></p>
+      <p><a href="#get_estimates">Fit the curve, get the Solver estimates</a></p>
+      <p><a href="#std_errors">Standard errors</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="curve_fitting">Curve fitting</h2>
+      <p> Today you will learn how to fit data to non-linear functions using least squares, obtain estimates of the
+        function's coefficients, calculate standard errors of the estimates, and test whether two parameter estimates
+        are statistically significantly different.</p>
+      <br>
+      <table style="width: 100%">
+        <tbody>
+          <tr>
+            <td>
+              <p><img src="6400_instr.png" alt="Instrument" hspace="10" align="left">We will use the same kind of
+                photosynthesis data used as an example in lecture. Net photosynthesis can be measured at varying light
+                levels by a portable photosynthesis system like the one pictured to the left. A leaf is placed in the
+                machine's chamber, and light levels are set by the machine. The rate of depletion of CO<sub>2</sub> from
+                the chamber is a measure of carbon fixation through photosynthesis, so the data produced by the system
+                is a set of light levels and photosynthesis rates. Thus, both light level and net photosynthesis are
+                known quantities.</p>
+            </td>
+          </tr>
+          <tr>
+            <td> <br>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p> <img alt="Curve" style="width: 218px; height: 192px;" src="typical_photosynth_curve.jpg" vspace="5" hspace="10"
+                  align="left">Light level is set by the machine, making it the independent variable, and net
+                photosynthesis is measured in response. However, the shape of the response between these two variables
+                is not a straight line, as you can see from the graph of a typical photosynthesis curve shown to the
+                left. Photosynthesis rises quickly as light levels rise, then asymptotically approach a maximum. If all
+                of the conditions needed for photosynthesis are met or exceeded, the curve will plateau when the
+                photosynthetically active tissue is fixing carbon as quickly as it possibly can. Photosynthesis is
+                limited by light availability at low light levels, which causes the curve to drop rapidly below a value
+                of about 500.</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p>Many trees grow in dense forests, such that the leaves at the top of the tree are the only ones that
+                routinely receive direct sunlight without being shaded by neighboring trees. Leaves near the base may be
+                in the shadow of their neighbors most or all of the day. A tree may respond to this by producing leaves
+                with different structures at the top and bottom of the tree to take full advantage of the light that's
+                available. Leaves from the top of a tree will generally not be light limited, but being in the sun all
+                day makes evaporation rates go up. Leaves from the bottom of the tree need to make efficient use of the
+                light available, but will be in a cooler, more shaded environment that will expose them to lower rates
+                of water loss. Since leaves at the top and leaves at the bottom face different environments, they may
+                show differences in their photosynthetic activity.</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p><img src="compare_top_bottom.jpg" alt="Compare top to bottom" style="width: 357px; height: 245px;" vspace="5"
+                  hspace="10" align="left"></p>
+              <p> </p>
+              <p> From the graph to the left it's clear that when tested at consistent, known light levels by the
+                machine, leaves from the tree top have higher net photosynthesis than leaves from the base of the tree
+                when light levels are high. However, below about 500 on the x-axis this changes - leaves from the bottom
+                are more effective at photosynthesizing when light levels are low. </p>
+              <p>It would be nice to be able to take this interpretation further, and try to understand why the curves
+                differ in the way that they do.</p>
+              <p> </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p> To do this, we will need to pick an equation that relates net photosynthesis to light levels, and that has
+        parameters that are interpretable as different characteristics of the photosynthesis process. We will then be
+        able to use differences in the parameters from each curve to better understand what is causing differences in
+        shape of the curves. An equation that relates photosynthesis to light levels is the following:</p>
+      <p> </p>
+      <p> <img src="equation.jpg" alt="Equation" style="width: 670px; height: 88px;"></p>
+      <p> The definition of the terms in this equation are:</p>
+      <p> </p>
+      <p> Q = light intensity (the independent variable, set by the photosynthesis system)</p>
+      <p> Pnet = net photosynthesis (the response variable, measured by the photosynthesis system)</p>
+      <p> </p>
+      <p> Φ = upper-case Greek Phi = maximum quantum yield (measure of efficiency of conversion from light energy to
+        chemical energy)</p>
+      <p> θ = upper-case Greek Theta = Convexity of the curve (a dimensionless constant)</p>
+      <p> P<sub>marea</sub> = maximum area-based rate of net photosynthesis (CO<sub>2</sub> per m<sup>2</sup> per s)</p>
+      <p> </p>
+      <p> We will fit one data set for leaves at the bottom of a tree to this curve. For comparison, I have provided you
+        with a completed analysis of data from leaves at the top of a tree as well, so you can see how they differ in
+        their parameters.</p>
+      <h2 class="part" id="get_estimates">Fit the curve to the data to obtain estimates of Φ, θ, and P<sub>marea</sub></h2>
+      <p> <strong><input name="Step 1" type="checkbox">Step 1 - Download <a href="curve_fit_data.xlsx">this</a> file,
+          and save it tothe folder H:/Biol365/ex7. </strong></p>
+      <p>You'll see that you have two worksheets, one with data from a leaf at the bottom of a tree, and one from a leaf
+        at the top of the same tree. The one from the top of the tree is already done, and as you complete the analysis
+        of the data of the leaf from the bottom of the tree it will be automatically added to the graph on the "Top"
+        worksheet. Aside from the block of cells in the "Top and Bottom Compared" region, and the graph, the Bottom
+        sheet will look just like the Top sheet when you're done. You can refer to the Top sheet as an example as you're
+        working through the exercise.</p>
+      <p> </p>
+      <p> <strong><input name="step2" type="checkbox">Step 2 - Set up the "Bottom" sheet for curve fitting. </strong></p>
+      <p><input name="step2a" type="checkbox">In cell A15 type "Parameter", and in B15 type "Values". </p>
+      <p> </p>
+      <p> <input name="step2b" type="checkbox">Select A16, switch to the "Insert" tab, and click on "Symbol". On the
+        Symbol selector that pops up, select "Greek and Coptic" as the "Subset", and find capital <span class="popup">
+          Phi<img class="popupimage" src="insert_phi.jpeg"></span> - select it, and click "Insert".</p>
+      <p> </p>
+      <p> <input name="step2c" type="checkbox">Select cell A17 and type "Pmarea". Select cell A18 and insert lower case
+        <span class="popup">theta<img class="popupimage" src="insert_theta.jpeg"></span>, using the "Insert" "Symbol"
+        method you used for Phi.</p>
+      <p> </p>
+      <p> <input name="step2d" type="checkbox">We will need to provide starting values for these parameters, but for
+        now just type in 1's for each parameter (1 for B16, B17, and B18).</p>
+      <p> </p>
+      <p> <input name="step2e" type="checkbox">We will be typing in a fairly complicated formula next, so to make this
+        easier we are going to assign names to each of the parameters we can refer to in the formula. </p>
+      <ul>
+        <li>
+          <p>Click on cell B16 (the Phi parameter), and right-click. </p>
+        </li>
+        <li>
+          <p>In the menu that pops up, select "Define name...". </p>
+        </li>
+        <li>
+          <p>In the "New name" window that opens, the "Name" will already show the Greek Phi symbol - this looks like it
+            would be ideal, but we want to use something that's easy to enter into a formula, and don't want to have to
+            do to the symbol selector each time we want to use this parameter. Change the Phi symbol to the word "phi",
+            change the "Scope" to "Bottom" (that is, just use this name in the Bottom worksheet) and click "OK".</p>
+        </li>
+        <li>
+          <p>Select cell B17, right-click, and name the range "Pmarea".</p>
+        </li>
+        <li>
+          <p>Finally, right-click on B18,and name the range "theta".</p>
+        </li>
+      </ul>
+      <p>We can now use these descriptive names instead of cell references in our formulas, which will make it easier to
+        spot mistakes.</p>
+      <p> </p>
+      <p> <strong><input name="step3" type="checkbox">Step 3. Calculate predicted Pnet. </strong></p>
+      <p><input name="step3a" type="checkbox">In cell C1 type "Pnet predicted", and in cell C2 enter the formula that
+        predicts Pnet above. You will need to type in:</p>
+      <img src="photosynth_excel.png" alt="Formula">
+      <p> </p>
+      <p>Notice that since we named the cell ranges containing our parameters we can refer to them by name, rather than
+        by absolute cell reference. This makes complex formulas much easier to read, and much easier to trouble-shoot if
+        you make a mistake. The only cell reference in the formula is A2, which points to the first light level. </p>
+      <p> </p>
+      <p> <input name="step3b" type="checkbox">Copy and paste the formula from C2 to the rest of the data rows, C3 to
+        C9.</p>
+      <p> </p>
+      <p> <strong><input name="step4" type="checkbox">Step 4. Graph the data. </strong></p>
+      <p>At this point we want to pick better starting values for our parameters so that the predicted values come as
+        close as we can to the observed values - we will let Solver find the best values, but the closer we are to the
+        solution when we start the more likely that Excel will find the correct values for us. </p>
+      <p><input name="CheckBox1" type="checkbox">Select cells A1 through C9, and insert a scatter plot with only
+        markers. Then, select the predicted Pnet series, right-click, and select "Format data series" from the popup
+        menu. In the "Fill and Line" options (the paint bucket), choose "Solid line" as the line style, and then switch
+        to "Marker" and use in "Marker options" use "None" - this will make the predicted values show only as a line on
+        the graph.</p>
+      <p> </p>
+      <p> <input name="step4a" type="checkbox">Add axis labels - use "Light" as the x-axis label, and "Pnet" as the
+        y-axis label.</p>
+      <p> </p>
+      <p> Your graph should look like <span class="popup">this<img class="popupimage" src="fit_bad_start.jpeg"></span>.
+      </p>
+      <p> </p>
+      <p> Now we can use the graph to help us pick some better starting parameters.</p>
+      <ul>
+        <li>
+          <p>The parameter that sets the level at which the curve plateaus is Pmarea. Look at where the actual Pnet data
+            levels off, and set that as the starting value for Pmarea in B17.</p>
+        </li>
+        <li>
+          <p>Quantum yield (Phi) and convexity (theta) control the curvature of the graph. Try values of Phi that
+            increase the curvature, and decrease the stair-step appearance of the graph. Start around 0.05, and reduce
+            the values from there (don't go below 0).</p>
+        </li>
+        <li>
+          <p>Theta controls the convexity. Try out values of theta in cell b18 that bring the Pnet predicted values as
+            close to the observed Pnet as possible.</p>
+        </li>
+      </ul>
+      <p> </p>
+      <p> Once you have the line as close to the data as you can get it, you can move on to the next step.</p>
+      <p> </p>
+      <p> <strong><input name="step5" type="checkbox">Step 5 - Calculate the sum of squared deviations between Pnet and
+          predicted Pnet. </strong></p>
+      <p>We can calculate the sum of squared differences between observed Pnet and predicted Pnet in a single cell if we
+        use an array formula. In cell B11 type "SumSq", and in cell C11 type the array formula:</p>
+      <p> </p>
+      <p class="Excel"> =sum((b2:b9-c2:c9)^2)</p>
+      <p> </p>
+      <p> Don't forget to CTRL-SHIFT-ENTER. You should see curly braces around the formula.</p>
+      <p> </p>
+      <p> <strong><input name="step6" type="checkbox">Step 6 - Use Solver to find the parameter estimates. </strong></p>
+      <p>Turn on the Solver if it isn't already present in the Data tab. Click on Solver, and have it set cell C11 (the
+        sum of squared deviations) to Min by changing cells B16:B18 (the parameters). Click "Solve".</p>
+      <p> </p>
+      <p> You'll see that the parameters are now a little different than before, and the curve goes nicely through the
+        data in the graph.</p>
+      <p>Now is a good time to save your work!</p>
+      <p> </p>
+      <h2 class="part" id="std_errors"> Calculate standard errors</h2>
+      <p>If you switch to the "Top" sheet for a moment, you'll see that the estimates you obtained for bottom leaves are
+        already plotted on a graph, along with estimates based on measurements from top leaves. The two curves are not
+        identical, and we can use the differences in each parameter to better understand why the curves differ. </p>
+      <p>However, our estimates of parameters are based on a sample of data, and if we had picked different leaves we
+        probably would have gotten somewhat different results. The differences between parameters for top and bottom
+        leaves may just reflect this random sampling variation, rather than being due to a real difference. Before we
+        try to interpret the differences between the top and bottom leaves we should test whether the differences we see
+        are big enough to be considered real, and not just random sampling variation. We can quantify how much random
+        sampling variation to expect in each parameter estimate by calculating their standard errors. </p>
+      <p>As we learned in today's lecture, if we are wrong about the value of one of the parameters, then our predicted
+        values will be wrong by some amount. The function we are using, though, isn't equally sensitive to changes in
+        each of the parameters. If changing a parameter by a little causes a big change in predicted value, then the
+        function has high sensitivity to the parameter. If changing a parameter by a lot has very little effect on
+        predicted values, then the function has low sensitivity to the parameter. This has implications for how good
+        each of our parameter estimates is - we'll get better estimates, with smaller standard errors, for parameters
+        that the function is sensitive to, and poorer estimates, with larger standard errors, for parameter the function
+        is not sensitive to. </p>
+      <p> </p>
+      <p> We are going to take advantage of the sensitivity of the function to change in its parameters when we
+        calculate standard errors, using a method called "finite difference approximation". This involves altering each
+        of the estimated parameter values one at a time by a very small amount, then seeing how much change in predicted
+        value we get (the "deltas"). We can then use the difference in the predicted values per unit change in the
+        parameters to calculate P, which is a matrix of sums of squares and cross products for the deltas. We will then
+        use the inverted P matrix, along with an estimate of the standard error of model overall (based on the
+        residuals), to calculate the standard errors for each of the three parameters we estimated. This requires
+        several steps.</p>
+      <p> </p>
+      <p> <strong><input name="step1.2" type="checkbox">Step 1. Set up the worksheet to do the finite difference
+          approximation.</strong></p>
+      <p>Switch back to the "Bottom" sheet to calculate standard errors for your estimates.</p>
+      <p> </p>
+      <p> <input name="step1.2a" type="checkbox">a. Copy the entire parameter block (A15:B18) and paste it below,
+        starting in cell a22.</p>
+      <p> </p>
+      <p> <input name="step1.2b" type="checkbox">b. In cell C15 type "Parameter multiplier", and in cell C16, C17, and
+        C18 enter a 1. We will change this value in order to change the parameters by a small amount.</p>
+      <p> </p>
+      <p> <input name="step1.2c" type="checkbox">c. In cell B16 type <span class="Excel">=b23*c16</span>. Copy and
+        paste this to B17 and B18. This will now make the parameters depend on the 1's in c16-c18.</p>
+      <p> </p>
+      <p> <input name="step1.2d" type="checkbox">d. Copy Pnet Predicted (c1:c9) and paste-special only the values to
+        column D. Re-name it "Best fit" in cell D1.</p>
+      <p> </p>
+      <p> <input name="step1.2e" type="checkbox">e. Label F1 "dY/dPhi", G1 "dY/dPmarea", and H1 "dY/dTheta". We will
+        calculate the change in predicted Pnet that happens when we change each parameter in these columns.</p>
+      <p> </p>
+      <p> <input name="step1.2f" type="checkbox">f. In cell f2 write the formula <span class="Excel">=(c2-d2)/(phi-b$23)</span>.
+        I know, you just got a divide by zero error, but that is okay for the moment. The formula calculates the change
+        in Y divided by the change in the Phi parameter, and since we haven't changed Phi yet both the numerator and
+        denominator are 0, which is where the divide by zero error comes from. This will go away when we change phi. </p>
+      <p>Copy and paste the formula from f2 to the rest of the cells in this column (f3:f9).</p>
+      <p> </p>
+      <p> <input name="step1.2g" type="checkbox">g. In cell g2 write the formula <span class="Excel">=(c2-d2)/(Pmarea
+          - b$24)</span>. Copy and paste to g3:g9.</p>
+      <p> </p>
+      <p> <input name="step1.2h" type="checkbox">h. In cell h2 write the formula <span class="Excel">=(c2-d2)/(theta -
+          b$25)</span>. Copy and paste to h3:h9.</p>
+      <p> </p>
+      <p> <strong><input name="step2.2" type="checkbox">Step 2 - Calculate the finite differences. </strong></p>
+      <p>Now that you have everything set up, you're ready to change the parameters a tiny amount, one at a time, and
+        record the change in predicted value per unit change in the parameter. </p>
+      <p> </p>
+      <p> <input name="step2.2a" type="checkbox"> a. Change the "Parameter multiplier" for Phi to 1.000001. You'll see
+        that this increases the Phi parameter in cell B16 by a tiny amount (one one millionth of its value), which
+        changes the predicted Pnet's in column C, and causes the dY/dPhi's in F to calculate (they should no longer be
+        "divide by zero" errors). </p>
+      <p><input name="AnotherOne1" type="checkbox">Now that you have a set of dY/dPhi values, you don't want them to go
+        back to a divide by zero error when you set the multiplier back to 1, so we'll convert these formulas to values.
+        Copy the cells in f2:f9, right-click and "Paste Special"only the values - you now have the first set of "deltas"
+        (that is, changes in the curve with a small change in the Phi parameter). </p>
+      <p><input name="AnotherOne2" type="checkbox">Once you've pasted the values, change the multiplier for Phi back to
+        1. The dY/dPhi column is no longer made up of cell formulas, so you should not have the values go back to divide
+        by zero errors when you set the multiplier back to 1.</p>
+      <p> </p>
+      <p> <input name="step2.2b" type="checkbox"> b. Change the multiplier for Pmarea to 1.000001. Copy and
+        paste-special the values in the dY/dPmarea column (cells g2:g9), then change the multiplier back to 1.</p>
+      <p> </p>
+      <p> <input name="step2.2c" type="checkbox">c. Change the multiplier for theta to 1.000001. Copy and paste-special
+        the values in the dY/dtheta column (cells h2:h9), then change the multiplier back to 1.</p>
+      <p> </p>
+      <p><strong> <input name="step3.2" type="checkbox">Step 3 - Calculate the P matrix, and invert it. </strong></p>
+      <p>Now that you have the changes in predicted values per unit change in each parameter, you can use these to
+        calculate the P matrix. P gives sums of the squared deltas in the main diagonal, and their cross-products in the
+        off diagonal. These are approximations to first partial derivatives, which are instantaneous values - that is,
+        they represent the change in Y with an infinitely small change in one of the parameters. Our change wasn't
+        infinitely small, but it was sufficiently small that our approximation should be very good. All we need to do to
+        get our P matrix is to transpose the deltas, then multiply the transposed delta matrix by the untransposed delta
+        matrix. We can then invert P, which will give us the numbers needed to calculate standard errors of our
+        parameters.</p>
+      <p> </p>
+      <p> <input name="step3.2a" type="checkbox">a. Copy the dY's in f1:h9, and paste-special transposed into cell j1 -
+        that is, select cell j1, right-click, and select this paste option: <img src="transpose.png" alt="Transpose">.
+        You should now have a copy of the dY's with the columns converted to rows.</p>
+      <p> </p>
+      <p> <input name="step3.2b" type="checkbox">b. Next you will matrix multiply the transposed dY matrix by the dY
+        matrix get the sums of squares and cross-products matrix, P. In cell F12 type "P matrix". Since we're
+        calculating these values for three parameters the result of this multiplication will be a new 3x3 matrix, so we
+        need to select a 3x3 range of cells - select cells F13:H15. With the cells selected, type <span class="Excel">=mmult(k1:r3,
+          f2:h9)</span>. Remember to CTRL+SHIFT+ENTER. The result will be sums of squares and cross-products for the
+        deviations we calculated in F2 through H9.</p>
+      <p> </p>
+      <p> <input name="step3.2c" type="checkbox">c. Invert the matrix. In cell F17 type "Inverted P". Select cells
+        F18:H20, and type <span class="Excel">=minverse(f13:h15)</span>, and CTRL+SHIFT+ENTER. This will give you the
+        inverse of the P matrix.</p>
+      <p> </p>
+      <p><strong> <input name="step4.2" type="checkbox">Step 4 - Calculate the standard error of residuals for the
+          best-fit model.</strong></p>
+      <p>Before we can use the inverted P matrix to calculate standard errors, we need the standard error of the model
+        overall, which is calculated from the sum of squared residuals. Once we have this we will use it, along with
+        some of the elements of the inverted P, to calculate standard errors of each of the parameters.</p>
+      <p> </p>
+      <p> <input name="step4.2a" type="checkbox">a. In cell B12 type "SE", and in cell C12 type <span class="Excel">=sqrt(c11/(8-3))</span>.
+        This is the formula for the standard error of light level, based on the sum of squared deviations in c11, and
+        our model degrees of freedom. We have 8 light levels (n = 8), and are estimating three parameters, so the
+        degrees of freedom are 8-3 = 5.</p>
+      <p> </p>
+      <p> <strong><input name="step5.2" type="checkbox">Step 5 - Calculate the standard errors of the parameter
+          estimates.<br>
+        </strong></p>
+      <p> </p>
+      <p> <input name="step5.2a" type="checkbox">a. In cell C22 type "SE". In cell C23 type <span class="Excel">=c12*sqrt(f18)</span>.
+        This multiplies the standard error of Y we just calculated by the square root of the entry in the inverted P
+        matrix that corresponds to the Phi parameter. </p>
+      <p> </p>
+      <p> <input name="step5.2b" type="checkbox">b. In cell C24 type <span class="Excel">=c12*sqrt(g19)</span>. This
+        is the standard error for Pmarea.</p>
+      <p> </p>
+      <p> <input name="step5.2c" type="checkbox">c. In cell C25 type <span class="Excel">=c12*sqrt(h20)</span>. This
+        is the standard error for Theta.</p>
+      <p> </p>
+      <p><strong> <input name="ANiceCheckbox" type="checkbox">Step 6 - compare top leaves to bottom leaves.</strong></p>
+      <p>If you switch back to the "Top" sheet, you'll see that this entire analysis has been done for you in the "Top
+        and Bottom Compared" area. If you put everything in the right place in the Bottom sheet, you should see the
+        following: </p>
+      <ul>
+        <li>The graph shows both lines plotted.</li>
+        <li>The parameter estimates for Bottom leaves in cells L18, L19, and L20 of the Top sheet should match the
+          estimates in the Bottom sheet.</li>
+        <li>The SE's for the bottom leaf parameters should be in cells L24, L25, and L26 of the Top sheet, and should
+          match the standard errors you calculated in the Top sheet.</li>
+        <li>There should be t-values and p-values for comparisons of bottom and top leaves for each parameter in
+          M24-N26.</li>
+      </ul>
+      <p>Each t-value is the difference between the parameter estimates divided by a pooled standard error. P-values
+        come from comparing the observed t-value to a t-distribution with 10 degrees of freedom (5 for each leaf).
+        Consider the parameters for top and bottom leaves to be different if the p-values are less than 0.05.</p>
+      <h2 class="part" id="assignment">Assignment</h2>
+      <p>In addition to the completed Bottom worksheet, starting in cell J28 of the Top sheet answer the following
+        questions:</p>
+      <p>a. Which kind of leaves (top or bottom) had a higher Pmarea? Does the graph reflect this difference between the
+        leaf types? Explain how you know.</p>
+      <p>b. Which leaf type (top or bottom) had the highest quantum yield (phi)? What does this tell you about which
+        type of leaf needs to be more efficient in using light?</p>
+      <p>c. How do these two different parameters translate into the net photosynthesis differences you see in the
+        graph? Specifically, which kind of leaf has higher photosynthesis at low light levels (light = 50, 100, 250)?
+        Which kind of leaf has higher photosynthesis at high light levels (light = 500 or higher)? Why do leaves from
+        the top of the tree have less efficiency in their use of light, but still end up having the highest net
+        photosynthesis at high light levels?</p>
+      <p> </p>
+      <p> That's it! Save and upload your Excel file.</p>
+    </div>
+  </body>
+</html>
