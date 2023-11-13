@@ -1,0 +1,402 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Exercise 2b - random numbers, color, and sound on a computer</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+    <script src="binary_decimal_converter.js" type="text/javascript"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Exercise 2b - randomness, color, and sound</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#randomness">Sort of random numbers</a></p>
+      <p><a href="#lossy_compression">Lossy compression</a></p>
+      <p><a href="#lossy_audio">Lossy audio</a></p>
+      <p><a href="#lossy_images">Lossy images</a></p>
+    </div>
+    <div id="content">
+      <h2 id="randomness">Random numbers on a computer</h2>
+      <p>If there is one thing that a computer is <em>not</em> it's spontaneous. Computers are unable to do something
+        truly unexpected. This may sound wrong to you, since from a user's perspective computers can do things we don't
+        expect, and even programmers are surprised by what their programs do at times. But, what has actually happened
+        when we are surprised by what a computer does is that the computer executed its instructions exactly as it was
+        told to do, but the instructions we gave it worked differently than we expected or intended. In our ignorance of
+        what is happening under the hood we may be surprised, but the computer will always do exactly what it is told.
+        That is, a computer is <strong>deterministic</strong> - given a set of inputs, it will always give the same
+        output (unless it breaks, then all bets are off!).</p>
+      <p>Randomness is true unpredictability. With a random variable we receive different outputs for the same input,
+        and we can only predict what the output will be with a probability statement. Another word for random is <strong>stochastic</strong>,
+        which is the opposite of deterministic - for a given input a stochastic process gives different outputs that can
+        only be predicted as a probability.</p>
+      <p>This is a problem for us as scientists, because we use random numbers a lot. When we assign our experimental
+        subjects to different treatment groups we are supposed to do so randomly, and the most reliable way to do that
+        is to use random numbers - closing your eyes and picking isn't really random, and can lead to biases in
+        experiments. We will use random numbers later in class when we learn how to do things like randomization
+        testing, and when we build our simulation model of genetic drift.</p>
+      <p>Because computers are deterministic, they are not capable of producing truly random numbers. They are capable
+        of producing <strong>pseudo-random numbers</strong>, which are sequences of numbers that do not have a
+        sequential pattern, generated using an input value (the "seed") applied to an algorithm (which is what computer
+        scientists call a procedure). If we use the same initial input value the algorithm will perfectly reproduce the
+        same set of sequentially unpatterned set of values. Since they are unpatterned we can treat them as though they
+        are randomly generated - provided that we don't use the same seed number twice we get different, unpatterned
+        numbers every time. In other words, we can simulate random numbers on a computer so well with pseudo-random
+        numbers that they are indistinguishable from the real thing.</p>
+      <p>1. <strong>Set up the pseudo-random number generator</strong>. Start Excel with a new file. In cell A1 enter
+        the word "Seed", then in B1 enter the number 1.</p>
+      <p>In cell B2 enter the formula <span class="Excel">=mod(48271*B1, 2^31-1)</span> and hit ENTER. You'll see the
+        number 48271. The mod() command is the <strong>modulo</strong> function, which returns the remainder left when
+        dividing the first number by the second. The first number is 48271 multiplied by the seed in cell B1, and the
+        second number is 2<sup>31</sup>-1 (exponents are denoted in Excel formulas with the carat symbol, SHIFT+6).</p>
+      <p>Now, grab the fill handle and extend downward to about the 20th row - this will copy and paste the formula to
+        cells B3 to B20. If you look at B3 you'll see the number displayed is 182605794, but if you select the cell the
+        formula that is producing this number shows in the formula bar as <span class="Excel">=MOD(48271*B2,2^31-1)</span>
+        - the formula is the same as in B2, but since we copied the formula down one row it updated the reference so
+        that it points to B2 instead of B1. The numbers in the rows are now un-patterned, pseudo-random numbers.</p>
+      <p>2. <strong>Make random uniform probabilities</strong>. Enter the word "My uniform" in cell C1, and in cell C2
+        enter the formula <span class="Excel">=b2/(2^31-1)</span> - this divides the modulo value in cell b2 by the big
+        number we used in the modulo function, which is also the largest remainder possible. Since the smallest possible
+        remainder is 0, and the largest is 2<sup>31</sup>-1, this operation gives us numbers that have to fall between 0
+        and 1, and we can interpret them as probabilities. The remainders in column B are equally likely to fall
+        anywhere between 0 and 2^31, so these probabilities are equally likely to fall anywhere between 0 and 1, which
+        means they are random numbers from a <strong>uniform probability distribution</strong>. Extend this cell down
+        to the 20th row as well, and you will have a set of uniform (pseudo-) random numbers.</p>
+      <p>These are the kind of random numbers Excel generates for you with the rand() function - in the cell below the
+        last of your random uniform numbers enter <span class="Excel">=rand()</span> and you'll see a number between 0
+        and 1, but this one changes each time you re-calculate the worksheet because it is not based on an unchanging,
+        constant seed like the ones you just produced are.</p>
+      <p>3. <strong>Generate random numbers from a normal distribution</strong>. Enter the word "My normal" in cell D1.
+        Then in cell D2 enter the formula <span class="Excel">=norminv(c2,0,1)</span> - this function takes the uniform
+        distribution probabilities in C2 and translates them into a value drawn from a <strong>normal distribution</strong>
+        with a mean of 0 and a standard deviation of 1. Extend these down to the 20th row and you'll have a set of
+        (pseudo-) random numbers drawn from the normal distribution. We could get random normal numbers with any mean
+        and standard deviation we want by changing the arguments in norminv() - for example, to get numbers with a mean
+        of 100 and a standard deviation of 10 we would change the function in D2 to =norminv(c2,100,10), and then
+        copy/paste the the rest of the rows.</p>
+      <p>Now that you have your formulas set up, change the seed in cell B1 to 2 - you'll see the pseudo-random numbers
+        all change to a different set. But, if you change the seed back to 1 again they all go back to exactly the same
+        values you had originally. Since the numbers are unpatterned we can use them as though they're random numbers in
+        our work, and as long as we use a different seed each time we'll get numbers that are indistinguishable from
+        truly random values, even though they were generated deterministically.</p>
+      <p>How does Excel avoid producing exactly the same set of random numbers every time? Each time you use its
+        built-in random number function (rand()) it uses system time as its seed. Remember from lecture that system time
+        is the number of ticks that have elapsed since the epoch, which is never the same twice, so the random numbers
+        are never the same. We can simulate this by entering <span class="Excel">=now()</span> into cell B1 - this will
+        enter the date and time in B1, which is then used as the seed for the random numbers generated below it. We'll
+        learn more about how Excel is able to interpret the date and time as a single number in a couple of weeks - for
+        now note that each time you re-calculate the worksheet (hit F9 to do this manually) a new time stamp is entered
+        into B1, and this causes a new set of random numbers to be generated. Since it will never be now again, this
+        means that the random numbers we're generating will never be the same twice.</p>
+      <p>Answer the questions about random number generation on your worksheet.</p>
+      <h2>The RGB color model</h2>
+      <p> Color is usually represented on a computer using the RGB color model, which mixes together the intensity of
+        red, green, and blue light to generate millions of possible colors. When you mix pigments the three primary
+        colors are red, yellow, and blue, which can be mixed to form all the other pigment colors. On a computer we see
+        color on a monitor, which is mixing together different colors of light - a computer monitor has three light
+        emitting diodes in each pixel, one for each primary color, and the intensity of light emitted by each diode sets
+        the color of that pixel. </p>
+      <blockquote>
+        <p><em>What about printers?</em></p>
+        <p>Mixing color on a monitor involves mixing different colors of light, but printing involves mixing pigments
+          (ink or toner). The color model computers use for printing is the CMYK model.</p>
+        <p>Like the RGB model the CMYK model mixes primary colors to get all the colors it requires. The letters stand
+          for <span style="background-color: cyan">cyan</span>, <span style="background-color: magenta">magenta</span>,
+          <span style="background-color: yellow">yellow</span>, and <span style="color: white; background-color: black">black</span>.
+          The three colors (C, M, and Y) are mixed to get the hue (color) that is desired, and black is used to set the
+          lightness or darkness of the color (its value). On the printed page (assuming white paper), the RGB code for
+          white is 255, 255, 255, but for CMYK would be 0, 0, 0, 0 - the lack of all pigment is white on the printed
+          page. Black for RGB is 0, 0, 0, but is 0, 0, 0, 1 for CMYK (the CMYK numbers are proportions of a total, so 1
+          means 100% coverage with black). There is a one to one match between RGB and CMYK colors, so computers are
+          able to translate between the RGB and CMYK models to make the printed page look like the image on the computer
+          screen.</p>
+      </blockquote>
+      <p> Since the number of possible combinations of red, green, and blue light levels exceeds the number that the
+        human eye can discriminate, 24 bit RGB color is called "true" color.</p>
+      <iframe src="color_picker.html" style="width: 400px; height: 500px; float: left; margin-right: 40px"> </iframe>
+      <p><input name="Checkbox1" type="checkbox">1. <strong>Translate colors between colors and RGB codes</strong>.
+        Refer to the color picker to the left - you can either specify a color by entering R, G, or B values to see what
+        color results, or you can click on the colored square to pick a color, and see which R, G, B values result.</p>
+      <p>To begin the R, G, and B channels are all set to 0 - since there is no red, green, or blue to display the color
+        is black.</p>
+      <p>Try the following:</p>
+      <ul>
+        <li>Set Red to 255 - the box below the number will turn bright red, because 255 is the maximum red intensity
+          possible. Since green and blue are still 0 the square is still red - an RGB value of 255,0,0 is bright red.</li>
+        <li>Set Green to 255, and red back to 0 - the box is now bright green.</li>
+        <li>Set Blue to 255, and green back to 0 - the box is bright blue.</li>
+        <li>Set red to 255 and green to 255, but leave blue as 0 - you should see bright yellow. Mixing light is
+          different from mixing pigment - the combination of red and green pigment is a muddy brown color, but red and
+          green light mix to make yellow.</li>
+        <li>Now click on the square and select a color - you should see that the Red, Green, and Blue numbers update for
+          the color you selected, and the intensity of each of the primary colors is shown below the numbers.</li>
+      </ul>
+      <p>Using these three colors of light it is possible to display all the colors we could ever need, given the
+        limitations of the human eye.</p>
+      <p style="clear:both">Calling 24 bit RGB color "true color" only makes sense given the limitations of the human
+        eye. The RGB model uses only wavelengths of visible light, where "visible" is defined by what humans can see.
+        However, some animals can see wavelengths that we cannot. Some animals can see into the ultraviolet (wavelengths
+        shorter than violet light) and infrared (wavelengths longer than red light), and the RGB model can't represent
+        those. It wouldn't make much sense to use a color model that extended into wavelengths that we can't see,
+        because...we wouldn't be able to see them!</p>
+      <p style="clear:both">What we can do, however, is to use the RGB model to make <strong>false color</strong>
+        images - for example, if we had measurements of the amount of infrared radiation reflected from a scene we could
+        assign the intensity of infrared radiation to be displayed by the red channel on our computer screens, which
+        would show us something like this:</p>
+      <img src="CIR_Blog_FeatureImage_807x454-1.png" alt="Color infrared" style="width: 459px; height: 258px;"></div>
+    <p> By assigning a wavelength band that we can't see to one of the color channels that we can see, we're able to
+      visualize characteristics of the scene that would be invisible otherwise. It should be fairly obvious from where
+      the brightest reds are located in this image that growing vegetation reflects a lot of infrared light compared to
+      buildings and water - we can make use of this fact to help us identify where the vegetation is growing well, and
+      where it is dormant.</p>
+    <p><img src="Dandelion-SAD-2022.jpg" alt="Dandelion" style="width: 152px; height: 158px; float: left; margin-right:20px">Many
+      insects can see into the ultraviolet part of the spectrum, and flowers evolve patterns that attract them that are
+      only visible to those wavelengths. The picture on the left shows a dandelion as we see it, on the right side, and
+      how it appears to an insect on the left side. Measuring the amount of UV radiation reflected off the flower and
+      assigning it to the red channel shows that the middle of the flower has a pattern that we can't see, but insects
+      can.</p>
+    <p>So, while the "true color" designation of 24 bit RGB color is only true relative to human vision, we can take
+      advantage of the RGB color model to make invisible wavelengths visible to us by assigning them to visible color
+      channels on the computer.</p>
+    <br style="clear:both">
+    <h2>Digitizing sound waves</h2>
+    <p><input name="Checkbox1" type="checkbox">1. <strong>Evaluate how many different levels of sound intensity would
+        be possible at different bit depths</strong>. If you remember from lecture, sound is converted to a digital
+      representation by sampling the sound wave form at discrete time points. The two factors that determine how well
+      the sound wave is represented are...</p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td>2 bit<br>
+            (only 3 intensities recorded)</td>
+          <td>4 bit<br>
+            (16 intensities recorded)</td>
+          <td>8 bit<br>
+            (65536 intensities recorded)</td>
+        </tr>
+        <tr>
+          <td><strong>Bit depth</strong> = the number of bits used to record sound intensity. The more bits used to
+            record sound intensity the larger the number of discrete levels can be recorded. The bars can get closer to
+            the continuous wave if there are more levels along the y-axis</td>
+          <td><img src="two_bit_sound.png" alt="Two bit sound"><br>
+          </td>
+          <td><img src="four_bit_sound.png" alt="Four bit"><br>
+          </td>
+          <td><img src="eight_bit_sound.png" alt="Eight bit"><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p> ...and.. </p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <td><br>
+          </td>
+          <td>8 bit with low sampling rate</td>
+          <td>8 bit with moderate sampling rate</td>
+          <td>8 bit with high sampling rate</td>
+        </tr>
+        <tr>
+          <td><strong>Sampling rate</strong> - the amount of time between samples of the sound wave. The shorter the
+            time between measurements of sound intensity the narrower the bars, and the more continuous they become</td>
+          <td><img src="eight_bit_low_rate.png" alt="Low rate"><br>
+          </td>
+          <td><img src="eight_bit_med_rate.png" alt="Medium rate"><br>
+          </td>
+          <td><img src="eight_bit_high_rate.png" alt="High rate"><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The graph that shows the closest match between the blue bars (indicating the digital recordings of sound
+      intensity) and the curve (indicating the actual sound wave) occurs with high sampling rates and high bit depth.
+      Note that even the best digital sound recording doesn't perfectly match the analog sound wave, but it can get
+      close enough that the human ear can't hear the difference.</p>
+    <p>On your worksheet answer the questions about how bit depth affects fidelity of digital sound recordings.</p>
+    <h2 class="part" id="lossy_compression">File storage and lossy compression</h2>
+    <p>Digital files can get really big, and although storage media capacities keep increasing we keep finding ways to
+      fill them up. Finding ways to store information with fewer bits allows us to fit more data onto our hard drives,
+      CD-ROM's, and flash drives.</p>
+    <p>When you are looking at pictures on a web page, or watching video, or listening to music, as long as everything
+      looks and sounds okay to you there would be no reason to worry about whether the images or audio were exactly as
+      they were recorded. If the recorded data had been changed in some way to save storage space, as long as the
+      results didn't look or sound different it wouldn't matter.</p>
+    <p>When you ware doing scientific work, though, digital data in image, sound, or video files is used to measure the
+      properties of a system being studied. A change in data that isn't intentional is a problem, and the fact that the
+      change may not be noticeable to the researcher actually makes the problem worse, as the data may be used as though
+      it's accurate when it isn't anymore.</p>
+    <p>Using lossy file formats is a way of corrupting your digital data unintentionally, and possibly without knowing
+      that you did so. Today you will evaluate how use of lossy file formats can affect digital sound data and digital
+      image data. In general, use of lossy file formats in scientific work is a bad idea, and should only be done when a
+      researcher knows how the data will be altered, and is certain that the change will not affect his or her work.</p>
+    <p><strong class="part" id="lossy_audio">Lossy compression of audio files</strong></p>
+    <p>Lossy compression methods commonly used for sound files throw out sounds that aren't audible to the human ear.
+      This is fine for audio recordings that are meant for entertainment, but if we are recording animal sounds to study
+      how they communicate we have to be aware that animals can hear different ranges of sound than we can, and throwing
+      out data because we can't hear it is problematic.</p>
+    <p><img alt="Blackbird" src="Common_Blackbird.jpg" style="float: left; padding: 10px;">To see how lossy compression
+      affects sound files, we are going to use a program called Audacity to analyze a recording of a European Blackbird.
+      European Blackbirds are not closely related to blackbirds we have in North America, they are actually much more
+      closely related to the American Robin. If you know birds, the picture of a European Blackbird to the left looks
+      just like a black robin.</p>
+    <p>We will start with a recording of a blackbird song stored in an uncompressed WAV file, export it to a lossy
+      compression format (called Ogg Vorbis), and then compare the compressed file to the original to see how lossy
+      compression changes the data in the file.</p>
+    <p style="clear: both"><input name="Checkbox1" type="checkbox">1. Start Audacity from Cougar Apps. You can open a
+      copy of the uncompressed WAV file by selecting "File" → "Open",&nbsp; clicking on the "This PC" icon in the
+      "Select one or more files" window, and then navigating to "Public on Viking (P:)" → "Biology" → "kristanw" →
+      "Biol365" → "Ex2", and then open the file "blackbird_w.wav".</p>
+    <p>When the file opens the sound is displayed as a waveform graph, which has time on the x-axis, and loudness (in
+      decibels) on the y-axis. If you are able to hear it when you play the sound, you'll hear that the blackbird has a
+      lilting, flute-like song that covers a wide range of different pitches - this will make it a good test case.</p>
+    <p><img alt="Inverted" src="sound_inverted.png" style="float: left; padding: 10px; width: 218px; height: 180px;"><input
+        name="Checkbox1" type="checkbox">2. Before we try out some lossy compression, we will test the method we will
+      use to compare the original sound file to the compressed one. We will make a copy of the original uncompressed WAV
+      file, invert it, and then mix the original with the inverted copy. An example of a tiny clip from the sound file
+      is shown to the left, with the original on top and the inverted original on the bottom - inverting the sound file
+      flips the wave vertically around 0, so that positive values become negative, and negative become positive - if you
+      look at the discrete sampled sound intensities on the two they are mirror images of one another. </p>
+    <p>Mixing these two sound waves together means to add them, and if two waves are exact inverses of one another they
+      will cancel each other out. The result will be a flat line at 0, which is silence. Since the second is an exact
+      inverse of the other this is what we'll get - a flat line at 0.</p>
+    <p style="clear: both;">First we'll make an exact copy of the song by selecting the track (by clicking the "Select"
+      button in the controls to the left of the waveform graph), then duplicating it using "Edit" → "Duplicate" - you
+      will now see a second copy of the original in a second "track". below the first.</p>
+    <p>Next, select just the duplicate track by clicking its "Select" button. When a track is selected it lightens and
+      gets a light yellow border around it, so the second track should be lighter than the first.</p>
+    <p>Now, select "Effect" → "Invert". If you watch the waveform graph as you invert it you'll see a subtle change in
+      the wave form, but otherwise you probably won't be able to tell that it's different. Don't worry if you don't see
+      the change - you can double-check that it happened by checking the "Edit" menu, and if it gives you the option to
+      undo the invert then you're good to go.</p>
+    <p>Now to combine the tracks hold down the CTRL key while you hit the A key to select both of the tracks, and then
+      use "Tracks" → "Mix" → "Mix and render to new track". The two tracks will be combined into one, and you'll see a
+      flat line. If you select this new mixed track and play it you won't hear anything. This is what happens when you
+      mix two tracks are inverses of one another - they cancel each other out exactly, and the result is silence.</p>
+    <p>Before you move on to the next step you can close the second, duplicate track by clicking the little x next to
+      the name of the track in the properties box on the left side of the track (next to "blackbird_w" in the screen
+      shot above), and do the same for the mixed flat line track. You should just have the original track left open
+      before going on.</p>
+    <p><input name="Checkbox1" type="checkbox">3. Now select "File" → "Export" → "Export as OGG". In the "Export Audio"
+      window that pops up:</p>
+    <ul>
+      <li>Navigate to your OneDrive, and leave the Save as type: selection at "Ogg Vorbis files".</li>
+      <li>Leave the quality at 5. The quality setting is a trade-off between file size (smaller with lower quality
+        setting) and degree of change to the sound data (more change with lower quality). We'll see how accepting the
+        default setting works out.</li>
+      <li>Change the file name to "lossy_blackbird_w.ogg" and save. You can skip making any changes to the metadata
+        (which are information tags that are attached to the file that give various pieces of information about it),
+        just click OK to finish exporting.</li>
+    </ul>
+    <p>You may not have heard of Ogg Vorbis before - it is a lossy sound file format intended for the same uses as mp3
+      files, primarily for sound files meant for human ears. We would have used mp3 since it is so common, but there is
+      a bug in the mp3 encoder used by Audacity that inserts a few milliseconds of silence at the beginning of each
+      file, and this causes the sound waves to misalign when we try to compare them. However, any lossy sound file
+      format, including mp3, would change the sound data and give us similar results to what we will get with Ogg
+      Vorbis.</p>
+    <p><input name="Checkbox1" type="checkbox">4. Import the lossy version of the file as a second track. Select "File"
+      → "Import" → "Audio", and go find the Ogg Vorbis file you just exported, select it, and import it.</p>
+    <p>Audacity will make a new track for this file, add it below the original, and select it. The wave forms don't
+      obviously look different, and if you select the lossy one and play it you won't be notice any obvious differences.</p>
+    <p><input name="Checkbox1" type="checkbox">5. Now, to compare the two waves:</p>
+    <ul>
+      <li>Invert the lossy track - if you're not sure what is selected, un-select all with CTRL+SHIFT+A, and then click
+        Select for the lossy track. Once you have only the lossy track selected, invert it.</li>
+      <li>Select both tracks (CTRL+A), and mix and render them to a new track like you did before.</li>
+    </ul>
+    <p>You should now have a mixed track that isn't a flat line. Anywhere that isn't flat is sound data that was changed
+      when the file was saved to a lossy format.</p>
+    <p>If you try to play the mixed track you may not hear much, it's a fairly subtle amount of difference. But, it's
+      not zero difference, and for scientific work it is a bad idea to allow a choice of file format to change your
+      data.</p>
+    <p><strong class="part" id="lossy_images">Lossy and lossless compression - images</strong></p>
+    <p>Some image file formats use raw, uncompressed image data (e.g. TIFF), but there are also lossless (e.g. PNG), and
+      lossy compression (e.g. JPEG) formats to choose from.</p>
+    <p>Just like with sound file compression, lossy compression of images discards image data strategically, so that the
+      image still looks okay when viewed at its intended magnification. However, when images are being used as the basis
+      for data collection these changes in the image corrupt the data.</p>
+    <p>We need to use an image editing program to see how compression changes an image file, so we will use the Gnu
+      Image Manipulation Program (GIMP). The GIMP is an open source program that is similar to PhotoShop.</p>
+    <p><input name="Checkbox1" type="checkbox">1. Start the GIMP from Cougar Apps, and open the original TIFF file on
+      the P: drive. You will find it in the same folder as the blackbird song - it's called csusm.tif.</p>
+    <p>When you open it you'll see it's a high resolution aerial photo of part of the CSUSM campus taken in 2012 (before
+      the USU was built, although you can see that construction had started).</p>
+    <p><input name="Checkbox1" type="checkbox">2. Hold down the SHIFT key and hit + to zoom in. When you've zoomed in
+      far enough to see individual pixels stop. This image has a resolution if 0.6 feet (7.2 inches on a side), so each
+      pixel is equivalent to 0.36 square feet on the ground.</p>
+    <p>Select "Windows" → "Dockable Dialogs" → "Pointer" to bring up the pointer window. With the pointer window
+      visible, move your pointer around the image and you'll see that the Red, Green, and Blue values change as you move
+      from pixel to pixel. Even though some pixels are pretty similar in color, you will have a hard time finding RGB
+      values that are identical for adjacent pixels.</p>
+    <p>You can zoom back out so that you can see the whole scene now by hitting the "-" key (to the left of +).</p>
+    <p><input name="Checkbox1" type="checkbox">3. Now it's time to export the file as a lossy file format, jpeg. We're
+      going to use jpeg because it is very common, and sufficiently good at retaining a good looking image that many
+      digital cameras use it as their native format. The jpeg format uses a combination of lossy and lossless
+      compression techniques, and the amount of compression is configurable as a "quality" setting - higher quality
+      means less lossy compression, and if a quality setting of 100% is used then only lossless compression is used.
+      However, even digital cameras will typically use a quality setting less than 100% by default, and some degree of
+      lossy compression is typically used when the image is originally acquired.</p>
+    <p>Choose "File" → "Export as", and in the "Export Image" window give the file the name "csusm.jpg" and save it to
+      your OneDrive. Using the jpg extension will cause the GIMP to export as a jpeg file, so we don't need to select
+      that as an option. We will accept the default of 90%, so don't change this setting.</p>
+    <p>When you click "Export" an "Export image as JPEG" window will pop up so that you can set the quality. The default
+      is 90%, which is considered very high (70% is considered high quality for images used on web pages). Click
+      "Export".</p>
+    <p><input name="Checkbox1" type="checkbox">4. Import the jpeg file you just created as a new layer by selecting
+      "File" → "Open as layers". Navigate to the csusm.jpg, select and open it.</p>
+    <p>This will add csusm.jpg as a second layer in the same image as csusm.tif, rather than opening the jpeg file as a
+      separate image. If you look at the "Layers" tab in the lower right section of the GIMP window you'll see that you
+      now have a layer for csusm.jpg above the original csusm.tif layer.</p>
+    <p>You can turn the csusm.jpg layer on and off by clicking on the eye icon to the left of it, but you probably won't
+      notice big differences unless you zoom in to pixel level, and even at a very high magnification the differences
+      are very slight - using 90% quality results in barely perceptible changes in the appearance of the image.</p>
+    <p>But just because our eyes aren't seeing differences doesn't mean they aren't there - we'll confirm that saving as
+      jpeg changed the image data in the next step.</p>
+    <p><input name="Checkbox1" type="checkbox">5. To do the comparison of csusm.tif and csusm.jpg we will take advantage
+      of a built-in function that is used to make animations from multiple images. </p>
+    <p>Animation and video takes up a lot of file space because they use multiple images that are played in quick
+      succession to give the illusion of movement. If each frame in the animation is a complete image then the animation
+      file size will be the size of a single frame multiplied by the number of frames - since video tends to use 30
+      frames per second or more to produce smooth playback the number of individual frames becomes huge for even a few
+      minutes of video. Animation and video files get big quickly if they are not compressed.</p>
+    <p>However, not very much typically changes from one frame to the next when each is only 1/30 of a second apart in
+      time. Sequential frames in an animation thus usually have a lot of pixels that are identical, and only a few
+      pixels that actually change between frames. If the animation file contains a full image for the first frame, and
+      then saves only the differences between the first frame and the frames that follow, pixels that don't change only
+      have to be saved once, which can save a lot of space. We will use a tool that makes these differenced images, but
+      instead of making an animation from them we'll use the differenced images to see how jpeg changes the data from
+      the original tif image.</p>
+    <p>Select "Filters" → "Animation" → "Optimize (difference)". This will make a new image in a new tab with two
+      layers, the first being a complete copy of the original lossless tif image, and the second being pixels in the
+      jpeg that are different from the original tif. Pixels that are the same between the tif and jpeg images are
+      transparent in the second layer, so turning the original on and off by clicking the eye icon next to
+      csusm.tif(100ms) will show where the differences are - transparent pixels were the same between the tif and jpeg
+      images, and any that are not transparent are at least a little different between the tif and jpeg layers.</p>
+    <p>You can make the differences even clearer by:</p>
+    <ul>
+      <li>Find the foreground/background color pickers, <img alt="Foreground" src="foreground.png">, in the upper-left
+        area of the GIMP window, and click on the black box to set the foreground color to a nice bright red.</li>
+      <li>In the "Layers" window where the differenced jpeg and tif images are, right-click to get a context menu and
+        then select "New layer" to create a new, blank layer. In the "New Layer" settings window that pops up set "Fill
+        with:" to "Foreground color" (which you just set to red), and click "OK"</li>
+      <li>The new layer is on top, and is blocking the other layers in the image - drag the new layer below
+        csusm.tif(100ms)</li>
+    </ul>
+    <p>Now when you turn csusm.tif(100ms) off you will see red through the transparent pixels - red pixels are those
+      that did not change when you saved the original tif image as a jpeg with 90% quality. Any pixel that is not red is
+      at least a little different from the tif image.</p>
+    <p>Since most of the image isn't red, there were at least small changes to most of the pixels in the image when it
+      was saved as a jpeg. The differences are mostly very slight, but just like with the audio file, we wouldn't want
+      our choice of file format to change our data at all, so non-zero changes are a problem.</p>
+    <p><strong>File format take home message</strong></p>
+    <p>In general, the best way to avoid corruption to your digital data is to use either uncompressed file formats, or
+      file formats that use lossless compression.</p>
+    <p>That's it! Upload your completed Excel file to the course web site, and complete your worksheet to turn in next
+      week.</p>
+  </body>
+</html>
