@@ -1,0 +1,273 @@
+---
+title: "Post-hocs and planned comparisons"
+author: "Your Name"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Import and summary of data
+
+We will work eel larval development data. Import the "eels.csv" into a data frame called "eels".
+
+```{r eels.import.data}
+
+
+
+```
+
+
+To plot the means and 95% confidence intervals use summarySE() to get the summary statistics you need:
+
+```{r summarize.data}
+
+
+
+```
+
+Then use the summary data set you created to plot the means and 95% confidence intervals using ggplot2:
+
+```{r plot.means.ci}
+
+
+
+```
+
+#### Question: the stages are in their proper order on the plot. Stage is clearly an ordinal variable, but does that mean that R is considering Stage to be ordinal?
+
+> 
+
+## Fitting the linear model
+
+Now run the lm() command to fit the model, using HA as the response variable and Stage as the predictor:
+
+```{r fit.lm}
+
+
+
+```
+
+#### Question: is the Stage term significant? How do you know?
+
+> 
+
+#### Question: can you tell at this point which stages differ?
+
+> 
+
+Load the emmeans library:
+
+```{r load.emmeans}
+
+
+
+```
+
+## Tukey comparisons
+
+Run the emmeans() command, from the emmeans library, for the Tukey procedure:
+
+```{r tukey.emmeans}
+
+
+
+```
+
+#### Question: which stages are different from one another?
+
+> 
+
+## Dunnett's comparisons
+
+Dunnett's comparisons are all groups against one. Usually the one that is compared against is a "control" group, and all the others are treatments of various kinds. We don't have data like that, but since Stage 1 is set as the baseline group we can use Dunnett's test to compare all of the other stages against Stage 1:
+
+```{r dunnett.emmeans}
+
+
+
+```
+
+#### Question: at what stage did HA become different from Stage 1?
+
+> 
+
+## Sequential comparisons
+
+Comparing each level to the previous one is done with the consec comparisons in emmeans:
+
+```{r consec.emmeans}
+
+
+
+```
+
+#### Question: which stages are different from the previous one?
+
+>
+
+## Orthogonal polynomials - analyzing ordinal trends
+
+R uses polynomial contrasts by default for ordered factors. If we make a version of the Stage variable that is an ordered factor, and then use it in a linear model, R will give us tests of the ordinal trends across the five stages. 
+
+Make a copy of Stage as an ordered factor:
+
+```{r stage.ordered}
+
+
+
+```
+
+#### Question: refer to the polynomial weights in the instructions. These weights describe a pattern of change from first to last stage. How? Use Linear and Quadratic weights as an example.
+
+> 
+
+Fit a model using the ordered factor version of stage:
+
+```{r lm.with.polynomial.contrasts}
+
+
+
+```
+
+Get the ANOVA table - it doesn't look any different:
+
+```{r anova.poly.weights}
+
+
+
+```
+
+Run Tukey tests on this ordinal stage variable:
+
+```{r tukey.poly.weights}
+
+
+
+```
+
+#### Question: are there any changes to these Tukey tests compared with the analysis with the unordered factor you did previously?
+
+> 
+
+
+The tests of polynomial trends are seen in the coefficient tests:
+
+```{r coefficient.tests.poly.weights}
+
+
+
+```
+
+#### Question: which polynomial trends were statistically significant?
+
+> 
+
+
+## Corrections for multiple p-values
+
+We just completed an analysis of HA, but the data set includes measures of change in water and in neutral sugar as well. Fit a model using water as a response, and Stage as a predictor, then get the summary output:
+
+```{r water.lm}
+
+
+
+```
+
+Fit a model using NS as a response, and get the summary output:
+
+```{r ns.lm}
+
+
+
+```
+
+#### Question: according to the model-level omnibus test (i.e. the p-value at the bottom of the summary output), do NS and water change during development? How do you know?
+
+> 
+
+Calculate the adjusted alpha levels:
+
+```{r adjusted.alphas}
+
+
+
+```
+
+#### Question: are any of the variables no longer statistically significant at either of these adjusted alpha levels?
+
+> 
+
+## Optional: post-hoc comparisons of your choice, and orthogonal contrasts
+
+We need a matrix that defines comparisons between sequential stages.
+
+```{r group.vectors}
+
+
+
+```
+
+Define the contrasts you wish to make:
+
+```{r define.contrasts}
+
+
+
+```
+
+
+Now get the multiple comparisons for this set of custom contrasts:
+
+```{r test.custom.contrasts}
+
+
+
+```
+
+#### Question: which comparisons are significant?
+
+> 
+
+#### Question: why was it necessary to adjust for multiple comparisons with these contrasts?
+
+> 
+
+## Orthogonal contrasts
+
+We will use the fourth set of possible orthogonal contrasts.
+
+```{r make.contrast.vectors}
+
+
+
+```
+
+Make a list of each of the four independent contrasts:
+
+```{r make.contrast.list}
+
+
+
+```
+
+Test these contrasts for significance:
+
+```{r test.orthog.contrasts}
+
+
+
+```
+
+#### Question: which comparisons were significant?
+
+>
+
+#### Question: why was it not necessary to adjust for multiple comparisons, even though there are four contrasts being tested?
+
+>

@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Post-hocs and contrasts</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script type="text/javascript" src="dunnett_orthog.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Post-hocs and contrasts</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#tukey">Tukey post-hocs</a></p>
+      <p><a href="#orthog_poly">Orthogonal polynomials</a></p>
+    </div>
+    <div id="content">
+      <p>Recall from our statistics review that the ANOVA approach to analyzing
+        differences between three or more groups is to:</p>
+      <ul>
+        <li>Conduct an initial test for significant variation among group means
+          (the <strong>omnibus</strong> test of the predictor in an ANOVA
+          table)</li>
+        <li>If the predictor is statistically significant, then a follow-up <strong>post-hoc
+            procedure</strong> is conducted to find out which pairs of means are
+          significantly different</li>
+      </ul>
+      <p>We do this odd two-step procedure to avoid excessive false positive
+        errors. Post-hoc procedures adjust the comparisons of group means so
+        that a larger difference is needed to achieve statistical significance,
+        so that across all of the tests conducted the family-wise error rate is
+        kept at the chosen (nominal) α level of 0.05.</p>
+      <p>After we review a few of the available post-hoc procedures, we will
+        learn to use orthogonal contrasts. Orthogonal means independent, and
+        when comparisons are independent it is not necessary to adjust for
+        multiple comparisons - these orthogonal contrasts therefore have higher
+        statistical power than post-hoc procedures (that is, they have a greater
+        chance of detecting a real effect, and thus have a greater sensitivity
+        than post-hocs). One common type of orthogonal contrasts is the
+        orthogonal polynomial, which can be used to analyze patterns of change
+        in response across ordinal categories - we will learn to use orthogonal
+        polynomials. You can also construct your own contrasts (either
+        orthogonal or not) and test them - there is an optional section at the
+        end of the assignment that shows you how.</p>
+      <p>Lastly, when comparisons are made for different variables made on the
+        same experimental subjects the tests are not independent and can lead to
+        excessive false positive errors. We will learn to use adjustments to the
+        α level that account for this effect.</p>
+      <h2>Post-hoc procedures</h2>
+      <p><img src="eels.png" alt="Eel larvae" style="width: 195px; height: 269px; float:left; padding-right: 10px">We
+        will be working with the conger eel data set presented in lecture - it
+        is a study by Kawakami et al. 2009 of changes in water, neutral sugars,
+        and hyaluronan during larval development. Illustrations of the five
+        larval stages are shown to the left (two images are given for stages 2,
+        3, and 4). Because larval development is a process that occurs in
+        sequence over time, developmental stage is an ordinal categorical
+        variable.</p>
+      <h3 style="clear:both">Import, summarize, and graph the data</h3>
+      <p>Start R Studio and make a new project for today's assignment. The
+        eels.xlsx data set is <a href="eels.xlsx">here</a>, and the
+        posthocs.Rmd R markdown file to use today is <a href="posthocs.Rmd">here</a>.
+      </p>
+      <p> </p>
+      <p>1. Import the eels.xlsx file into an R data set called "eels". Put the
+        commands in chunk eels.import.data of your <strong>Rmd file</strong>.</p>
+      <p> </p>
+      <p>By default columns of text are imported as character data. R has a
+        special data type for variables that are meant to be used to define
+        groups in a model, called a <strong>factor</strong>, and we can convert
+        Stage to a factor before using it (in your Rmd file, just below your
+        read_excel() command):</p>
+      <p class="rcmd"> eels$Stage &lt;- factor(eels$Stage)</p>
+      <p>This command takes the text labels in eels$Stage, converts them to a
+        factor made up of levels (using factor(Stage)), and assigns the result
+        back into eels$Stage, thereby replacing the non-factor version with the
+        factor we just created. Note that we didn't bother to list the levels
+        this time - alphabetical order is also increasing developmental stage
+        order, so the factor() command's default works fine here.</p>
+      <p>2. You can now plot the means and 95% confidence intervals for
+        hyaluronan (HA) by developmental stage (Stage). We are going to focus on
+        HA for this exercise, since it has an interesting pattern of change
+        across the stages of development. We have done this type of graph a few
+        times now - use summarySE() from Rmisc to get the summary data to plot
+        (summarize.data chunk of your <strong>Rmd file</strong>), and use
+        ggplot2's ggplot() command to make your graph (plot.means.ci chunk of
+        your <strong>Rmd file</strong>).</p>
+      <p> </p>
+      <p>3. Fit a linear model of HA as a function of Stage, and call it
+        eels.ha.lm - put the command in the fit.lm chunk of your <strong>R
+          markdown file</strong>. Once you have it, also get the ANOVA table
+        (enter the anova() command below the lm() command in the same chunk).
+        You'll see that HA differs significantly between developmental stages.</p>
+      <p>Now that we have a fitted model, we can do some post-hoc procedures to
+        address which of the groups are different from one another. Which we
+        choose depends on which means we want to compare.</p>
+      <h3>Tukey post-hocs - all possible pairs of means</h3>
+      <p> </p>
+      <p>You already know about Tukey tests - the Tukey procedure compares every
+        possible pair of means, of which there are k(k-1)/2, or 5(4)/2 = 10 with
+        our five stages of development. The amount of adjustment depends on the
+        number of tests, and with 10 comparisons it will take a pretty big
+        difference to be statistically significant - this will protect against
+        Type I (false positive) errors, but at the expense of potentially
+        missing smaller differences (Type II, false negative errors).</p>
+      <p>4. We can't use the TukeyHSD() command we learned in the review,
+        because it doesn't work on lm() objects. The command we will use to get
+        Tukey tests from our GLM is part of the "emmeans" package. If you're
+        working on a computer on campus, or through Cougar Apps it is already
+        installed and just needs to be loaded - you can load it using the
+        command (in the load.emmeans chunk of your <strong>R markdown file</strong>):</p>
+      <p> </p>
+      <p><span class="rcmd">library(emmeans)</span></p>
+      <p> </p>
+      <p> If you are working on your own computer you can install the emmeans
+        library first in the Packages tab, and then add the library(emmeans) to
+        your code.</p>
+      <p> The emmeans package is...wonderful. I only recently started using it
+        myself, and it is so good that I had to re-write this entire exercise to
+        take advantage of its capabilities, which dramatically shortened and
+        simplified the instructions (pity the students who came before you!). We
+        will use it throughout the semester for multiple comparison procedures,
+        graphs, and estimates of marginal means (or "least squares means" as
+        they are sometimes called).</p>
+      <p>The emmeans library uses a single command, emmeans(), for all of its
+        post-hocs, with arguments that indicate the kind of post-hoc to return.
+        To get Tukey post-hocs, type the command (in the tukey.emmeans chunk of
+        your <strong>R markdown file</strong>): </p>
+      <p> </p>
+      <p><span class="rcmd">emmeans(eels.ha.lm, tukey ~ Stage) -&gt; eels.ha.emm</span></p>
+      <p><span class="rcmd">eels.ha.emm<br>
+        </span></p>
+      <p>You will see all ten of the comparisons that can be made between the
+        five stages, along with their p-values, reported: </p>
+      <p class="rout">$emmeans<br>
+        &nbsp;Stage&nbsp;&nbsp; emmean&nbsp;&nbsp; SE df lower.CL upper.CL<br>
+        &nbsp;Stage 1&nbsp;&nbsp;&nbsp; 564 36.4 15&nbsp;&nbsp;&nbsp;
+        486.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 641<br>
+        &nbsp;Stage 2&nbsp;&nbsp;&nbsp; 636 36.4 15&nbsp;&nbsp;&nbsp;
+        558.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 713<br>
+        &nbsp;Stage 3&nbsp;&nbsp;&nbsp; 406 36.4 15&nbsp;&nbsp;&nbsp;
+        328.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 483<br>
+        &nbsp;Stage 4&nbsp;&nbsp;&nbsp; 271 36.4 15&nbsp;&nbsp;&nbsp;
+        193.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 348<br>
+        &nbsp;Stage 5&nbsp;&nbsp;&nbsp; 104 36.4 15&nbsp;&nbsp;&nbsp;&nbsp;
+        26.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 181<br>
+        <br>
+        Confidence level used: 0.95 <br>
+        <br>
+        $contrasts<br>
+        &nbsp;contrast&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        estimate&nbsp;&nbsp; SE df t.ratio p.value<br>
+        &nbsp;Stage 1 - Stage 2&nbsp;&nbsp;&nbsp; -71.9 51.4 15&nbsp;
+        -1.397&nbsp; 0.6384<br>
+        &nbsp;Stage 1 - Stage 3&nbsp;&nbsp;&nbsp; 158.1 51.4 15&nbsp;&nbsp;
+        3.075&nbsp; 0.0513<br>
+        &nbsp;Stage 1 - Stage 4&nbsp;&nbsp;&nbsp; 292.8 51.4 15&nbsp;&nbsp;
+        5.695&nbsp; 0.0004<br>
+        &nbsp;Stage 1 - Stage 5&nbsp;&nbsp;&nbsp; 460.2 51.4 15&nbsp;&nbsp;
+        8.950&nbsp; &lt;.0001<br>
+        &nbsp;Stage 2 - Stage 3&nbsp;&nbsp;&nbsp; 230.0 51.4 15&nbsp;&nbsp;
+        4.472&nbsp; 0.0035<br>
+        &nbsp;Stage 2 - Stage 4&nbsp;&nbsp;&nbsp; 364.7 51.4 15&nbsp;&nbsp;
+        7.092&nbsp; &lt;.0001<br>
+        &nbsp;Stage 2 - Stage 5&nbsp;&nbsp;&nbsp; 532.1 51.4 15&nbsp;
+        10.348&nbsp; &lt;.0001<br>
+        &nbsp;Stage 3 - Stage 4&nbsp;&nbsp;&nbsp; 134.7 51.4 15&nbsp;&nbsp;
+        2.620&nbsp; 0.1163<br>
+        &nbsp;Stage 3 - Stage 5&nbsp;&nbsp;&nbsp; 302.1 51.4 15&nbsp;&nbsp;
+        5.876&nbsp; 0.0003<br>
+        &nbsp;Stage 4 - Stage 5&nbsp;&nbsp;&nbsp; 167.4 51.4 15&nbsp;&nbsp;
+        3.256&nbsp; 0.0365<br>
+        <br>
+        P value adjustment: tukey method for comparing a family of 5
+        estimates&nbsp;</p>
+      <p>The output is in two blocks:</p>
+      <ul>
+        <li>The first block is labeled $emmeans, and it gives the mean, standard
+          error, degrees of freedom, and confidence interval for each stage. </li>
+        <li>The second block is labeled $contrasts, and it gives the Tukey tests
+          comparing pairs of stages. The comparisons are, for example, Stage 1 -
+          Stage 2, which literally says that the mean for Stage 2 is subtracted
+          from the mean for Stage 1. A negative "estimate" of the difference
+          between means indicates that Stage 2 has a bigger mean than Stage 1.
+          The sign of the difference doesn't affect the p-value, because the
+          tests are all two tailed.</li>
+      </ul>
+      <p>Tukey post-hocs use a sampling distribution that changes shape
+        depending on the number of comparisons being done, so you can continue
+        to interpret Tukey p-values below 0.05 to be significant without
+        inflating your overall Type I error rate.</p>
+      <blockquote>
+        <p>Quick aside about the table of emmeans - it seems to be giving you
+          the same information as the table you made with summarySE() - that
+          table is here for reference (I added the lower and upper limits of the
+          95% confidence interval for comparison):</p>
+        <p class="rout">&nbsp;&nbsp;&nbsp; Stage
+          N&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          HA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          sd&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          se&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          ci&nbsp;&nbsp;&nbsp;&nbsp; lower&nbsp;&nbsp;&nbsp; upper<br>
+          1 Stage 1 4 563.8025 92.11653 46.05827 146.57796 417.22454 710.3805<br>
+          2 Stage 2 4 635.6600 92.03236 46.01618 146.44403 489.21597 782.1040<br>
+          3 Stage 3 4 405.7000 54.96816 27.48408&nbsp; 87.46660 318.23340
+          493.1666<br>
+          4 Stage 4 4 270.9675 24.77444 12.38722&nbsp; 39.42166 231.54584
+          310.3892<br>
+          5 Stage 5 4 103.5575 76.49631 38.24815 121.72269 -18.16519 225.2802</p>
+        <p> But, if you look at the numbers you'll see that the means match, but
+          the standard errors and CI's are not the same.</p>
+        <p>The reason they are different is that emmeans() generates its table
+          from the fitted model. We assume that the data are normally
+          distributed and have equal variances, and if this is the case our best
+          estimate of the amount of random variation in the data comes from all
+          the data combined - that is, it comes from the MS<sub>residual</sub>
+          term for the overall fitted model. Using all of the data also allows
+          us to use a larger total sample size in calculating the standard
+          errors, so the standard errors are all the same and generally smaller
+          in the emmeans table than in the summarySE() table.</p>
+        <p>Which is correct? Depends on what you want to know:</p>
+        <ul>
+          <li>The se and CI's from emmeans are the most accurate representation
+            of the ANOVA and post-hoc procedure you used. If you're trying to
+            present the analytical results, the emmeans table is best.</li>
+          <li>The se and CI's from the summarySE() table are the most accurate
+            representation of the estimates of the group means from your data.
+            They are based on just the data from each group, and they make no
+            assumptions about equality of variances between the groups, and they
+            allow you (and your audience) to see which groups were more or less
+            variable. If you want to emphasize what the data look like, rather
+            than what the analysis says, you should present the summarySE()
+            table.</li>
+        </ul>
+      </blockquote>
+      <p> </p>
+      <p> </p>
+      <p>5. A list of 10 comparisons is difficult to interpret. A simpler
+        presentation that is easier to understand is the "compact letter
+        display", which we can get with the command (put below the previous
+        commands in the same code chunk, in your <strong>R markdown file</strong>)
+        - note that this hasn't been working consistently for some reason, skip
+        if it doesn't work for you:</p>
+      <p> </p>
+      <p class="rcmd">multcomp::cld(eels.ha.emm)</p>
+      <p> </p>
+      <p>This style of command gives the name of a package, followed by two
+        colons, followed by the command within the package that you want to use.
+        If you are working at home, you may need to install the multcomp library
+        before you can use this command.</p>
+      <p>The cld() command gives you output that looks like this:</p>
+      &nbsp; <span class="rout">Stage&nbsp;&nbsp; emmean&nbsp;&nbsp; SE df
+        lower.CL upper.CL .group<br>
+        &nbsp;Stage 5&nbsp;&nbsp;&nbsp; 104 36.4 15&nbsp;&nbsp;&nbsp;&nbsp;
+        26.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 181&nbsp; 1&nbsp;&nbsp;&nbsp; <br>
+        &nbsp;Stage 4&nbsp;&nbsp;&nbsp; 271 36.4 15&nbsp;&nbsp;&nbsp;
+        193.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 348&nbsp;&nbsp; 2&nbsp;&nbsp; <br>
+        &nbsp;Stage 3&nbsp;&nbsp;&nbsp; 406 36.4 15&nbsp;&nbsp;&nbsp;
+        328.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 483&nbsp;&nbsp; 23&nbsp; <br>
+        &nbsp;Stage 1&nbsp;&nbsp;&nbsp; 564 36.4 15&nbsp;&nbsp;&nbsp;
+        486.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 641&nbsp;&nbsp;&nbsp; 34 <br>
+        &nbsp;Stage 2&nbsp;&nbsp;&nbsp; 636 36.4 15&nbsp;&nbsp;&nbsp;
+        558.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 713&nbsp;&nbsp;&nbsp;&nbsp; 4 <br>
+        <br>
+        Confidence level used: 0.95 <br>
+        P value adjustment: tukey method for comparing a family of 5 estimates <br>
+        significance level used: alpha = 0.05 <br>
+        NOTE: Compact letter displays can be misleading<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; because they show NON-findings rather
+        than findings.<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Consider using 'pairs()', 'pwpp()', or
+        'pwpm()' instead. <br>
+      </span>
+      <p>The compact letter display assigns the same number in the .group column
+        to stages that are not significantly different, and assigns different
+        numbers to stages that are significantly different (why not letters?
+        Only the programmers know). If more than one number is assigned to a
+        stage that means that the stage isn't different from either of the
+        stages it shares a number with - for example, Stage 1 is assigned 3 and
+        4 (not 34), so it isn't different from stages that have a 3 (Stage 3) or
+        stages that have a 4 (Stage 2). From the output you can see that Stage 5
+        is different from all the others. Identify the rest of the differences
+        that are significant and record them in your R markdown file.</p>
+      <p>The somewhat snarky note you get when you use the cld() command on an
+        emmeans() results object indicates that statisticians do not always
+        agree - the "NOTE" warning you to use a better method reflects the fact
+        that the emmeans developers disagree with the multcomp developers about
+        the utility of a compact letter display. Personally, I find them helpful
+        in summarizing a long list of results in a more compact and
+        understandable format.</p>
+      <h3>Dunnett's post-hocs - comparison with the control group<br>
+      </h3>
+      <p>Adjusting for 10 comparisons is extravagant if you only actually care
+        about a few of them. For example, it is not uncommon to care primarily
+        whether a set of treatment groups differ from the control, but not
+        whether the treatments are different from one another. We don't have a
+        control group per se, but if we are only interested in when the eels
+        start to differ from their Stage 1 starting point we could use Dunnett's
+        tests, which compare each mean to a single group - with five groups this
+        means we will only have to correct for 4 comparisons if we use Dunnett's
+        tests instead of 10, and smaller differences will be detectable.</p>
+      <p>6. You can get Dunnett's comparisons with emmeans by changing the tukey
+        ~ Stage argument to dunnett ~ Stage. In the dunnett.emmeans chunk of
+        your <strong>R markdown file</strong> enter:</p>
+      <p><span style="font-family: &quot;Source Sans Pro&quot;,sans-serif;"></span><span
+          class="rcmd">emmeans(eels.ha.lm, dunnett ~ Stage)</span></p>
+      <p>You'll see that the output still reports means for every stage in the
+        $emmeans section, but this time the comparisons in $contrasts are only
+        between Stage 1 and each of the other four. </p>
+      <p>If you compare the p-values for the comparisons of each stage to Stage
+        1 that you get with Dunnett to the same comparison using Tukey tests,
+        you'll see that Dunnett's gives you smaller p-values for the same
+        comparison. Reducing the number of tests done makes it possible to
+        detect smaller differences.</p>
+      <p>The Dunnett procedure in emmeans assumes the "control" group is the
+        first level in the variable, Stage 1 in this case. To pick a different
+        stage you would either need to make a factor with the levels in the
+        order you want (whichever is first being the "control" for Dunnett's
+        tests), or you can use the trt.vs.ctrlk option in emmeans - to use Stage
+        2 as the control you would use (in the <strong>console</strong>):</p>
+      <p class="rcmd">emmeans(eels.ha.lm, trt.vs.ctrlk ~ Stage, ref = 2)</p>
+      <p>You will still get Dunnett comparisons, but this time with every group
+        compared to Stage 2 as the reference group.</p>
+      <h3>Sequential comparisons - comparing each level to the previous one</h3>
+      <p>Instead of comparing treatments to a control we might only be
+        interested in whether each stage differs from the previous one - that
+        is, we may want to know if there are changes from one stage to the next
+        during development. We can get these comparisons using (in the
+        consec.emmeans chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">eels.ha.consec &lt;- emmeans(eels.ha.lm, consec ~ Stage)</p>
+      <p class="rcmd">eels.ha.consec</p>
+      <p>You'll see that each level is compared to the one before it.</p>
+      <h2>Ordinal categorical variables and orthogonal polynomials:</h2>
+      <p>So far none of the methods we used made full use of the fact that Stage
+        is an ordinal variable. The closest we came was in our selection of
+        consec comparisons, which compared stages to those that came before
+        them, but there was no consideration of the pattern of change across the
+        levels. When we have numeric predictors we are primarily interested in
+        the pattern of change - we fit a line to the data and interpret the
+        slope of the line, rather than comparing group means. Here we have
+        levels that do not have a quantitative relationship with one another,
+        but they do have a natural order, and we can ask how HA changes across
+        developmental stages using <strong>orthogonal polynomial contrasts</strong>.
+      </p>
+      <p>Orthogonal polynomials are the default contrasts R uses for ordered
+        factors, so all we need to do to get them is to make an ordered factor
+        out of Stage.</p>
+      <p>1. We will make an ordered factor out of Stage, but will assign it to a
+        new variable called Stage.ordered so that Stage can continue to function
+        as an un-ordered factor. We'll then use Stage.ordered in our lm() to get
+        orthogonal polynomial contrasts.</p>
+      <p>To make an ordered factor called "Stage.ordered", you can add "ordered
+        = T" as an argument to the factor() command, like so (in the
+        stage.ordered chunk of your <strong>R markdown file</strong>):</p>
+      <p class="rcmd">eels$Stage.ordered &lt;- factor(eels$Stage, ordered = T) </p>
+      <p>Note that we can make an ordered factor just by adding ordered = T to
+        the factor() command, rather than using the ordered() command.</p>
+      <p>If you type eels$Stage.ordered at the <strong>console</strong> you'll
+        see the stage names with the factor levels listed at the bottom - the
+        levels will be separated by less than symbols, &lt;, indicating that R
+        now knows that levels increase from left to right. </p>
+      <blockquote>
+        <p>Before we run the analysis, let's take a look at what the orthogonal
+          polynomial contrasts actually look like - in the console enter:</p>
+        <p><span class="rcmd">contr.poly(5)<br>
+          </span></p>
+        <p>This will show you the weights used to make orthogonal polynomial
+          contrasts for 5 levels of a factor, like so:</p>
+        <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          .L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          .Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          .C&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ^4<br>
+          [1,] -0.6324555&nbsp; 0.5345225 -3.162278e-01&nbsp; 0.1195229<br>
+          [2,] -0.3162278 -0.2672612&nbsp; 6.324555e-01 -0.4780914<br>
+          [3,]&nbsp; 0.0000000 -0.5345225 -4.095972e-16&nbsp; 0.7171372<br>
+          [4,]&nbsp; 0.3162278 -0.2672612 -6.324555e-01 -0.4780914<br>
+          [5,]&nbsp; 0.6324555&nbsp; 0.5345225&nbsp; 3.162278e-01&nbsp;
+          0.1195229</p>
+        <p> Instead of comparisons between specific group means, these weights
+          define the pattern of change expected for a factor with five levels.
+          The patterns are read down the columns, and the labels indicate the
+          linear trend (.L), quadratic trend (.Q), cubic trend (.C), and fourth
+          (^4) order trends. The patterns are:</p>
+        <ul>
+          <li>Linear (.L column) - starting with -0.632, and increasing to 0.632
+            by equal amounts across the six levels.</li>
+          <li>Quadratic (.Q column) - defines an upward-pointing parabola,
+            starting and ending with positive values, and declining to the
+            smallest, negative values for the two middle levels.</li>
+          <li>Cubic (.C column) - defines a sideways s-curve, starting negative,
+            increasing to a maximum, declining to a minimum, and increasing to a
+            positive end point (mind the exponents - the middle number in row 3
+            is e-16, meaning that the decimal point is sixteen places to the
+            left, and the number is very close to zero).</li>
+          <li>Fourth degree (^4 column) - w-shaped, with a peak in the middle.</li>
+        </ul>
+        <img src="poly_wts.png" style="float:left; margin-right: 40px">
+        <p> </p>
+        <p>A graph of the weights is shown to the left. The exact values of the
+          weights aren't important, but there are a couple of rules for
+          selecting them: </p>
+        <ul>
+          <li>They should be centered on 0 - for example, the linear weights go
+            from -0.632 to +0.632, and are equal 0 at the middle stage, Stage 3.
+            As you look at each column you'll see they are all symmetrical
+            around 0. This rule allows you to flip the trends around the x-axis
+            by multiplying the weights by -1.</li>
+          <li>They need to be independent (<strong>orthogonal</strong>). The
+            weights are orthogonal if each set of weights sums to 0, and if the
+            sum of the products of any two sets of weights is equal to 0.</li>
+        </ul>
+        <p>You can confirm the sum of products criterion with a quick
+          calculation - first, you can multiply the linear column by each of the
+          others with (in the <strong>console</strong>):</p>
+        <p class="rcmd">poly.wts[,1] * poly.wts[,-1]</p>
+        <p>This command multiplies the .L column from poly.wts (.L is column 1)
+          by every column except the .L column (column -1 omits .L). To confirm
+          that these sum to 0 use (in the <strong>console</strong>):</p>
+        <p class="rcmd">colSums(poly.wts[,1] * poly.wts[,-1])</p>
+        <p>You should get numbers such as -1.110223e-16. This is a number in R's
+          scientific notation format, and it means -1.110223 x 10<sup>-16</sup>,
+          which is a very small number, very close to 0 (it is only not exactly
+          zero because of rounding error). You can do the same calculation for
+          any of the columns 2 through 4 and you should see the same thing,
+          confirming that this set of weights produces independent contrasts.</p>
+        <p>You can confirm that each set of weights sums to zero with (in the <strong>console</strong>):</p>
+        <p class="rcmd">colSums(poly.wts)</p>
+        <p>You'll see tiny numbers very close to 0.</p>
+        <p>These are used just like the dummy coded columns we made last week -
+          each row is the set of weights for each stage. Combined with the data
+          set they look like this:</p>
+        <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp; Stage&nbsp;&nbsp;&nbsp;&nbsp;
+          HA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          .L&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          .Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          .C&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; X.4<br>
+          1&nbsp; Stage 1 446.86 -0.6324555&nbsp; 0.5345225 -3.162278e-01&nbsp;
+          0.1195229<br>
+          2&nbsp; Stage 1 654.96 -0.6324555&nbsp; 0.5345225 -3.162278e-01&nbsp;
+          0.1195229<br>
+          3&nbsp; Stage 1 537.08 -0.6324555&nbsp; 0.5345225 -3.162278e-01&nbsp;
+          0.1195229<br>
+          4&nbsp; Stage 1 616.31 -0.6324555&nbsp; 0.5345225 -3.162278e-01&nbsp;
+          0.1195229<br>
+          5&nbsp; Stage 2 647.47 -0.3162278 -0.2672612&nbsp; 6.324555e-01
+          -0.4780914<br>
+          6&nbsp; Stage 2 593.92 -0.3162278 -0.2672612&nbsp; 6.324555e-01
+          -0.4780914<br>
+          7&nbsp; Stage 2 758.05 -0.3162278 -0.2672612&nbsp; 6.324555e-01
+          -0.4780914<br>
+          8&nbsp; Stage 2 543.20 -0.3162278 -0.2672612&nbsp; 6.324555e-01
+          -0.4780914<br>
+          9&nbsp; Stage 3 446.74&nbsp; 0.0000000 -0.5345225 -4.095972e-16&nbsp;
+          0.7171372<br>
+          10 Stage 3 431.83&nbsp; 0.0000000 -0.5345225 -4.095972e-16&nbsp;
+          0.7171372<br>
+          11 Stage 3 419.24&nbsp; 0.0000000 -0.5345225 -4.095972e-16&nbsp;
+          0.7171372<br>
+          12 Stage 3 324.99&nbsp; 0.0000000 -0.5345225 -4.095972e-16&nbsp;
+          0.7171372<br>
+          13 Stage 4 297.87&nbsp; 0.3162278 -0.2672612 -6.324555e-01 -0.4780914<br>
+          14 Stage 4 286.06&nbsp; 0.3162278 -0.2672612 -6.324555e-01 -0.4780914<br>
+          15 Stage 4 251.97&nbsp; 0.3162278 -0.2672612 -6.324555e-01 -0.4780914<br>
+          16 Stage 4 247.97&nbsp; 0.3162278 -0.2672612 -6.324555e-01 -0.4780914<br>
+          17 Stage 5 201.34&nbsp; 0.6324555&nbsp; 0.5345225&nbsp;
+          3.162278e-01&nbsp; 0.1195229<br>
+          18 Stage 5 125.65&nbsp; 0.6324555&nbsp; 0.5345225&nbsp;
+          3.162278e-01&nbsp; 0.1195229<br>
+          19 Stage 5&nbsp; 30.96&nbsp; 0.6324555&nbsp; 0.5345225&nbsp;
+          3.162278e-01&nbsp; 0.1195229<br>
+          20 Stage 5&nbsp; 56.28&nbsp; 0.6324555&nbsp; 0.5345225&nbsp;
+          3.162278e-01&nbsp; 0.1195229</p>
+        <p>You'll see each of the numbers in the first row of the weights matrix
+          are used for each Stage 1 row of the data set, each of the numbers in
+          the second row of the weights matrix are used for Stage 2, and so on.
+          Just like dummy codes, these polynomial weights are then used in a
+          multiple regression to test for a linear, quadratic, cubic, or fourth
+          degree pattern.</p>
+      </blockquote>
+      <p>Now we just need to use Stage.ordered in an lm() to test for these four
+        patterns of trend in the HA data.</p>
+      <p>2. Run a GLM model with an ordered factor as a predictor (in the
+        lm.with.polynomial.contrasts chunk of your <strong>R markdown file</strong>):</p>
+      <p><span class="rcmd">eels.op.lm &lt;- lm(HA ~ Stage.ordered, data=eels)</span></p>
+      <p> </p>
+      <p>This command fits exactly the same linear model as we used before, with
+        HA predicted by Stage, but by using Stage.ordered we prompt R to use
+        polynomial contrasts instead of dummy codes to represent the group
+        means. Get the ANOVA table for this model (anova.poly.weights chunk of
+        your <strong>R markdown file</strong>):</p>
+      <p class="rcmd">anova(eels.op.lm)</p>
+      <p>and you will get an ANOVA table that matches the one you got with Stage
+        as an unordered factor. Using orthogonal polynomial weights doesn't
+        change the ANOVA table.</p>
+      <p>Just like with dummy codes, four columns can represent five group means
+        perfectly, so even though we used polynomial weights we can still get
+        Tukey tests from this model if we want to. Confirm that Tukey tests from
+        this model are the same as for the unordered version of Stage (in the
+        tukey.poly.weights chunk of your <strong>R markdown file</strong>):</p>
+      <p class="rcmd">emmeans(eels.op.lm, tukey ~ Stage.ordered)</p>
+      <p>The comparisons of means is exactly the same as before - using
+        polynomial weights doesn't prevent you from comparing group means if
+        that's what you want to do.</p>
+      <p>Where the results do differ between ordered and unordered factors is in
+        the coefficients, which you can see with the command (in the coefficient
+        tests.poly.weights chunk of your<strong> R markdown file</strong>):</p>
+      <p> </p>
+      <p><span class="rcmd">summary(eels.op.lm)</span></p>
+      <p>The model output looks like this:</p>
+      <p class="rout">Call:<br>
+        lm(formula = HA ~ Stage.ordered, data = eels)<br>
+        <br>
+        Residuals:<br>
+        &nbsp;&nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1Q&nbsp;
+        Median&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3Q&nbsp;&nbsp;&nbsp;&nbsp; Max <br>
+        -116.94&nbsp; -43.12&nbsp;&nbsp; 12.68&nbsp;&nbsp; 30.44&nbsp; 122.39 <br>
+        <br>
+        Coefficients:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp; &nbsp;<br>
+        (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        395.94&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 16.26&nbsp; 24.349 1.79e-13 ***<br>
+        Stage.ordered.L&nbsp; -406.41&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 36.36
+        -11.177 1.13e-08 ***<br>
+        Stage.ordered.Q&nbsp; -102.44&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 36.36&nbsp;
+        -2.817&nbsp;&nbsp; 0.0130 * &nbsp;<br>
+        Stage.ordered.C&nbsp;&nbsp;&nbsp; 85.11&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        36.36&nbsp;&nbsp; 2.341&nbsp;&nbsp; 0.0335 * &nbsp;<br>
+        Stage.ordered^4&nbsp;&nbsp; -62.74&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        36.36&nbsp; -1.726&nbsp;&nbsp; 0.1050&nbsp;&nbsp; &nbsp;<br>
+        ---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1<br>
+        <br>
+        Residual standard error: 72.72 on 15 degrees of freedom<br>
+        Multiple R-squared:&nbsp; 0.904,&nbsp;&nbsp; &nbsp;Adjusted
+        R-squared:&nbsp; 0.8785 <br>
+        F-statistic: 35.33 on 4 and 15 DF,&nbsp; p-value: 1.805e-07</p>
+      <p>If you compare the model summary output here to what you got with the
+        unordered version of stage, the bottom-most section is identical - using
+        an ordered factor doesn't change the fit, degrees of freedom, or overall
+        p-value for the model. But, the coefficient tests are now tests of trend
+        across the ordered stage levels. You'll see that the linear (.L),
+        quadratic (.Q), and cubic (.C) terms are significant, but the fourth
+        degree (^4) term is not.</p>
+      <img src="poly_wts_scaled.png" ,="" style="float: left; margin-right: 20px"
+        onclick="changeImage(this,['linear.png','quadratic.png','cubic.png','fourth.png','poly_wts_scaled.png'])">
+      <p>The graph on the left shows how the coefficients modify the weights to
+        fit to the HA data. The sign on the coefficient keeps the pattern the
+        same if it is positive, but it flips the pattern around the x-axis if it
+        is negative. The magnitude of the coefficient indicates how strong the
+        pattern is. So, for example, the linear trend (.L) has a negative sign,
+        which flips the trend from positive to negative, and it has the largest
+        magnitude, so it is the strongest pattern in the data - the straight
+        line covers the widest range of values along the y-axis in this graph.</p>
+      <p>When you interpret orthogonal polynomials, remember that they add
+        together. So...</p>
+      <ul>
+        <li> If you click once on the graph it will show the mean HA for each
+          group (red dots) with the linear trend added to the graph - the linear
+          trend captures the general tendency for HA to decline from Stage 1 to
+          Stage 5.</li>
+        <li>If you click again you will see the sum of the linear weights and
+          the quadratic weights, which shows the increase between Stage 1 and
+          stage 2. Think of the test of significance for this trend as being
+          based on how much closer the predicted means get to the observed means
+          by adding the quadratic - there is still some space between predicted
+          and observed means, but less than with only the linear term, so adding
+          the quadratic was a significant improvement.</li>
+        <li>Click a third time and you'll see the sum of the linear, quadratic,
+          and cubic weights. The contribution of the cubic term adds the
+          sideways S pattern, which allows the weights to get closer to Stage 2
+          and Stage 3. Like with the quadratic term, adding the cubic gives us a
+          statistically significant improvement in our ability to predict the
+          actual means for each Stage.</li>
+        <li>The fourth degree term isn't significant, but if you click a fourth
+          time the line hits the means exactly - remember, with 4 columns we can
+          reproduce 5 means exactly, and that's what we're getting here. Even
+          though the means are reproduced perfectly, we came close enough with
+          the cubic term that the amount of additional variation explained by
+          adding the fourth order term wasn't enough for it to be statistically
+          significant.</li>
+      </ul>
+      <p>These orthogonal polynomial trend results match our impression from
+        looking at the graph nicely, and provide us with some statistical
+        support for claiming that HA peaks at the second stage and declines for
+        the remaining stages. They do not test for differences between any pair
+        of means, but if the question you are interested in is about the pattern
+        of change across ordinal categories, orthogonal polynomials are very
+        useful.</p>
+      <blockquote>
+        <h3>Many ways there are</h3>
+        <p>R uses orthogonal polynomial contrasts by default when you use an
+          ordered factor as a predictor. But, it isn't necessary to make a
+          factor ordered to get orthogonal polynomial contrasts - provided that
+          the order of the levels is in the sort order you want, you can instead
+          either specify the contrasts in your lm(), or you can set the type of
+          contrasts by assigning them to the variable in your data frame.</p>
+        <p>To specify them in the lm() we would use:</p>
+        <p class="rcmd">lm(HA ~ Stage, data = eels, contrasts = list(Stage =
+          "contr.poly"))</p>
+        <p>This approach doesn't change the Stage variable, but produces the
+          same result as making Stage an ordered factor.</p>
+        <p>Or, rather than making Stage.ordered we could have just assigned the
+          contrasts we wanted to use to the Stage variable, like so:</p>
+        <p class="rcmd">contrasts(eels$Stage) &lt;- contr.poly(5)</p>
+        <p>Then using lm(HA ~ Stage, data = eels) would give us orthogonal
+          polynomial contrasts without having to specify them in the lm(). To
+          set the contrasts back to the default dummy coding we would use:</p>
+        <p class="rcmd">contrasts(eels$Stage) &lt;- contr.treatment</p>
+        <p>R calls dummy coding "treatment contrasts", so this command assigns
+          the default treatment contrasts to Stage.</p>
+        <p>Note that we could have also gotten orthogonal polynomial contrasts
+          from emmeans() after we had already gotten a fitted model that used
+          dummy coded predictors - if we used:</p>
+        <p class="rcmd">emmeans(eels.ha.lm, poly ~ Stage)</p>
+        <p>we get:</p>
+        <p class="rout">$contrasts<br>
+          &nbsp;contrast&nbsp; estimate&nbsp; SE df t.ratio p.value<br>
+          &nbsp;linear&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1285 115 15
+          -11.177&nbsp; &lt;.0001<br>
+          &nbsp;quadratic&nbsp;&nbsp;&nbsp;&nbsp; -383 136 15&nbsp; -2.817&nbsp;
+          0.0130<br>
+          &nbsp;cubic&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 269
+          115 15&nbsp;&nbsp; 2.341&nbsp; 0.0335<br>
+          &nbsp;quartic&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -525 304 15&nbsp;
+          -1.726&nbsp; 0.1050</p>
+        <p>The t-values and p-values are the same, but the estimates are not -
+          this is almost certainly due to a difference in how emmeans() assigns
+          weights, but I haven't figured out what the difference is yet. Either
+          approach is fine, though, since the p-values match, and the magnitudes
+          of the estimates matter less than their signs and sizes relative to
+          one another.</p>
+        <p>Long story short - R is flexible, and there are usually multiple ways
+          to accomplish the same thing. This can be confusing to beginners, but
+          it can be an advantage as you move into more advanced applications.</p>
+      </blockquote>
+      <h2>Corrections for multiple comparisons outside of an ANOVA</h2>
+      <p>The contrasts and post-hoc procedures we've learned all apply to a
+        single factor in an ANOVA. But, it is not uncommon to have more than one
+        response variable measured in a single experiment, and we would want to
+        analyze all of them. The data set we have for the eel study has three
+        different response variables, all measured from the same eels, and they
+        are not independent - the correlation between HA and NS is r = -0.77,
+        between HA and water is r = 0.75, and between NS and water has r = -0.56
+        (if they were independent the correlation would be 0). Since the
+        variables are not independent it seems we should make some sort of
+        correction for multiple comparisons, but if we are fitting three
+        separate models it's not straightforward to incorporate this correction
+        into our post-hoc procedures.</p>
+      <p>When we are in this situation, we can account for the additional
+        chances of Type I errors by adjusting the alpha level for our analyses.
+        The simplest correction for the alpha level commonly used is the
+        Bonferroni. Bonferroni's correction sets a <strong>nominal</strong>
+        alpha level, or <strong>family-wise</strong> error rate, at a desired
+        level (usually the traditional 0.05) and then calculates the alpha level
+        used for each test by dividing the nominal level by the number of tests
+        conducted. If we were to test for differences among stages in water as
+        well as HA we would be producing two omnibus tests, with two p-values,
+        and could test each at 0.05/2 = 0.025 to avoid an increase in Type I
+        error rate. If we also tested NS, we could test at 0.05/3 = 0.0167.</p>
+      <p>However, Bonferroni's correction is stronger than absolutely necessary.
+        If we assume that each test has a 5% chance of a false positive, then it
+        also has a 95% chance of a correct negative. Across three comparisons
+        the chance of correct negatives on all of them is 0.95 x 0.95 x 0.95, or
+        (1 - 0.05)<sup>3</sup>. Any other possible outcome other than this would
+        include a false positive, Type I error in at least one comparison, so
+        the probability of one or more false positives across these five
+        comparisons is 1 - (1 - 0.05)<sup>3</sup>. If we wanted to achieve an
+        overall <strong>family-wise</strong> rate of 0.05, we could set this
+        quantity equal to 0.05, and then solve for the level that we would need
+        to test at to achieve a family-wise rate of the desired 0.05 value. In
+        other words:</p>
+      <p>0.05 = 1 - (1 - α)<sup>3</sup></p>
+      <p>α = 1-(1-0.05)<sup>1/3</sup> = 0.0169</p>
+      <p>This is called the Dunn-Sidak correction, and you can see it is a
+        little bit bigger than Bonferroni, and thus a little more easier to
+        achieve statistical significance with, without increasing the false
+        positive rate.</p>
+      <p>Let's see how correcting for multiple p-values affects our
+        interpretation of the data. Do the following steps in your <strong>R
+          markdown file</strong>.</p>
+      <p>1. Fit a model using water as a response, and Stage as a predictor, and
+        then get an ANOVA table to test for an effect of Stage (chunk water.lm).</p>
+      <p>2. Fit a model using NS as a response, and Stage as a predictor, and
+        then get an ANOVA table to test for an effect of Stage (chunk ns.lm).</p>
+      <p>3. Calculate the two corrections we could use - enter
+        (adjusted.alphas):</p>
+      <p class="rcmd">0.05/3</p>
+      <p class="rcmd">1 - (1-0.05)^(1/3)</p>
+      <p>The first calculation is the Bonferroni correction, and the second is
+        Dunn-Sidak. These two values are the corrected alpha-levels we should
+        use to assess if the p-values are statistically significant from our
+        three linear models. Compare the p-values from each of the models and
+        see if any of them are no longer significant after adjustment. The
+        variable that was significant at 0.05 but not at these adjusted levels
+        could be a Type I error if we were to use the 0.05 level.</p>
+      <h3>In summary...</h3>
+      <p>To wrap up this collection of procedures:</p>
+      <ul>
+        <li>Most of the comparisons we would typically want to make to help us
+          interpret our experiments are not independent, and require us to use a
+          post-hoc procedure that protects our family-wise Type I error rate.</li>
+        <ul>
+          <li>This includes the common, named procedures (Tukey, Dunnett), as
+            well as any set of simple comparisons between group means.</li>
+          <li>We would use the emmeans() command from the emmeans library for
+            most post-hocs, but use contrast() from the emmeans library for
+            custom contrasts that are not available as built-in options within
+            emmeans().</li>
+        </ul>
+        <li>It is possible to design comparisons that are independent (called
+          orthogonal contrasts), and which do not require correction for
+          multiple comparisons, but the rules for constructing them makes them
+          unusable for some of the comparisons we typically want to make</li>
+        <ul>
+          <li>A contrast matrix of weights that sum to 0 within a contrast, and
+            whose products sum to 0 for every pairing of contrasts is
+            independent (i.e. orthogonal)</li>
+          <li>There are at most k-1 orthogonal contrasts for a data set, and at
+            least some must combine information from more than one group</li>
+          <li>Polynomial contrasts that measure the shape of the trend across
+            levels of the predictor are useful for ordinal predictor variables</li>
+        </ul>
+        <li>If more than one variable is being analyzed from the same
+          experimental subjects they are not independent, and the alpha level
+          used to assess significance should be adjusted</li>
+        <ul>
+          <li>Bonferroni's correction, and Dunn-Sidak's correction both account
+            for the number of comparisons made</li>
+          <li>The omnibus test for the predictor variable is compared against
+            the adjusted alpha level, instead of the usual 0.05 level</li>
+        </ul>
+      </ul>
+      <h2>Optional: custom post-hocs and contrasts</h2>
+      <p>There are several additional built-in comparisons in emmeans that we
+        didn't go over (you can read about them if you type "contrast-methods"
+        in the search bar in R Studio's Help tab). But, if you want to make a
+        set of comparisons that are not already available, you can specify your
+        own.</p>
+      <p>We'll try out a couple of custom contrasts to see how they work.</p>
+      <p>1. First we need to make a set of vectors that define each group by
+        placing a 1 in the position occupied by the group. For example, the mean
+        of Stage 1 is identified with (in the group.vectors code chunk of your <strong>R
+          markdown</strong> document): </p>
+      <p class="rcmd">s1 &lt;- c(1,0,0,0,0)</p>
+      <p>This set of weights has a 1 in the first position to represent Stage 1,
+        and a zero for the other four positions for the rest of the stages.</p>
+      <p>To make the remaining comparisons, you need a vector for each one (add
+        to your R markdown document, same code chunk, below s1):</p>
+      <p class="rcmd">s2 &lt;- c(0,1,0,0,0)</p>
+      <p class="rcmd">s3 &lt;- c(0,0,1,0,0)</p>
+      <p class="rcmd">s4 &lt;- c(0,0,0,1,0)</p>
+      <p class="rcmd">s5 &lt;- c(0,0,0,0,1)</p>
+      <p>2. To define the contrasts, we need to decide what comparisons we want
+        to make, and then make them on these group vectors - the result will
+        then be used as the weights when we do our contrasts. For example, if we
+        wanted to compare the average of groups 1 and 2 to the average of groups
+        4 and 5, we would do the following (in the <strong>console</strong>):</p>
+      <p class="rcmd">(s1+s2)/2 - (s4+s5)/2</p>
+      <p>You'll see that the output you get is another vector that looks like
+        this:</p>
+      <p class="rout">0.5&nbsp; 0.5&nbsp; 0.0 -0.5 -0.5</p>
+      <p>When you use vectors in mathematical expressions R operates on the
+        matching elements, so adding s1 to s2 produced a vector with elements
+        1,1,0,0,0, and dividing by 2 resulted in 0.5, 0.5, 0, 0, 0. The same is
+        true for the (s4+s5)/2 operation, which produced a vector with
+        0,0,0,0.5,0.5. Subtracting the (s4+s5)/2 vector from the (s1+s2)/2
+        vector gave us the final 0.5, 0.5, 0, -0.5, -0.5 vector in our output.
+        These weights will result in a comparison of the mean of stages 1 and 2
+        to the mean of groups 3 and 4 - multiplying by half and then summing is
+        equivalent to calculating the average of two groups, and the mean of the
+        groups with negative weights will be subtracted from the mean of the
+        groups with positive weights.</p>
+      <p>We could also decide we want to compare the mean of Stage 1 to the
+        average of the rest of the stages, like so:</p>
+      <p class="rcmd">s1 - (s2 + s3 + s4 + s5)/4</p>
+      <p>which gives us:</p>
+      <p class="rout">1.00 -0.25 -0.25 -0.25 -0.25</p>
+      <p>This set of weights will compare the Stage 1 mean against the mean of
+        the other four stages. Note that the two contrasts have weights that sum
+        to zero, but the sums of the products of the weights for the two
+        contrasts is not equal to 0, so they are not independent - we will need
+        to correct for multiple comparisons when we run them.</p>
+      <p>To get emmeans() to use these contrasts, and correct for the fact that
+        we are doing two comparisons, we need to put them both into an R list
+        (in the define.contrasts chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">list(s1s2.vs.s4s5 = (s1+s2)/2 - (s4+s5)/2, s1.vs.s2s3s4s5
+        = s1 - (s2+s3+s4+s5)/4) -&gt; custom.contrasts</p>
+      <p>Note that when we define the list we name each element in a way that
+        identifies which means are being compared, and then create the element
+        by putting the calculations we did above into the function definition of
+        the element. For example, the first named element is s1s2.vs.s4s5, and
+        we assign it the mean of s1 and s2 minus the mean of s4 and s5. Naming
+        the elements of the list isn't necessary, but it makes the results
+        easier to interpret since these names will be used to label the final
+        output. To see what this list contains, type custom.contrasts in the <strong>console</strong>:</p>
+      <p class="rout">$s1s2.vs.s4s5<br>
+        [1]&nbsp; 0.5&nbsp; 0.5&nbsp; 0.0 -0.5 -0.5<br>
+        <br>
+        $s1.vs.s2s3s4s5<br>
+        [1]&nbsp; 1.00 -0.25 -0.25 -0.25 -0.25</p>
+      <p>2. To use these to get multiple comparisons, we first use emmeans() to
+        make an object with all the needed values (means, standard errors,
+        sample sizes), and then we use the contrast() function on the emmeans()
+        object to test the contrasts for statistical significance (in your <strong>Rmd
+          file</strong>, test.custom.contrasts chunk):</p>
+      <p class="rcmd">emmeans(eels.ha.lm, ~Stage) -&gt; eels.ha.emm</p>
+      <p class="rcmd">contrast(eels.ha.emm, custom.contrasts, adjust = "mvt")</p>
+      <p>The output of this command is:</p>
+      &nbsp; <span class="rout">contrast&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        estimate&nbsp;&nbsp; SE df t.ratio p.value<br>
+        &nbsp;s1s2.vs.s4s5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 412 36.4
+        15&nbsp; 11.344&nbsp; &lt;.0001<br>
+        &nbsp;s1.vs.s2s3s4s5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 210 40.7
+        15&nbsp;&nbsp; 5.162&nbsp; 0.0002<br>
+        <br>
+        P value adjustment: mvt method for 2 tests&nbsp;</span>
+      <p> The first emmeans() command generates the estimated means and their
+        standard errors, and then the contrast() function compares the means
+        based on the contrasts we put in the custom.contrasts list object. We
+        also tell contrast() to adjust for multiple comparisons using the "mvt",
+        or multivariate, method, which is the default used by emmeans for custom
+        contrasts. Since the contrasts are being corrected for multiple
+        comparisons you can interpret p-values less than 0.05 as being
+        statistically significant without risking an inflated false positive
+        error rate.</p>
+      <h2>Planned comparisons: orthogonal contrasts</h2>
+      <p>It's possible to make comparisons between group means without having to
+        adjust for multiple comparisons, if the comparisons are independent. We
+        did this when we used orthogonal polynomials above, but it's possible to
+        construct contrasts that are comparisons of group means that are also
+        orthogonal. </p>
+      <p>There are at most k - 1 independent contrasts possible, where k is the
+        number of groups - for the Stage variable there are at most 5-1 = 4
+        orthogonal contrasts. Orthogonal contrasts divide up the variation
+        explained by the predictor variable into independent pieces, and then
+        test those pieces for statistical significance. As was true for the
+        orthogonal polynomial contrasts we used above, to be orthogonal the
+        weights we use have to sum to 0 for any single contrast, and the sum of
+        products of any two contrasts' weights has to be zero. This means that
+        not every set of four contrasts that we could construct is independent -
+        the Dunnett comparisons we used above were not, as you can see below.</p>
+      <p>Dunnett's comparisons</p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th>Factor levels</th>
+            <th>Contrast 1</th>
+            <th>Contrast 2</th>
+            <th>Contrast 3</th>
+            <th>Contrast 4</th>
+          </tr>
+          <tr>
+            <td align="left">Stage 1</td>
+            <td>1</td>
+            <td>1</td>
+            <td>1</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 2</td>
+            <td>-1</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 3</td>
+            <td>0</td>
+            <td>-1</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 4</td>
+            <td>0</td>
+            <td>0</td>
+            <td>-1</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 5</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td>-1</td>
+          </tr>
+          <tr>
+            <td align="left">Interpretation</td>
+            <td>1 vs. 2</td>
+            <td>1 vs. 3</td>
+            <td>1 vs. 4</td>
+            <td>1 vs. 5</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>The sums of the weights in each column are 0, but multiplying any two
+        sets of weight together and summing the products gives a sum of 1, not 0
+        - which means that these comparisons are not independent. We were right
+        to adjust the p-value for Dunnett's comparisons given this. You can
+        confirm for yourself that sequential comparisons suffer from the same
+        problem in the table below - if you enter a 1 and -1 for each pair of
+        means being compared you'll see the sums of products aren't equal to 0.</p>
+      <div id="wrapper_div" style="width:100%; clear: both">
+        <div id="wts_div" style="width: 600px; float: left">
+          <table id="dunnett" class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Factor levels</th>
+                <th>Contrast 1</th>
+                <th>Contrast 2</th>
+                <th>Contrast 3</th>
+                <th>Contrast 4</th>
+              </tr>
+              <tr>
+                <td align="left">Stage 1</td>
+                <td><input id="s1_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s1_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s1_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s1_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+              </tr>
+              <tr>
+                <td align="left">Stage 2</td>
+                <td><input id="s2_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s2_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s2_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s2_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+              </tr>
+              <tr>
+                <td align="left">Stage 3</td>
+                <td><input id="s3_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s3_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s3_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s3_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+              </tr>
+              <tr>
+                <td align="left">Stage 4</td>
+                <td><input id="s4_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s4_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s4_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s4_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+              </tr>
+              <tr>
+                <td align="left">Stage 5</td>
+                <td><input id="s5_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s5_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s5_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+                <td><input id="s5_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                    type="text"></td>
+              </tr>
+              <tr>
+                <td align="left">Column totals:</td>
+                <td id="c1_total">0</td>
+                <td id="c2_total">0</td>
+                <td id="c3_total">0</td>
+                <td id="c4_total">0</td>
+              </tr>
+              <tr>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="orthog_div" style="float: left; border: 1 px solid red">
+          <table id="sum_prods" class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Contrasts:</th>
+                <th>Sum of products</th>
+              </tr>
+              <tr>
+                <td align="left">C1 vs. C2</td>
+                <td id="c1_c2">0<br>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">C1 vs. C3</td>
+                <td id="c1_c3">0<br>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">C1 vs. C4</td>
+                <td id="c1_c4">0<br>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">C2 vs. C3</td>
+                <td id="c2_c3">0<br>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">C2 vs. C4</td>
+                <td id="c2_c4">0<br>
+                </td>
+              </tr>
+              <tr>
+                <td align="left">C3 vs. C4</td>
+                <td id="c3_c4">0<br>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <br style="clear: both">
+      <p>So, not every set of four contrasts will be independent, only ones with
+        weights that meet our criteria are independent.</p>
+      <p>Each of the four sets of contrasts below do meet the criteria for being
+        orthogonal - each column sums to 0, and the sum of the products of any
+        two columns also sums to zero. Remember that when fractions are used an
+        average of two or more group means is being calculated, and weights with
+        different signs are being compared to one another, while weights with
+        the same sign are being averaged together.</p>
+      <p>Set 1:</p>
+      <p> </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th>Factor levels</th>
+            <th>Contrast 1</th>
+            <th>Contrast 2</th>
+            <th>Contrast 3</th>
+            <th>Contrast 4</th>
+          </tr>
+          <tr>
+            <td align="left">Stage 1</td>
+            <td>1/2</td>
+            <td>1</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 2</td>
+            <td>1/2</td>
+            <td>-1</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 3</td>
+            <td>-1/3</td>
+            <td>0</td>
+            <td>1</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 4</td>
+            <td>-1/3</td>
+            <td>0</td>
+            <td>-1/2</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 5</td>
+            <td>-1/3</td>
+            <td>0</td>
+            <td>-1/2</td>
+            <td>-1</td>
+          </tr>
+          <tr>
+            <td align="left">Interpretation</td>
+            <td>Mean of 1, 2 vs. mean of 3, 4, 5</td>
+            <td>1 vs. 2</td>
+            <td>3 vs. mean of 4,5</td>
+            <td>4 vs. 5</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Set 2:</p>
+      <p> </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th align="left">Factor levels:</th>
+            <th>Contrast 1</th>
+            <th>Contrast 2</th>
+            <th>Contrast 3</th>
+            <th>Contrast 4</th>
+          </tr>
+          <tr>
+            <td align="left">Stage 1</td>
+            <td>1</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 2</td>
+            <td>-1/4</td>
+            <td>1</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 3</td>
+            <td>-1/4</td>
+            <td>-1/3</td>
+            <td>1</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 4</td>
+            <td>-1/4</td>
+            <td>-1/3</td>
+            <td>-1/2</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 5</td>
+            <td>-1/4</td>
+            <td>-1/3</td>
+            <td>-1/2</td>
+            <td>-1</td>
+          </tr>
+          <tr>
+            <td align="left">Interpretation</td>
+            <td>1 vs. mean of 2-5</td>
+            <td>2 vs. mean of 3-5</td>
+            <td>3 vs. mean of 4-5</td>
+            <td>4 vs. 5</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Set 3:</p>
+      <p> </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th align="left">Factor levels:</th>
+            <th>Contrast 1</th>
+            <th>Contrast 2</th>
+            <th>Contrast 3</th>
+            <th>Contrast 4</th>
+          </tr>
+          <tr>
+            <td align="left">Stage 1</td>
+            <td>1</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 2</td>
+            <td>-1/4</td>
+            <td>1/2</td>
+            <td>1</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 3</td>
+            <td>-1/4</td>
+            <td>1/2</td>
+            <td>-1</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 4</td>
+            <td>-1/4</td>
+            <td>-1/2</td>
+            <td>0</td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 5</td>
+            <td>-1/4</td>
+            <td>-1/2</td>
+            <td>0</td>
+            <td>-1</td>
+          </tr>
+          <tr>
+            <td align="left">Interpretation</td>
+            <td>1 vs. mean of 2-5</td>
+            <td>Mean of 2,3 vs. mean of 4,5</td>
+            <td>2 vs. 3</td>
+            <td>4 vs. 5</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Set 4:</p>
+      <p> </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th align="left">Factor levels:</th>
+            <th>Contrast 1</th>
+            <th>Contrast 2</th>
+            <th>Contrast 3</th>
+            <th>Contrast 4</th>
+          </tr>
+          <tr>
+            <td align="left">Stage 1</td>
+            <td>1</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 2</td>
+            <td>-1/4</td>
+            <td>1/2</td>
+            <td>1/2</td>
+            <td>-1/2</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 3</td>
+            <td>-1/4</td>
+            <td>1/2</td>
+            <td>-1/2</td>
+            <td>1/2</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 4</td>
+            <td>-1/4</td>
+            <td>-1/2</td>
+            <td>1/2</td>
+            <td>1/2</td>
+          </tr>
+          <tr>
+            <td align="left">Stage 5</td>
+            <td>-1/4</td>
+            <td>-1/2</td>
+            <td>-1/2</td>
+            <td>-1/2</td>
+          </tr>
+          <tr>
+            <td align="left">Interpretation</td>
+            <td>1 vs. mean of 2-5</td>
+            <td>Mean of 2,3 vs. mean of 4,5</td>
+            <td>Mean of 2,4 vs. mean of 3,5</td>
+            <td>Mean of 3,4 vs. mean of 2,5</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>As an exercise, we'll use Set 4. </p>
+      <p>Since these are a little more complicated than the previous step, we'll
+        make the vectors of weights first, assign each to an object, and then
+        make our list of contrasts from these objects. First the vectors of
+        weights (in the orthogonal.contrasts chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">Contrast.1 &lt;- s1 - (s2+s3+s4+s5)/4<br>
+        Contrast.2 &lt;- (s2+s3)/2 - (s4+s5)/2<br>
+        Contrast.3 &lt;- (s2+s4)/2 - (s3+s5)/2<br>
+        Contrast.4 &lt;- (s3+s4)/2 - (s2+s5)/2</p>
+      <p>Then put these into a list (make.contrast.list chunk of your <strong>Rmd
+          file</strong>):</p>
+      <p class="rcmd">list(s1.vs.s2s3s4s5 = Contrast.1, s2s3.vs.s4s5 =
+        Contrast.2, s2s4.vs.s3s5 = Contrast.3, s3s4.vs.s2s5 = Contrast.4) -&gt;
+        orthog.contrasts</p>
+      <p>You can now use contrast() to test these - since they are orthogonal no
+        correction for multiple comparisons is needed (in your
+        test.orthog.contrasts chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">contrast(eels.ha.emm, orthog.contrasts)</p>
+      <p>Note that we're using the same eels.ha.emm object as we used for the
+        custom contrasts above, the only difference is the list of contrasts
+        used. The results are:</p>
+      <p class="rout">&nbsp;contrast&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        estimate&nbsp;&nbsp; SE df t.ratio p.value<br>
+        &nbsp;s1.vs.s2s3s4s5&nbsp;&nbsp;&nbsp; 209.8 40.7 15&nbsp;&nbsp;
+        5.162&nbsp; 0.0001<br>
+        &nbsp;s2s3.vs.s4s5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 333.4 36.4
+        15&nbsp;&nbsp; 9.170&nbsp; &lt;.0001<br>
+        &nbsp;s2s4.vs.s3s5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 198.7 36.4
+        15&nbsp;&nbsp; 5.464&nbsp; 0.0001<br>
+        &nbsp;s3s4.vs.s2s5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -31.3 36.4 15&nbsp;
+        -0.860&nbsp; 0.4033</p>
+      <p>All of the contrasts are significant except the last one comparing s3
+        and s4 to s2 and s5.</p>
+      <p>Orthogonal contrasts are great, but orthogonality requirements limit
+        the questions you can address with them. But, if the questions you want
+        to address can be expressed as orthogonal contrasts you will get better
+        statistical power from them than from any post hoc procedure.</p>
+      <h2>Assignment<br>
+      </h2>
+      <p>All done! Save, knit, and upload your Word file with all your output.</p>
+      <p></p>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,293 @@
+---
+title: "Post-hocs and planned comparisons"
+author: "KEY"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Import and summary of data
+
+We will work eel larval development data. Import the "eels.csv" into a data frame called "eels".
+
+```{r eels.import.data}
+
+library(readxl)
+eels <- read_excel("eels.xlsx")
+eels$Stage <- factor(eels$Stage)
+
+```
+
+
+To plot the means and 95% confidence intervals use summarySE() to get the summary statistics you need:
+
+```{r summarize.data}
+
+library(Rmisc)
+summarySE(eels, "HA","Stage") -> eels.sumstats
+
+```
+
+Then use the summary data set you created to plot the means and 95% confidence intervals using ggplot2:
+
+```{r plot.means.ci}
+
+library(ggplot2)
+ggplot(eels.sumstats, aes(x = Stage, y = HA)) + geom_errorbar(aes(ymin = HA - ci, ymax = HA + ci), width = 0.1) + geom_point()
+
+```
+
+#### Question: the stages are in their proper order on the plot. Stage is clearly an ordinal variable, but does that mean that R is considering Stage to be ordinal?
+
+> No, the categories are in alphabetical order, but the factor is not considered ordered at this point. The ordering will not be used in this first analysis.
+
+## Fitting the linear model
+
+Now run the lm() command to fit the model, using HA as the response variable and Stage as the predictor:
+
+```{r fit.lm}
+
+eels.ha.lm <- lm(HA ~ Stage, data = eels)
+anova(eels.ha.lm)
+
+```
+
+#### Question: is the Stage term significant? How do you know?
+
+> Yes, because the p-value for Stage is significant.
+
+#### Question: can you tell at this point which stages differ?
+
+> No, only that there are at least two Stages have mean HA that differ.
+
+Load the emmeans library:
+
+```{r load.emmeans}
+
+library(emmeans)
+
+```
+
+## Tukey comparisons
+
+Run the emmeans() command, from the emmeans library, for the Tukey procedure:
+
+```{r tukey.emmeans}
+
+emmeans(eels.ha.lm, tukey ~ Stage) -> eels.ha.emm
+eels.ha.emm
+
+multcomp::cld(eels.ha.emm)
+
+```
+
+#### Question: which stages are different from one another?
+
+> Working from first to last stage, Stage 1 is different from Stage 4 and 5, Stage 2 is different from Stage 3, 4, and 5. Stage 3 is different from Stage 5. STage 4 is different from Stage 5.
+
+## Dunnett's comparisons
+
+Dunnett's comparisons are all groups against one. Usually the one that is compared against is a "control" group, and all the others are treatments of various kinds. We don't have data like that, but since Stage 1 is set as the baseline group we can use Dunnett's test to compare all of the other stages against Stage 1:
+
+```{r dunnett.emmeans}
+
+emmeans(eels.ha.lm, dunnett ~ Stage)
+
+```
+
+#### Question: at what stage did HA become different from Stage 1?
+
+> No, Stage 2 is not, but the rest of the stages are different from Stage 1.
+
+## Sequential comparisons
+
+Comparing each level to the previous one is done with the consec comparisons in emmeans:
+
+```{r consec.emmeans}
+
+eels.ha.consec <- emmeans(eels.ha.lm, consec ~ Stage)
+eels.ha.consec
+
+```
+
+#### Question: which stages are different from the previous one?
+
+>
+
+## Orthogonal polynomials - analyzing ordinal trends
+
+R uses polynomial contrasts by default for ordered factors. If we make a version of the Stage variable that is an ordered factor, and then use it in a linear model, R will give us tests of the ordinal trends across the five stages. 
+
+Make a copy of Stage as an ordered factor:
+
+```{r stage.ordered}
+
+eels$Stage.ordered <- factor(eels$Stage, ordered = T)
+
+```
+
+#### Question: refer to the polynomial weights in the instructions. These weights describe a pattern of change from first to last stage. How? Use Linear and Quadratic weights as an example.
+
+> Linear weights start at a negative value and increase by an equal amount across the levels. The quadratic term is a parabola that opens upward, so it starts at positive values, declines to a minimum, and then increases back to the same value as it started.
+
+Fit a model using the ordered factor version of stage:
+
+```{r lm.with.polynomial.contrasts}
+
+eels.op.lm <- lm(HA ~ Stage.ordered, data = eels)
+summary(eels.op.lm)
+
+```
+
+Get the ANOVA table - it doesn't look any different:
+
+```{r anova.poly.weights}
+
+anova(eels.op.lm)
+
+```
+
+Run Tukey tests on this ordinal stage variable:
+
+```{r tukey.poly.weights}
+
+emmeans(eels.op.lm, tukey ~ Stage.ordered)
+
+```
+
+#### Question: are there any changes to these Tukey tests compared with the analysis with the unordered factor you did previously?
+
+> No, the comparisons of means are all the same.
+
+
+The tests of polynomial trends are seen in the coefficient tests:
+
+```{r coefficient.tests.poly.weights}
+
+summary(eels.op.lm)
+
+```
+
+#### Question: which polynomial trends were statistically significant?
+
+> Linear, Quadratic, and Cubic trends were significant.
+
+
+## Corrections for multiple p-values
+
+We just completed an analysis of HA, but the data set includes measures of change in water and in neutral sugar as well. Fit a model using water as a response, and Stage as a predictor, then get the summary output:
+
+```{r water.lm}
+
+lm(water ~ Stage, data = eels) -> water.lm
+summary(water.lm)
+
+```
+
+Fit a model using NS as a response, and get the summary output:
+
+```{r ns.lm}
+
+lm(NS ~ Stage, data = eels) -> ns.lm
+summary(ns.lm)
+
+```
+#### Question: according to the model-level omnibus test (i.e. the p-value at the bottom of the summary output), do NS and water change during development? How do you know?
+
+> Yes they do, both have p-values less than 0.05.
+
+Calculate the adjusted alpha levels:
+
+```{r adjusted.alphas}
+
+0.05/3
+1 - (1 - 0.05)^(1/3)
+
+```
+#### Question: are any of the variables no longer statistically significant at either of these adjusted alpha levels?
+
+> All are still statistically significant after adjustment, but water is much closer to the adjusted alpha level.
+
+## Optional: post-hoc comparisons of your choice, and orthogonal contrasts
+
+We need a matrix that defines comparisons between sequential stages.
+
+```{r group.vectors}
+
+s1 <- c(1,0,0,0,0)
+s2 <- c(0,1,0,0,0)
+s3 <- c(0,0,1,0,0)
+s4 <- c(0,0,0,1,0)
+s5 <- c(0,0,0,0,1)
+
+```
+
+Define the contrasts you wish to make:
+
+```{r define.contrasts}
+
+list(s1s2.vs.s4s5 = (s1+s2)/2 - (s4+s5)/2, s1.vs.s2s3s4s5 = s1 - (s2+s3+s4+s5)/4) -> custom.contrasts
+
+```
+
+
+Now get the multiple comparisons for this set of custom contrasts:
+
+```{r test.custom.contrasts}
+
+emmeans(eels.ha.lm, ~Stage) -> eels.ha.emm
+
+contrast(eels.ha.emm, custom.contrasts, adjust = "mvt")
+
+```
+
+#### Question: which comparisons are significant?
+
+> Both are significant.
+
+#### Question: why was it necessary to adjust for multiple comparisons with these contrasts?
+
+> These comparisons are not independent.
+
+## Orthogonal contrasts
+
+We will use the fourth set of possible orthogonal contrasts, which compares each stage against the mean of those that follow.
+
+```{r make.contrast.vectors}
+
+Contrast.1 <- s1 - (s2+s3+s4+s5)/4
+Contrast.2 <- (s2+s3)/2 - (s4+s5)/2
+Contrast.3 <- (s2+s4)/2 - (s3+s5)/2
+Contrast.4 <- (s3+s4)/2 - (s2+s5)/2
+
+```
+
+Make a list of each of the four independent contrasts:
+
+```{r make.contrast.list}
+
+list(s1.vs.s2s3s4s5 = Contrast.1, s2s3.vs.s4s5 = Contrast.2, s2s4.vs.s3s5 = Contrast.3, s3s4.vs.s2s5 = Contrast.4) -> orthog.contrasts
+
+```
+
+Test these contrasts for significance:
+
+```{r test.orthog.contrasts}
+
+contrast(eels.ha.emm, orthog.contrasts)
+
+```
+
+#### Question: which comparisons were significant?
+
+> All of the contrasts except for the last one, which compared the mean of Stage 3 and Stage 4 to the mean of Stage 2 and Stage 5, were significant.
+
+**Question: why was it not necessary to adjust for multiple comparisons, even though there are four contrasts being tested?**
+
+> The contrasts are independent this time, so they do not need to be corrected for multiple comparisons.

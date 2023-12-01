@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Post-hocs and contrasts</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script type="text/javascript" src="dunnett_orthog.js"></script>
+  </head>
+  <body>
+    <h2>Planned comparisons: orthogonal contrasts</h2>
+    <p>It's possible to make comparisons between group means without having to
+      adjust for multiple comparisons, if the comparisons are independent. We
+      did this when we used orthogonal polynomials above, but it's possible to
+      construct contrasts that are comparisons of group means that are also
+      orthogonal. </p>
+    <p>There are at most k - 1 independent contrasts possible, where k is the
+      number of groups - for the Stage variable there are at most 5-1 = 4
+      orthogonal contrasts. Orthogonal contrasts divide up the variation
+      explained by the predictor variable into independent pieces, and then test
+      those pieces for statistical significance. As was true for the orthogonal
+      polynomial contrasts we used above, to be orthogonal the weights we use
+      have to sum to 0 for any single contrast, and the sum of products of any
+      two contrasts' weights has to be zero. This means that not every set of
+      four contrasts that we could construct is independent - the Dunnett
+      comparisons we used above were not, as you can see below.</p>
+    <p>Dunnett's comparisons</p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th>Factor levels</th>
+          <th>Contrast 1</th>
+          <th>Contrast 2</th>
+          <th>Contrast 3</th>
+          <th>Contrast 4</th>
+        </tr>
+        <tr>
+          <td align="left">Stage 1</td>
+          <td>1</td>
+          <td>1</td>
+          <td>1</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 2</td>
+          <td>-1</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 3</td>
+          <td>0</td>
+          <td>-1</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 4</td>
+          <td>0</td>
+          <td>0</td>
+          <td>-1</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 5</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>-1</td>
+        </tr>
+        <tr>
+          <td align="left">Interpretation</td>
+          <td>1 vs. 2</td>
+          <td>1 vs. 3</td>
+          <td>1 vs. 4</td>
+          <td>1 vs. 5</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The sums of the weights in each column are 0, but multiplying any two
+      sets of weight together and summing the products gives a sum of 1, not 0 -
+      which means that these comparisons are not independent. We were right to
+      adjust the p-value for Dunnett's comparisons given this. You can confirm
+      for yourself that sequential comparisons suffer from the same problem in
+      the table below - if you enter a 1 and -1 for each pair of means being
+      compared you'll see the sums of products aren't equal to 0.</p>
+    <div id="wrapper_div" style="width:100%; clear: both">
+      <div id="wts_div" style="width: 600px; float: left">
+        <table id="dunnett" class="tableLarge">
+          <tbody>
+            <tr>
+              <th>Factor levels</th>
+              <th>Contrast 1</th>
+              <th>Contrast 2</th>
+              <th>Contrast 3</th>
+              <th>Contrast 4</th>
+            </tr>
+            <tr>
+              <td align="left">Stage 1</td>
+              <td><input id="s1_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s1_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s1_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s1_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+            </tr>
+            <tr>
+              <td align="left">Stage 2</td>
+              <td><input id="s2_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s2_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s2_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s2_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+            </tr>
+            <tr>
+              <td align="left">Stage 3</td>
+              <td><input id="s3_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s3_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s3_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s3_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+            </tr>
+            <tr>
+              <td align="left">Stage 4</td>
+              <td><input id="s4_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s4_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s4_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s4_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+            </tr>
+            <tr>
+              <td align="left">Stage 5</td>
+              <td><input id="s5_c1" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s5_c2" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s5_c3" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+              <td><input id="s5_c4" value="0" onchange="isOrthog()" style="width: 30px; text-align:right"
+                  type="text"></td>
+            </tr>
+            <tr>
+              <td align="left">Column totals:</td>
+              <td id="c1_total">0</td>
+              <td id="c2_total">0</td>
+              <td id="c3_total">0</td>
+              <td id="c4_total">0</td>
+            </tr>
+            <tr>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="orthog_div" style="float: left; border: 1 px solid red">
+        <table id="sum_prods" class="tableLarge">
+          <tbody>
+            <tr>
+              <th>Contrasts:</th>
+              <th>Sum of products</th>
+            </tr>
+            <tr>
+              <td align="left">C1 vs. C2</td>
+              <td id="c1_c2">0<br>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">C1 vs. C3</td>
+              <td id="c1_c3">0<br>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">C1 vs. C4</td>
+              <td id="c1_c4">0<br>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">C2 vs. C3</td>
+              <td id="c2_c3">0<br>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">C2 vs. C4</td>
+              <td id="c2_c4">0<br>
+              </td>
+            </tr>
+            <tr>
+              <td align="left">C3 vs. C4</td>
+              <td id="c3_c4">0<br>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <br style="clear: both">
+    <p>So, not every set of four contrasts will be independent, only ones with
+      weights that meet our criteria are independent.</p>
+    <p>Each of the four sets of contrasts below do meet the criteria for being
+      orthogonal - each column sums to 0, and the sum of the products of any two
+      columns also sums to zero. Remember that when fractions are used an
+      average of two or more group means is being calculated, and weights with
+      different signs are being compared to one another, while weights with the
+      same sign are being averaged together.</p>
+    <p>Set 1:</p>
+    <p> </p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th>Factor levels</th>
+          <th>Contrast 1</th>
+          <th>Contrast 2</th>
+          <th>Contrast 3</th>
+          <th>Contrast 4</th>
+        </tr>
+        <tr>
+          <td align="left">Stage 1</td>
+          <td>1/2</td>
+          <td>1</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 2</td>
+          <td>1/2</td>
+          <td>-1</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 3</td>
+          <td>-1/3</td>
+          <td>0</td>
+          <td>1</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 4</td>
+          <td>-1/3</td>
+          <td>0</td>
+          <td>-1/2</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 5</td>
+          <td>-1/3</td>
+          <td>0</td>
+          <td>-1/2</td>
+          <td>-1</td>
+        </tr>
+        <tr>
+          <td align="left">Interpretation</td>
+          <td>Mean of 1, 2 vs. mean of 3, 4, 5</td>
+          <td>1 vs. 2</td>
+          <td>3 vs. mean of 4,5</td>
+          <td>4 vs. 5</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Set 2:</p>
+    <p> </p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th align="left">Factor levels:</th>
+          <th>Contrast 1</th>
+          <th>Contrast 2</th>
+          <th>Contrast 3</th>
+          <th>Contrast 4</th>
+        </tr>
+        <tr>
+          <td align="left">Stage 1</td>
+          <td>1</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 2</td>
+          <td>-1/4</td>
+          <td>1</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 3</td>
+          <td>-1/4</td>
+          <td>-1/3</td>
+          <td>1</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 4</td>
+          <td>-1/4</td>
+          <td>-1/3</td>
+          <td>-1/2</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 5</td>
+          <td>-1/4</td>
+          <td>-1/3</td>
+          <td>-1/2</td>
+          <td>-1</td>
+        </tr>
+        <tr>
+          <td align="left">Interpretation</td>
+          <td>1 vs. mean of 2-5</td>
+          <td>2 vs. mean of 3-5</td>
+          <td>3 vs. mean of 4-5</td>
+          <td>4 vs. 5</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Set 3:</p>
+    <p> </p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th align="left">Factor levels:</th>
+          <th>Contrast 1</th>
+          <th>Contrast 2</th>
+          <th>Contrast 3</th>
+          <th>Contrast 4</th>
+        </tr>
+        <tr>
+          <td align="left">Stage 1</td>
+          <td>1</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 2</td>
+          <td>-1/4</td>
+          <td>1/2</td>
+          <td>1</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 3</td>
+          <td>-1/4</td>
+          <td>1/2</td>
+          <td>-1</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 4</td>
+          <td>-1/4</td>
+          <td>-1/2</td>
+          <td>0</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 5</td>
+          <td>-1/4</td>
+          <td>-1/2</td>
+          <td>0</td>
+          <td>-1</td>
+        </tr>
+        <tr>
+          <td align="left">Interpretation</td>
+          <td>1 vs. mean of 2-5</td>
+          <td>Mean of 2,3 vs. mean of 4,5</td>
+          <td>2 vs. 3</td>
+          <td>4 vs. 5</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Set 4:</p>
+    <p> </p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th align="left">Factor levels:</th>
+          <th>Contrast 1</th>
+          <th>Contrast 2</th>
+          <th>Contrast 3</th>
+          <th>Contrast 4</th>
+        </tr>
+        <tr>
+          <td align="left">Stage 1</td>
+          <td>1</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 2</td>
+          <td>-1/4</td>
+          <td>1/2</td>
+          <td>1/2</td>
+          <td>-1/2</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 3</td>
+          <td>-1/4</td>
+          <td>1/2</td>
+          <td>-1/2</td>
+          <td>1/2</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 4</td>
+          <td>-1/4</td>
+          <td>-1/2</td>
+          <td>1/2</td>
+          <td>1/2</td>
+        </tr>
+        <tr>
+          <td align="left">Stage 5</td>
+          <td>-1/4</td>
+          <td>-1/2</td>
+          <td>-1/2</td>
+          <td>-1/2</td>
+        </tr>
+        <tr>
+          <td align="left">Interpretation</td>
+          <td>1 vs. mean of 2-5</td>
+          <td>Mean of 2,3 vs. mean of 4,5</td>
+          <td>Mean of 2,4 vs. mean of 3,5</td>
+          <td>Mean of 3,4 vs. mean of 2,5</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>As an exercise, we'll use Set 4. </p>
+    <p>Since these are a little more complicated than the previous step, we'll
+      make the vectors of weights first, assign each to an object, and then make
+      our list of contrasts from these objects. First the vectors of weights (in
+      the orthogonal.contrasts chunk of your <strong>Rmd file</strong>):</p>
+    <p class="rcmd">Contrast.1 &lt;- s1 - (s2+s3+s4+s5)/4<br>
+      Contrast.2 &lt;- (s2+s3)/2 - (s4+s5)/2<br>
+      Contrast.3 &lt;- (s2+s4)/2 - (s3+s5)/2<br>
+      Contrast.4 &lt;- (s3+s4)/2 - (s2+s5)/2</p>
+    <p>Then put these into a list (make.contrast.list chunk of your <strong>Rmd
+        file</strong>):</p>
+    <p class="rcmd">list(s1.vs.s2s3s4s5 = Contrast.1, s2s3.vs.s4s5 = Contrast.2,
+      s2s4.vs.s3s5 = Contrast.3, s3s4.vs.s2s5 = Contrast.4) -&gt;
+      orthog.contrasts</p>
+    <p>You can now use contrast() to test these - since they are orthogonal no
+      correction for multiple comparisons is needed (in your
+      test.orthog.contrasts chunk of your <strong>Rmd file</strong>):</p>
+    <p class="rcmd">contrast(eels.ha.emm, orthog.contrasts)</p>
+    <p>Note that we're using the same eels.ha.emm object as we used for the
+      custom contrasts above, the only difference is the list of contrasts used.
+      The results are:</p>
+    <p class="rout">&nbsp;contrast&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      estimate&nbsp;&nbsp; SE df t.ratio p.value<br>
+      &nbsp;s1.vs.s2s3s4s5&nbsp;&nbsp;&nbsp; 209.8 40.7 15&nbsp;&nbsp;
+      5.162&nbsp; 0.0001<br>
+      &nbsp;s2s3.vs.s4s5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 333.4 36.4 15&nbsp;&nbsp;
+      9.170&nbsp; &lt;.0001<br>
+      &nbsp;s2s4.vs.s3s5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 198.7 36.4 15&nbsp;&nbsp;
+      5.464&nbsp; 0.0001<br>
+      &nbsp;s3s4.vs.s2s5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -31.3 36.4 15&nbsp;
+      -0.860&nbsp; 0.4033</p>
+    <p>All of the contrasts are significant except the last one comparing s3 and
+      s4 to s2 and s5.</p>
+    <p>Orthogonal contrasts are great, but orthogonality requirements limit the
+      questions you can address with them. But, if the questions you want to
+      address can be expressed as orthogonal contrasts you will get better
+      statistical power from them than from any post hoc procedure.</p>
+    <p></p>
+  </body>
+</html>
