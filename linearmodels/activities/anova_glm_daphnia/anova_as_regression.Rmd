@@ -1,0 +1,189 @@
+---
+title: "Everythig is regression to the GLM"
+author: "Your name here"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+This exercise will explore how the General Linear Model treats categorical variables. We will use the Daphnia data that we used for the ANOVA review exercise, but this time we will analyze it using the GLM, instead of a conventional analysis of variance.
+
+## Import and graph the data
+
+Import the Daphnia data:
+
+```{r import.data}
+
+
+
+```
+
+Put the levels of cyandensity in order (but NOT as an ordered factor):
+
+```{r order.cyandensity.levels}
+
+
+
+```
+
+Summarize the data with summarySE:
+
+```{r summarize.daphnia}
+
+
+
+```
+
+Plot the means +- one standard error:
+
+```{r plot.means}
+
+
+
+```
+
+## First analysis - just the low and high cyandensity groups
+
+Subset the data so that we can use just the high and low groups first.
+
+```{r subset.two.groups}
+
+
+
+```
+
+Make a dummy coded variable - low will be the baseline because it now comes first, so high is the dummy coded variable:
+
+```{r make.high.dummy.code}
+
+
+
+```
+
+Plot the two group data, using high as the x-axis variable:
+
+```{r scatter.plot.and.line}
+
+
+
+```
+
+#### Question: which cyandensity level is at 0? Which is at 1?
+
+>
+
+Run the analysis as a regression, using high as the predictor variable and resistance as the response:
+
+```{r high.low.as.regression}
+
+
+
+```
+
+Now run the analysis using cyandensity as the predictor - this will use the GLM to analyze the dependency of resistance on cyanobacteria density.
+
+```{r high.low.as.anova}
+
+
+
+```
+
+Get the ANOVA tables for both of the models:
+
+```{r high.low.anova.tables}
+
+
+
+```
+
+#### Question: are the ANOVA tables the same, aside for the labels used for the predictor variable?
+
+>
+
+Next get the model summary for each model:
+
+```{r summary.of.hl.regression}
+
+
+
+```
+
+#### Question: are the model summaries the same for both approaches? Specifically, are the slope and intercept the same, and the multiple R-squared?
+
+>
+
+#### Question: the intercept is the mean for one of the groups, which one?
+
+>
+
+#### Question: what does the slope of 0.11667 represent? Is it the mean of the other group?
+
+>
+
+## Second analysis - all three cyandensity levels
+
+Now repeat the analysis with all three levels. First, dummy code the daphnia data set to have one dummy coded column for med, and a second for high:
+
+```{r dummy.code.three.groups}
+
+
+
+```
+
+Use the dummy codes in a multiple regression:
+
+```{r multiple.dummy.coded.regression}
+
+
+
+```
+
+Now use cyandensity as a categorical predictor:
+
+```{r categorical.predictor.lm}
+
+
+
+```
+
+Get the ANOVA tables:
+
+```{r anova.tables.three.levels}
+
+
+
+```
+
+#### Question: these ANOVA tables are not laid out the same way, but they are the same - how? What do you have to do to the first table to change it into the second table?
+
+>
+
+Get the model summaries for both models:
+
+```{r model.summaries.threelevels}
+
+
+
+```
+
+#### Question: are the model summaries the same for both models (aside from the labeling on the slopes)?
+
+>
+
+#### Question: what does the med coefficient estimate represent?
+
+>
+
+#### Question: the p-value for the med coefficient is 0.00794, which is statistically significant. This means that med is statistically significantly different from one of the other groups - which one?
+
+>
+
+#### Question: same question about high - what is the high group mean different from?
+
+>

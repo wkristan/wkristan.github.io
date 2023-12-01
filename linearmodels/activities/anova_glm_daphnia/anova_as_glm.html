@@ -1,0 +1,511 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Anova as GLM</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script type="text/javascript" src="anova_glm.js"></script>
+    <script type="text/javascript" src="highlight_matches.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>The General Linear Model - everything is regression</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#instructions">Instructions</a></p>
+      <p><a href="#twogrp">Two groups</a></p>
+      <p><a href="#threegrp">Three groups</a></p>
+      <p> <a href="#really_everything">Everything, really?</a> </p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <p class="part" id="intro">In our statistics review we analyzed data on growth rates of <em>Daphnia</em> that
+        were obtained from lakes that had high, medium, or low levels of cyanobacteria. The expectation that resistance
+        to cyanobacteria toxins would be greatest in the lakes with the highest cyanobacteria concentration was
+        supported by the analysis. We used an analysis of variance (ANOVA) on these data, since we were interested in
+        comparing the mean resistance (as indicated by the growth rate of the <em>Daphnia</em> in the lab when fed on
+        cyanobacteria) between these three categorical levels.</p>
+      <p class="part">Today we will use the same data to learn how the General Linear Model (GLM) approaches the
+        analysis. With GLM, categorical predictor variables are converted into one or more numeric <strong>dummy coded</strong>
+        predictors, and the analysis is conducted as a regression analysis. R understands that when we use a categorical
+        predictor we are asking a question about differences between group means, so it presents the GLM results as
+        though it had done a conventional ANOVA. Although this means that it is possible to ignore the fact that the
+        analysis is actually a regression, it will help us make better use of the analytical results if we understand
+        how the analysis works, and what we can (and cannot) say about the output of the analysis.</p>
+      <h2 class="part" id="instructions">Instructions<br>
+      </h2>
+      <p>To begin, start a new project in R Studio for today's activity in a new folder. Download <a href="daphnia.xlsx">this</a>
+        data file (called daphnia.xlsx), and save it to your project folder. The data are the same data from the anova
+        sheet of the review_data.xlsx file you used for the last two weeks, but with just the anova data included.
+        Download <a href="anova_as_regression.Rmd">this</a> R markdown file and save it in your project folder as well,
+        and open it in R Studio.</p>
+      <p>R's general linear model function is lm(). It dummy-codes categorical predictor variables for us, and once you
+        understand how a GLM is working we will let it do that work for us - we will only do the dummy coding manually
+        today as a learning tool. We will then be able to see how the GLM produces the results for an ANOVA, using a
+        regression model.</p>
+      <h3 class="part">Importing and plotting the data</h3>
+      <p>1. Import the data into a data set called "daphnia". Use the import.data code chunk in your <strong>Rmd file</strong>.
+        You do not need the sheet argument in your read_excel() command because there is only one worksheet in the
+        daphnia.xlsx file.</p>
+      <p>2. We've worked with these data and graphed them before, but we'll take this opportunity to learn the
+        difference between <strong>ordered factors</strong> and <strong>unordered factors</strong> that have been put
+        in a desired order. </p>
+      <p>Recall that R calls categorical variables <strong>factors</strong>. Our cyandensity column is a categorical
+        variable, but when it was imported R treated it as <strong>character</strong> data, rather than as a factor,
+        which means that R hasn't identified the levels or put them in order - it just considers the densities to be
+        text labels. </p>
+      <p>When we graph the data we want cyandensity levels to be in order from low, to med, to high, but by default R
+        uses the alphabetical order (high, low, med). We learned last week that we can put the levels in the desired
+        order by converting the variable into a factor, and specifying the order of the factor levels that we want. We
+        did this with the command (in the <strong>console</strong>):</p>
+      <p class="rcmd">ordered(daphnia$cyandensity, levels = c("low","med","high"))</p>
+      <p>When you enter this command in the console you'll see the output:</p>
+      <p class="rout">&nbsp;[1] high high high high high high high high high high med&nbsp; med&nbsp; med&nbsp;
+        med&nbsp; med <br>
+        [16] med&nbsp; med&nbsp; med&nbsp; med&nbsp; med&nbsp; low&nbsp; low&nbsp; low&nbsp; low&nbsp; low&nbsp;
+        low&nbsp; low&nbsp; low&nbsp; low&nbsp; low <br>
+        [31] low&nbsp; low <br>
+        Levels: low &lt; med &lt; high</p>
+      <p>You'll see that the data are displayed in the order they appear in the daphnia data set, but below the data is
+        a report of the Levels that were created, and the &lt; symbols show that they are ordered from low to med to
+        high.</p>
+      <p>Ordered factors are treated differently in an lm() than unordered factors are, and we're not ready to use
+        ordered factors in a GLM yet. So, to get our graphs to show the levels in increasing order without triggering a
+        change in the way lm() handles the variable, we will use the factor() command and specify the order we want to
+        use, like so (in the order.cyandensity.levels chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">daphnia$cyandensity &lt;- factor(daphnia$cyandensity, levels = c("low","med","high"))</p>
+      <p>If you type daphnia$cyandensity in the console you'll see:</p>
+      <p class="rout">&nbsp;[1] high high high high high high high high high high med&nbsp; med&nbsp; med&nbsp;
+        med&nbsp; med <br>
+        [16] med&nbsp; med&nbsp; med&nbsp; med&nbsp; med&nbsp; low&nbsp; low&nbsp; low&nbsp; low&nbsp; low&nbsp;
+        low&nbsp; low&nbsp; low&nbsp; low&nbsp; low <br>
+        [31] low&nbsp; low <br>
+        Levels: low med high</p>
+      <p>The factor command produces an unordered factor, as you can see from the lack of &lt; between the levels. But,
+        even with an unordered factor the order that the levels are listed is the order that will be used in graphs and
+        analyses, so by specifying the levels in the order we want we will be able to get graphs that show the levels in
+        low, med, high order. This will also mean that low will be used as the baseline group in our GLM, because we've
+        identified it as the first level.</p>
+      <p>3. Now we can summarize and plot the data. </p>
+      <p>Get the table of mean resistances by cyandensities using summarySE() from the Rmisc library. Do this in the
+        summarize.daphnia code chunk of your <strong>Rmd file</strong>.</p>
+      <p>Then, use ggplot() from the ggplot2 library to plot the mean resistances for each cyandensity, using standard
+        errors as the error bars. This is essentially the same graph you made in the review activity, if you need to
+        refresh your memory of how to make the graph refer to that exercise. Put the code in the plot.means chunk of
+        your <strong>Rmd file</strong>.</p>
+      <h3 id="twogrp">First analysis: two cyandensities</h3>
+      <p>1. The data has three different cyanobacteria densities, but we will start by analyzing just two of the groups
+        because it's easier to understand the results. We can extract the "low" and "high" groups from the daphnia data
+        set with the command (in the subset.two.groups chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">subset(daphnia, subset = cyandensity != "med") -&gt; daphnia.high.low</p>
+      <p>This command extracted the high and low cyandensity data from daphnia, and put them into daphnia.high.low. The
+        subset() command takes the data set, daphnia, as its first argument, and then uses a subset argument that
+        defines which rows to take from the daphnia data set. The subset argument is asking for all cyandensity values
+        that are <em>not equal</em> (!=) to "med", which leaves us with "low" and "high" - these rows of data are then
+        put into a data object called daphnia.high.low.</p>
+      <p> </p>
+      <p>2. Next we will dummy code the cyandensities. As you will see, when you use lm() with cyandensity as a
+        categorical predictor R dummy-codes the variable for you and conducts a regression analysis with the dummy-coded
+        variable it creates. To see how this is working we will reproduce that analysis by creating our own dummy-coded
+        variable.</p>
+      <p>Remember, dummy-coding means to use a 1 for one of the levels of the categorical variable, and 0 for any other
+        level. So, for example, if we decide our dummy-coded variable will use a 1 for the "high" group, we would use
+        (in the <strong>console</strong>):</p>
+      <p class="rcmd">daphnia.high.low$cyandensity == "high"</p>
+      <p>you will see the output:</p>
+      <p class="rout">&nbsp;[1]&nbsp; TRUE&nbsp; TRUE&nbsp; TRUE&nbsp; TRUE&nbsp; TRUE&nbsp; TRUE&nbsp; TRUE&nbsp;
+        TRUE&nbsp; TRUE&nbsp; TRUE FALSE FALSE FALSE<br>
+        [14] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE</p>
+      <p><strong>**CAREFUL**, it's important to use two equal signs here</strong> - a single equal sign is an
+        assignment, equivalent to &lt;-, which assigns the right side of the expression to the left, so if you only use
+        one equal sign you will accidentally assign "high" to every row of the cyandensity column of daphnia.high.low.
+        Using two equal signs makes this expression a <strong>comparison</strong>, which compares the contents of the
+        cyandensity column to the value of "high", and returns TRUE when the cyandensity is high, and FALSE when it is
+        not. Since the high cyandensities are in the first 10 rows of the file you should see 10 TRUEs followed by 12
+        FALSEs. If you accidentally used just one equal sign don't despair, you can fix the expression and then
+        re-import the data by running your read_excel() command again (R Markdown is your friend).</p>
+      <p>Now, this command is returning TRUE and FALSE, when what we want is 1's and 0's. As far as a computer is
+        concerned, a comparison like this is a <strong>logical</strong> comparison, and the return values of TRUE and
+        FALSE are a <strong>boolean variable</strong>. Even though what we are seeing on the screen are the words
+        "true" and "false", the computer understands boolean variable is either a 0 (which is interpreted as false), or
+        a 1 (which interpreted as true). Given this, we can convert this set of TRUEs and FALSEs to 1's and 0's by
+        converting the boolean variable to a numeric variable - modify your command in the <strong>console</strong> to:
+      </p>
+      <p class="rcmd">as.numeric(daphnia.high.low$cyandensity == "high")</p>
+      <p>You should now see ten 1's followed by twelve 0's, instead of TRUE's and FALSE's. Note that this wouldn't work
+        if we had the words "true" and "false" in our variable instead - for example, the command (in the <strong>console</strong>):</p>
+      <p class="rcmd">as.numeric(c("TRUE", "FALSE"))</p>
+      <p>makes a vector with the words "TRUE" and "FALSE" in it and then tries to convert those words to numbers, which
+        gives us an error. The quotes around the words cause R to treat them as character data rather than as boolean
+        data, so the conversion to numbers doesn't make sense (it makes as much sense to R as asking to convert the
+        words "dog" and "horseshoe" to numbers).</p>
+      <p>Now, to complete this step we want to assign these 1's and 0's to a dummy variable called "high" in the
+        daphnia.high.low data set - add this command to the make.high.dummy.code chunk of your <strong>Rmd file</strong>:</p>
+      <p class="rcmd">as.numeric(daphnia.high.low$cyandensity == "high") -&gt; daphnia.high.low$high</p>
+      <p>Your daphnia.high.low data frame should now have three variables, including this new high variable that has a 1
+        when cyandensity is "high", and 0 when cyandensity is "low".</p>
+      <p>3. We will plot the data in this form next - use the command (in the scatter.plot.and.line chunk of your <strong>Rmd
+          file</strong>):</p>
+      <p class="rcmd">ggplot(daphnia.high.low, aes(x = high, y = resistance)) + geom_point() + geom_smooth(method =
+        "lm", se = F)</p>
+      <p>Take a look at the plot - you have set high to 1, and low to 0 in your dummy-coded column. When you use
+        regression to analyze the differences between the groups, which cyandensity mean will be equal to the intercept
+        term? <a href="javascript:ReverseDisplay('who_is_zero')">Click here to see if you're right.</a> </p>
+      <div style="display: none;" id="who_is_zero">
+        <p style="border-style: solid; padding: 10px;"> The low group is the 0 group, so the intercept will be the mean
+          resistance for low cyandensity. </p>
+      </div>
+      <p> Should the slope coefficient on the high dummy variable be positive or negative? <a href="javascript:ReverseDisplay('high_pos_neg')">Click
+          here to see if you're right.</a></p>
+      <div style="display: none" id="high_pos_neg">
+        <p style="border-style: solid; padding: 10px"> The line is sloped up from 0 to 1, so the slope on high should be
+          positive. </p>
+      </div>
+      <p>4. We can now fit the linear regression, using high as the predictor variable (code chunk
+        high.low.as.regression of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">lm(resistance ~ high, data = daphnia.high.low) -&gt; daphnia.hl.dummy.lm</p>
+      <p>We'll get the ANOVA version now, and then we'll compare output for the regression and ANOVA version - to use
+        lm() on grouped data we just use the categorical variable as the predictor (code chunk high.low.as.anova of your
+        <strong>Rmd file</strong>):</p>
+      <p class="rcmd">lm(resistance ~ cyandensity, data = daphnia.high.low) -&gt; daphnia.hl.categorical.lm</p>
+      <p>5. To get the ANOVA tables for each of these models we just need to use the anova() command on the lm objects
+        we just made. Enter the commands (in the high.low.anova.tables chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">anova(daphnia.hl.dummy.lm)</p>
+      <p class="rcmd">anova(daphnia.hl.categorical.lm) </p>
+      <p>You'll see the ANOVA tables are identical, except that the predictor for the first is the dummy coded high
+        variable, and the second is cyandensity, but every number matches.</p>
+      <p>6. We can get the model summary for each model as well (summary.of.hl.regression chunk of your <strong>Rmd
+          file</strong>):</p>
+      <p class="rcmd">summary(daphnia.hl.dummy.lm)</p>
+      <p class="rcmd">summary(daphnia.hl.categorical.lm)</p>
+      <p>You'll see that once again all the numbers match, and the only difference is that the slope coefficient for the
+        dummy coded model is called "high", and it's labeled "cyandensityhigh" in the categorical predictor model. When
+        lm() dummy codes a variable for you, as it did for the categorical predictor model, it uses the name of the
+        variable and the name of the level combined together - thus, lm() assigned a 1 to the high level, just like we
+        did.</p>
+      <h3 id="threegrp">Second analysis - all three cyandensity levels</h3>
+      <p>Now that you've completed the analysis with two groups, let's see what changes when we use all three. </p>
+      <p>1. First, we need two dummy-coded variables to represent three groups - in general, for k groups you need k-1
+        dummy coded columns to represent them all. We'll use the full daphnia data set for this (dummy code.three.groups
+        chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">daphnia$med &lt;- as.numeric(daphnia$cyandensity == 'med')<br>
+        daphnia$high &lt;- as.numeric(daphnia$cyandensity == 'high')</p>
+      <p>2. Next, we fit both of the models. The formula for the regression model is a little different in that we now
+        have two predictors, but all we need to do is to add the second one, like so (i the
+        multiple.dummy.coded.regression chunk of the <strong>Rmd file</strong>):</p>
+      <p class="rcmd">lm(resistance ~ med + high, data = daphnia) -&gt; daphnia.dummy.lm</p>
+      <p>You'll see the command is nearly the same as before, but instead of using resistance ~ high as the model
+        formula we're using resistance ~ med + high. This makes the analysis a <strong>multiple regression</strong>,
+        but we will more or less ignore that fact for now - we will learn more about multiple regression soon.</p>
+      <p>The categorical predictor command is identical to the one we used for just two groups, but this time we'll use
+        the full daphnia data set instead of daphnia.high.low (in the categorical.predictor.lm chunk of your <strong>Rmd
+          file</strong>):</p>
+      <p class="rcmd">lm(resistance ~ cyandensity, data = daphnia) -&gt; daphnia.categorical.lm</p>
+      <p>3. Get the ANOVA tables (anova.tables.three.levels chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">anova(daphnia.dummy.lm)</p>
+      <p class="rcmd">anova(daphnia.categorical.lm)</p>
+      <p>You'll see that the tables don't look so much alike anymore - they look like this:</p>
+      <p class="rout"> Analysis of Variance Table<br>
+        <br>
+        Response: resistance<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp;&nbsp; Sum Sq&nbsp; Mean Sq F value&nbsp;&nbsp;
+        Pr(&gt;F)&nbsp;&nbsp; <br>
+        med&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 <span class="ss_med">0.014953</span> 0.014953&nbsp; 2.2436
+        0.144977&nbsp;&nbsp; <br>
+        high&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 <span class="ss_high">0.074242</span> 0.074242 11.1396 0.002329 **<br>
+        Residuals 29 0.193277
+        0.006665&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <br>---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</p>
+      <p class="rout"><br>
+        Analysis of Variance Table<br>
+        <br>
+        Response: resistance<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp;&nbsp; Sum Sq&nbsp; Mean Sq F
+        value&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp; <br>
+        cyandensity&nbsp; 2 <span class="ss_model">0.089195</span> 0.044598&nbsp; 6.6916 0.004078 **<br>
+        Residuals&nbsp;&nbsp; 29 0.193277
+        0.006665&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <br>---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</p>
+      <p>The categorical predictor table still looks like an ANOVA table for a categorical variable - the predictor is
+        cyandensity, which has 3 groups and thus 3-1 = 2 degrees of freedom, and has a Sum Sq indicating the amount of
+        variability between the means. But, the dummy coded multiple regression table has two lines, one for each dummy
+        coded predictor (med and high), and each has its own F value and p-value.</p>
+      <p>These are actually the same table, but R knows that when you use a categorical predictor it should re-assemble
+        the results of its dummy-coded multiple regression into the presentation that you expect when you run an ANOVA.
+        We can confirm this by adding together the Sum Sq for med and high (mouse over the numbers to see where in the
+        ANOVA table they come from): <span class="ss_med" onmouseover="highlight(this)" onmouseout="unhighlight(this)">0.014953</span>
+        + <span class="ss_high" onmouseover="highlight(this)" onmouseout="unhighlight(this)">0.074242</span> = <span class="ss_model"
+          id="model_ss" onmouseover="highlight(this)" onmouseout="unhighlight(this)">0.089195</span>, which is the Sum
+        Sq for cyandensity in the categorical ANOVA table. In other words, using lm() with a categorical predictor
+        produces the same analysis we did when we did our own dummy coding, but lm() presents the results in the form of
+        a conventional analysis of variance, rather than as a multiple regression.</p>
+      <p>4. We can get the summaries for both models (model.summaries.threelevels chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd"> summary(daphnia.dummy.lm)<br>
+        summary(daphnia.categorical.lm)</p>
+      <p>The fact that the categorical predictor is dummy coded for analysis the same way we did by hand is apparent
+        from the model summaries - the summaries look exactly the same, except that med and high are the labels for the
+        slope coefficients for the dummy coded analysis, and cyandensitymed and cyandensityhigh are the labels in the
+        categorical version. The coefficients are exactly the same for both models.</p>
+      <p>The coefficients from the dummy coded version are:</p>
+      <p class="rout">Coefficients:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Estimate Std. Error t value
+        Pr(&gt;|t|)&nbsp;&nbsp;&nbsp; <br>
+        (Intercept)&nbsp; 0.68333&nbsp;&nbsp;&nbsp; 0.02357&nbsp; 28.996&nbsp; &lt; 2e-16 ***<br>
+        med&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.09967&nbsp;&nbsp;&nbsp; 0.03496&nbsp;&nbsp;
+        2.851&nbsp; 0.00794 ** <br>
+        high&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.11667&nbsp;&nbsp;&nbsp; 0.03496&nbsp;&nbsp; 3.338&nbsp;
+        0.00233 ** </p>
+      <p>These are used to construct a regression equation, into which we plug in the values for med and high to get the
+        predicted mean for the observation. When there is a single predictor the regression equation is:</p>
+      <p>resistance = 0.11667(high) + 0.68333</p>
+      <p>Adding a second predictor changes the equation to:</p>
+      <p>resistance = 0.11667(high) + 0.09967(med) + 0.68333</p>
+      <p>We can see how these values are used to predict group means with the app below. The mean resistance for each
+        group (taken from our daphnia.summ object) are:</p>
+      <p class="rout">cyandensity &nbsp; resistance<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; low&nbsp;&nbsp;&nbsp; 0.68333<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; med&nbsp;&nbsp;&nbsp; 0.78300<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; high&nbsp;&nbsp;&nbsp; 0.80000</p>
+      <p>Initially the app below is set to a cyanobacteria density of low, which means that both the Med and High
+        predictors are set to 0 - that is, a Low cyandensity row is not Med or High, so it gets a 0 for both of them.
+        With Med and High both set to 0 a Low row gets a predicted value of 0.68333. If you select a cyanobacteria
+        density that is High the value of the variable in the High column is set to 1, and the predicted value is equal
+        to 0.68333 + 0.11667 = 0.80000. If the cyanobacteria density is set to Medium the variable for Med is set to 1,
+        for High is set to 0, and the predicted value becomes 0.68333 + 0.09967 = 0.78300.</p>
+      <table class="tableLarge" id="predicted_values">
+        <tbody>
+          <tr>
+            <th>Cyanobacteria density</th>
+            <th>=</th>
+            <th>Intercept</th>
+            <th>+</th>
+            <th>Med</th>
+            <th>+</th>
+            <th>High</th>
+            <th>=<br>
+            </th>
+            <th>Predicted value</th>
+          </tr>
+          <tr>
+            <td>
+              <select id="cyandensity" onchange="setButtons(this)">
+                <option value="low">Low</option>
+                <option value="med">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </td>
+            <td><br>
+            </td>
+            <td id="int">0.68333</td>
+            <td><br>
+            </td>
+            <td>0.09967 × <input value="0" onclick="changeValue(this);" id="med" type="button"> </td>
+            <td><br>
+            </td>
+            <td>0.11667 × <input value="0" onclick="changeValue(this);" id="high" type="button"> </td>
+            <td><br>
+            </td>
+            <td id="predicted">0.68333</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>You can also click on the variable value to change it from a 0 to a 1, or the reverse, and it will change the
+        cyanobacteria density option accordingly.</p>
+      <p>So, as you can see, even though the GLM is conducted using multiple regression, using dummy-coded predictors
+        allows us to perfectly reproduce the results we would get from a traditional ANOVA - a single, general model can
+        be used for either. Once you understand how this is working, learning new analyses is a simple matter of
+        understanding how the basic GLM is adapted to the new case. For example, a little later in the semester we will
+        learn to analyze mixes of categorical and numeric predictors, which is a simple extension of what you just
+        learned here rather than a whole new type of analysis. Taking the time now to understand the GLM will pay
+        dividends for the rest of the semester. </p>
+      <h2 id="really_everything">Really, everything? Revisiting the t-test review exercise using lm()</h2>
+      <p>Now I'm going to show you that the rest of the analyses we did for the review exercises are all special cases
+        of the GLM as well. Obviously, the regression data set is a GLM, and this exercise showed that the ANOVA was as
+        well, but what about the t-tests?</p>
+      <h4>Two sample t-test as lm()</h4>
+      <p>Let's start with the two sample data set. ANOVA works with two or more groups, so it shouldn't be surprising
+        that a two sample data set can be analyzed just as easily using ANOVA as a t-test, and we now know that ANOVA
+        data can be analyzed with a GLM. The data we used are a comparison of heights of outcrossed and selfed plants,
+        and the t-test results are here:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp; Two Sample t-test<br>
+        <br>
+        data:&nbsp; Height by Pollination<br>
+        t = 2.2124, df = 46, p-value = <span style="background-color: yellow">0.03195</span><br>
+        alternative hypothesis: true difference in means between group cross and group self is not equal to 0<br>
+        95 percent confidence interval:<br>
+        &nbsp;0.2305639 4.8840194<br>
+        sample estimates:<br>
+        mean in group cross&nbsp; mean in group self <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        17.17708&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 14.61979 </p>
+      <p>If we used lm(Height ~ Pollination, data = twosample) to fit the model, followed by anova() to get the ANOVA
+        table the results are:</p>
+      <p class="rout">Analysis of Variance Table<br>
+        <br>
+        Response: Height<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum Sq Mean Sq F value&nbsp;
+        Pr(&gt;F)&nbsp; <br>
+        Pollination&nbsp; 1&nbsp; 78.48&nbsp; 78.477&nbsp; 4.8945 <span style="background-color: yellow">0.03195</span>
+        *<br>
+        Residuals&nbsp;&nbsp; 46 737.54&nbsp;
+        16.034&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        ---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</p>
+      <p>Note that the p-values are identical for the t-test and ANOVA. A summary of the model gives us:</p>
+      <p class="rout"> Call:<br>
+        lm(formula = Height ~ Pollination, data = twosample)<br>
+        <br>
+        Residuals:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1Q&nbsp;&nbsp;
+        Median&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Max <br>
+        -10.1771&nbsp; -2.0690&nbsp;&nbsp; 0.1641&nbsp;&nbsp; 1.9792&nbsp;&nbsp; 8.0729 <br>
+        <br>
+        Coefficients:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Estimate Std. Error t
+        value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp; <br>
+        (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 17.1771&nbsp;&nbsp;&nbsp;&nbsp; 0.8174&nbsp; 21.016&nbsp;&nbsp;
+        &lt;2e-16 ***<br>
+        Pollinationself&nbsp; -2.5573&nbsp;&nbsp;&nbsp;&nbsp; 1.1559&nbsp; -2.212&nbsp;&nbsp; <span style="background-color: yellow">0.0319</span>
+        *&nbsp; <br>
+        ---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1<br>
+        <br>
+        Residual standard error: 4.004 on 46 degrees of freedom<br>
+        Multiple R-squared:&nbsp; 0.09617,&nbsp;&nbsp;&nbsp; Adjusted R-squared:&nbsp; 0.07652 <br>
+        F-statistic: 4.895 on 1 and 46 DF,&nbsp; p-value: 0.03195</p>
+      <p>The coefficients are 17.1771 for the intercept, and -2.5573 for the dummy-coded predictor (outcrossed is the
+        baseline group for the dummy coded predictor, so the intercept is the mean of outcrossed plants and the
+        Pollinationself predictor's coefficient of -2.5573 is the difference between outcrossed and selfed - it too has
+        a p-value of 0.0319, just like the t-test and the ANOVA table).</p>
+      <h4>Paired t-test as lm()</h4>
+      <p>Less obviously, we can reproduce a paired t-test with lm(). The paired data we worked with had the uptake of CO<sub>2</sub>
+        for the same plants grown at 250 ppm and 500 ppm of CO<sub>2</sub> in the growth chamber. The data looked like
+        this:</p>
+      <p class="rout">&nbsp;&nbsp; plant uptake_250 uptake_500 diffs<br>
+        1&nbsp;&nbsp;&nbsp; Mc1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 18.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        19.5&nbsp;&nbsp; 1.4<br>
+        2&nbsp;&nbsp;&nbsp; Mc2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 12.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        12.5&nbsp;&nbsp; 0.2<br>
+        3&nbsp;&nbsp;&nbsp; Mc3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 17.9&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        17.9&nbsp;&nbsp; 0.0<br>
+        4&nbsp;&nbsp;&nbsp; Mn1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 26.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        30.9&nbsp;&nbsp; 4.7<br>
+        5&nbsp;&nbsp;&nbsp; Mn2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 30.6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        32.4&nbsp;&nbsp; 1.8<br>
+        6&nbsp;&nbsp;&nbsp; Mn3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 25.8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        28.5&nbsp;&nbsp; 2.7<br>
+        7&nbsp;&nbsp;&nbsp; Qc1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 30.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        32.5&nbsp;&nbsp; 2.2<br>
+        8&nbsp;&nbsp;&nbsp; Qc2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 35.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        38.6&nbsp;&nbsp; 3.6<br>
+        9&nbsp;&nbsp;&nbsp; Qc3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 38.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        38.9&nbsp;&nbsp; 0.8<br>
+        10&nbsp;&nbsp; Qn1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 34.8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 35.3&nbsp;&nbsp;
+        0.5<br>
+        11&nbsp;&nbsp; Qn2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 37.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 40.6&nbsp;&nbsp;
+        3.5<br>
+        12&nbsp;&nbsp; Qn3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 40.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 42.9&nbsp;&nbsp;
+        2.6</p>
+      <p>We calculated the diffs column by subtracting uptake_250 from uptake_500. Recall that a paired t-test is just a
+        one sample test of these differences against a null mean of 0. The output you got for this test is:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp; Paired t-test<br>
+        <br>
+        data:&nbsp; uptake_250 and uptake_500<br>
+        t = -4.6595, df = 11, p-value = <span style="background-color: lightblue">0.0006943</span><br>
+        alternative hypothesis: true difference in means is not equal to 0<br>
+        95 percent confidence interval:<br>
+        &nbsp;-2.944739 -1.055261<br>
+        sample estimates:<br>
+        mean of the differences <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -2 </p>
+      <p>To reproduce this test with a general linear model, we will use diffs as the response variable, but will use no
+        predictor variable. Instead, we will use a 1 as the predictor to indicate to R that we only want an intercept to
+        be estimated - this is the <strong>intercept only model</strong>. Since the intercept is the mean of the
+        responses, the coefficient test of the intercept against zero is a one sample t-test. The model looks like this:</p>
+      <p class="rcmd">lm(diffs ~ 1, data = paired)</p>
+      <p>The summary() output for this model is here:</p>
+      <p class="rout">Call:<br>
+        lm(formula = diffs ~ 1, data = paired)<br>
+        <br>
+        Residuals:<br>
+        &nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp; 1Q Median&nbsp;&nbsp;&nbsp;&nbsp; 3Q&nbsp;&nbsp;&nbsp; Max <br>
+        -2.000 -1.275&nbsp; 0.000&nbsp; 0.900&nbsp; 2.700 <br>
+        <br>
+        Coefficients:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Estimate Std. Error t value
+        Pr(&gt;|t|)&nbsp;&nbsp;&nbsp; <br>
+        (Intercept)&nbsp;&nbsp; 2.0000&nbsp;&nbsp;&nbsp;&nbsp; 0.4292&nbsp;&nbsp; 4.659 <span style="background-color: lightblue">0.000694</span>
+        ***<br>
+        ---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1<br>
+        <br>
+        Residual standard error: 1.487 on 11 degrees of freedom</p>
+      <p>The p-value on the test of the intercept matches the p-value for the paired t-test (both highlighted in blue).</p>
+      <h4>One sample t-test</h4>
+      <p>What about the one sample comparison of body temperature against a hypothetical value of 98.6? The one sample
+        t-test gave us:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp; One Sample t-test<br>
+        <br>
+        data:&nbsp; onesample$Body.temperature<br>
+        t = -2.8817, df = 24, p-value = <span style="background-color: pink">0.008205</span><br>
+        alternative hypothesis: true mean is not equal to 98.6<br>
+        95 percent confidence interval:<br>
+        &nbsp;98.18125 98.53075<br>
+        sample estimates:<br>
+        mean of x <br>
+        &nbsp;&nbsp; 98.356 </p>
+      <p>We can't specify a null other than 0 for the intercept test in our lm(), but we can instead subtract the null
+        value from each of the body temperature measurements, which has the same effect. Why does this work? If the null
+        hypothesis for a one sample t-test is:</p>
+      <p>H<sub>o</sub>: μ = 98.6</p>
+      <p>it is also correct to express it as:</p>
+      <p>H<sub>o</sub>: μ - 98.6 = 0</p>
+      <p>We use the sample mean, x̄, as our estimate of μ, so we just need to subtract 98.6 from the sample mean in our
+        lm(), and then use the coefficient test of the intercept as a one sample test of this difference against 0.
+        Subtracting 98.6 from every body temperature data point is mathematically the same as subtracting 98.6 from the
+        mean of the body temperatures - that is:</p>
+      <img src="subtracting_mean_temp.png" alt="Subtracting mean temperature">
+      <p>and gives us a comparison of the difference between the sample mean and 98.6 against 0. If we use the model:</p>
+      <p class="rcmd">lm(Body.temperature - 98.6 ~ 1, data = onesample)</p>
+      <p>the intercept is will now be the mean of the body temperatures minus 98.6, and this is tested against 0 in the
+        summary output:</p>
+      <p class="rout">Call:<br>
+        lm(formula = Body.temperature - 98.6 ~ 1, data = onesample)<br>
+        <br>
+        Residuals:<br>
+        &nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp; 1Q Median&nbsp;&nbsp;&nbsp;&nbsp; 3Q&nbsp;&nbsp;&nbsp; Max <br>
+        -1.056 -0.156&nbsp; 0.044&nbsp; 0.344&nbsp; 0.544 <br>
+        <br>
+        Coefficients:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Estimate Std. Error t value
+        Pr(&gt;|t|)&nbsp;&nbsp; <br>
+        (Intercept) -0.24400&nbsp;&nbsp;&nbsp; 0.08467&nbsp; -2.882&nbsp; <span style="background-color: pink">0.00821</span>
+        **<br>
+        ---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1<br>
+        <br>
+        Residual standard error: 0.4234 on 24 degrees of freedom</p>
+      <p>Again, the p-value for this lm() is the same as the p-value for the one sample t-test (both highlighted in
+        pink).</p>
+      <p>What's the points, exactly? Once you learn to use general linear models, nearly every analysis you have learned
+        so far, and much of what you will encounter in your professional careers, can be done using it.</p>
+      <div style="display: none;" id="resid">
+        <p style="border-style: solid; padding: 10px;"> Remember that all we are doing by dummy coding is representing
+          our six species with five numeric variables. The analysis is still about comparing the amount of variation we
+          can explain (in terms of differences in average between species) to the amount of variation we can't explain
+          (in terms of individual variation around the averages). So, if all we're doing is expressing group means using
+          regression coefficients, then we should explain exactly the same amount of variation when we use regression,
+          and we should thus leave exactly the same amount unexplained. The residual term should be the same for both. </p>
+      </div>
+      <h2 class="part" id="assignment">Knit, quit, and save</h2>
+      <p>Answer all the questions in the R markdown file, knit it, and upload the Word document to complete the
+        assignment.</p>
+    </div>
+  </body>
+</html>
