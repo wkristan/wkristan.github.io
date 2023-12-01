@@ -1,0 +1,67 @@
+---
+title: "Repeated measures analysis"
+author: "Bill Kristan"
+date: "1/31/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Import the leech data.
+
+```{r import.leech.data}
+
+library(readxl)
+read_excel("leech.xlsx") -> leech
+read_excel("leech.xlsx", sheet="leech_stacked") -> leech.stacked
+
+```
+
+Get means by day:
+
+```{r summaryse}
+
+library(Rmisc)
+summarySE(leech.stacked, "weight",c("day","food")) -> leech.summ
+
+```
+
+Plot the data:
+
+```{r plot.weight.over.time}
+
+library(ggplot2)
+ggplot(leech.summ, aes(x = day, y = weight, color = food)) + geom_point() + geom_errorbar(aes(ymin = weight - se, ymax = weight + se), width = 0.1)
+
+```
+
+Load the lme4 library:
+
+```{r lme4}
+
+library(lme4)
+
+```
+
+Fit the model:
+
+```{r lmer.rma}
+
+lmer(weight ~ food * day + (1 | Leech.id), data = leech) -> leech.lmer
+library(car)
+Anova(leech.lmer, test = "F")
+
+```
+
+Compare with aov() with an error stratum:
+
+```{r aov.rma}
+
+aov(weight ~ food*day + Error(Leech.id), data = leech) -> leech.aov
+
+summary(leech.aov)
+
+```
+

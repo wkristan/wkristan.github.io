@@ -1,0 +1,918 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Repeated measures in R</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Repeated measures and random effects</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#import">Import data, graph</a></p>
+      <p><a href="#rma">Repeated measures analysis</a></p>
+      <p><a href="#rma_posthocs">Post-hocs for RMA</a></p>
+      <p><a href="#rma_components">Variance components</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="intro"> Repeated measures ANOVA</h2>
+      <img src="leech.jpg" alt="Leech" style="float: left; margin-right: 10px">
+      <p class="part">Medicinal leeches are aquatic annelids that feed on
+        warm-blooded prey. They feed by attaching with their front suckers,
+        abrading the skin with a rasp-like jaw in the middle of the sucker, and
+        drinking the blood as it seeps out. Leeches are capable of consuming a
+        huge amount of blood in a single feeding, several times their own body
+        weights - you can see the difference in size between a hungry leech and
+        a fed leech in the picture to the left. </p>
+      <p class="part">After a feeding leeches rapidly expel the liquid portion
+        of the blood, and then more slowly digest the solid components over
+        time. As ectothermic animals, their metabolic rates are quite low, and a
+        single blood meal can last them for months. </p>
+      <p>Leeches can also be fooled into eating arginine solution, but arginine
+        has little nutritive value for leeches. We will see whether leeches fed
+        on arginine show a different pattern of weight change over time compared
+        to leeches fed on blood. </p>
+      <p>Multiple measurements from the same leech are probably not independent
+        - a big leech is going to have consistently big masses compared with a
+        small leech. We could handle this level of dependency by using the
+        individual leech as a random effect.</p>
+      <p>However, we expect these animals to lose weight over the course of the
+        experiment, which would probably introduce some serial dependency - that
+        is, we expect that measurements of the same leech between successive
+        days will be correlated, because the the weight of a leech on a given
+        day will be affected by their weight on the day before. We can account
+        for this serial dependency using repeated measures ANOVA (RMA). </p>
+      <p> Repeated measures analysis treats time as an ordinal categorical
+        variable, so our analysis will be very much like a 2-way factorial
+        ANOVA. Thus, we can ask questions about: </p>
+      <ol>
+        <li> Whether there are differences in masses between arginine and
+          blood-fed leeches - this is the between-subjects main effect.</li>
+        <li> Whether masses changed over time - this is the within-subjects main
+          effect.</li>
+        <li> Whether the pattern of change over time differed between arginine
+          and blood-fed leeches - this is the interaction of between- and
+          within-subjects effects.</li>
+      </ol>
+      <p>There are two different approaches to testing these hypotheses in a
+        repeated measures analysis - the univariate approach, and the
+        multivariate approach. If your data meet the assumptions of univariate
+        RMA it is more statistically powerful than the multivariate approach,
+        and is the better one to use. However, to use the univariate approach we
+        need to assume sphericity, which means that the variance has to be the
+        same between successive time points. If we violate sphericity, but not
+        too badly, we can still use the univariate approach, but with an
+        adjustment to the p-values. However, if we violate sphericity badly we
+        would need to use the multivariate approach, which does not assume
+        sphericity at all. </p>
+      <h3 class="part" id="import">Importing the data and graphing the means</h3>
+      <p> 1. <strong>Start a new project (in a folder called "repeated"), start
+          a new R script, and import today's data</strong>. Download <a href="repeated_and_random_effects.xlsx">this
+          file</a> and import the two leech worksheets - the first one (leech)
+        has the data in the arrangement we need for running a repeated measures
+        ANOVA, but the other (leeches_stacked) is better for graphing. Call the
+        first data set leech, and the second leech.stacked.</p>
+      <p>The weights are expressed as multiples of the initial weight of each
+        animal, obtained by dividing each weight by the original weight measured
+        before feeding for the animal. A value of 7 indicates that the leech is
+        7 times as heavy as it was before feeding, and a value of 1 indicates
+        that the animal is the same weight as it was before feeding.</p>
+      <p>2. <strong>Make a plot of means</strong>. Make a plot of mean weights,
+        with "food" and "day" as the factors, and "weight" as the response.
+        First, load ggplot2:</p>
+      <p class="rcmd">library(ggplot2)</p>
+      <p>Make the summarized data set you need for plotting - load the Rmisc
+        library, and then use summarySE() to get the values you need:</p>
+      <p class="rcmd">leech.summ &lt;- summarySE(leech.stacked, measurevar =
+        "weight", groups = c("day","food"))</p>
+      <p>Next, set the global settings with:</p>
+      <p class="rcmd">leech.gg &lt;- ggplot(leech.summ, aes(x = day, y = mean,
+        color = food, group = food, ymin = mean - se, ymax = mean + se))</p>
+      <p>Then add points, error bars, and lines to the plot:</p>
+      <p class="rcmd">leech.gg + geom_point() + geom_line() +
+        geom_errorbar(width = 0.1) + labs(y = "Weight")</p>
+      <p>The final labs() statement changes the y-axis label from "mean" to
+        "Weight".</p>
+      <p>As expected, the leeches increase their body weight by a factor of 7-10
+        when they feed, but you should also see that the blood-fed leeches only
+        lose weight rapidly on the first day or two as they expel liquid from
+        the blood, and then lose weight much more slowly after that as they
+        slowly digest the solid components. The arginine-fed leeches appear to
+        gain less weight during feeding, and lose weight rapidly for several
+        days in a row. Since the patterns of change over time are quite
+        different you should expect a food x day interaction.</p>
+      <h2 class="part" id="rma">Repeated measures analysis in R</h2>
+      <p>There are actually four different ways to run a univariate repeated
+        measures analysis in R (that I know of, there may be more). They are:</p>
+      <ul>
+        <li>
+          <p>Using aov() with an Error() statement.</p>
+        </li>
+        <li>
+          <p>Using Anova() from the car package.</p>
+        </li>
+        <li>
+          <p>Using ezANOVA() from the ez package.</p>
+        </li>
+        <li>Using linear mixed effects models, from either the lme or lme4
+          packages.</li>
+      </ul>
+      <p>We will use the Anova() function from the car package, because it is
+        flexible and comprehensive. Anova() gives us a test of sphericity, and
+        provides univariate analysis with and without corrections for violation
+        of sphericity, as well as multivariate tests. With the output from
+        Anova() we will have the output we need, whether we meet the sphericity
+        assumption or not.</p>
+      <p>The three packages that we aren't going to learn about today are also
+        interesting. We could use aov(), which is part of base R and doesn't
+        require any libraries to be installed, but it doesn't provide the test
+        of sphericity we need. The ez package is designed as a set of "wrappers"
+        that use existing R commands to do the actual work, but that try to
+        simplify the input required of the user. The linear mixed effects
+        packages (lme and lme4) are the preferred platforms for fitting complex
+        mixed-effects models in R, including repeated measures analysis. If
+        you're trying to develop your R skills to their fullest, you may want to
+        try out these different packages - there are lots of tutorials available
+        with a little Googling.</p>
+      <p>There are several steps we need to take to use the Anova() function for
+        repeated measures analysis.</p>
+      <p>1. <strong>Prepare the data for analysis</strong>. To use Anova() we
+        need to provide it with several things: </p>
+      <ul>
+        <li>
+          <p>An object that defines the within-subjects design - it's possible
+            to have treatment levels that we need to account for in the
+            within-subjects part of the design. We could, for example, have kept
+            the leeches in cold water for the first four days, and then
+            increased the temperature for the last three, in which case
+            temperature would be an additional within-subjects factor. In this
+            case, since we have only one within-subjects variable (day) we have
+            a very simple within-subjects design - all we need to do is to make
+            a vector that lists the time points, with no additional grouping
+            information. We will call this object "time.factor".</p>
+        </li>
+        <li>
+          <p>A data frame that gives names for the different repeated time
+            points (which we will call "time.frame").</p>
+        </li>
+        <li>
+          <p>A fitted lm() model that includes the between-subjects effect for
+            each of the time points (which we will call "time.model"). This is
+            actually a multivariate linear model, with all of the time points
+            treated as a response, but Anova() will use the analysis to
+            construct a univariate RMA from it.</p>
+        </li>
+      </ul>
+      <p> To set up the object that defines the different levels of the repeated
+        factor, use:<br>
+        <br>
+        <span class="rcmd"> time.factor &lt;- ordered(seq(1,7))</span><br>
+        <br>
+        This command generates a sequence of numbers from 1 to 7 and then makes
+        an ordinal factor out of them. We have seven days of measurements, and
+        Anova() will use this object to label them. You won't see any output to
+        the screen because the factor was assigned to time.factor, but if you
+        type the name of the object its contents will be displayed:</p>
+      <p><span class="rout">[1] 1 2 3 4 5 6 7<br>
+          Levels: 1 &lt; 2 &lt; 3 &lt; 4 &lt; 5 &lt; 6 &lt; 7</span></p>
+      <p>Next we need a data frame with the names of the time points, which we
+        can get by converting time.factor into a data frame:<br>
+        <br>
+        <span class="rcmd"> time.frame &lt;- data.frame(time.factor)</span></p>
+      <p>Time.frame has only the time.factor in it, but it is now a column in a
+        data frame. The time.frame object is defining the within-subjects
+        design, and since we only have a single within-subjects factor (time),
+        we just need one column with the time points identified.<br>
+        <br>
+        Next, we need to extract the columns from leech that have the mass
+        measurements in them. Use the commands:<br>
+        <br>
+        <span class="rcmd">time.bind &lt;- as.matrix(leech[,3:9])&nbsp;&nbsp;</span>&nbsp;
+        </p>
+      <p>This command extracts the masses in columns 3 through 9 and assigns
+        them to a matrix called time.bind. </p>
+      <p>Finally, we use the lm() command to set up a fitted model - this is not
+        yet a repeated measures analysis, but the Anova() command will use it to
+        produce a repeated measures analysis in the next step. To fit the model,
+        use the command:<br>
+        <br>
+        <span class="rcmd">time.model &lt;- lm(time.bind ~ leech$food)<br>
+        </span><br>
+        The time.model object is actually a multivariate linear model for the
+        between-subjects factor (food), that also includes all of the basic
+        quantities Anova() needs to do univariate repeated measures ANOVA.</p>
+      <p>3. <strong>Run the analysis</strong>. First, make sure the "car"
+        library is loaded - it has the Anova() function we need:</p>
+      <p><span class="rcmd">library(car)</span></p>
+      <p>Generate the analysis with the commands:</p>
+      <p><span class="rcmd">leech.rma &lt;- Anova(time.model, idata =
+          time.frame, idesign = ~time.factor)</span></p>
+      <p><span class="rcmd">summary(leech.rma)</span></p>
+      <p>The first command, Anova(), produces the analysis and places the output
+        into object leech.rma, and the second, summary(), dumps the output to
+        the screen so you can see it.</p>
+      <p>4. <strong>Interpret the tests of main effects and interactions</strong>.
+        The Anova() command produces a lot of output, because both multivariate
+        and univariate tests are produced, as well as the sphericity tests we
+        need in order to decide which output to interpret. To find the
+        univariate tests, scroll down until you find "Univariate Type II
+        Repeated-Measures ANOVA Assuming Sphericity". It looks like this:</p>
+      <p><span class="rout">Univariate Type II Repeated-Measures ANOVA Assuming
+          Sphericity <br>
+          &nbsp;<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          SS num Df Error SS den Df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          F&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp;&nbsp; <br>
+          (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          5435.6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;
+          160.520&nbsp;&nbsp;&nbsp;&nbsp; 18 609.517 2.470e-15 *** <br>
+          <span style="color: red">leech$food&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            545.5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;
+            160.520&nbsp;&nbsp;&nbsp;&nbsp; 18&nbsp; 61.165 3.379e-07 *** </span><br>
+          time.factor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          407.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6&nbsp;&nbsp;
+          35.649&nbsp;&nbsp;&nbsp; 108 205.557 &lt; 2.2e-16 *** <br>
+          leech$food:time.factor&nbsp;&nbsp; 72.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          6&nbsp;&nbsp; 35.649&nbsp;&nbsp;&nbsp; 108&nbsp; 36.445 &lt; 2.2e-16
+          ***<br>
+        </span></p>
+      <p><em><strong>Main effect of food type</strong></em>: I've put the test
+        of the main effect of food in red type - you can see that it is
+        significant. The organization of this table is different from what
+        you're used to - instead of having sub-tables with different error terms
+        Anova() puts both the numerator and denominator for each test into a
+        single row of the table. For the test of food type this means that:</p>
+      <ul>
+        <li>The test of the main effect of food type is labeled leech$food.</li>
+        <li>The "SS" column is the sums of squares for food type, and "num DF"
+          is the degrees of freedom for this between-subjects factor (with 2
+          food types we have 1 df).</li>
+        <li>The denominator for the test of differences in food types is
+          variation in average masses for each leech. The "Error SS" and "den
+          DF" refer to variation between leech averages, and number of leeches
+          minus 2, respectively.</li>
+        <li>The "F" column is the ratio of (SS/num Df)/(Error SS/den Df) for the
+          row.</li>
+      </ul>
+      <p>Since the main effect of food is tested using the averages for each
+        leech, and doesn't use the repeated measures themselves, the sphericity
+        assumption doesn't pertain to the test of this between-subjects effect.</p>
+      <p>However, before we can interpret the main effect of food we need to
+        look at the food x time interaction to make sure any general statements
+        we make about effects of food are true at every time point. The table
+        that Anova() produces doesn't split the test of the main effect of food
+        from the test of the main effect of time or the time x food interaction,
+        but if you look at the den DF column you'll see that the denominator
+        degrees of freedom for both time.factor and the leech$food by
+        time.factor interaction lines is 108, whereas it was 18 for the main
+        effect of food. The time and food x time effects use an error term that
+        is based on the repeated measurements, and thus we have to worry about
+        the sphericity assumption for those two effects - even though they are
+        all plopped together in the same table, we can't interpret the main
+        effect of time or the food x time interaction until we have dealt with
+        the sphericity assumption.</p>
+      <ul>
+      </ul>
+      <p><em><strong>Main effect of time, and the food by time interaction - the
+            procedure:</strong></em> </p>
+      <p> How we test for the main effects of time and the food by time
+        interaction depends on whether we meet the sphericity assumption of
+        univariate repeated measures ANOVA. If we fail the Mauchly sphericity
+        test, our next step also depends on how badly we are violating the
+        assumption. To summarize, the procedure is: </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th>Mauchly test results</th>
+            <th>Epsilon</th>
+            <th>Results to use</th>
+          </tr>
+          <tr>
+            <td>Passed - sphericity assumed</td>
+            <td>Any</td>
+            <td>Univariate Type II tests</td>
+          </tr>
+          <tr>
+            <td style="height: 22px;">Failed - sphericity not assumed</td>
+            <td>Greater than 0.7</td>
+            <td>HF or GG-adjusted p-values</td>
+          </tr>
+          <tr>
+            <td><br>
+            </td>
+            <td>Less than 0.7</td>
+            <td>Multivariate tests</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>What does the Mauchly test tell us? Below the ANOVA table is Mauchly's
+        test of sphericity - it looks like this: </p>
+      <p class="rout">Mauchly Tests for Sphericity <br>
+        &nbsp;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Test statistic&nbsp;&nbsp;&nbsp; p-value <br>
+        time.factor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.00015747 3.1978e-19 <br>
+        leech$food:time.factor&nbsp;&nbsp;&nbsp;&nbsp; 0.00015747 3.1978e-19</p>
+      <p>Like all of our other assumption tests, the null hypothesis for Mauchly
+        is that we meet the assumption. With a p-value less than 0.05 we fail
+        the test.</p>
+      <p>The next block of output gives the epsilon estimates using two
+        different estimation methods, the Greenhouse-Geisser method and the
+        Huynh-Feldt method.</p>
+      <p class="rout">Greenhouse-Geisser and Huynh-Feldt Corrections <br>
+        &nbsp;for Departure from Sphericity <br>
+        &nbsp;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        GG eps Pr(&gt;F[GG])&nbsp;&nbsp;&nbsp; &nbsp;<br>
+        time.factor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.37125&nbsp; &lt; 2.2e-16 *** <br>
+        leech$food:time.factor 0.37125&nbsp; 3.299e-10 *** <br>
+        --- <br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1 <br>
+        &nbsp;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        HF eps&nbsp;&nbsp; Pr(&gt;F[HF]) <br>
+        time.factor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.4260826 1.753500e-25 <br>
+        leech$food:time.factor 0.4260826 2.097151e-11</p>
+      <p>The two different epsilon estimates are different from one another, but
+        both are below 0.7. If epsilon was 0.7 or bigger we would use one of the
+        two adjusted p-values presented as our test of time and time x food
+        interaction, instead of using p-values from they Type II ANOVA table
+        above. The corrected p-values will generally be bigger than those in the
+        Type II table - adjusting for a lack of sphericity reduces our power
+        somewhat.</p>
+      <p>If you were able to use these corrected p-values, which should you use?
+        The general advice is to use GG, particularly if epsilon is 0.75 or
+        less. They tend to be very similar to one another when epsilon is bigger
+        than 0.75, so the decision is not a very important one - using GG
+        routinely is fine.</p>
+      <p>In our case we violated sphericity with an epsilon value that is too
+        small (&lt; 0.7) to use the GG or HF corrected p-values, so we should
+        use the <strong>multivariate</strong> tests instead - the multivariate
+        approach to testing repeated measures doesn't assume sphericity at all,
+        so we can use it no matter how small the epsilon value is.</p>
+      <p> If you search through the mass of output, you'll find a table for each
+        term in the model that looks like this (they aren't all together, but
+        I've gathered them together to make it easier for you to see them):</p>
+      <p class="rout">Multivariate Tests: (Intercept) <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Df test stat approx F num Df den Df&nbsp;&nbsp;&nbsp;&nbsp;
+        Pr(&gt;F)&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Pillai&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp; 0.97132 609.5174&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp;&nbsp; 18 2.4705e-15 *** <br>
+        Wilks&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp; 0.02868 609.5174&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp;&nbsp; 18 2.4705e-15 *** <br>
+        Hotelling-Lawley&nbsp; 1&nbsp; 33.86208
+        609.5174&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 18
+        2.4705e-15 *** <br>
+        Roy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp; 33.86208 609.5174&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp;&nbsp; 18 2.4705e-15 ***<br>
+        <br>
+        Multivariate Tests: leech$food <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Df test stat approx F num Df den Df&nbsp;&nbsp;&nbsp;&nbsp;
+        Pr(&gt;F)&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Pillai&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp; 0.772626 61.16487&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp;&nbsp; 18 3.3788e-07 *** <br>
+        <span style="color: red">Wilks&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          1&nbsp; 0.227374 61.16487&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          1&nbsp;&nbsp;&nbsp;&nbsp; 18 3.3788e-07 ***</span> <br>
+        Hotelling-Lawley&nbsp; 1&nbsp; 3.398048
+        61.16487&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 18
+        3.3788e-07 *** <br>
+        Roy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp; 3.398048 61.16487&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp;&nbsp; 18 3.3788e-07 ***<br>
+        <br>
+        Multivariate Tests: time.factor <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Df test stat approx F num Df den Df&nbsp;&nbsp;&nbsp;&nbsp;
+        Pr(&gt;F)&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Pillai&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp; 0.99258 289.8905&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        6&nbsp;&nbsp;&nbsp;&nbsp; 13 4.5181e-13 *** <br>
+        Wilks&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp; 0.00742 289.8905&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        6&nbsp;&nbsp;&nbsp;&nbsp; 13 4.5181e-13 *** <br>
+        Hotelling-Lawley&nbsp; 1 133.79560
+        289.8905&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6&nbsp;&nbsp;&nbsp;&nbsp; 13
+        4.5181e-13 *** <br>
+        Roy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1 133.79560 289.8905&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        6&nbsp;&nbsp;&nbsp;&nbsp; 13 4.5181e-13 ***</p>
+    </div>
+    <p class="rout">Multivariate Tests: leech$food:time.factor <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Df test stat approx F num Df den Df&nbsp;&nbsp;&nbsp;&nbsp;
+      Pr(&gt;F)&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      Pillai&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      1&nbsp; 0.965179 60.05718&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      6&nbsp;&nbsp;&nbsp;&nbsp; 13 9.9717e-09 *** <br>
+      Wilks&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      1&nbsp; 0.034821 60.05718&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      6&nbsp;&nbsp;&nbsp;&nbsp; 13 9.9717e-09 *** <br>
+      Hotelling-Lawley&nbsp; 1 27.718697 60.05718&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      6&nbsp;&nbsp;&nbsp;&nbsp; 13 9.9717e-09 *** <br>
+      Roy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      1 27.718697 60.05718&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      6&nbsp;&nbsp;&nbsp;&nbsp; 13 9.9717e-09 ***<br>
+      <br>
+    </p>
+    <p>The term that is being tested is identified after the "Multivariate
+      Tests:" label - there is a test of the intercept, of the main effect of
+      food, of the main effect of time, and of the time x food interaction. For
+      each of the terms being tested there are rows labeled Pillai, Wilks,
+      Hotelling-Lawley, and Roy - each of these is a different multivariate test
+      statistic. For each one it's possible to calculate an approximate F test
+      statistic, which is used to calculate the p-value for the test - all of
+      the approximate F values are the same across all four multivariate test
+      statistics, so you would only need to present one multivariate test for
+      each term. Wilks is most commonly reported, so report that row for each
+      test when you fill in your worksheet.</p>
+    <p>I told you earlier that you don't need to worry about the sphericity
+      assumption with respect to the main effect of the between-subjects factor,
+      food, yet you get a multivariate test for this term. If you look at the
+      red text in the multivariate test of the food main effect you'll see that
+      the results are identical to the univariate tests - same numerator and
+      denominator degrees of freedom, approximate F-value equal to the
+      univariate test's F-value, same p-value. If you need to use multivariate
+      tests for the effect of time and food x time it's a good idea to use the
+      multivariate results for food as well just to avoid unneeded complexity in
+      explaining your methods, but the results are the same whichever one you
+      pick.</p>
+    <h2 class="part" id="rma_posthocs">Post-hoc analysis of an RMA</h2>
+    <p>Post-hoc comparisons in a repeated measures ANOVA can take several
+      different forms, depending on what we want to know about the results. </p>
+    <h3>With no interaction of between and within-subjects factors</h3>
+    <p>The simplest possibility would be a case in which there are main effects
+      of the between-subjects factor (food) and/or the withing-subjects factor
+      (time) but <em><strong>no interaction</strong></em>. In that case we can
+      do the following: </p>
+    <ul>
+      <li>
+        <p>Between-subjects main effect - Tukey comparisons among treatment
+          groups (if needed - with only two groups we only need to know that the
+          main effect was significant).</p>
+      </li>
+      <li>
+        <p>Within-subjects main effect - post-hoc comparisons among time points
+          of interest. Since the data are repeated measurements over time,
+          paired comparisons should be used. With 7 time points there are 21
+          pairs of means if we compare all time points to one another. To reduce
+          the number of comparisons to do we may choose to only compare:</p>
+        <ul>
+          <li>
+            <p>Successive time points - we may only want to compare one day
+              against the next - day 1 to day 2, day 2 to day 3, etc.</p>
+          </li>
+          <li>
+            <p>Against initial conditions, or final conditions - we may want to
+              find which days are different from starting conditions (comparison
+              of each day to the first), or how long it takes to return to
+              baseline (comparison of each day to the final day).</p>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <h3>With an interaction of between and within-subjects factors</h3>
+    <p>We have an interaction between food and day, which tells us that the
+      pattern of change over time depends on the treatment (or, equivalently,
+      that the amount of difference between the treatments depends on the day).
+      We still would like to avoid comparing all possible pairs of means,
+      because with 7 time points and 2 foods we have 14 groups, which gives us
+      91 means to compare. Many of these comparisons are probably not very
+      interesting to us, though - the comparison of the first day in the blood
+      group to the last day in the arginine group is probably not all that
+      experimentally important. A more restricted, targeted set of comparisons
+      may be all that we need.</p>
+    <p>The choice of which comparisons to make depends largely on your research
+      question, but there are a couple of common approaches.</p>
+    <p> <strong>Comparisons of between-subjects groups at each time point:</strong>
+      If finding the time points at which the treatments differ is important we
+      can compare the food treatments at each day. Since no comparisons are made
+      between different days we will only have 7 comparisons to do. </p>
+    <p>R actually makes this pretty easy - we can use aov() to conduct an ANOVA
+      for all 7 of the daily mass measurements with a single command. Comparison
+      of foods within a time point is a comparison between two independent
+      groups, so paired comparisons aren't needed, and with only two food levels
+      we can use the p-value on an ANOVA to tell if the treatments are different
+      (no Tukey tests required unless there are 3 or more levels to compare).
+      Use the command:</p>
+    <p><span class="rcmd"> summary(aov(time.bind~food, data=leech))</span></p>
+    <p> The time.bind object has the masses for each day, using it as the
+      response variable tells R to run the analysis once for each of the columns
+      in time.bind. This command will thus give you a separate ANOVA table for
+      each day of masses in time.bind. Bear in mind that with 7 tests you should
+      not consider anything greater than 0.05/7 = 0.0071 to be significant.</p>
+    <p><strong>Comparison between time points within each group:</strong>
+      Instead of comparing between the treatment groups, we might want to know
+      which time points are different within each of the two food types.</p>
+    <p>Still, we have a choice to make... </p>
+    <ul>
+      <li>We may only be interested in comparing sequential differences (that
+        is, differences between d1 to d2, d2 to d3, d3 to d4, etc.) for
+        blood-fed animals, and the same sequence for arginine-fed animals. </li>
+      <li>We may be interested in the time points that are different than
+        starting conditions, in which case we should compare days 2 through 7 to
+        day 1.</li>
+    </ul>
+    <p>Regardless of which we choose, we will to use paired t-tests for these
+      comparisons instead of ANOVA's or two-sample t-tests because we're
+      comparing two sets of measurements on the same individuals on different
+      days.</p>
+    <p>We will use a process that will give us the p-values, degrees of freedom,
+      and test statistics that what we want, but it will take a couple of steps.</p>
+    <p>1. <strong>Calculate the differences between sequential time points</strong>.
+      The data are in an object called leech, with the leech at each day in
+      columns 3 through 9. We can calculate differences between successive time
+      points with:</p>
+    <p><span class="rcmd">leech[,3:8] - leech[,4:9] -&gt; time.diffs</span></p>
+    <p>Since the column references are all different by 1, this command will
+      subtract column 4 from 3, column 5 from 4, and so on, and put the
+      differences in time.diffs. We can make these differences a data frame,
+      with the command: </p>
+    <p> <span class="rcmd">data.frame(time.diffs) -&gt; time.diffs</span></p>
+    <p>If you look at time.diffs (by typing time.diffs at the command prompt)
+      you'll see that the labels are carried over from the first set of columns
+      - they are the labels for the first through the 6th day, rather than
+      labels that indicate which two days are being compared. We can fix this by
+      using both of the days being compared in the column labels:</p>
+    <p><span class="rcmd">colnames(time.diffs) &lt;-
+        paste(colnames(leech[,3:8]), colnames(leech[,4:9]), sep = ".")</span></p>
+    <p>The paste() command combines arguments together, using the separator
+      identified with "sep" statement. We are using the column names for columns
+      3 to 8, and combining them in pairs with the column names in 4 to 9, using
+      a period as the separator. This will help us keep track of what is being
+      compared as we assemble our results.</p>
+    <p>2. <strong>Split the data by food type</strong>. We want to split the
+      data in two by food group, which we can do with: </p>
+    <p><span class="rcmd">split(time.diffs, leech$food) -&gt; diffs.split</span></p>
+    <p>The split() command takes a data frame we want to split, and a factor
+      that has the groups we want to split by, and makes a <strong>list</strong>
+      with data sets for each of the groups. A list is another R data type,
+      which has named elements that can hold other data types (a data frame, or
+      a matrix, for example). If you type the name:</p>
+    <p><span class="rcmd">diffs.split</span></p>
+    <p>you will see you have two named sections, one for $blood, and one for
+      $arg, with the differences for each. You can extract a named element by
+      name using the syntax:</p>
+    <p><span class="rcmd">diffs.split$arg</span></p>
+    <p>to get the arginine differences as a group. To pull out just the
+      differences for d1.d2, you would change this to:</p>
+    <p><span class="rcmd">diffs.split$arg$d1.d2</span></p>
+    <p>3. <strong>Conduct the paired t-tests</strong>. Now that we have a list
+      with our two data sets, we can get our t-tests done using a single command
+      that applies a function to each named element of a list. Use the command:
+    </p>
+    <p><span class="rcmd">lapply(diffs.split, function(i) apply(i, MARGIN = 2,
+        FUN = t.test)) -&gt; diffs.ttests</span></p>
+    <p>This command actually uses two different versions of the apply function
+      nested inside of one another to get all of the tests that we want done in
+      one command. If you have done any programming, this command functions as a
+      nested loop - the way that it works is: </p>
+    <ul>
+      <li>The outer function is lapply(), and this is used to extract the data
+        from each named element of diffs.split one at a time and apply a
+        function to them. The first argument is the name of the list
+        (diffs.split). From this list, lapply() extracts the first named element
+        ($arg) and passes it to the function specified as the second argument.
+        The function is specified as function(i) apply(). At this point, control
+        is passed to the apply() function.</li>
+      <ul>
+        <li>apply() is used to apply a function (identified by FUN =) to either
+          the rows (if MARGIN = 1) or columns (if MARGIN = 2) of a data frame or
+          a matrix. Our differences between days are in columns, so we're using
+          MARGIN = 2. The first time through the apply() function will pass the
+          differences in the first column of diffs.split$arg (i.e. the
+          differences between d1 and d2) to the function specified by FUN.</li>
+        <li>The FUN = t.test statement causes the function
+          t.test(diffs.split$arg$d1.d2) to be run. Running t.test() on a single
+          column of data without any other arguments gives us a one-sample
+          t-test of the mean of the column of data against 0. A one-sample
+          comparison of differences against a hypothetical mean difference of 0
+          is a paired t-test, so this will give us paired t-tests of the
+          differences between successive days.</li>
+        <li>apply() then moves to the next column, which has the differences
+          between d2 and d3, and performs a t-test on those differences. This
+          continues until all of the columns in diffs.split$arg are processed,
+          at which time apply() passes control back to the lapply() function.</li>
+      </ul>
+      <li>lapply() moves to the second named element, $blood, and passes it to
+        apply() to conduct all of the t-tests on the columns in $blood. When
+        apply() completes the t-tests for all the columns of differences in
+        $blood, the complete set of t-test results are returned and put into
+        diffs.ttests.</li>
+    </ul>
+    <p>We are going to take advantage of R's ability to apply functions
+      repeatedly to lists, data frames, or matrices again later in the semester
+      - it is a little confusing at first, but the apply() family of functions
+      make it possible to do a lot of repetitive work with just a few commands.</p>
+    <ul>
+    </ul>
+    <p>4. <strong>Report the results</strong>. If you look at the output by
+      typing:</p>
+    <p><span class="rcmd">diffs.ttests</span></p>
+    <p>you'll see that diffs.ttests is a list of t-tests, each labeled by the
+      food type first, and then by the day. For example, the label $arg$d1.d2 is
+      labeled first by the food type, and then by the days being compared. The
+      labeling is hierarchical - meaning, if we used the command:</p>
+    <p><span class="rcmd">diffs.ttests$arg</span></p>
+    <p>we get all of the t-tests done on the arginine-fed leeches, labeled by
+      the days compared.</p>
+    <p>It's a long list, and it would take some patience and care to record each
+      p-value, test statistic, and degrees of freedom for all of the tests.
+      Fortunately, there is a better way. </p>
+    <p>First, you should understand that the output of a t-test is also an R
+      object made up of several named elements. We can see what the names are
+      for the arginine d1.d2 t-test by typing:</p>
+    <p><span class="rcmd">names(diffs.ttests$arg$d1.d2)</span></p>
+    <p>You'll see the following:</p>
+    <p><span class="rout">[1] "statistic"&nbsp;&nbsp; "parameter"&nbsp;&nbsp;
+        "p.value"&nbsp;&nbsp;&nbsp;&nbsp; "conf.int"&nbsp;&nbsp;&nbsp;
+        "estimate"&nbsp;&nbsp; <br>
+        [6] "null.value"&nbsp; "alternative"
+        "method"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "data.name" </span></p>
+    <p>We don't need all of these values, we only need the test statistic,
+      degrees of freedom, and p-value, which are the named elements "statistic",
+      "parameter", and "p.value". To extract p-values from all of the tests in
+      the diffs.ttests list, we would use: </p>
+    <p><span class="rcmd">sapply(diffs.ttests, function(i) sapply(i, function(y)
+        y$p.value)) -&gt; pvals<br>
+      </span></p>
+    <p>The sapply() function is just like the lapply() that you used above, but
+      it returns a matrix instead of a list. This command is actually two
+      sapply() functions nested inside one another, and it works like this:</p>
+    <ul>
+      <li>The outer sapply() uses diffs.ttests as its first argument. It passes
+        the first named element, $arg, to the function defined in its second
+        argument. The function(i) statement says that the data passed on to the
+        function is going to be called i within the function definition. </li>
+      <li>The function that is defined is another sapply(). This second sapply()
+        uses i as its first argument, which will be the $arg t-tests the first
+        time through. The $arg t-tests are thus passed to the inner sapply()
+        function.</li>
+      <ul>
+        <li>The inner sapply() applies a function to the first named section
+          within i, which will be d1.d2. The named sections used for the inner
+          sapply() are called y - so, y will be the d1.d2 t-test initially.</li>
+        <li>The function defined in the inner sapply() simply extracts the
+          p-value from the t-test result contained in y.</li>
+        <li>The inner sapply() moves on to the next t-test result (d2.d3), and
+          extracts its p-value. This continues until all the t-tests in $arg
+          have been processed, and then control is passed back to the outer
+          sapply() function.</li>
+      </ul>
+      <li>The outer sapply() moves on to the second named element, $blood, and
+        repeats the process with the $blood t-tests.</li>
+      <li>Once the $blood p-values have been extracted, the outer sapply()
+        returns the p-values for both $arg and $blood. These are assigned to an
+        object called pvals.</li>
+    </ul>
+    <p>If you type pvals at the command line, you'll see a matrix of p-values,
+      with row labels indicating the days being compared, and column labels
+      indicating the food type.</p>
+    <ul>
+      <ul>
+      </ul>
+    </ul>
+    Similarly, the test statistics can be obtained by changing the function
+    definition for the inner sapply():
+    <p><span class="rcmd">sapply(diffs.ttests, function(i) sapply(i, function(y)
+        y$statistic)) -&gt; tstats<br>
+      </span></p>
+    <p>And, the degrees of freedom can be obtained with:</p>
+    <p><span class="rcmd">sapply(diffs.ttests, function(i) sapply(i, function(y)
+        y$parameter)) -&gt; dfs<br>
+      </span></p>
+    <p>You now have p-values in an object called "pvals", test statistics in an
+      object called "tstats", and degrees of freedom in an object called "dfs".
+      To combine all of these statistics into a single data frame, you can use:</p>
+    <p><span class="rcmd">data.frame(p = pvals, t = tstats, df = dfs)</span></p>
+    <p>The row labels show the comparison, and the column labels identify the
+      statistic - R automatically appended arg or blood to the t, df, and p
+      column names because data frames can't have two columns with identical
+      names.</p>
+    <p>You can change the ordering of the columns if you want to put the
+      arginine and blood stats together. First put the comparisons into an
+      object:</p>
+    <p><span class="rcmd">data.frame(p = pvals, t = tstats, df = dfs) -&gt;
+        ttest.results</span> </p>
+    <p>Then to re-order the columns you just need to use the command:</p>
+    <p><span class="rcmd">ttest.results[ , c(1,3,5,2,4,6)]</span></p>
+    <p>This command is just the name of the ttest.results object, with square
+      brackets used to refer to the rows and columns it contains. The first
+      entry is the row identifier, and leaving it blank gives us all of the
+      rows. The second entry is the column identifier, and using c(1,3,5,2,4,6)
+      specifies the ordering of the columns to be reported.</p>
+    <p>If you want to challenge yourself... try modifying this procedure to
+      compare days 2 through 7 to day 1. This is the kind of comparison you
+      would do if your first measurement was of initial conditions, and you
+      wanted to identify the point at which the masses because different from
+      the starting point.</p>
+    <blockquote>
+      <p><strong>Optional - testing trends over time<br>
+        </strong></p>
+      <p><strong></strong>Rather than testing for differences between means, you
+        may be happy to just know what the nature of the change over time is
+        (linear, quadratic, cubic, etc.). This unfortunately is not perfectly
+        straightforward using the car library - it does include a function
+        called linearHypothesis() that lets us test for different time trends,
+        but the syntax is complicated and not at all intuitive. If this is
+        something you might want to do on your own data, the following will walk
+        you through the process. If not, you can skip this step.</p>
+      <p> </p>
+      <p>We will just test the trends for the main effect of time. First, we
+        need to create the "model matrix" that has the orthogonal polynomial
+        weights (remember, these take the place of dummy codes for ordered
+        factors, and model the different time levels as a linear trend + a
+        quadratic trend + a cubic trend...up to one less than the number of
+        factor levels). Do that with the command:</p>
+      <p><span class="rcmd">model.matrix(~time.factor) -&gt; time.model.matrix</span></p>
+      <p>If you type the name of the object, time.model.matrix, you'll see a
+        matrix with a column for an intercept, and then columns with
+        coefficients for each type of trend - rows are the seven days.</p>
+      <p>To test the linear trend in the data, we would use the command:</p>
+      <p><span class="rcmd">linearHypothesis(time.model, "(Intercept) = 0",
+          P=time.model.matrix[ , 2, drop=FALSE])</span></p>
+      This command uses the time.model object we already created for Anova();
+      time.model is the within-subjects design of the analysis. Our polynomial
+      weights are centered on 0, so testing if the intercept is equal to 0 is
+      equivalent to testing the trend. The argument P=time.model.matrix[ , 2,
+      drop=FALSE] tells linearHypothesis() to use the second column in our
+      time.model.matrix in the hypothesis test. The second column is where the
+      linear weights are, so this will test for linear trend. To test for
+      quadratic trend, you can just recall the command (with the up arrow key),
+      and change the 2 to a 3 in time.model.matrix[ , 3, drop = FALSE].</blockquote>
+    <h2>Random effects</h2>
+    <p>The second half of this assignment deals with random effects. We will use
+      data on the gestation lengths and masses of a selection of mammals from
+      different taxonomic groups, which you will find in the worksheet called
+      "mammal" in the Excel spreadsheet you downloaded - import the data into a
+      data frame called "mammal".</p>
+    <p>If you open the file to view it, you will see that each row is a species
+      of mammal, with columns indicating the taxonomic order, family, genus, and
+      species (remember, a species name is a combination of its genus and a
+      specific epithet - the genus column has the genus name, and the species
+      column has the specific epithet). There is also a column for the mass (in
+      grams) and the gestation length (in months) for each species. The natural
+      log of mass and gestation length are in the columns loggest and logmass -
+      both variables tend to be strongly right-skewed, and log transformation
+      improves normality.</p>
+    <p>All taxonomic levels group organisms together that are related, but
+      higher levels in the taxonomic hierarchy encompass more distantly related
+      organisms than lower levels. All of the species in our data set are in the
+      class Mammalia - they are all mammals. The first level that is recorded in
+      the data set is order - the orders in the data set are:</p>
+    <ul>
+      <li>Artiodactyla - hoofed animals with even numbers of toes, such as cows,
+        sheep, pigs, giraffes, and hippopotami</li>
+      <li>Primates - monkeys, gorillas, lemurs, humans</li>
+      <li>Rodentia - mice, squirrels, capybaras, beavers</li>
+      <li>Carnivora - dogs, cats, mongooses, skunks</li>
+    </ul>
+    <p>We expect the species within an order to be more similar to one another
+      than they are to species in other orders, but since order is a fairly high
+      level in the hierarchy the species within an order can be fairly different
+      from one another.</p>
+    <p>The next level below order is family, and the data set we are working
+      with has two families within each order:</p>
+    <ul>
+      <li>The families within Artiodactyla are the Bovidae (animals with
+        permanent horns, like cows, sheep, and antilope) and the Cervidae
+        (animals with antlers that are shed each year, like deer and elk)</li>
+      <li>The families within Primates are the Cebidae (new-world monkeys like
+        capuchins and squirrel monkeys) and the Cercopithecidae (old-world
+        monkeys)</li>
+      <li>The families within the Rodentia are the Caviidae (guinea pigs, cavys,
+        and capybaras) and the Muridae (mice, rats)</li>
+      <li>The families within the Carnivora are the Canidae (dogs, wolves,
+        foxes) and the Felidae (cats such as lions, tigers, and ocelots)</li>
+    </ul>
+    <p></p>
+    <p>We would expect less variation between species that are members of the
+      same family than between species that are members of the same order,
+      because species within the same family are more closely related on average
+      than those in the same order. The same basic expectation would hold for
+      members of the same genus - there are three genera for each family and two
+      species per genus in this data set. The two species in the same genus are
+      quite closely related, and should be fairly similar in many ways (size,
+      physiology, genetic composition, etc.).</p>
+    <p> </p>
+    <p>To make the analysis simple, I selected an equal number of families
+      within each order, genera within each family, and species within each
+      genus. As such, we are working with a sample of the possible members of
+      each taxonomic level, and we will thus treat each level as a random effect
+      - the purpose of the analysis will not be to test for differences between
+      these particular orders, families, and genera, but to see how much
+      variation there is between random samples of orders, families, and genera
+      of mammals. Once we have our ANOVA table, we will estimate the variance
+      components for each level, so we can see if our expectation of decreasing
+      amounts of variation as we go from order through genus is upheld.</p>
+    <p>We will start by analyzing the log of gestation length:</p>
+    <p>1. Fit a nested ANOVA for log gestation length using the command:</p>
+    <p class="rcmd">aov(loggest ~ Error(order + family + Genus), data = mammal)
+      -&gt; mammal.loggest.aov</p>
+    <p>You will get a scary red warning message about the Error() term being
+      singular - don't worry, this has to do with the fact that we do not have a
+      crossed (factorial) design, and there are many combinations of the three
+      different levels that don't occur. In spite of this warning message the
+      calculations are done correctly for a nested ANOVA.</p>
+    <p>2. Use the summary() command to get your ANOVA table - it should look
+      like this for log gestation:</p>
+    <p class="rout">Error: order<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum Sq Mean Sq F
+      value Pr(&gt;F)<br>
+      Residuals&nbsp; 3&nbsp; 21.42&nbsp;&nbsp;&nbsp;
+      7.14&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <br><br>
+      Error: family<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum Sq Mean Sq F
+      value Pr(&gt;F)<br>
+      Residuals&nbsp; 4&nbsp; 2.668&nbsp;&nbsp;
+      0.667&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <br><br>
+      Error: Genus<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum Sq Mean Sq F
+      value Pr(&gt;F)<br>
+      Residuals 16&nbsp; 1.104
+      0.06902&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <br><br>
+      Error: Within<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum Sq&nbsp;
+      Mean Sq F value Pr(&gt;F)<br>
+      Residuals 24 0.2109 0.008789 </p>
+    <p>3. Calculate the variance components for each level - Order, Family,
+      Genus, and Species. The expected mean squares for each level are:</p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th>Random effect</th>
+          <th>Expected mean squares</th>
+          <th>Estimated by:</th>
+        </tr>
+        <tr>
+          <td>Order</td>
+          <td>nmsσ<sup>2</sup><sub>order</sub> + nmσ<sup>2</sup><sub>family</sub>
+            + nσ<sup>2</sup><sub>genus</sub> + σ<sup>2</sup><sub>error</sub></td>
+          <td>Residual for Error: order<br>
+          </td>
+        </tr>
+        <tr>
+          <td>Family</td>
+          <td>nmσ<sup>2</sup><sub>family</sub> + nσ<sup>2</sup><sub>genus</sub>
+            + σ<sup>2</sup><sub>error</sub></td>
+          <td>Residual for Error: family<br>
+          </td>
+        </tr>
+        <tr>
+          <td>Genus</td>
+          <td>nσ<sup>2</sup><sub>genus</sub> + σ<sup>2</sup><sub>error</sub></td>
+          <td>Residual for Error: Genus<br>
+          </td>
+        </tr>
+        <tr>
+          <td>Species</td>
+          <td>σ<sup>2</sup><sub>error</sub></td>
+          <td>Residual for Error: Within<br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>To calculate the variance components for each taxonomic level you need to
+      isolate its σ<sup>2</sup> - for example, to isolate σ<sup>2</sup><sub>order</sub>
+      you would need to subtract MS<sub>family</sub> from MS<sub>order</sub>,
+      and then divide by the number of data points in the mean for each order.
+      With n = 2 species per genus, m = 3 genera per family, and s = 2 families
+      per order, there are 12 species used to calculate the mean for each order.
+      The calculation would thus be: </p>
+    <p>σ<sup>2</sup><sub>order</sub> = (MS<sub>order</sub> - MS<sub>family</sub>)/12
+=
+      (7.14 - 0.667)/12 = 0.539</p>
+    <p>With six species included in each family, the calculation for family is:</p>
+    <p>σ<sup>2</sup><sub>family</sub> = (MS<sub>family</sub> - MS<sub>genus</sub>)/6
+      = (0.667 - 0.06902)/6 = 0.0996</p>
+    <p>Each genus has two species recorded, so the calculation is:</p>
+    <p>σ<sup>2</sup><sub>genus</sub> = (MS<sub>genus</sub> - MS<sub>error</sub>)/2
+      = (0.06902 - 0.008789)/2 = 0.0301</p>
+    <p>Since each row of the table is a different species the σ<sup>2</sup><sub>error</sub>
+      term is also σ<sup>2</sup><sub>species</sub>. The σ<sup>2</sup><sub>error</sub>
+      component is estimated directly by MS<sub>error</sub>, which is equal to
+      0.008789, with no algebra needed! </p>
+    <p>4. Now repeat steps 1 to 3 using logmass.<br>
+    </p>
+    <p>That's it! Answer the questions on the assignment sheet, and upload your
+      R output in a Word file to the class web site.</p>
+    <p><br>
+    </p>
+  </body>
+</html>
