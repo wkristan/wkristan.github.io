@@ -1,0 +1,277 @@
+---
+title: "Classic model selection"
+author: "Key"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Classic model selection
+
+We will work with data from the USDA National Nutrient Database. Import the data set:
+
+```{r import.data}
+
+library(readxl)
+data.frame(read_excel("macronutrients.xls")) -> food
+
+```
+
+### Graphing the data
+
+To get an idea of the distribution of each of the variables, we can plot a histogram for each. To save space, we'll plot them in a 4x4 array.
+
+```{r plot.untransformed.histograms, results='hide'}
+
+oldpar <- par()
+par(oma = c(0,0,3,0), mfrow=c(2,4))
+
+untrans.var <- c("kcal","ash","carb","fiber","protein","fat","water")
+
+lapply(untrans.var, FUN = function(x) hist(food[ , x], main = x, xlab = x)) 
+```
+
+
+Now plot the transformed histograms:
+
+```{r plot.transformed.histograms, results='hide'}
+
+par(oma = c(0,0,3,0), mfrow=c(2,4))
+
+trans.var <- c("log.kcal","log.ash","log.carb","log.fiber","log.protein","log.fat","logit.water")
+
+lapply(trans.var, FUN = function(x) hist(food[ , x], main = x, xlab = x)) 
+
+```
+Run this chunk to add a function, panel.cor(), that will put the correlation coefficient and p-value into the lower panel of the correlation matrix plot.
+
+```{r panel.cor.function}
+
+panel.cor <- panel.cor <- function(x, y, cex.cor = 0.8, method = "pearson", ...) {
+options(warn = -1)                              # Turn off warnings (e.g. tied ranks)
+usr <- par("usr"); on.exit(par(usr))            # Saves current "usr" and resets on exit
+par(usr = c(0, 1, 0, 1))                        # Set plot size to 1 x 1
+r <- cor(x, y, method = method, use = "pair")   # correlation coef
+p <- cor.test(x, y, method = method)$p.val      # p-value
+txt <- format(r, digits = 3)                    # Format r-value
+txt1 <- format(p, digits = 3)                   # Format p-value
+txt2 <- paste0("r= ", txt, '\n', "p= ", txt1)   # Make panel text
+text(0.5, 0.5, txt2, cex = cex.cor, ...)        # Place panel text
+options(warn = 0)                               # Reset warning
+}
+
+```
+
+
+Next we should see how the variables relate to one another. First, we will make a scatterplot matrix using kcal, along with the un-transformed versions of the predictors:
+
+```{r kcal.untrans.pairs.plots}
+
+pairs(food[,untrans.var], lower.panel = panel.cor)
+
+```
+
+Now make one for kcal against the log-transformed versions of the predictors:
+
+```{r kcal.trans.pairs.plots}
+
+pairs(food[,c("kcal",trans.var[-1])], lower.panel = panel.cor)
+
+```
+
+Using the log of kcal might help - plot it against the un-transformed predictors:
+
+```{r log.kcal.untrans.pairs.plots}
+
+pairs(food[,c("log.kcal","ash","carb","fiber","protein","fat","water")], lower.panel = panel.cor)
+
+```
+
+Finally, plot the transformed log.kcal against the transformed predictors:
+
+```{r log.kcal.trans.pairs.plot}
+
+pairs(food[,trans.var], lower.panel = panel.cor)
+
+```
+
+**Question: why is it better to use the transformed versions of the variables instead of the raw variables, based on the scatterplots?**
+
+> The scatterplots are more linear using the transformed variables.
+
+### Fitting models
+
+Make an empty list to hold the models:
+
+```{r make.model.list}
+
+models.list <- list()
+
+```
+
+Add all of the single predictor models to the list:
+
+```{r add.single.predictor.models.to.list}
+
+models.list$log.ash <- lm(log.kcal ~ log.ash, data = food)
+models.list$log.carb <- lm(log.kcal ~ log.carb, data = food)
+models.list$log.fiber <- lm(log.kcal ~ log.fiber, data = food)
+models.list$log.protein <- lm(log.kcal ~ log.protein, data = food)
+models.list$log.fat <- lm(log.kcal ~ log.fat, data = food)
+models.list$logit.water <- lm(log.kcal ~ logit.water, data = food)
+
+```
+
+Get the r.squared values for each model:
+
+```{r r.squared}
+
+sapply(models.list, FUN = function(x) summary(x)$r.squared) -> r.squared
+
+```
+
+Get the adj.r.squared values:
+
+```{r adj.r.squared}
+
+sapply(models.list, FUN = function(x) summary(x)$adj.r.squared) -> adj.r.squared
+
+```
+
+Combine the r.squared and adj.r.squared into a data frame to make them easier to see:
+
+```{r p.values}
+
+data.frame(r.squared, adj.r.squared)
+
+```
+
+
+**Question: which single predictor variable model has the highest adjusted r-squared?**
+
+> The logit.water model had an adjusted R^2^ of 0.91.
+
+The two predictors log.ash and log.protein are strongly correlated. Fit a model with both included and get a summary here:
+
+```{r log.ash.log.protein.model}
+
+models.list$log.ash.log.protein <- lm(log.kcal ~ log.ash + log.protein, data = food)
+sapply(models.list, FUN = function(x) summary(x)$r.squared) -> r.squared
+sapply(models.list, FUN = function(x) summary(x)$adj.r.squared) -> adj.r.squared
+data.frame(r.squared, adj.r.squared)
+
+
+```
+
+**Question: did the model with both log.ash and log.protein have a higher r.squared than than either of them by themselves? Did it have a higher adj.r.sqaured than either by themselved?**
+
+> The model with log.ash and log.protein had an R^2^ of 0.35576, which is slightly higher than log.protein alone (0.35571), and higher than log.ash alone (0.21543).
+
+Fit a model with all of the predictors included:
+
+```{r all.variables}
+
+models.list$all.var <- lm(log.kcal ~ log.ash + log.carb + log.fiber + log.protein + log.fat + logit.water, data = food)
+sapply(models.list, FUN = function(x) summary(x)$r.squared) -> r.squared
+sapply(models.list, FUN = function(x) summary(x)$adj.r.squared) -> adj.r.squared
+data.frame(r.squared, adj.r.squared)
+
+```
+
+**Question: did the model with all predictors included have a higher adj.r.squared than all the others so far?**
+
+> Yes, the adjusted R^2^ for the model with all of the predictors is 0.9734, which is higher than any of the other models.
+
+Use a Type II SS ANOVA table to decide whether there are variables that are not contirbuting statistically significant amounts of explained variation to the model:
+
+```{r type.II.ss.anova}
+
+library(car)
+Anova(models.list$all.var)
+
+```
+
+**Question: which variables are statistically significant?**
+
+> log.carb, log.fat, and logit.water are all statistically significant.
+
+Fit a model with only the statistically significant predictors from the ANOVA:
+
+```{r signif.predictors.model}
+
+models.list$signif.pred <- lm(log.kcal ~ log.carb + log.fat + logit.water, data = food)
+data.frame(r.squared, adj.r.squared)
+
+
+```
+
+**Question: did the model with only the significant predictors have a better adj.r.squared than all the others?**
+
+> Yes, by a tiny amount, 0.9727 instead of 0.9722.
+
+**Question: log.protein did not make it into the best model. Does this mean that protein has no calories? Explain.**
+
+> No, protein has caleries. The correlation between log.protein and the other predictors is large enough that log.protein is no longer significant when it's included with the others.
+
+Double check that the three significant predictors that you dropped are not just statistically redundant with one another by testing the model without them against the model that included them:
+
+```{r test.reduced.against.full.model}
+
+anova(models.list$signif.pred, models.list$all.var)
+
+```
+
+**Question: how did your test of the reduced model against the full model show you that log.ash, log.protein, and log.fiber are not just statistically redundant with one another?**
+
+> Dropping log.protein, log.ash, and log.fiber didn't reduce the fit of the model to the data significantly, because the p-value was 0.86. This means that the variables were not contributing to the fit, rather than that they were important predictors that were so correlated with one another that their coefficients were non-significant.
+
+**Question: look at the p-values for each of the models. Are any of the models non-significant? If you had just looked at a single model, would you have considered it to be a poor model based on the p-value alone for any of these? What does that tell you about the importance of fitting multiple models and comparing their adjusted R^2?**
+
+> All of the models were statistically significant, so none of them would have appeared to be poorly supported by the data. Fitting multiple models allowed us to see that a combination of log.carb, log.fat, and logit.water was the best representation for the data, and was much better than any of the single-predictor models.
+
+To make sure we aren't selecting a "best" model that is in reality terrible, we should make sure that the model is statistically significant. Get the summary() of signif.pred:
+
+```{r summary.of.signif.pred}
+
+summary(models.list$signif.pred)
+
+```
+**Question: is the model with only the statistically significant predictors significant overall? How do you know (what part of the output tells you this)?**
+
+> Yes, it has a p-value of 2.2e-16.
+
+
+## Models as hypotheses
+
+Once you have your own hypotheses created in the Excel spreadsheet provided, import it as a dataset called food.hypotheses:
+
+``` {r import.food.hypotheses}
+
+hypotheses <- read_excel("macronutrients_nopredictors.xls")
+
+```
+
+To start, make an empty list for the models you will use (my H.example, and your two hypotheses), called food.hypotheses.list:
+
+```{r make.food.hypotheses.list}
+
+food.hypotheses.list <- list()
+
+```
+
+Fit a model with my hypothesis (H.example) as a predictor, and assign it to the food.hypotheses.list:
+
+```{r make.H.example.model}
+
+food.hypotheses.list$H.example <- lm(log.kcal ~ H.example, data = hypotheses)
+summary(food.hypotheses.list$H.example)
+
+```
+
+Code chunks for your own models should follow.

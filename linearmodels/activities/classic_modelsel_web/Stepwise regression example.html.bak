@@ -1,0 +1,451 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    <title>Stepwise regression example</title>
+    <link href="https://wkristan.github.io/style.css"
+      rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Stepwise model selection of the blood pressure data</h1>
+    <p> In R, stepwise selection is done with the step() function.&nbsp; To use
+      it, we specify:</p>
+    <ul>
+      <li>A starting model (or two) of a response variable in a data set (the
+        response is systolic blood pressure, and the data set name is systol)</li>
+      <li>A search direction (forward, backward, or both)</li>
+      <li>A criterion for variable addition or removal. </li>
+    </ul>
+    <p>At each step in the model selection process, variables are added
+      (forward) or dropped (backward) using a quantity called "AIC". We're going
+      to learn all about AIC next week, but for now all you need to know about
+      it is that it balances how well the model fits the data against the
+      model's complexity, just like adjusted R<sup>2</sup> does. AIC is based on
+      the <strong>likelihood</strong> of the models given the data, rather than
+      on the mean squares. Unlike adjusted R<sup>2</sup>, with AIC smaller is
+      better. </p>
+    <p>The way that step() selects models is to calculate AIC for a set of
+      candidate models, and select model with the smallest AIC. we will run
+      through an example of forward selection and backward selection with the
+      systolic blood pressure data.</p>
+    <p> </p>
+    <p> </p>
+    <h2>Forward selection:</h2>
+    <p>The first for forward selection is to set up two models - the simple
+      model that is the starting point, and the most complex model we are
+      willing to consider. A good starting point for forward selection is a
+      "null" model that only has an intercept, but no predictors - when you have
+      no predictors the intercept is just the mean of the response variable.</p>
+    <p>In R we specify a null model with the command:<br>
+    </p>
+    <p> </p>
+    <p class="rcmd"> null &lt;- lm(SYSTOL ~ 1, data = systolic)</p>
+    <p>Using 1 as the only predictor tells R to fit an intercept only.</p>
+    <p>The most complex model we will consider is one that includes all of the
+      other variables in the data set as predictors, but without interactions
+      between them. This command uses SYSTOl as the response, and every other
+      variable in the data set as predictors:</p>
+    <p class="rcmd">full &lt;- lm(SYSTOL ~ ., data = systolic)</p>
+    <p> R allows you to use a period for the predictor side of the model formula
+      to mean "all the other variables aside from the one used as a response
+      variable", so this statement is equivalent to SYSTOL ~ WEIGHT + DIASTOL +
+      FOREARM + CALF + HEIGHT + CHIN + PULSE + YEARS + AGE. </p>
+    <p>To conduct the forward stepwise procedure we use the command: </p>
+    <p class="rcmd"> step(null, scope = list(lower=null, upper=full),
+      data=systolic, direction = "forward", k = 2)</p>
+    <p> </p>
+    <p> This causes the step() function to start with the null model, and to
+      consider models of increasing complexity, up to the full model which
+      includes all of the predictor variables - the scope argument gives the
+      simple initial model as "lower", and the most complex model to be
+      considered as "upper". The argument "k = 2" is a little cryptic, but it
+      causes step() to use AIC, rather than a related quantity (called the BIC,
+      or Bayesian Information Criterion).</p>
+    <p>The complete output from R looks like this:</p>
+    <div style="clear:both">
+      <div style="float:left; width:30%"> <span class="rout"><span style="background-color:yellow">Start:&nbsp;
+            AIC=201.71<br>
+          </span> SYSTOL ~ 1<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum of
+          Sq&nbsp;&nbsp;&nbsp; RSS&nbsp;&nbsp;&nbsp; AIC<br>
+          + WEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp; 1775.38 4756.1 <span style="background-color:powderblue">191.34</span><br>
+          + DIASTOL&nbsp; 1&nbsp;&nbsp; 1474.84 5056.6 193.73<br>
+          + FOREARM&nbsp; 1&nbsp;&nbsp;&nbsp; 484.22 6047.2 200.71<br>
+          + CALF&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 410.80 6120.6
+          201.18<br>
+          &lt;none&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          6531.4 201.71<br>
+          + HEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 313.58 6217.9 201.79<br>
+          + CHIN&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 189.19 6342.2
+          202.57<br>
+          + PULSE&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 119.88 6411.6 202.99<br>
+          + YEARS&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 49.98 6481.5
+          203.41<br>
+          + AGE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          0.22 6531.2 203.71<br>
+          <br>
+        </span></div>
+      <div style="float:left;width:65%">
+        <p>The first step is to calculate AIC for the initial (null) model
+          (which is highlighted in yellow), and compare it to the AIC that would
+          result if each possible variable was used as a predictor by itself.
+          The one-predictor model with the lowest AIC (highlighted in blue)
+          would be one with WEIGHT included (variables are sorted by AIC, with
+          the lowest one at the top). Notice too that some of the variables are
+          not an improvement at all over the null model - adding HEIGHT, CHIN,
+          PULSE, YEARS, or AGE results in higher AIC's than the intercept-only
+          model that has no predictors included in it at all (indicated as
+          &lt;none&gt;). </p>
+        <p>So, now that WEIGHT has earned a place in the model, the next step is
+          to compare this model with all the two-variable models that could be
+          constructed by adding a single additional variable to WEIGHT.</p>
+      </div>
+    </div>
+    <div style="clear:both">
+      <div style="float: left; width: 30%"> <span class="rout">Step:&nbsp;
+          AIC=191.34<br>
+          SYSTOL ~ WEIGHT<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum of
+          Sq&nbsp;&nbsp;&nbsp; RSS&nbsp;&nbsp;&nbsp; AIC<br>
+          + YEARS&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 972.90 3783.2 184.41<br>
+          + DIASTOL&nbsp; 1&nbsp;&nbsp;&nbsp; 561.88 4194.2 188.44<br>
+          + AGE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 385.73 4370.3
+          190.04<br>
+          &lt;none&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          4756.1 191.34<br>
+          + CHIN&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 143.63 4612.4
+          192.15<br>
+          + CALF&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 16.67 4739.4
+          193.20<br>
+          + PULSE&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5.31 4750.8
+          193.30<br>
+          + HEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.01 4754.0
+          193.32<br>
+          + FOREARM&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.16 4754.9 193.33<br>
+        </span></div>
+      <div style="float:left; width:65%">
+        <p>In the second step the current model is SYSTOL ~ WEIGHT, and the
+          current AIC is now 191.34. The next best model would add YEARS as a
+          predictor, which is the number of years since migrating to low
+          elevation. Note that this is a little surprising, because YEARS by
+          itself was such a poor predictor of systolic blood pressure that it
+          didn't improve on a model with no predictors included. But, when
+          combined with WEIGHT, YEARS gives us a much better fit than using
+          WEIGHT alone. In other words, being heavy or light for the number of
+          years you have been at low elevation is predictive of blood pressure,
+          but years since descending by itself is not a good predictor. </p>
+      </div>
+    </div>
+    <div style="clear:both">
+      <div style="float:left; width:30%"><span class="rout"> <br>
+          Step:&nbsp; AIC=184.42<br>
+          SYSTOL ~ WEIGHT + YEARS<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum of
+          Sq&nbsp;&nbsp;&nbsp; RSS&nbsp;&nbsp;&nbsp; AIC<br>
+          + DIASTOL&nbsp; 1&nbsp;&nbsp;&nbsp; 379.67 3403.5 182.29<br>
+          + CHIN&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 198.98 3584.2
+          184.31<br>
+          &lt;none&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          3783.2 184.41<br>
+          + HEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 53.07 3730.1 185.86<br>
+          + FOREARM&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 38.29 3744.9 186.02<br>
+          + AGE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 27.90
+          3755.3 186.13<br>
+          + CALF&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 10.60 3772.6
+          186.31<br>
+          + PULSE&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.91 3782.2
+          186.41<br>
+          <br>
+        </span> </div>
+      <div style="float:left; width: 65%">
+        <p>Including both WEIGHT and YEARS gives us an AIC of 184.42, and making
+          a 3 variable model by adding DIASTOL slightly lowers the AIC, so it
+          should be included. </p>
+      </div>
+    </div>
+    <div style="clear:both">
+      <div style="float:left; width:30%"><span class="rout">Step:&nbsp;
+          AIC=182.29<br>
+          SYSTOL ~ WEIGHT + YEARS + DIASTOL<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum of
+          Sq&nbsp;&nbsp;&nbsp; RSS&nbsp;&nbsp;&nbsp; AIC<br>
+          &lt;none&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          3403.5 182.29<br>
+          + CHIN&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp; 113.619 3289.9 182.97<br>
+          + HEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 74.352 3329.1 183.43<br>
+          + CALF&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 39.680 3363.8
+          183.83<br>
+          + FOREARM&nbsp; 1&nbsp;&nbsp;&nbsp; 32.256 3371.2 183.92<br>
+          + AGE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 10.663 3392.8
+          184.17<br>
+          + PULSE&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 4.418 3399.1
+          184.24<br>
+        </span> </div>
+      <div style="float:left; width: 65%">
+        <p>The three predictor model with WEIGHT, YEARS, and DIASTOL has an AIC
+          of 182.29, and the next best model is the null model. All of the other
+          four predictor variable models would have a higher AIC than this
+          current one, so we have our final model: SYSTOL ~ WEIGHT + YEARS +
+          DIASTOL </p>
+      </div>
+    </div>
+    <div style="clear:both">
+      <div style="float:left"><br>
+        <span class="rout"> Call:<br>
+          lm(formula = SYSTOL ~ WEIGHT + YEARS + DIASTOL, data = systolic)<br>
+          <br>
+          Coefficients:<br>
+          (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          WEIGHT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          YEARS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DIASTOL&nbsp; <br>
+          &nbsp;&nbsp;&nbsp; 41.3223&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          1.1260&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          -0.5208&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.2973 <br>
+          <br>
+        </span> </div>
+      <div style="float:left; width:auto">
+        <p style="margin-left: 30px"> The model coefficients for the selected
+          model are printed at the end of the output so that you interpret it. </p>
+      </div>
+    </div>
+    <p style="clear:both">Once you have the final model identified you can do
+      the usual interpretation steps, including getting an ANOVA table and model
+      summary. The Type II SS ANOVA table for this final model is here: </p>
+    <p><span class="rout">Anova Table (Type II tests)<br>
+        <br>
+        Response: SYSTOL<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Sum Sq Df F
+        value&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+        WEIGHT&nbsp;&nbsp;&nbsp; 1552.9&nbsp; 1 15.9695 0.0003157 ***<br>
+        YEARS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 790.7&nbsp; 1&nbsp; 8.1311 0.0072518
+        ** <br>
+        DIASTOL&nbsp;&nbsp;&nbsp; 379.7&nbsp; 1&nbsp; 3.9043 0.0560863 .&nbsp; <br>
+        Residuals 3403.5 35</span><br>
+    </p>
+    <p>The diastolic blood pressure is not significant at the 0.05 level, but
+      it's close - there was a very small difference in AIC between the
+      two-variable model with just weight and years and the three variable model
+      that also includes diastolic blood pressure, so including diastolic blood
+      pressure may not be needed, but according to the forward selection
+      procedure this is the best model.</p>
+    <h2>Backward selection:</h2>
+    <p> Backward selection starts with a full model and drops terms until
+      dropping additional terms stops improving the criterion (AIC in our
+      example). It has the advantage over forward selection that cases in which
+      the effect of one variable isn't clear until another is included will be
+      uncovered. Forward and backward selection are not guaranteed to arrive at
+      the same models, and when they produce different results the backward
+      selection models are usually more complex. Typically, if we were to use
+      stepwise selection we would run both approaches, and if they don't agree
+      we would pick the final model with the lowest AIC.</p>
+    <p> </p>
+    <p> The syntax of the command is a little simpler with backward selection,
+      because we specify the most complex model at the outset, and the step()
+      function assumes we want to consider dropping all of the terms. The
+      command is:</p>
+    <p> </p>
+    <p class="rcmd">step(full, data=systolic, direction = "backward", k = 2)</p>
+    <p> </p>
+    <p> The "full" model is specified as the first argument. Since the simplest
+      model that we are willing to consider by default would be one with no
+      predictors we don't need a "scope" statement. The direction to search is
+      backward, and k=2 indicates we'll use AIC as the criterion. The output is
+      here:</p>
+    <div style="clear:both">
+      <div style="width: 700px; float:left"> <span class="rout">Start:&nbsp; <span
+            style="background-color:yellow">AIC=189.43</span><br>
+          SYSTOL ~ AGE + YEARS + WEIGHT + HEIGHT + CHIN + FOREARM + CALF + <br>
+          &nbsp;&nbsp;&nbsp; PULSE + DIASTOL<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum of
+          Sq&nbsp;&nbsp;&nbsp; RSS&nbsp;&nbsp;&nbsp; AIC<br>
+          - CALF&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.03
+          3004.8 <span style="background-color:powderblue">187.43</span><br>
+          - PULSE&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6.66 3011.4
+          187.52<br>
+          - FOREARM&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 38.70 3043.5 187.93<br>
+          - AGE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 60.11
+          3064.9 188.20<br>
+          - CHIN&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 133.50 3138.3
+          189.13<br>
+          &lt;none&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          3004.8 189.43<br>
+          - HEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 252.57 3257.4 190.58<br>
+          - DIASTOL&nbsp; 1&nbsp;&nbsp;&nbsp; 261.93 3266.7 190.69<br>
+          - YEARS&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 670.91 3675.7 195.29<br>
+          - WEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp; 1485.17 4490.0 203.09<br>
+        </span></div>
+      <div style="float:left; width:200px">
+        <p> The first step compares AIC for the full model to the AIC of each
+          model that drops one of the predictors. The lowest AIC results from
+          dropping CALF, so that will be the beginning point for the next step.
+        </p>
+      </div>
+    </div>
+    <div style="clear:both">
+      <div style="float:left; width: 700px"> <span class="rout"><br>
+          Step:&nbsp; AIC=187.43<br>
+          SYSTOL ~ AGE + YEARS + WEIGHT + HEIGHT + CHIN + FOREARM + PULSE + <br>
+          &nbsp;&nbsp;&nbsp; DIASTOL<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum of
+          Sq&nbsp;&nbsp;&nbsp; RSS&nbsp;&nbsp;&nbsp; AIC<br>
+          - PULSE&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6.84 3011.7
+          185.52<br>
+          - AGE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 60.38
+          3065.2 186.21<br>
+          - FOREARM&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 60.73 3065.5 186.21<br>
+          - CHIN&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 137.42 3142.2
+          187.18<br>
+          &lt;none&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          3004.8 187.43<br>
+          - HEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 254.62 3259.4 188.60<br>
+          - DIASTOL&nbsp; 1&nbsp;&nbsp;&nbsp; 278.07 3282.9 188.88<br>
+          - YEARS&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 678.06 3682.9 193.37<br>
+          - WEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp; 1502.57 4507.4 201.25<br>
+        </span> </div>
+      <div style="float:left; width:200px">
+        <p> Step 2 begins with all of the predictors except CALF. Dropping PULSE
+          reduces AIC, so the next step will have all but CALF and PULSE. </p>
+      </div>
+    </div>
+    <div style="clear:both">
+      <div style="float:left; width: 700px"> <span class="rout"><br>
+          Step:&nbsp; AIC=185.52<br>
+          SYSTOL ~ AGE + YEARS + WEIGHT + HEIGHT + CHIN + FOREARM + DIASTOL<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum of
+          Sq&nbsp;&nbsp;&nbsp; RSS&nbsp;&nbsp;&nbsp; AIC<br>
+          - FOREARM&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 53.92 3065.6 184.21<br>
+          - AGE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 63.59
+          3075.2 184.34<br>
+          - CHIN&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 147.80 3159.5
+          185.39<br>
+          &lt;none&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          3011.7 185.52<br>
+          - HEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 255.94 3267.6 186.70<br>
+          - DIASTOL&nbsp; 1&nbsp;&nbsp;&nbsp; 272.69 3284.3 186.90<br>
+          - YEARS&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 674.17 3685.8 191.40<br>
+          - WEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp; 1528.73 4540.4 199.53<br>
+        </span> </div>
+      <div style="float:left; width:200px">
+        <p> Step 3 begins with all of the predictors but CALF and PULSE, and we
+          see that we can do better still by dropping FOREARM.</p>
+      </div>
+    </div>
+    <div style="clear:both">
+      <div style="float:left; width: 700px"> <span class="rout"><br>
+          Step:&nbsp; AIC=184.21<br>
+          SYSTOL ~ AGE + YEARS + WEIGHT + HEIGHT + CHIN + DIASTOL<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum of
+          Sq&nbsp;&nbsp;&nbsp; RSS&nbsp;&nbsp;&nbsp; AIC<br>
+          - AGE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 42.56
+          3108.1 182.75<br>
+          &lt;none&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          3065.6 184.21<br>
+          - HEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 203.87 3269.4 184.72<br>
+          - CHIN&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 247.05 3312.6
+          185.24<br>
+          - DIASTOL&nbsp; 1&nbsp;&nbsp;&nbsp; 261.46 3327.0 185.41<br>
+          - YEARS&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 640.91 3706.5 189.62<br>
+          - WEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp; 1608.16 4673.7 198.66<br>
+        </span> </div>
+      <div style="float:left;width:200px">
+        <p> Step 4 has dropped CALF, PULSE, and FOREARM, and we can do better by
+          dropping AGE as well.</p>
+      </div>
+    </div>
+    <div style="clear:both">
+      <div style="float:left; width:700px"> <span class="rout"><br>
+          Step:&nbsp; AIC=182.75<br>
+          SYSTOL ~ YEARS + WEIGHT + HEIGHT + CHIN + DIASTOL<br>
+          <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df Sum of
+          Sq&nbsp;&nbsp;&nbsp; RSS&nbsp;&nbsp;&nbsp; AIC<br>
+          &lt;none&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          3108.1 182.75<br>
+          - HEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 181.73 3289.9 182.97<br>
+          - CHIN&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 221.00 3329.1
+          183.43<br>
+          - DIASTOL&nbsp; 1&nbsp;&nbsp;&nbsp; 293.37 3401.5 184.27<br>
+          - YEARS&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; 976.85 4085.0 191.41<br>
+          - WEIGHT&nbsp;&nbsp; 1&nbsp;&nbsp; 1594.41 4702.6 196.90<br>
+        </span> </div>
+      <div style="float:left;width:200px">
+        <p> Step 5 still has YEARS, WEIGHT, HEIGHT, CHIN, and DIASTOL included,
+          and we can't reduce the AIC any further by dropping another variable.
+          This is our selected model.</p>
+      </div>
+    </div>
+    <div style="clear:both">
+      <div style="float:left; width: 800px"> <span class="rout"><br>
+          Call:<br>
+          lm(formula = SYSTOL ~ YEARS + WEIGHT + HEIGHT + CHIN + DIASTOL, <br>
+          &nbsp;&nbsp;&nbsp; data = systolic)<br>
+          <br>
+          Coefficients:<br>
+          (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          YEARS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          WEIGHT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          HEIGHT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          CHIN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DIASTOL&nbsp; <br>
+          &nbsp; 100.87200&nbsp;&nbsp;&nbsp;&nbsp;
+          -0.59605&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.62122&nbsp;&nbsp;&nbsp;&nbsp;
+          -0.05096&nbsp;&nbsp;&nbsp;&nbsp;
+          -1.17446&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.26599</span></div>
+      <div style="float:left; width:200px">
+        <p> Coefficients for the selected model are here. </p>
+      </div>
+    </div>
+    <p style="clear:both"> <br>
+    </p>
+    <p>The ANOVA table for the model chosen through backward selection is:</p>
+    <p><span class="rout">Anova Table (Type II tests)<br>
+        <br>
+        Response: SYSTOL<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Sum Sq Df F
+        value&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+        YEARS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 976.85&nbsp; 1 10.3715 0.0028732 **
+        <br>
+        WEIGHT&nbsp;&nbsp;&nbsp; 1594.41&nbsp; 1 16.9284 0.0002429 ***<br>
+        HEIGHT&nbsp;&nbsp;&nbsp;&nbsp; 181.73&nbsp; 1&nbsp; 1.9295
+        0.1741152&nbsp;&nbsp;&nbsp; <br>
+        CHIN&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 221.00&nbsp; 1&nbsp; 2.3464
+        0.1351029&nbsp;&nbsp;&nbsp; <br>
+        DIASTOL&nbsp;&nbsp;&nbsp; 293.37&nbsp; 1&nbsp; 3.1148 0.0868386 .&nbsp;
+        <br>
+        Residuals 3108.14 33 </span></p>
+    <p>You can see that there are more variables in this model, including three
+      that are not statistically significant in the Type II SS table. Note also
+      that the AIC for the simpler three variable model we arrived at with
+      forward selection (AIC = 182.75) is lower than the AIC for this five
+      variable model (AIC = 182.75). We weren't able to get to the better,
+      simpler model because dropping a single variable didn't improve the AIC,
+      but evidently if we could have dropped two at once we would have found the
+      better, simpler model - this prevents the backward stepwise procedure from
+      finding a simpler model that's better than the current one.</p>
+    <p>Bear in mind that it could have happened the other way - we didn't see
+      the value of YEARS as a predictor until WEIGHT was already included, and
+      it's possible that a pair of predictors could have further lowered AIC
+      further, but we couldn't enter two at a time to find that out.</p>
+    <p>Stepwise procedures are not universally admired by statisticians, but
+      they can be a useful tool when analyzing large numbers of predictors,
+      particularly in an exploratory analysis in which little is known about the
+      relationships to expect between predictors and response. If you choose to
+      use stepwise procedures, my advice to you is to not trust it too much. Use
+      both forward and backward selection and see whether the same model is
+      chosen. Bear in mind that these methods only add or drop one variable at a
+      time, and models in which entire sets of variables are added or dropped as
+      a unit are not included. We didn't include interactions in this example -
+      interactions may be important, but adding them vastly increases the
+      complexity of the problem. Also bear in mind that stepwise procedures
+      search blindly through a large number of possible models, and the
+      potential for over-fitting and spurious results is high.</p>
+    <p> </p>
+  </body>
+</html>
