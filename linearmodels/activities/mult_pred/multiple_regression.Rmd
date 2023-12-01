@@ -1,0 +1,316 @@
+---
+title: "Multiple regression"
+author: "Your Name"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+Import the GapMinder data:
+
+```{r import.gapminder}
+
+
+
+```
+
+Open the data set and check 
+
+## Case 1 - multiple regression enhances the significance of the relationship between variables
+
+Make a scatterplot of life expectancy against the log of population density:
+
+```{r graph.life.exp.against.logPop.Density}
+
+
+
+```
+
+#### Question: does it appear from the graph that there is a relationship between life expectancy and the log of population density? Is it positive or negative?
+
+>
+
+Run a linear model of life expectancy on log of population density - with just one predictor this is a simple linear regression model. Get the summary of the fitted model, and an ANOvA table.
+
+```{r life.logpop.simple.linear.regression}
+
+
+
+```
+
+#### Question: is logPop.Density statistically significant? Is it a good predictor of variation in life expectancy? What statistics did you use to answer each of these questions?
+
+> 
+
+
+
+Make a scatterplot of life expectancy against the log of GDP:
+
+```{r graph.life.exp.vs.loggdp}
+
+
+
+```
+
+#### Question: is the relationship between life expectancy and the log of population density positive or negative, according to the graph?
+
+>
+
+Run a linear model of life expectancy on log of GDP - this too will be a simple linear regression. Get the summary of the fitted model, and an ANOvA table.
+
+```{r life.loggdp.simple.linear.regression}
+
+
+
+```
+
+#### Question: is logGDP statistically significant? Is it a good predictor of variation in life expectancy (at least, does it seem to be a better predictor than logPop.Density)? How do you know?
+
+> 
+
+
+Correlate the two predictors before using them in a model together:
+
+```{r correlate.logGDP.and.logPop.Density}
+
+
+
+```
+
+#### Question: is there a large correlation between logGDP and logPop.Density?
+
+>
+
+
+Now run a multiple regression, using both logPop.Density and logGDP as predictors. Get the summary of the fitted model and the ANOVA table (using the anova() function will give you Type I SS).
+
+```{r life.logpop.loggdp.multiple.regression}
+
+
+
+```
+
+#### Question: how did the p-value for logPop.Density and logGDP change when you included both in the model together?
+
+> 
+
+#### Question: how did the slope coefficients change, compared to their values when you included just one of the predictors at a time?
+
+> 
+
+#### Question: which of these three models (the two that included only a single predictor, and the one that included both at once) had the largest R^2? What does that tell you about which model did the best job of predicting life expectancy?
+
+> 
+
+Now get the Type II SS ANOVA table for this multiple regression:
+
+```{r typeII.SS.anova.table.life.popdens.gdp}
+
+
+
+```
+
+Refer to the 3D plot of these data, showing the plane that represents the model predicted values and residuals indicating how far each country is from the plane.
+
+#### Question: based on your interpretation of the residuals on the 3D graph on the course web site, which countries had high life expectancies for their logPop.Density and logGDP? Which had short life expectances for their logPop.Density and logGDP?
+
+> 
+
+Calculate the standardized coefficients:
+
+```{r life.logpop.loggdp.std.coeff}
+
+
+
+```
+
+#### Question: which predictor is better at predicting life expectancy? Do you need to worry about the fact that poulation density is measured in people per square mile, and that GDP is measured in dollars per person? Why or why not (that is, do standardized coefficients correct for the problem)?
+
+> 
+
+## Effects of strongly correlated predictors can't be told apart
+
+
+Make a scatter plot of life expectancy on birth rate:
+
+```{r graph.life.birth}
+
+
+
+```
+
+Now make a scatter plot of life expectancy on babies per woman:
+
+```{r graph.life.bpw}
+
+
+
+```
+
+And, make a scatter plot of birth rate on babies per woman:
+
+```{r graph.birth.bpw}
+
+
+
+```
+
+Run a linear model of life expectancy on birth rate alone, one with babies per woman alone, and one with both birth rate and babies per woman.
+
+First birth rate alone:
+
+```{r life.birth.rate}
+
+
+
+```
+
+#### Question: is birth rate a good predictor of life expectancy? How do you know?
+
+> 
+
+Now run a linear model with babies per woman alone:
+
+```{r life.babies.per.woman}
+
+
+
+```
+
+#### Question: is babies per woman a good predictor of life expectancy? How do you know?
+
+> 
+
+Correlate the two predictor variables:
+
+```{r cor.bpw.birth}
+
+
+
+```
+
+#### Question: how big is this correlation (how close is it to perfect correlation)?
+
+>
+
+Finally, run a linear model with both predictors together:
+
+```{r life.birth.bpw}
+
+
+
+```
+
+#### Question: are both of the predictors still statistically significant when you include both in the same model?
+
+> 
+
+#### Question: Birth.rate is statistically significant, but Babies.per.woman is not. Does this mean that Birth.rate is an excellent predictor of life expectancy, but Babies.per.woman is not? Why or why not?
+
+>
+
+## Multiple regression can identify spurious relationships
+
+First, make a graph of life expectancy on cholesterol:
+
+```{r graph.life.exp.on.chol}
+
+
+
+```
+
+
+Now run a regression of life expectancy on cholesterol:
+
+```{r life.cholesterol.alone}
+
+
+
+```
+
+#### Question: according to the slope coefficient, what is the relationship between cholesterol level and life expectancy across different countries of the world? Is this what you would expect, given the effect of cholesterol on cardiovascular health?
+
+>
+
+
+We expect that cholesterol is correlated with wealth (as indicated by logGDP) and healthcare (as indicated by TB rates and maternal mortality). Get the correlation coefficients:
+
+```{r correlate.predictors.cholesterol}
+
+
+
+```
+
+#### Question: these are fairly large correlations, but do these correlations measure all of the confounded variation between these variables?
+
+>
+
+Now run a model with indicators of wealth included along with cholesterol - use cholesterol, logGDP, Maternal.mortality, and TB as predictors of life expectancy:
+
+```{r life.cholesterol.wealth}
+
+
+
+```
+
+Run the anova() command to get Type I SS:
+
+```{r life.typeI.ss}
+
+
+
+```
+
+Now get the Type II SS with the Anova() command from the car library:
+
+```{r life.typeII.ss}
+
+
+
+```
+
+#### Question: cholesterol is significant in the Type I SS table, but not in the Type II SS table. Why?
+
+>
+
+Calculate the residuals for life expectancy, and for cholesterol, accounting for logGDP, TB, and Maternal.mortality:
+
+```{r cholesterol.residuals}
+
+
+
+```
+
+
+Graph life.resid against chol.resid to see how much relationship there is between life expectancy and cholesterol after logGDP, Maternal.mortality, and TB have been eliminated:
+
+```{r graph.indep.chol.var}
+
+
+
+```
+
+Run a linear model that explains life.resid with chol.resid:
+
+```{r anova.indep.chol.var}
+
+
+
+```
+
+#### Question: is cholesterol still a good predictor of life expectancy when it is included with measures of wealth?
+
+> 
+
+#### Question: does this prove that the relationship between life expectancy and cholesterol was spurious? Why might we think it's spurious, even though the statistical evidence can't tell us this for sure?
+
+> 
+
+
+
