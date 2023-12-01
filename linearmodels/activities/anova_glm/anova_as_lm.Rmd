@@ -1,0 +1,207 @@
+---
+title: "ANOVA as a linear model"
+author: "Your name"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Two species
+
+We will work with data on the length of cuckoo eggs deposited in the nests of different host species. To begin import the "two_sp" worksheet from the cuckoo_all_species.xls spreadsheet you downloaded.
+
+```{r twosp.import.data}
+
+
+
+```
+
+Add a "Wren" dummy variable to twosp:
+
+```{r twosp.dummy}
+
+
+
+```
+
+Calculate summary statistics for the data, needed for plotting:
+
+```{r twosp.sumstats}
+
+
+
+```
+
+
+Plot the means and confidence intervals:
+
+```{r twosp.plotmeans}
+
+
+
+```
+
+**Question: based on the graph does there appear to be a difference between species? How do you know?**
+
+> 
+
+**Question: what does a 95% confidence interval tell you?**
+
+> 
+
+
+Run the ANOVA, in the usual way (using length as the response variable, and species as the grouping variable):
+
+```{r twosp.anova}
+
+
+
+```
+
+Now you can run the analysis using Wren as a predictor in a regression analysis:
+
+```{r twosp.regression}
+
+
+
+```
+
+**Question: Report the Wren coefficient; what does it represent?**
+
+> 
+
+**Question: Is there a statistically significant difference between species? Do you need to run a Tukey HSD procedure to knwo which species are different for this analysis? Why or why not?**
+
+> 
+
+
+## Six species
+
+Now we will repeat this process using six species.
+
+Import the data:
+
+```{r allsp.import.data}
+
+
+
+```
+
+Dummy code the columns:
+
+```{r allsp.dummy}
+
+
+
+```
+
+**Question: What should these dummy coded columns have in them for a row that contains a Hedge Sparrow? Why? Double check your allsp data frame and confirm that this is the case.**
+
+> 
+
+**Question: Why isn't there a column for Hedge Sparrow? Does it have to be Hedge Sparrow, or could any of the species be omitted?**
+
+> 
+
+**Question: We are doing this dummy coding so that we can use regression analysis to conduct an ANOVA comoparing species means. Why not just use a single column with numbers instead of species names (1 for Hedge Sparrow, 2 for Meadow Pipit, etc.)? Would the analysis work correctly (why or why not)?**
+
+> 
+
+
+Graph the six species data - first, summarize the data by species:
+
+```{r allsp.sumstats}
+
+
+
+```
+
+
+Plot the means and 95% confidence intervals:
+
+```{r allsp.plotmeans}
+
+
+
+```
+
+**Question: Based on the graph, which species is most different from the others?**
+
+> 
+
+
+ANOVA of the six species data set:
+
+```{r allsp.anova}
+
+
+
+```
+
+**Question: Are there significant differences between species? Can you tell at this point which species are different (why or why not)?**
+
+> 
+
+
+Now analyze the same data using the dummy-coded variables. This is a multiple linear regression of the six species data set:
+
+```{r allsp.regression}
+
+
+
+```
+
+**Question: At this point only the residual line should be the same between this table and your ANOVA table, above. Is it the same?
+
+> 
+
+To see if the rest of the table for the multiple regression version of the analysis matches the ANOVA version you need to sum the SS for each of the dummy coded variables. Confirm that the SS for the five dummy coded predictors is the same as the species SS in your ANOVA:
+
+```{r allsp.check.ss}
+
+
+
+```
+
+**Question: Is the sum of the five dummy coded variable SS equal to the species SS from the ANOVA table above?**
+
+> 
+
+
+## Confirm that the regression using five dummy coded variables is predicting the mean length for each species.
+
+Coefficient estimates from the species lm:
+
+```{r allsp.species.coefficients}
+
+
+
+```
+
+**Question: Can you tell from these tests of coefficients if Meadow Pipit is different from Robin? If so, how? If not, what would you need to do to test for this difference?**
+
+> 
+
+## Add the means, as calculated form the glm coefficients, do your allsp.sumstats data set to make it easy to compare with the means calculated in the usual way:
+
+```{r allsp.glm.means}
+
+
+
+```
+
+
+**Question: Compare the "mean" column with this new "mean.glm" column in allsp.sumstats - are they the same?**
+
+> 
+
+**Question: Were the predicted values for each species, using the app on the web page, the same as the group means?**
+
+> 
+

@@ -1,0 +1,847 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Anova as GLM</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script type="text/javascript" src="anova_glm.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>The General Linear Model - everything is regression</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#instructions">Instructions</a></p>
+      <p><a href="#twosp">Two species</a></p>
+      <p><a href="#sixsp">Six species</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <p class="part" id="intro">Today we will analyze grouped data in two
+        different ways: a) as a general linear model (GLM) and b) as a
+        dummy-coded regression. Since GLM expresses all analyses as regressions,
+        we expect that both of these approaches will give identical results. By
+        comparing the output we get from each approach we can practice
+        interpreting GLM output when we are using it to conduct an analysis of
+        variance on grouped data. We will also learn how to take advantage of
+        the tests of coefficients that are part of the standard GLM output, but
+        not part of the standard ANOVA output in R.</p>
+      <div style="clear:both; margin-bottom: 10px; overflow: auto">
+        <p><img alt="About to do the deed" src="Cuckoo.jpg" style="float:left; padding-right: 10px">The
+
+          data we will use today gives the length of European cuckoo eggs laid
+          in nests of various host species (if you have taken Biol 215 here you
+          probably recognize it). European cuckoos are nest parasites, which
+          means they do not build nests of their own, but instead place their
+          eggs in the nests of other "host" bird species. They have been
+          observed laying their eggs on the ground, picking them up in their
+          beaks, and then depositing them in a host nest nearby.</p>
+      </div>
+      <div style="clear:both; margin-bottom:10px;overflow:auto">
+        <p><img alt="Chick ejecting" src="chick_ejecting_egg.jpg" style="float: left; padding-right: 10px">These
+
+          host species raise the cuckoo chick as its own, even though the cuckoo
+          chick is often much larger than the host species' chicks. Cuckoo
+          chicks hatch quickly and grow rapidly after hatching, and are able to
+          actively eject the host species' eggs from the nest. Hosts often end
+          up raising only the cuckoo chick.</p>
+      </div>
+      <div style="clear: both;margin-bottom:10px;overflow:auto">
+        <p><img alt="Meadow pipit parent" src="meadow_pipit_parent.jpg" style="float:left; padding-right: 10px">As
+          the cuckoo chick reaches full size, it may be substantially larger
+          than the host adults. This open-mouthed chick is being fed by a meadow
+          pipit.</p>
+      </div>
+      <div style="clear:both; margin-bottom: 10px; overflow:auto">
+        <p><img alt="Wren parent" src="wren_parent.jpg" style="float:left; padding-right: 10px">European
+          wrens are one of the host species cuckoos use. Wrens are quite a bit
+          smaller than other host species, like meadow pipits, and you can see
+          from this picture of a wren feeding a cuckoo chick that raising a
+          cuckoo is a heavy burden for such a small host. At some point the food
+          needs of the cuckoo chick could exceed the host pair's foraging
+          ability, and the cuckoo chick may starve. The size of the egg is
+          related to the size of the chick, such that smaller cuckoo eggs tend
+          to give rise to smaller chicks.</p>
+        <p>Given this, it seems likely that a female cuckoo's reproductive
+          success would increase if she matched her egg sizes to the size of the
+          host species. The question we are asking is, are cuckoo egg lengths
+          different in different host species nests? We have data measured by
+          Oswald Latter in 1902 using cuckoo eggs collected from nests of
+          various host species to address this question.</p>
+      </div>
+      <h2 class="part" id="instructions">Instructions</h2>
+      <p>To begin, start a new project in R Studio for today's activity in a new
+        folder. Download <a href="cuckoo_all_species.xls">this</a> data file,
+        and save it to your project folder. Download <a href="anova_as_lm.Rmd">this</a>
+        R markdown file and save it in your project folder as well, and open it
+        in R Studio.</p>
+      <p>By the way, Mac users... it seems that Safari likes to rename these Rmd
+        files by adding a .txt at the end of them. If this is happening to you,
+        you will need to rename the file before you can use it - find it in the
+        Files tab of R Studio, check the box next to the file, click Rename, and
+        delete the .txt that was added. This seems to be something that Safari
+        does but Chrome and Firefox do not, so if you're comfortable using one
+        of those browsers you can avoid the issue.</p>
+      <p>R's general linear model function is lm(). It is sophisticated enough
+        to dummy-code our categorical variables for us, and once you understand
+        how a GLM is working we will let it do that work for us. To help you
+        learn how the GLM works we will do some dummy coding by hand, and then
+        see how using dummy coded variables in a regression model allows us to
+        ask exactly the same question we would ask if we used an ANOVA on group
+        means.</p>
+      <h3 class="part" id="twosp">First analysis: two host species</h3>
+      <p>Recall from lecture that when there are only two groups, we need only a
+        single numeric dummy variable. The dummy variable is assigned either a 1
+        or a 0 depending on the factor level, and then that numeric dummy
+        variable is used as our predictor in a simple linear regression. The
+        results of this analysis should be identical to the results of an ANOVA
+        comparing the two group means. We will demonstrate this with just two
+        host species, European wrens and tree pipits, first.</p>
+      <h4>A. Dummy coding the two species data</h4>
+      <p>1. Import the "two_sp" Excel worksheet into R Studio, and call the R
+        data set "twosp". You will see there are 15 measurements of cuckoo egg
+        length for each of two host species, the wren and the tree pipit.</p>
+      <p> </p>
+      <p>2. The first thing we need to do is to make a dummy-coded version of
+        the Species column. Our dummy column will be named for one of the
+        species - it doesn't matter which one we use, but R uses the level that
+        is first alphabetically to be the 0 category, so we'll do the same by
+        using Wren as the dummy variable name. The Wren column will have a 1 for
+        rows in which "species" is Wren, and a 0 for any other species (with
+        just two species it will have a 0 when species is Tree Pipit). First we
+        will write a statement that evaluates if each row of the species column
+        is "Wren", like so (in the <strong>console</strong>):</p>
+      <p class="rcmd">twosp$species == "Wren"</p>
+      <p><strong>**CAREFUL**, it's important to use two equal signs here</strong>
+        - a single equal sign is an assignment, equivalent to &lt;-, which
+        assigns the right side of the expression to the left, so if you only use
+        one equal sign you will set every row of the species column to contain
+        Wren. Using two equal signs makes this expression a <strong>comparison</strong>,
+        which compares the contents of the species column to the value of
+        "Wren", and returns TRUE when the species is a wren, and FALSE when it
+        is not. Since the wrens are in the first 15 rows of the file you should
+        see 15 TRUEs followed by 15 FALSEs. If you accidentally used just one
+        equal sign don't despair, you can fix the expression and then re-import
+        the data by running your read_excel() command again (R Markdown is your
+        friend).</p>
+      <p>Now, this command is returning TRUE and FALSE, when what we want is 1's
+        and 0's. As far as a computer is concerned, a comparison like this is a
+        <strong>boolean</strong> comparison, and the return values of TRUE and
+        FALSE are a <strong>boolean variable</strong>. Even though what we are
+        seeing on the screen are the words "true" and "false", what is actually
+        stored for a boolean variable is either a 0 (which is interpreted as
+        false), or a 1 (which interpreted as true). Given this, we can convert
+        this set of TRUEs and FALSEs to 1's and 0's by converting the boolean
+        variable to a numeric variable - modify your command in the <strong>console</strong>
+        to: </p>
+      <p class="rcmd">as.numeric(twosp$species == "Wren")</p>
+      <p>You should now see fifteen 1's followed by fifteen 0's, instead of
+        TRUE's and FALSE's. Note that this wouldn't work if we had the words
+        "true" and "false" in our variable instead - for example, the command
+        (in the <strong>console</strong>):</p>
+      <p class="rcmd">as.numeric(c("TRUE", "FALSE"))</p>
+      <p>makes a vector with the words "TRUE" and "FALSE" in it and then tries
+        to convert those words to numbers, which gives us an error. The quotes
+        around the words cause R to treat them as character data rather than as
+        boolean data, so the conversion to numbers doesn't make sense (it makes
+        as much sense to R as asking to convert the words "dog" and "horseshoe"
+        to numbers).</p>
+      <p>Now, to complete this step we want to assign these 1's and 0's to a
+        dummy-coded variable called "Wren" in the twosp data set. Add this
+        command to the twosp.dummy code chunk of your <strong>R markdown file</strong>:</p>
+      <p class="rcmd">as.numeric(twosp$species == "Wren") -&gt; twosp$Wren</p>
+      <p>Your twosp data frame should now have three variables, including this
+        new Wren variable that has a 1 when species is "Wren", and 0 when
+        species is "Tree Pipit".</p>
+      <h4>B. Look at your data</h4>
+      <p>We should always look at the data before we analyze it, so let's plot
+        the means and error bars for each species.</p>
+      <p>We will use the summarySE() function from the Rmisc library that you
+        installed last time to get our summary statistics. In the twosp.sumstats
+        chunk of your <strong>R markdown file</strong> enter the command:</p>
+      <p class="rcmd">library(Rmisc)</p>
+      <p class="rcmd">summarySE(twosp, "length", "species") -&gt; twosp.sumstats</p>
+      <p>The summarySE() function takes the name of a data set as its first
+        argument, the name of the variable to be summarized as its second
+        argument (in quotes, "length"), and the grouping variable as the third
+        argument ("species"). The summary statistics are then assigned to
+        twosp.sumstats.</p>
+      <p>Now to plot the means and confidence intervals with ggplot, you will
+        need to (in the twosp.plotmeans code chunk of your <strong>R markdown
+          file</strong>):</p>
+      <p>...load the ggplot2 library:</p>
+      <p class="rcmd">library(ggplot2)</p>
+      <p>..set species as the x-axis variable, and "length" as the y-axis
+        variable, add points for the means, and add error bars that use length -
+        ci for ymin, and length + ci for ymax:</p>
+      <p class="rcmd">ggplot(twosp.sumstats, aes(x = species, y = length)) +
+        geom_point() + geom_errorbar(aes(ymin = length - ci, ymax = length +
+        ci), width = 0.1)</p>
+      <p>For the daphnia data we use the mean + se for ymax and the mean - se
+        for ymin, but we switched to 95% confidence intervals this time - ci is
+        the width of the confidence intervals. The plot will give you a mean for
+        Tree Pipit and a mean for Wren, and the 95% CI's for each mean. You'll
+        see that Wrens are smaller, and the confidence intervals are clearly
+        non-overlapping. You would expect that the ANOVA should be significant
+        given this.</p>
+      <p>Take a look at the plot - you have set Wren to 1, and Tree Pipit to 0
+        in your dummy-coded column. When you use regression to analyze the
+        differences between the groups, which species mean will be equal to the
+        intercept term? <a href="javascript:ReverseDisplay('who_is_zero')">Click
+          here to see if you're right.</a> </p>
+      <div style="display: none;" id="who_is_zero">
+        <p style="border-style: solid; padding: 10px;"> The Tree Pipit is the 0
+          group, so the intercept will be the tree pipit mean. </p>
+      </div>
+      <p> Should the slope coefficient on the Wren dummy variable be positive or
+        negative? <a href="javascript:ReverseDisplay('wren_pos_neg')">Click
+          here to see if you're right.</a> </p>
+      <div style="display: none;" id="wren_pos_neg">
+        <p style="border-style: solid; padding: 10px;"> The coefficient on the
+          dummy variable is going to be the difference between the zero group
+          mean and the 1 group mean. Since Wrens have a lower mean than Tree
+          Pipits the coefficient will be negative. </p>
+      </div>
+      <h4>C. ANOVA using a General Linear Model</h4>
+      <p>1. We used the aov() function to do ANOVA in our review exercise, and
+        used lm() for regression, but this time we will use the lm() function
+        for both. The lm() command is R's general linear model command, and will
+        be our workhorse from now on.</p>
+      <p>We're expecting that using a dummy-coded numeric predictor will give us
+        the same results as if we had used an ANOVA with our grouped data. To
+        see if that's the case we need to run an ANOVA using species as the
+        grouping variable first, so we can compare it to our dummy-coded
+        regression. To get our ANOVA use the commands (in the <strong>R
+          markdown file</strong>):</p>
+      <p class="rcmd">lm(length ~ species, data = twosp) -&gt; twosp.anova.lm</p>
+      <p class="rcmd">anova(twosp.anova.lm)</p>
+      <p>The first command conducts the analysis, and the second produces the
+        ANOVA table. You will see that even though this is the command we used
+        for regression in our review exercise you get a typical ANOVA table -
+        there is a single term for species with 1 degrees of freedom, reflecting
+        that there were two levels for species (model df is number of groups
+        minus 1). The row label for the predictor is "species".</p>
+      <p>We can confirm that lm() used a GLM for this analysis by showing the
+        coefficients (in your R markdown file, below the anova() function<strong></strong>):</p>
+      <p class="rcmd">summary(twosp.anova.lm)</p>
+      <p>When you run the code chunk you will see that there is a coefficient
+        labeled speciesWren, which is the slope coefficient for a dummy-coded
+        Wren column that R creates internally (R names the dummy-coded
+        coefficients for the name of the variable combined with the name of the
+        level that is assigned a 1). R sets whichever level is first
+        alphabetically to be the baseline group, which in this case was Tree
+        Pipit. Since the intercept by definition is the mean when the predictor
+        equals 0 the intercept coefficient is the mean for Tree Pipit. The slope
+        is the change in length per one unit of change in the predictor - going
+        from speciesWren = 0 to speciesWren = 1 is one unit of change in the
+        predictor, and the slope coefficient for speciesWren is thus the
+        difference in mean egg length between the Tree Pipit and the Wren.</p>
+      <p> </p>
+      <p>Now that we know what the ANOVA table should look like, you can move on
+        to using regression on Wren, the dummy-coded predictor we created
+        ourselves.</p>
+      <h4>D. Regression with dummy coded species</h4>
+      <p>1. To do your regression analysis on your dummy coded Wren variable,
+        use the command (in your <strong>R markdown file</strong>):</p>
+      <p class="rcmd">lm(length ~ Wren, data = twosp) -&gt; twosp.regression.lm</p>
+      <p> </p>
+      <p>2. Now that the model is fit, generate an ANOVA table using the command
+        (keep adding to the same code chunk, below your regression lm()):</p>
+      <p class="rcmd">anova(twosp.regression.lm)</p>
+      <p>You'll see that the ANOVA table is exactly the same as the first one in
+        which you used species as a categorical predictor, except that in this
+        case Wren is shown as the predictor instead of species.</p>
+      <p>You can see the coefficients with the command (in the same
+        twosp.regression code chunk, below your anova() command):</p>
+      <p class="rcmd">summary(twosp.regression.lm)</p>
+      <p>and they should match what you got in the previous step using species
+        as a categorical predictor, except that the name on the slope will be
+        Wren. The interpretation of the coefficients is also the same - the
+        intercept is the Tree Pipit mean, and the Wren slope coefficient is the
+        difference between the species mean egg lengths.</p>
+      <p>Now that you have an idea of how this works using a simple example with
+        only two species to compare, we'll repeat the procedure with six
+        species.<br>
+      </p>
+      <h3 class="part" id="sixsp">Six host species</h3>
+      <h4>A. Dummy coding the six species data.</h4>
+      <p>1. Import the "all_sp" worksheet into an R data set called allsp.</p>
+      <p> </p>
+      <p>2. Do the dummy coding - this is just like what you did when there are
+        only two species, but now that there are six you will need to make five
+        columns of dummy-coded variables. If you look at the levels in the
+        species column (using levels(factor(allsp$species)) at the <strong>console</strong>)
+        you'll see the list is:</p>
+      <p class="rout">[1] "Hedge Sparrow" "Meadow Pipit"&nbsp; "Pied
+        Wagtail"&nbsp; "Robin"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        "Tree Pipit"&nbsp;&nbsp;&nbsp; "Wren" </p>
+      <p> </p>
+      <p>R will use the first one alphabetically as the baseline, so we will do
+        the same - we will skip Hedge Sparrow, but will make a column for Meadow
+        Pipit, Pied Wagtail, Robin, Tree Pipit, and Wren. Spaces in column names
+        are a pain, so replace spaces with periods in column names - for
+        example, for the Meadow Pipit you would use (in your <strong>R markdown
+          file</strong>):</p>
+      <p class="rcmd">as.numeric(allsp$species == "Meadow Pipit") -&gt;
+        allsp$Meadow.Pipit<br>
+      </p>
+      <p>Do this for each of the remaining four species - make sure you change
+        the name each time, and match the name in the comparison to the name of
+        the dummy-coded column you're making.</p>
+      <p>Once you're done, open the allsp data set and confirm that you now have
+        7 variables, 5 of which are dummy coded species factor levels, and that
+        the 0's and 1's in the dummy coded columns are correct (for example, the
+        Meadow.Pipit dummy coded column should have 1's for every Meadow Pipit
+        and 0's for every other species, Pied.Wagtail should have 1's for every
+        Pied Wagtail and 0's for every other species, and so on).</p>
+      <p> </p>
+      <h4>B. Look at your data.</h4>
+      <p> </p>
+      <p>Produce another plot comparing means for the six host species in this
+        data set, like you did for two species (you can use the species column
+        for grouping).</p>
+      <p>Take a look at the plot - now that Hedge Sparrow is the species with 0
+        on all the dummy coded variables what will the intercept represent? <a
+          href="javascript:ReverseDisplay('who_is_zero_six')">Click here to see
+          if you're right.</a> </p>
+      <div style="display: none;" id="who_is_zero_six">
+        <p style="border-style: solid; padding: 10px;"> The intercept will now
+          be the hedge sparrow mean. </p>
+      </div>
+      <p> Should the coefficient on the Wren dummy variable be positive or
+        negative? <a href="javascript:ReverseDisplay('wren_pos_neg_six')">Click
+          here to see if you're right.</a> </p>
+      <div style="display: none;" id="wren_pos_neg_six">
+        <p style="border-style: solid; padding: 10px;"> Cuckoo eggs in wren
+          nests are the smallest, so the difference between Hedge Sparrow and
+          Wren is negative. For the other species, any that are above Hedge
+          Sparrow will be positive, and any that are below Hedge Sparrow will be
+          negative. </p>
+      </div>
+      <h4>C. ANOVA with a GLM</h4>
+      <p>Conduct an ANOVA on these six species, as you did for the two species
+        data set (put your command in the allsp.anova code chunk of your <strong>Rmd
+          file</strong>). Use the same naming convention as we started using
+        with two species - use <span style="color: red">allsp.anova.lm</span>
+        for the name of the model <span style="color:red">(note that this
+          object gets used to extract coefficients, below, in step E. If the
+          name of this object is different from the name used in step E the
+          command will fail)</span>. You should see that, again, the ANOVA table
+        you get looks like what you would expect for an analysis of variance
+        comparing group means to one another - a single row labeled "species"
+        with 5 degrees of freedom - even though you used the lm() command for
+        the analysis. This means that while R uses multiple regression (i.e.
+        regression with more than one predictor) to do the analysis, it knows to
+        present the test of species in the ANOVA table as though we had done a
+        traditional ANOVA, with species as the grouping variable.</p>
+      <h4>D. (Multiple) Regression</h4>
+      <p>What did the lm() command do, exactly, with the species variable? We
+        can work through the steps by doing a multiple regression with our five
+        dummy-coded variables, and then combining them into a single test of
+        variation among species. We will learn more about multiple regression in
+        the coming weeks, but for now you just need to know that we are still
+        predicting a single response (length), using all five dummy-coded
+        columns as predictors. This sounds complicated, but it's actually a
+        simple extension of our regression command - all we need to do is to
+        list all of the dummy-coded predictors in our model formula with +
+        symbols between them (in your <strong>Rmd file</strong>,
+        allsp.regression code chunk):</p>
+      <p class="rcmd">lm(length ~ Meadow.Pipit + Pied.Wagtail + Robin +
+        Tree.Pipit + Wren, data = allsp) -&gt; allsp.regression</p>
+      <p>I left it to you to do the naming for your dummy coded columns, so if
+        you get a "not found" error check that the column names you are using
+        for this command match what you used in your allsp data set. Note that
+        the order of the predictors doesn't matter to the analysis, but R uses
+        alphabetical order by default - keeping the dummy-coded predictors in
+        alphabetical order will make the results match the R output.</p>
+      <p>To get the ANOVA table use (in the next line below your lm() command):</p>
+      <p class="rcmd">anova(allsp.regression)</p>
+      <p> </p>
+      <p>The ANOVA table will look like this:</p>
+      <p class="rout">Analysis of Variance Table <br>
+        &nbsp;<br>
+        Response: length <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Df Sum Sq Mean Sq F value&nbsp;&nbsp;&nbsp;
+        Pr(&gt;F)&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Meadow.Pipit&nbsp;&nbsp; 1&nbsp; 1.767&nbsp; 1.7672&nbsp; 2.1567
+        0.1446995&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Pied.Wagtail&nbsp;&nbsp; 1&nbsp; 2.202&nbsp; 2.2016&nbsp; 2.6869
+        0.1039311&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Robin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;
+        0.209&nbsp; 0.2092&nbsp; 0.2553 0.6143459&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Tree.Pipit&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp; 9.832&nbsp; 9.8319 11.9991
+        0.0007507 *** <br>
+        Wren&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1
+        28.800 28.8002 35.1486 3.329e-08 *** <br>
+        Residuals&nbsp;&nbsp;&nbsp; 114 93.410&nbsp;
+0.8194&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br>
+        --- <br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1<br>
+      </p>
+      <p> </p>
+      <p> The ANOVA table you get from this approach does not look like an
+        analysis of variance comparing group means. Rather than a single row for
+        species with 5 degrees of freedom, this table has a separate line for
+        each dummy variable with 1 degrees of freedom each. But, this is in fact
+        the same analysis as our ANOVA above, we just need to do some work to
+        show it.</p>
+      <p>First, note that some things are identical already - the residual
+        degrees of freedom and the residual SS are the same. The only thing that
+        is different between our ANOVA and multiple regression models is how we
+        are representing the species variable, but the random, unexplained
+        variation in the data is the same regardless.</p>
+      <p>Second, note that the degrees of freedom we're using to model the
+        effect of species on length is the same for both this model and the
+        ANOVA. In a multiple regression each predictor is tested for its effect
+        on the response separately, and each predictor consumes 1 degree of
+        freedom. We needed five dummy variables to represent 6 species, so
+        across all of the predictors we are using 5 degrees of freedom, which is
+        the same as when we used species as a categorical predictor above.</p>
+      <p>The sums of squares explained by these 5 regression predictors is also
+        the same as our species SS from the regression, if we sum across the
+        five dummy-coded predictors. We can check this by extracting the sums of
+        squares from the table and summing them - we will use this as an
+        opportunity to practice extracting information from R objects.</p>
+      <p>First, put the ANOVA table in an object - this will make the commands
+        needed to extract the SS simpler (in your <strong>R markdown file</strong>,
+        in the allsp.check.ss chunk):</p>
+      <p class="rcmd">anova(allsp.regression) -&gt; allsp.aovtable</p>
+      <p>The ANOVA table we get with anova(allsp.regression) is structured with
+        several named components that we can use to pull out just the numbers we
+        need. To see what the named components are use the command (in the <strong>console</strong>):</p>
+      <p class="rcmd">names(allsp.aovtable)</p>
+      <p>You'll see the output:</p>
+      <p class="rout">[1] "Df"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "Sum Sq"&nbsp;
+        "Mean Sq" "F value" "Pr(&gt;F)"&nbsp; </p>
+      <p>The sums of squares are the second named component, called "Sum Sq". We
+        can pull just the sums of squares with the command (in the <strong>console</strong>):</p>
+      <p class="rcmd">allsp.aovtable["Sum Sq"]</p>
+      <p>We're using the square brackets this time to extract a named component
+        of allsp.aovtable, using the name to identify it. We could instead have
+        used an index number, now that we know that Sum Sq is the second named
+        element (in the <strong>console</strong>):</p>
+      <p class="rcmd">allsp.aovtable[2]</p>
+      <p>but using the name of the element is a good idea because it makes your
+        code clearer, and more self-documenting.</p>
+      <p>The table has row names as well - you can see them with (still in the <strong>console</strong>):</p>
+      <p class="rcmd">rownames(allsp.aovtable)</p>
+      <p>The row names are:</p>
+      <p class="rout">[1] "Meadow.Pipit" "Pied.Wagtail"
+        "Robin"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        "Tree.Pipit"&nbsp;&nbsp;
+        "Wren"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        [6] "Residuals"</p>
+      <p>You'll see that the first five rows are named after the predictor
+        variables we used, and the final row is named Residuals. We just want to
+        sum the SS from the five dummy-coded predictors, so we can drop the
+        Residuals row from the sum - we can do this either by putting the names
+        of the five predictors in a vector to include them (in your <strong>R
+          markdown file</strong>, in the same allsp.check.ss chunk right afer
+        your anova() command):</p>
+      <p class="rcmd">sum(allsp.aovtable[c("Meadow.Pipit","Pied.Wagtail","Robin","Tree.Pipit","Wren"),
+        "Sum Sq"])</p>
+      <p>This command gives you Sum Sq summed across all five dummy-coded
+        predictors, and it should equal the species SS that you got in your
+        ANOVA table. </p>
+      <blockquote>
+        <p>Note that we could have used the row numbers instead, like so:</p>
+        <p class="rcmd">sum(allsp.aovtable[1:5, "Sum Sq"])</p>
+        <p>or simpler still, we could have dropped the sixth row to omit the
+          residuals:</p>
+        <p class="rcmd">sum(allsp.aovtable[-6, "Sum Sq"])</p>
+        <p>Any of these would be fine, but I have a slight preference for naming
+          what is being included to make the code easier to interpret.</p>
+      </blockquote>
+      <p>Summing across the sums of squares for each predictor gives us the same
+        SS as we got for species in our ANOVA. If the SS is the same, and the
+        d.f. is the same (5 across the five dummy-coded preditors), then we can
+        finish the rest of the calculations to get our ANOVA of species (done
+        for you here):</p>
+      <ul>
+        <li>Divide the dummy coded predictor SS by the df to get the MS for the
+          explained variation: 42.81/5 = 8.56</li>
+        <li>Divide the MS for the explained variation by the residual MS to get
+          an F ratio: 8.56/0.81 = 10.45</li>
+        <li>Calculate the p-value for an F value of 10.45 with 5 numerator and
+          114 denominator degrees of freedom: according to the R command
+          1-pf(10.45,5,114), this is p = 2.85e-08 (this command calculates the
+          p-value from an F distribution above 10.45 with 5 numerator and 114
+          denominator degrees of freedom)</li>
+      </ul>
+      <p>You can see that since the variation explained collectively by the five
+        dummy coded predictors is the same as the SS for the species term in our
+        ANOVA, all the rest of the ANOVA table would be the same as well. When
+        you run an ANOVA using the lm() function this is how it does the
+        analysis.</p>
+      <h4>E. Confirming that the coefficients are predicting species means</h4>
+      <p>Let's double check that these multiple regression slopes really are
+        giving us the mean for each species - first we can get the coefficients
+        from the dummy coded multiple regression model (in the
+        allsp.species.coefficients chunk of your <strong>R markdown file</strong>):</p>
+      <p class="rcmd">coefficients(allsp.anova.lm) -&gt; allsp.coeff</p>
+      <p><span style="color:red">Note that for this command to work you must use
+          the all species anova linear model object's name correctly. If you
+          used something other than allsp.anova.lm in step C, above, then use
+          the same name you used in C within the coefficients() command. <br>
+        </span></p>
+      <p><span style="color:red"></span>You can see what these values are by
+        typing allsp.coeff at the console, and you will see:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (Intercept)
+        speciesMeadow Pipit speciesPied
+        Wagtail&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        speciesRobin&nbsp;&nbsp; speciesTree Pipit <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        23.11428571&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -0.82095238&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -0.22761905&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -0.55803571&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -0.03428571
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; speciesWren <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -1.99428571 </p>
+      <p>The Intercept is supposed to be the mean for Hedge Sparrow, and you can
+        confirm this is true by looking at the allsp.sumstats data set - it
+        should be the same. </p>
+      <p>The rest of the coefficients are differences between Hedge Sparrow and
+        the other species - we can calculate these with (in the <strong>console</strong>):</p>
+      <p class="rcmd">allsp.coeff["(Intercept)"] + allsp.coeff[c("speciesMeadow
+        Pipit", "speciesPied Wagtail", "speciesRobin", "speciesTree Pipit",
+        "speciesWren")]</p>
+      <p>This formula takes the first coefficient (the intercept) and adds it to
+        each coefficient other than the first (which are the rest of the species
+        coefficients). The output should look like this:</p>
+      <p class="rout">speciesMeadow Pipit speciesPied
+        Wagtail&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        speciesRobin&nbsp;&nbsp; speciesTree
+        Pipit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; speciesWren <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        22.29333&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        22.88667&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        22.55625&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        23.08000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        21.12000 </p>
+      <p>and these too should match the means for each of these species (except
+        for Hedge Sparrow, but the intercept itself will match the mean for
+        Hedge Sparrow). We can put these into the data frame of means made by
+        summarySE(), which you called allsp.sumstats, to make it easier to
+        compare them. Note that since the Hedge Sparrow mean is the intercept it
+        didn't get calculated in this step, so we will need to add it in. We can
+        make a vector that includes Hedge Sparrow as the first element like so
+        (in the <strong>console</strong>):</p>
+      <p class="rcmd">c(allsp.coeff["(Intercept)"], allsp.coeff["(Intercept)"] +
+        allsp.coeff[c("speciesMeadow Pipit", "speciesPied Wagtail",
+        "speciesRobin", "speciesTree Pipit", "speciesWren")])</p>
+      <p>You will see that you now have all six means. We now just need to put
+        these into the alllsp.sumstats data frame (in the allsp.glm.means code
+        chunk of your <strong>R markdown file</strong>):</p>
+      <p class="rcmd">allsp.sumstats$mean.glm &lt;-
+        c(allsp.coeff["(Intercept)"], allsp.coeff["(Intercept)"] +
+        allsp.coeff[c("speciesMeadow Pipit", "speciesPied Wagtail",
+        "speciesRobin", "speciesTree Pipit", "speciesWren")])</p>
+      <p>You will now have a new column called mean.glm in allsp.sumstats, and
+        it should have the same values as the mean column - the GLM coefficients
+        are just another way of representing group means.</p>
+      <p>This calculation of the species means was done by using the regression
+        equation for the GLM model to get predicted values for each species. The
+        regression equation for our GLM is:</p>
+      <p>23.11 - 0.82 Meadow.Pipit - 0.23 Pied Wagtail - 0.55 Robin - 0.03 Tree
+        Pipit - 1.99 Wren</p>
+      <p>That is, just like in a simple linear regression it is an intercept
+        added to slopes multiplied by the values of predictors, it's just that
+        we have five predictors instead of one. </p>
+      <p>Any given row of data comes from a single species, so it will have a 1
+        in the dummy-coded variable that bears its name, and 0's in every other
+        column (except for Hedge Sparrow which will have a 0 in every column).
+        The app below is showing the predicted value for a Hedge Sparrow -
+        because it doesn't have a column named for it all of the dummy-coded
+        variables are set to 0, and the predicted value is equal to the
+        intercept.</p>
+      <table class="tableLarge" id="predicted_values">
+        <tbody>
+          <tr>
+            <th>Species</th>
+            <th>Intercept</th>
+            <th>Meadow pipit</th>
+            <th>Pied Wagtail</th>
+            <th>Robin</th>
+            <th>Tree Pipit</th>
+            <th>Wren</th>
+            <th><br>
+            </th>
+            <th>Predicted value</th>
+          </tr>
+          <tr>
+            <td>
+              <select id="species" onchange="setButtons(this)">
+                <option value="hs">Hedge Sparrow</option>
+                <option value="mp">Meadow Pipit</option>
+                <option value="pw">Pied Wagtail</option>
+                <option value="ro">Robin</option>
+                <option value="tp">Tree Pipit</option>
+                <option value="wr">Wren</option>
+              </select>
+            </td>
+            <td id="int">23.11</td>
+            <td>-0.82 × <input value="0" onclick="changeValue(this);" id="mp" type="button">
+            </td>
+            <td>-0.23 × <input value="0" onclick="changeValue(this);" id="pw" type="button">
+            </td>
+            <td>-0.55 × <input value="0" onclick="changeValue(this);" id="ro" type="button">
+            </td>
+            <td>-0.03 × <input value="0" onclick="changeValue(this);" id="tp" type="button">
+            </td>
+            <td>-1.99 × <input value="0" onclick="changeValue(this);" id="wr" type="button">
+            </td>
+            <td>=<br>
+            </td>
+            <td id="predicted">23.11 </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>What would the predicted value be for the first row of allsp, which is
+        a Meadow Pipit? Click the button in the Meadow Pipit column to set the
+        value to 1 for its dummy code variable value - we now multiply its slope
+        coefficient by 1, which means we need to add it to the intercept, which
+        gives us a predicted value of 22.29; this is equal to the Meadow Pipit
+        mean. </p>
+      <p>Repeat this for each of the other species and confirm that the
+        predicted values from the equation are equal to the species means (you
+        can either click on one of the predictor value boxes to toggle between 0
+        and 1, or you can pick the species out of the Species drop-down). Since
+        any given species only matches at most one of the columns clicking on a
+        0 to change it to a 1 will set all the rest of the columns to 0 for you
+        - see how setting any given predictor to 1 allows you to predict the
+        group mean for that species.</p>
+      <p>So, as you can see, even though the GLM is conducted using multiple
+        regression, using dummy-coded predictors allows us to perfectly
+        reproduce the results we would get from a traditional ANOVA - a single,
+        general model can be used for either. Once you understand how this is
+        working, learning new analyses is a simple matter of understanding how
+        the basic GLM is adapted to the new case. For example, a little later in
+        the semester we will learn to analyze mixes of categorical and numeric
+        predictors, which is a simple extension of what you just learned here
+        rather than a whole new type of analysis. Taking the time now to
+        understand the GLM will pay dividends for the rest of the semester.</p>
+      <h2>Really, everything? Revisiting the t-test review exercise using lm()</h2>
+      <p>Now I'm going to show you that the analyses we did for the review
+        exercise are all special cases of the GLM as well. Obviously, the
+        regression and ANOVA review data sets could be analyzed as GLM's, we've
+        seen that in this exercise already, so we won't repeat those analyses
+        here.</p>
+      <p>Less obviously, it is also possible to reproduce the results of a two
+        sample t-test, a one-sample t-test, and a paired t-test using lm() as
+        well. </p>
+      <h4>Two sample t-test as lm()</h4>
+      <p>Let's start with the two sample data set. ANOVA works with two or more
+        groups, so it shouldn't be surprising that a two sample data set can be
+        analyzed just as easily using ANOVA (or a GLM) as a t-test. The data we
+        used are a comparison of heights of outcrossed and selfed plants, and
+        the t-test results are here:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp; Two Sample t-test<br>
+        <br>
+        data:&nbsp; Height by Pollination<br>
+        t = 2.2124, df = 46, p-value = <span style="background-color: yellow">0.03195</span><br>
+        alternative hypothesis: true difference in means between group cross and
+        group self is not equal to 0<br>
+        95 percent confidence interval:<br>
+        &nbsp;0.2305639 4.8840194<br>
+        sample estimates:<br>
+        mean in group cross&nbsp; mean in group self <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        17.17708&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        14.61979 </p>
+      <p>Using lm(Height ~ Pollination, data = twosample) to fit the model,
+        followed by anova() to get the ANOVA table gives us:</p>
+      <p class="rout">Analysis of Variance Table<br>
+        <br>
+        Response: Height<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df
+        Sum Sq Mean Sq F value&nbsp; Pr(&gt;F)&nbsp; <br>
+        Pollination&nbsp; 1&nbsp; 78.48&nbsp; 78.477&nbsp; 4.8945 <span style="background-color: yellow">0.03195</span>
+        *<br>
+        Residuals&nbsp;&nbsp; 46 737.54&nbsp;
+        16.034&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <br>---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</p>
+      <p>Note that the p-values are identical for the t-test and ANOVA. A
+        summary of the model gives us:</p>
+      <p class="rout"> Call:<br>
+        lm(formula = Height ~ Pollination, data = twosample)<br>
+        <br>
+        Residuals:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1Q&nbsp;&nbsp; Median&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        3Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Max <br>
+        -10.1771&nbsp; -2.0690&nbsp;&nbsp; 0.1641&nbsp;&nbsp; 1.9792&nbsp;&nbsp;
+        8.0729 <br>
+        <br>
+        Coefficients:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp; <br>
+        (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        17.1771&nbsp;&nbsp;&nbsp;&nbsp; 0.8174&nbsp; 21.016&nbsp;&nbsp;
+        &lt;2e-16 ***<br>
+        Pollinationself&nbsp; -2.5573&nbsp;&nbsp;&nbsp;&nbsp; 1.1559&nbsp;
+        -2.212&nbsp;&nbsp; <span style="background-color: yellow">0.0319</span>
+        *&nbsp; <br>
+        ---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1<br>
+        <br>
+        Residual standard error: 4.004 on 46 degrees of freedom<br>
+        Multiple R-squared:&nbsp; 0.09617,&nbsp;&nbsp;&nbsp; Adjusted
+        R-squared:&nbsp; 0.07652 <br>
+        F-statistic: 4.895 on 1 and 46 DF,&nbsp; p-value: 0.03195</p>
+      <p>The coefficients are 17.1771 for the intercept, and -2.5573 for the
+        dummy-coded predictor (outcrossed is the baseline group for the dummy
+        coded predictor, so the intercept is the mean of outcrossed plants and
+        the Pollinationself predictor's coefficient of -2.5573 is the difference
+        between outcrossed and selfed - it too has a p-value of 0.0319, just
+        like the t-test and the ANOVA table).</p>
+      <h4>Paired t-test as lm()</h4>
+      <p>Less obviously, we can reproduce a paired t-test with ln(). The paired
+        data we worked with had the uptake of CO<sub>2</sub> for plants grown at
+        250 ppm and the same plants grown at 500 ppm. The data looked like this:</p>
+      <p class="rout">&nbsp;&nbsp; plant uptake_250 uptake_500 diffs<br>
+        1&nbsp;&nbsp;&nbsp; Mc1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        18.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 19.5&nbsp;&nbsp; 1.4<br>
+        2&nbsp;&nbsp;&nbsp; Mc2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        12.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 12.5&nbsp;&nbsp; 0.2<br>
+        3&nbsp;&nbsp;&nbsp; Mc3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        17.9&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 17.9&nbsp;&nbsp; 0.0<br>
+        4&nbsp;&nbsp;&nbsp; Mn1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        26.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 30.9&nbsp;&nbsp; 4.7<br>
+        5&nbsp;&nbsp;&nbsp; Mn2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        30.6&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 32.4&nbsp;&nbsp; 1.8<br>
+        6&nbsp;&nbsp;&nbsp; Mn3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        25.8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 28.5&nbsp;&nbsp; 2.7<br>
+        7&nbsp;&nbsp;&nbsp; Qc1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        30.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 32.5&nbsp;&nbsp; 2.2<br>
+        8&nbsp;&nbsp;&nbsp; Qc2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        35.0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 38.6&nbsp;&nbsp; 3.6<br>
+        9&nbsp;&nbsp;&nbsp; Qc3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        38.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 38.9&nbsp;&nbsp; 0.8<br>
+        10&nbsp;&nbsp; Qn1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        34.8&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 35.3&nbsp;&nbsp; 0.5<br>
+        11&nbsp;&nbsp; Qn2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        37.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 40.6&nbsp;&nbsp; 3.5<br>
+        12&nbsp;&nbsp; Qn3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        40.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 42.9&nbsp;&nbsp; 2.6</p>
+      <p>The diffs column gives the difference in uptake between 500 ppm and 250
+        ppm. Recall that a paired t-test is just a one sample test of the mean
+        of these differences against a null mean of 0. The output you got for
+        this test is:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp; Paired t-test<br>
+        <br>
+        data:&nbsp; uptake_250 and uptake_500<br>
+        t = -4.6595, df = 11, p-value = <span style="background-color: lightblue">0.0006943</span><br>
+        alternative hypothesis: true difference in means is not equal to 0<br>
+        95 percent confidence interval:<br>
+        &nbsp;-2.944739 -1.055261<br>
+        sample estimates:<br>
+        mean of the differences <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        -2 </p>
+      <p>To reproduce this test with a general linear model, we will use diffs
+        as the response variable, but will use no predictor variable. Instead,
+        we will use a 1 where to indicate to R that we only want an intercept to
+        be estimated - this is the <strong>intercept only model</strong>. Since
+        the intercept is the mean of the responses, the coefficient test of the
+        intercept against zero is a one sample t-test. The model looks like
+        this:</p>
+      <p class="rcmd">lm(diffs ~ 1, data = paired)</p>
+      <p>The summary() output for this model is here:</p>
+      <p class="rout">Call:<br>
+        lm(formula = diffs ~ 1, data = paired)<br>
+        <br>
+        Residuals:<br>
+        &nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp; 1Q
+        Median&nbsp;&nbsp;&nbsp;&nbsp; 3Q&nbsp;&nbsp;&nbsp; Max <br>
+        -2.000 -1.275&nbsp; 0.000&nbsp; 0.900&nbsp; 2.700 <br>
+        <br>
+        Coefficients:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp; <br>
+        (Intercept)&nbsp;&nbsp; 2.0000&nbsp;&nbsp;&nbsp;&nbsp;
+        0.4292&nbsp;&nbsp; 4.659 <span style="background-color: lightblue">0.000694</span>
+        ***<br>
+        ---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1<br>
+        <br>
+        Residual standard error: 1.487 on 11 degrees of freedom</p>
+      <p>The test of the intercept is a test of the mean of diffs against 0, and
+        it has the same p-value as the paired t-test (both highlighted in blue).</p>
+      <h4>One sample t-test</h4>
+      <p>What about the one sample comparison of body temperature against a
+        hypothetical value of 98.6? The one sample t-test gave us:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp; One Sample t-test<br>
+        <br>
+        data:&nbsp; onesample$Body.temperature<br>
+        t = -2.8817, df = 24, p-value = <span style="background-color: pink">0.008205</span><br>
+        alternative hypothesis: true mean is not equal to 98.6<br>
+        95 percent confidence interval:<br>
+        &nbsp;98.18125 98.53075<br>
+        sample estimates:<br>
+        mean of x <br>
+        &nbsp;&nbsp; 98.356 </p>
+      <p>We can't specify a null other than 0 for the intercept test in our
+        lm(), but we can instead subtract the null value from the response
+        variable, which has the same effect. Why does this work? If the null
+        hypothesis for a one sample t-test is:</p>
+      <p>H<sub>o</sub>: μ = 98.6</p>
+      <p>it is also correct to express it as:</p>
+      <p>H<sub>o</sub>: μ - 98.6 = 0</p>
+      <p>We use the sample mean, x̄, as our estimate of μ, so we just need to
+        subtract 98.6 from the sample mean in our lm(), and then use the
+        coefficient test of the intercept as a one sample test of this
+        difference against 0. Subtracting 98.6 from every body temperature data
+        point is mathematically the same as subtracting 98.6 from the mean of
+        the body temperatures - that is:</p>
+      <img src="subtracting_mean_temp.png" alt="Subtracting mean temperature">
+      <p>and gives us a comparison of the difference between the sample mean and
+        98.6 against 0. If we use the model:</p>
+      <p class="rcmd">lm(Body.temperature - 98.6 ~ 1, data = onesample)</p>
+      <p>the intercept is the mean of the body temperatures minus 98.6, and this
+        is tested against 0 in the summary output:</p>
+      <p class="rout">Call:<br>
+        lm(formula = Body.temperature - 98.6 ~ 1, data = onesample)<br>
+        <br>
+        Residuals:<br>
+        &nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp; 1Q
+        Median&nbsp;&nbsp;&nbsp;&nbsp; 3Q&nbsp;&nbsp;&nbsp; Max <br>
+        -1.056 -0.156&nbsp; 0.044&nbsp; 0.344&nbsp; 0.544 <br>
+        <br>
+        Coefficients:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp; <br>
+        (Intercept) -0.24400&nbsp;&nbsp;&nbsp; 0.08467&nbsp; -2.882&nbsp; <span
+          style="background-color: pink">0.00821</span> **<br>
+        ---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1<br>
+        <br>
+        Residual standard error: 0.4234 on 24 degrees of freedom</p>
+      <p>Again, the p-value for this lm() is the same as the p-value for the one
+        sample t-test (both highlighted in pink).</p>
+      <p>What's the points, exactly? Once you learn to use general linear
+        models, nearly every analysis you have learned so far, and much of what
+        you will encounter in your professional careers, can be done using it.</p>
+      <div style="display: none;" id="resid">
+        <p style="border-style: solid; padding: 10px;"> Remember that all we are
+          doing by dummy coding is representing our six species with five
+          numeric variables. The analysis is still about comparing the amount of
+          variation we can explain (in terms of differences in average between
+          species) to the amount of variation we can't explain (in terms of
+          individual variation around the averages). So, if all we're doing is
+          expressing group means using regression coefficients, then we should
+          explain exactly the same amount of variation when we use regression,
+          and we should thus leave exactly the same amount unexplained. The
+          residual term should be the same for both. </p>
+      </div>
+      <h2 class="part" id="assignment">Knit, quit, and save</h2>
+      <p>Answer all the questions in the R markdown file, knit it, and upload
+        the Word document to complete the assignment.</p>
+    </div>
+  </body>
+</html>
