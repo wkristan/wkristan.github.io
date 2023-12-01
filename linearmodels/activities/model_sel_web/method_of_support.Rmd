@@ -1,0 +1,170 @@
+---
+title: "The Method of Support"
+author: "Your name"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+We will work with data on the brain size/body size relationship in a selection of mammals, some of which are primates, along with a small number of dinosaurs. We will fit a variety of models that represent hypotheses about the species that share a common scaling relationship, and will use the Method of Support to decide which model is best supported by the data.
+
+
+Import the data into a dataset called brains:
+
+```{r import.data}
+
+
+
+```
+
+Make a model list object:
+
+```{r make.models.list}
+
+
+
+```
+
+Assign the first model to models.list, a simple linear regression of log.brain on log.body:
+
+```{r log.brain.on.log.body}
+
+
+
+```
+
+Fit the remaining models (2 through 10):
+
+```{r fit.remaining.models}
+
+
+
+```
+
+Check that all the models are there in the model.list:
+
+```{r show.model.list.elements}
+
+
+
+```
+
+#### Question: Based on the graphs that pop up for each model, which grouping looked like it would account for the greatest amount of variation among species (and would thus have the highest likelihood)?
+
+> 
+
+#### Question: Do you see any possible problems with fitting a separate line for each species grouping (particular when you color by Taxa)? Specifically focus on sample size issues - do we really have the sample sizes to get robust estimates of slopes and intercepts for all taxa?
+
+> 
+
+
+Extract the AIC statistics from the models:
+
+```{r extract.aic}
+
+
+
+```
+
+Change the column names to something better than X1 and X2 - they are the number of parameters (K) and the AIC values:
+
+```{r rename.k.and.aic.columns}
+
+
+
+```
+
+Calculate the second-order AIC, or AICc:
+
+```{r calculate.AICc}
+
+
+
+```
+
+Calculate the delta AICc values:
+
+```{r calculate.delta.AICc}
+
+
+```
+
+Calculate the AICc weights:
+
+```{r calculate.AICc.weights}
+
+
+
+```
+
+Sort the output by dAICc, and display without scientific notation to make it easier to compare the weights:
+
+```{r sort.and.display.output}
+
+
+
+```
+
+#### Question: Interpret models with ΔAIC~c~ less than 4. What do they have in common, and how are they different? Do they include the same predictors?
+
+> 
+
+#### Question: what do the AIC weights add to your interpretation of the results, compared with using just the AIC~c~ values alone?
+
+> 
+
+To calculate the weights for each variable first make vectors indicating which models each variable is included in:
+
+```{r which.models.variables.are.in}
+
+
+
+```
+
+Make a data frame from these vectors:
+
+```{r make.variable.inclusion.data.frame}
+
+
+
+```
+
+Multiply the weights in model.aic by these columns of 0's and 1's, and sum the products to get the weights for each variable:
+
+```{r calculate.variable.weights}
+
+
+
+```
+
+#### Question: which variables have the highest support and which have the lowest? Do any of the variables with high support appear in models with low support (which)?
+
+> 
+
+Check that the best-supported model meets GLM assumptions:
+
+```{r check.assumptions}
+
+
+
+```
+
+
+Make sure that the best model is also a good model by extracting the R^2^ for each model:
+
+```{r extract.r.squared}
+
+
+
+```
+
+#### Question: How do we know that the best supported model is any good at all? How do we know that it's better than random chance (that is, do we have a null hypothesis that we can reject with this approach)?
+
+> 
+

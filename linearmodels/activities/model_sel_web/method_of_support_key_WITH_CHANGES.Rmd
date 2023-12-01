@@ -1,0 +1,182 @@
+---
+title: "The Method of Support"
+author: "Key"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+We will work with data on the brain size/body size relationship in a selection of mammals, some of which are primates, along with a small number of dinosaurs. We will fit a variety of models that represent hypotheses about the species that share a common scaling relationship, and will use the Method of Support to decide which model is best supported by the data.
+
+
+Import the data into a dataset called brains:
+
+```{r import.data}
+
+library(readxl)
+read_excel("brain_body.xls") -> brains
+
+```
+
+Make a model list object:
+
+```{r make.models.list}
+
+models.list <- list()
+
+```
+
+Assign the first model to models.list, a simple linear regression of log.brain on log.body:
+
+```{r log.brain.on.log.body}
+
+models.list$body.lm <- lm(log.brain ~ log.body, data = brains)
+
+```
+
+Fit the remaining models (2 through 10):
+
+```{r fit.remaining.models}
+
+models.list$taxa.lm <- lm(log.brain ~ log.body + Taxa, data = brains)
+models.list$taxa.int.lm <- lm(log.brain ~ log.body * Taxa, data = brains)
+models.list$dino.lm <- lm(log.brain ~ log.body + Dino.nodino, data = brains)
+models.list$dino.int.lm <- lm(log.brain ~ log.body * Dino.nodino, data = brains)
+models.list$primate.lm <- lm(log.brain ~ log.body + Primate.noprimate, data = brains)
+models.list$primate.int.lm <- lm(log.brain ~ log.body * Primate.noprimate, data = brains)
+models.list$dpo.lm <- lm(log.brain ~ log.body + Dino.prim.other, data = brains)
+models.list$dpo.int.lm <- lm(log.brain ~ log.body * Dino.prim.other, data = brains)
+models.list$intercept.only.lm <- lm(log.brain ~ 1, data = brains)
+```
+
+Check that all the models are there in the model.list:
+
+```{r show.model.list.elements}
+
+names(models.list)
+
+```
+
+**Question: Based on the graphs that pop up for each model, which grouping looked like it would account for the greatest amount of variation among species (and would thus have the highest likelihood)?**
+
+> Your call, but for me it was taxa.int.lm, because it had the greatest number of lines, each with their own slopes and intercepts, which let it come as close as possible to all the points.
+
+**Question: Do you see any possible problems with fitting a separate line for each species grouping (particular when you color by Taxa)? Specifically focus on sample size issues - do we really have the sample sizes to get robust estimates of slopes and intercepts for all taxa?**
+
+> There are groups that only have two species in them. Any two points define a line, but such a small number of points is a poor basis for drawing any conclusions about differences in general between taxa.
+
+
+Extract the AIC statistics from the models:
+
+```{r extract.aic}
+
+data.frame(t(sapply(models.list, extractAIC))) -> model.aic
+
+```
+
+Change the column names to something better than X1 and X2 - they are the number of parameters (K) and the AIC values:
+
+```{r rename.k.and.aic.columns}
+
+colnames(model.aic) <- c("K","AIC")
+
+```
+
+Calculate the second-order AIC, or AICc:
+
+```{r calculate.AICc}
+
+model.aic$AICc <- with(model.aic, AIC + 2*K*(K+1)/(26-K-1))
+
+```
+
+Calculate the delta AICc values:
+
+```{r calculate.delta.AICc}
+
+model.aic$dAICc <- model.aic$AICc - min(model.aic$AICc)
+
+```
+
+Calculate the AICc weights:
+
+```{r calculate.AICc.weights}
+
+model.aic$wts <- with(model.aic, exp(-0.5*dAICc)/sum(exp(-0.5*dAICc)))
+
+```
+
+Sort the output by dAICc, and display without scientific notation to make it easier to compare the weights:
+
+```{r sort.and.display.output}
+
+model.aic[order(model.aic$dAICc), ]
+format(model.aic[order(model.aic$dAICc),], digits = 2, scientific = F)
+
+```
+
+**Question: Interpret models with ΔAIC~c~ less than 4. What do they have in common, and how are they different? Do they include the same predictors?**
+
+> There are three, dpo.lm, dpo.in.lm, and taxa.lm. The only difference between dpo.lm and dpo.int.lm is that dpo.int.lm includes an interaction between log.body and Dino.prim.other, but both include log.body and Dino.prim.other. So, the uncertainty is about whether each of these three groups should have lines with different slopes, or instead all have the same slope but with different intercepts. The taxa.lm model has dinosaurs and primates separated, like the dpo models do, but also splits the remaining mammal taxa. According to the taxa.lm model these different mammal taxa also differ in their intercepts, and there is modest support for that hypothesis. That dinosaurs and primates should be separated from other mammals is very well supported, though, since all of the best-supported models have this feature, and none of the others do (aside from taxa.int.lm, which is poorly supported due in large part to the fact that it requires 14 parameters, and is thus the most complex model in the set).
+
+**Question: what do the AIC weights add to your interpretation of the results, compared with using just the AIC~c~ values alone?**
+
+> The AIC weights give you a number that is interpretable in a more intuitive way than the &Delta;AIC~c~ values. While we know that a &Delta;AIC~c~ value of less than 4 indicates a model that is plausible, and should be interpreted, we don't know how a &Delta;AIC~c~ of 1.6 compares with a &Delta;AIC~c~ of 0 or 3.7. The weights tell us that if we repeated the analysis with a new data set, dpo.lm would be selected as best 62.5% of the time, whereas dpo.int.lm would be selected as best 27.8% of the time. It helps us better understand the degree of uncertainty in our conclusions.
+
+## Support for variables
+
+Although the Method of Support is based on comparisons between models, it is usually variables that we want to interpret. We can calculate measures of support for variables by summing the model weights for all the models each variable appears in, in addition to the usual interpretation steps (such as interpretation of slopes and least-squares means).
+
+To calculate the weights for each variable, first extract the predictors used in each model:
+
+```{r predictors.in.models.list}
+
+lapply(models.list, FUN = function(x) all.vars(formula(x)[[3]])) -> models.predictors
+
+```
+
+Next, make a list of the predictors used:
+
+```{r predictor.names}
+
+unique(unlist(models.predictors)) -> pred.names
+
+```
+
+Check if each predictor occurs in each model:
+
+```{r predictors.in.models.check}
+
+sapply(pred.names, FUN = function(y) sapply(models.predictors, FUN = function(x) any(grepl(y, x)))) -> preds.by.model
+
+```
+
+Multiply the model weights by the preds.by.model columns, and then sum the products to get variable weights:
+
+```{r variable.weights}
+
+format(colSums(model.aic$wts * preds.by.model), scientific = F)
+
+```
+
+
+**Question: which variables have the highest support and which have the lowest? Do any of the variables with high support appear in models with low support (which)?**
+
+> The variable with the higest support is log.body, and the one with the lowest support is primate. Note that splitting primates only has very low support, and splitting dinosaurs only has low support, but splitting primates and dinosaurs from non-primate mammals has very high support (0.90).
+
+```{r extract.r.squared}
+
+sapply(models.list, FUN = function(x) summary(x)$r.squared)
+
+```
+
+**Question: How do we know that the best supported model is any good at all? How do we know that it's better than random chance (that is, do we have a null hypothesis that we can reject with this approach)?**
+
+> The R^2^ for the best-supported models is 0.92 for dino.lm, 0.92 for dino.int.lm, and 0.98 for taxa.lm. These are all very close to the maximum amount of explainable variation, so they are good predictors. We know that the models are better than chance because the support for the intercept only model was very poor (it had the biggest &Delta;AIC~c~ at 79.0).
+

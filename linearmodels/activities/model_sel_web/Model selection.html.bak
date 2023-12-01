@@ -1,0 +1,1225 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Model based inference</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <style>
+    /* Tooltip container */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 0px;
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 410px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+
+    /* Position the tooltip text */
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+
+    /* Fade in tooltip */
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+/* Tooltip arrow */
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+    </style>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1> Model based inference - the Method of Support</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#exercise">Start of exercise</a></p>
+      <p><a href="#instructions">Models to run</a></p>
+      <p><a href="#r_lists">R lists</a></p>
+      <p><a href="#mistakes">Fixing mistakes</a></p>
+    </div>
+    <div id="content">
+      <p class="part" id="intro"> We will be working today with an approach to
+        statistical inference based on comparisons of likelihoods among models,
+        rather than on null hypothesis tests. With this approach each model is
+        treated as a hypothesis about the structure of the data, and we seek to
+        find which hypothesis is best supported by the data. This approach is
+        called the <strong>method of support</strong>.</p>
+      <p>Our approach throughout all but the last couple of weeks of the
+        semester has been to test a single null hypothesis. With a null
+        hypothesis test we assume the null is true, calculate the probability of
+        obtaining our results if the null is true, and if the probability is low
+        we reject the null in favor of an unspecified alternative hypothesis.
+        This procedure seems to set up a competition between two different
+        hypotheses, the null and the alternative, but these two hypotheses are
+        conceptually very different. The null hypothesis says that there is <strong>exactly</strong>
+        0 difference between group means (or that the slope of a regression line
+        is <strong>exactly</strong> 0), whereas the alternative hypothesis is
+        just that the null is incorrect. When we reject the null we may have
+        reason to think that a difference of 0 is not well supported by the
+        data, but we have not done anything to evaluate the support for any
+        other amount of difference specifically - treating evidence against one
+        hypothesis as though it's evidence for another is a logical fallacy
+        called a <strong>false dichotomy</strong>.</p>
+      <p>The method of support is very different. With the method of support it
+        isn't possible to test a single hypothesis alone, like we do with a null
+        hypothesis, because we can't draw any conclusions at all from a single
+        model. Instead, we need to compare models to one another to draw any
+        conclusions.</p>
+      <p>There are several important points to bear in mind about the method of
+        support:</p>
+      <p> </p>
+      <ul>
+        <li>
+          <p>It is <strong>model based</strong>, which means that we have to be
+            able to express our hypotheses as models. For example, we learned in
+            our classic model selection exercise that: </p>
+          <ul>
+            <li>
+              <p>If a predictor variable is included in the model, we are
+                hypothesizing that the response depends on it. Conversely, if a
+                predictor is excluded, we are hypothesizing that the response is
+                independent of it.</p>
+            </li>
+            <li>
+              <p>If we combine two or more levels of a categorical grouping
+                variable together, we are hypothesizing that the two different
+                levels have the same mean. If we split a single level into two
+                or more different levels, we are hypothesizing that each new
+                level has a different mean.</p>
+            </li>
+            <li>
+              <p>If we include a quadratic, cubic, or other higher-order term
+                for a predictor, we are hypothesizing that the response has this
+                specific non-linear relationship with the predictor.</p>
+            </li>
+            <li>
+              <p>If we include an interaction between two predictors we are
+                hypothesizing that the response to one predictor depends on the
+                level of the other.</p>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <p>Support for hypotheses is assessed at the level of the <em>model</em>.
+            To assess the importance of a specific <em>variable</em>, or a
+            model <em>term</em> (such as an interaction) you must fit models
+            that include the the variable/term and others that do not, and
+            assess which model is best supported by the data.</p>
+        </li>
+        <li>
+          <p>Model-based inference only works if the same <em><strong>response</strong></em>
+            data are used for every model. Any set of predictors can be
+            included, and models can be compared even if they contain completely
+            different sets of predictors. Specific cases that would be
+            problematic are:</p>
+          <ul>
+            <li>
+              <p>A missing value from one of the predictor variables causes R to
+                drop the entire row of data from the analysis, including the
+                response variable's data value. If some models use the entire
+                data set and others are missing a data point or two, you
+                shouldn't compare the models.</p>
+            </li>
+            <li>
+              <p>The response variable needs to be on the same scale for all of
+                the models - you can use an untransformed response variable for
+                every model, or a transformed response variable for every model,
+                but they all must be the same. You can, however, transform only
+                some of your predictors, and can even compare a model with a
+                transformed predictor to one with the un-transformed version of
+                the same predictor as two separate hypotheses.</p>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <p> We have to assume a distribution of residuals around the model to
+            calculate likelihoods and AIC values, so we should assess the usual
+            GLM assumptions for any model we wish to interpret. Models that are
+            poorly supported that don't meet GLM assumptions are not a problem,
+            but any model that is well enough supported that we wish to
+            interpret it should meet GLM assumptions.</p>
+        </li>
+        <li>The end result of this approach is not a "test" of a hypothesis in
+          the sense that there is no binary pass/fail decision made about the
+          hypothesis. Measures of support for hypotheses, such as AIC's and
+          model weights, are meant as relative measures, which we should use to
+          gauge the strength of our confidence in our conclusions.</li>
+        <li>
+          <p> Measures of support do not substitute for measures of model fit or
+            effect size, such as R<sup>2</sup>, because the best-supported model
+            in the set we are considering could still be lousy. We should also
+            always include an "intercept only" model to check the "no effect"
+            hypothesis - only models that are better supported than the "no
+            effect" model should be considered for interpretation.</p>
+        </li>
+      </ul>
+      <p>Although this method can be used to analyze any data set, it is most
+        attractive for studies in which the null hypothesis is not plausible. As
+        we discussed in lecture, this covers nearly all ecological studies, and
+        any lab study in which random allocation of subjects to treatments is
+        not possible.</p>
+      <h2 class="part" id="exercise">Today's exercise - the brain/body size
+        relationship</h2>
+      <p>This exercise will be based on brain weight and body weight for a
+        variety of species of animals. Most are mammals, but there are three
+        dinosaurs included (their weights are estimated values, based on the
+        sizes of their skeletons).</p>
+      <p>Start a new R Studio project in a new folder. The data set we will use
+        today is <a href="brain_body.xls">here</a>, and the Rmd file is <a href="method_of_support.Rmd">here</a>.
+        Import the data into a dataset called "brains". </p>
+      <p>If you look at the way the data are organized you will see that it
+        contains data on the log of brain mass, the log of body mass, the
+        identity of the species (Species column), and four different
+        hypothetical groupings of the species:</p>
+      <p>1) dinosaurs separate from mammals, mammals grouped by Order (column
+        Taxa)</p>
+      <p>2) dinosaurs separated from non-dinosaurs (column Dino.nodino)</p>
+      <p>3) primates separated from non-primates (column Primate.noprimate)</p>
+      <p>4) dinosaurs, primates, and other mammal species (column
+        Dino.prim.other)</p>
+      <table width="100%" border="0">
+        <tbody>
+          <tr>
+            <td>
+              <p><img alt="Basic pattern" src="brain_body_plot.png" style="float:right">The
+                brain/body data is shown in the graph to the right. Brain and
+                body weight have both been log-transformed, which makes the
+                relationship linear...which, by the way, tells you that brain
+                and body weight have what kind of relationship? <a href="javascript:ReverseDisplay('type_rel')">Click
+                  here to see if you're right</a> </p>
+              <div id="type_rel" style="display:none;">
+                <p style="border-style:solid;padding:10px;"> Straight line
+                  relationship with a log-transformed y and log-transformed x
+                  means that this is a power relationship. </p>
+              </div>
+              <p> You can see that there is a general, positive relationship
+                between body size and brain size, which makes sense - a large
+                part of the mass of the brain is devoted to simply operating the
+                body, and large bodies require large brains to operate them.</p>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" rowspan="1">
+              <p>For this exercise, we are interested in finding a model that
+                best represents the brain size/body size relationships of these
+                species. To give you an idea of how this will work, let's look
+                at a couple of examples of hypotheses we could evaluate.</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p><img alt="One line" src="brain_body_oneline.png" style="float:right">One
+                possibility is that brain/body scaling is the same for all
+                species, regardless of the taxonomic group they belong to, and a
+                simple linear regression of log.brain on log.body would
+                represent this hypothesis, like the graph to the right.</p>
+              <p>The AICc value for this model is -16.89.</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p><img alt="Dinosaurs vs. mammals" src="dino.png" style="float:right">The
+                cluster of three data points that are separate from the rest of
+                the data are the dinosaurs. Dinosaurs are notoriously small
+                brained, but it's possible that the change in brain weight per
+                unit change in body weight is the same for mammals and
+                dinosaurs. If that's true, then a single slope may apply to both
+                the dinosaurs and the mammals, but with each needing a different
+                intercept. You probably recognize this version of a linear model
+                as an ANCOVA.</p>
+              <p>It certainly looks like a separate line is desirable for the
+                dinosaurs, and not surprisingly the AICc for this model of
+                -57.21 is substantially lower than for the single line
+                hypothesis above. This model is the better of the two we have
+                looked at so far, and if we subtract the AICc for this model
+                from each of the first two, we would get a ΔAICc of 0 for this
+                model, and 40.31 for the single line model. With just these
+                first two models to consider, the simple linear regression can
+                be safely disregarded in favor of this ANCOVA model.</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p><img alt="With interaction" src="dino_int.png" style="float:right">Alternatively,
+                it could be that the dinosaurs not only have different brain
+                sizes on average, they may also have a different rate of change
+                in brain tissue with increasing body size. If this is the case
+                we need an interaction between log.body and Dino.nodino to allow
+                each group to have a line with a different slope and intercept.
+                This model is illustrated to the right. </p>
+              <p>This model also looks pretty good, but we had to add an
+                additional parameter to produce the differences in slope. The
+                AICc value for this model is -56.98, not quite as small as the
+                previous one. The previous model with parallel lines is still
+                best supported (with a ΔAICc of 0), and this model with
+                different slopes has a ΔAICc is 2.13.&nbsp;</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>With just these three models to go on we could confidently conclude
+        that dinosaurs and mammals are different enough to need their own lines
+        (ΔAICc is huge for the model with a single line), but whether their
+        scaling relationships have the same slope or different slopes is less
+        certain (ΔAICc = 2.13 for the model that includes an interaction between
+        log body weight and dino.nodino).</p>
+      <p>We will implement these three models, and six more that use the other
+        grouping variables in the data set to determine which hypotheses are
+        well supported by the data, and which are poorly supported.</p>
+      <h2 class="part" id="instructions">Instructions:</h2>
+      <p> </p>
+      <h2> </h2>
+      <p>1. We will fit several models to compare, and need to collect them all
+        in a list, just like we did when we were using adjusted R<sup>2</sup> to
+        analyze caloric content of foods. To start, we will create an empty list
+        into which we can add our fitted models. Use the command (in the
+        make.models.list of your <strong>Rmd file</strong>): </p>
+      <p><span class="R-code rcmd">models.list &lt;- list()</span></p>
+      <p>Now each time we fit a model we will add it as a named element of our
+        models.list object. </p>
+      <p>For example, the hypothesis that there is a single brain/body scaling
+        relationship for all of these species is a simple linear regression of
+        log.brain on log.body (in the log.brain.on.log.body chunk of your <strong>Rmd
+          file</strong>): </p>
+      <p><span class="R-code rcmd">models.list$body.lm &lt;-
+          lm(log.brain~log.body, data = brains)</span></p>
+      <p>By assigning the output of the lm() statement to models.list$body.lm we
+        create a named element called body.lm within the models.list object, and
+        store the fitted model within it.</p>
+      <p>That takes care of the first hypothesis' model, out of a total of 10
+        hypotheses we will compare. Since the method of support uses models to
+        represent hypotheses, the translation of scientific hypothesis first to
+        a type of linear model, and then to an R model formula to use in the
+        lm() function, is shown for each hypothesis in the table below. It is
+        structured like so:</p>
+      <ul>
+        <li>The scientific hypothesis is stated first, expressed in scientific
+          terms, in the "Scientific hypothesis" column</li>
+        <li>The hypothesis is then translated into the type of linear model that
+          would be used to represent the hypothetical relationship between
+          variables stated in the Scientific hypothesis column. If you hover
+          over the "Hypothesis as a linear model" for a hypothesis a graph pops
+          up to show what the lm will look like</li>
+        <li>The model formula you will use in R to represent the model is shown
+          next, in the "R model formula" column. The model formula to use is
+          displayed for the first two models (the first one being the body.lm
+          model you already assigned to models.list). For the third to tenth
+          model the model formula is hidden until you click "What is the model?"
+          - take a moment to construct the model formula yourself before looking
+          at the answer, it will give you useful practice for when you have to
+          do this on your own</li>
+        <li>The name of the model to use when you assign the lm to models.list
+          is given last, in the "Name of model to use" column. The model name
+          aren't critical, but the rest of the instructions will be easier to
+          interpret if you stick with these names</li>
+      </ul>
+      <p>Go ahead and fit the 2nd through 10th models, adding each to your
+        models.list (in the fit.remaining.models chunk of the <strong>Rmd file</strong>).
+        </p>
+      <ul>
+      </ul>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th>Scientific hypothesis </th>
+            <th>Hypothesis as a linear model (hover for graph)</th>
+            <th>R model formula:</th>
+            <th>Name of model to use </th>
+          </tr>
+          <tr>
+            <td>1. There is a single common brain/body scaling relationship for
+              all species in the set.</td>
+            <td>
+              <div class="tooltip"> Simple linear regression of log.brain on
+                log.body<span class="tooltiptext"><img src="logbody.png" style="width: 400px"></span></div>
+            </td>
+            <td>log.brain ~ log.body<br>
+            </td>
+            <td>body.lm<br>
+            </td>
+          </tr>
+          <tr>
+            <td>2. The scaling of brain size and body size is the same for all
+              species, but taxa differ in their average brain sizes for their
+              body size.</td>
+            <td>
+              <div class="tooltip">ANCOVA of log.brain by taxa, with log.body as
+                a covariate<span class="tooltiptext"><img src="taxa.png" style="width: 400px"></span></div>
+            </td>
+            <td>log.brain ~ log.body + Taxa<br>
+            </td>
+            <td>taxa.lm<br>
+            </td>
+          </tr>
+          <tr>
+            <td>3. Each taxa has a different scaling relationship.</td>
+            <td>
+              <div class="tooltip">ANCOVA of log.brain on taxa and log.body,
+                with an interaction between log.body and taxa.<span class="tooltiptext"><img
+                    src="taxa_int.png" style="width: 400px"></span></div>
+            </td>
+            <td><a href="javascript:ReverseDisplay('model3')">What is the model?</a>
+              <div id="model3" style="display:none;">
+                <p style="border-style:solid;padding:1px;border-width:1px">
+                  log.brain ~ log.body*Taxa</p>
+              </div>
+            </td>
+            <td>taxa.int.lm<br>
+            </td>
+          </tr>
+          <tr>
+            <td>4. Brain/body scaling is the same for dinosaurs and
+              non-dinosaurs, but with different averages between the groups.</td>
+            <td>
+              <div class="tooltip">ANCOVA of log.brain by dino.nodino, with
+                log.body as a covariate<span class="tooltiptext"><img src="dino.png"
+                    style="width: 400px"></span></div>
+            </td>
+            <td><a href="javascript:ReverseDisplay('model4')">What is the model?</a>
+              <div id="model4" style="display:none;">
+                <p style="border-style:solid;padding:1px;border-width:1px">
+                  log.brain ~ log.body + Dino.nodino</p>
+              </div>
+            </td>
+            <td>dino.lm<br>
+            </td>
+          </tr>
+          <tr>
+            <td>5. Brain/body scaling is different for dinosaurs and
+              non-dinosaurs.<br>
+            </td>
+            <td>
+              <div class="tooltip">ANCOVA of log.brain on dino.nodino and
+                log.body, with an interaction between dino.nodino and log.body<span
+                  class="tooltiptext"><img src="dino_int.png" style="width: 400px"></span></div>
+            </td>
+            <td><a href="javascript:ReverseDisplay('model5')">What is the model?</a>
+              <div id="model5" style="display:none;">
+                <p style="border-style:solid;padding:1px;border-width:1px">
+                  log.brain ~ log.body*Dino.nodino</p>
+              </div>
+            </td>
+            <td>dino.int.lm<br>
+            </td>
+          </tr>
+          <tr>
+            <td>6. Brain/body scaling is the same for primates and non-primates,
+              but with different averages between the groups.<br>
+            </td>
+            <td>
+              <div class="tooltip">ANCOVA of log.brain by primate.noprimate,
+                with log.body as a covariate <span class="tooltiptext"><img src="primate.png"
+                    style="width: 400px"></span></div>
+            </td>
+            <td><a href="javascript:ReverseDisplay('model6')">What is the model?</a>
+              <div id="model6" style="display:none;">
+                <p style="border-style:solid;padding:1px;border-width:1px">
+                  log.brain ~ log.body + Primate.noprimate</p>
+              </div>
+            </td>
+            <td>primate.lm<br>
+            </td>
+          </tr>
+          <tr>
+            <td>7. Brain/body scaling is different for primates and
+              non-primates.<br>
+            </td>
+            <td>
+              <div class="tooltip">ANCOVA of log.brain on primate.noprimate and
+                log.body, with an interaction between primate.noprimate and
+                log.body <span class="tooltiptext"><img src="primate_int.png" style="width: 400px"></span></div>
+            </td>
+            <td><a href="javascript:ReverseDisplay('model7')">What is the model?</a>
+              <div id="model7" style="display:none;">
+                <p style="border-style:solid;padding:1px;border-width:1px">
+                  log.brain ~ log.body*Primate.noprimate</p>
+              </div>
+            </td>
+            <td>primate.int.lm<br>
+            </td>
+          </tr>
+          <tr>
+            <td>8. Brain/body scaling is the same for dinosaurs, primates, and
+              other mammal, but with different averages between the groups.<br>
+            </td>
+            <td>
+              <div class="tooltip">ANCOVA of log.brain by dino.prim.other, with
+                log.body as a covariate <span class="tooltiptext"><img src="dpo.png"
+                    style="width: 400px"></span></div>
+            </td>
+            <td><a href="javascript:ReverseDisplay('model8')">What is the model?</a>
+              <div id="model8" style="display:none;">
+                <p style="border-style:solid;padding:1px;border-width:1px">
+                  log.brain ~ log.body + Dino.prim.other</p>
+              </div>
+            </td>
+            <td>dpo.lm<br>
+            </td>
+          </tr>
+          <tr>
+            <td>9. Brain/body scaling is different for dinosaurs, primates, and
+              other mammals.</td>
+            <td>
+              <div class="tooltip">ANCOVA of log.brain on dino.prim.other and
+                log.body, with an interaction between dino.prim.other and
+                log.body <span class="tooltiptext"><img src="dpo_int.png" style="width: 400px"></span></div>
+            </td>
+            <td><a href="javascript:ReverseDisplay('model9')">What is the model?</a>
+              <div id="model9" style="display:none;">
+                <p style="border-style:solid;padding:1px;border-width:1px">
+                  log.brain ~ log.body*Dino.prim.other</p>
+              </div>
+            </td>
+            <td>dpo.int.lm<br>
+            </td>
+          </tr>
+          <tr>
+            <td>10. There is no predictable relationship between brain size and
+              body size for these species. In other words, brain size is
+              independent of body size.<br>
+            </td>
+            <td>
+              <div class="tooltip">The "intercept only" model. <span class="tooltiptext"><img
+                    src="int_only.png" style="width: 400px"></span></div>
+            </td>
+            <td>log.brain ~ 1</td>
+            <td>intercept.only.lm</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="part">When you're done you can check the names in your list (in
+        the show.model.list.elements chunk of the <strong>Rmd file</strong>):<span
+          class="R-code rcmd"><br>
+        </span></p>
+      <p class="part"><span class="R-code rcmd">names(models.list)</span><br>
+        <br>
+        You should see the names:<br>
+        <br>
+        <span class="R-code rout">[1] "body.lm"&nbsp;
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          "taxa.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          "taxa.int.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          "dino.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+          [5] "dino.int.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          "primate.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          "primate.int.lm"&nbsp;&nbsp;&nbsp;
+          "dpo.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+          [9] "dpo.int.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          "intercept.only.lm"</span></p>
+      <p> If you don't see this list of names, read the blockquote section for
+        instructions for fixing errors. </p>
+      <blockquote>
+        <p class="part">IF YOU MAKE A MISTAKE read this for the fix (otherwise
+          skip to step 2 below). </p>
+        <ul>
+          <li>If you made a mistake in the model statement, but used the correct
+            model name, edit the command and assign the correct model to the
+            same named list element. The mistake will be replaced by the
+            corrected model.</li>
+          <li>If you use the right model statement but used the wrong model
+            name, you can change the name if you know the number of the model.
+            Look at the number of the named elements, and find the number for
+            the incorrect one. For example, if you were to get names like:<br>
+            <br>
+            <span class="R-code rout">[1]
+              "boody.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              "taxa.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              "taxa.int.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              "dino.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>
+              [5] "dino.int.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              "primate.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              "primate.int.lm"&nbsp;&nbsp;&nbsp;
+              "dpo.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              <br>
+              [9] "dpo.int.lm"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              "intercept.only.lm"</span><br>
+            <br>
+            The incorrect name is the first in the list, which has index number
+            1. You can change its name with:<br>
+            <br>
+            <span class="R-code rcmd">names(models.list)[1] &lt;- "body.lm"</span><br>
+            <br>
+            This will replace the wrong name with the right one.</li>
+          <li>If you accidentally included a model that you don't want, use the
+            command:<span class="R-code rcmd"><br>
+              <br>
+              models.list$mistake.name &lt;- NULL <br>
+              <br>
+            </span>This will delete the model from the list. </li>
+        </ul>
+      </blockquote>
+      <p> 2. After you have added all 10 models to models.list you need to
+        extract their AIC values for analysis. We can use sapply() for this,
+        using R's extractAIC() function applied to each of the named models in
+        models.list. The extractAIC() function extracts AIC and number of
+        parameters from a fitted model. Try it out in the Console on the first
+        model, body.lm, with the command (in the <strong>console</strong>): </p>
+      <p><span class="R-code rcmd">extractAIC(models.list$body.lm)</span></p>
+      <p>You will get two values, the first being the number of parameters in
+        the model (2, which is K in the AIC formula), and AIC (which is
+        -17.36706 for this model). </p>
+      <p>We can use extractAIC() as the function in an sapply() command, which
+        will extract K and AIC for each model in models.list. The command is (in
+        the <strong>Console</strong>):</p>
+      <p><span class="R-code rcmd">sapply(models.list, extractAIC)</span><br>
+      </p>
+      <p>which gives you this:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; body.lm&nbsp;&nbsp;
+        taxa.lm taxa.int.lm&nbsp;&nbsp; dino.lm dino.int.lm primate.lm
+        primate.int.lm&nbsp;&nbsp;&nbsp; dpo.lm<br>
+        [1,]&nbsp;&nbsp; 2.00000&nbsp;&nbsp; 8.00000&nbsp;&nbsp;&nbsp;
+        14.00000&nbsp;&nbsp; 3.00000&nbsp;&nbsp;&nbsp;&nbsp;
+        4.00000&nbsp;&nbsp;&nbsp;
+        3.00000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        4.0000&nbsp;&nbsp; 4.00000<br>
+        [2,] -17.36705 -79.14906&nbsp;&nbsp; -70.07542 -58.16365&nbsp;&nbsp;
+        -56.81901&nbsp; -22.22915&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -20.2379
+        -76.33646<br>
+        &nbsp;&nbsp;&nbsp;&nbsp; dpo.int.lm intercept.only.lm<br>
+        [1,]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        6.000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.000000<br>
+        [2,]&nbsp;&nbsp;&nbsp;
+        -77.238&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4.424834</p>
+      <p>This command gives us the information that we want, but it's in the
+        wrong orientation - each model is a column instead of a row, and our
+        numbers of parameters and AIC's are rows instead of columns.
+        Fortunately, swapping rows and columns is a simple matrix operation
+        called "transposition". We can transpose the matrix using the t()
+        command (in the <strong>Console</strong>):</p>
+      <p><span class="R-code rcmd">t(sapply(models.list, extractAIC))</span></p>
+      <p>which gives us:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        [,1]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [,2]<br>
+        body.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        2 -17.367054<br>
+        taxa.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        8 -79.149058<br>
+        taxa.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 14
+        -70.075416<br>
+        dino.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        3 -58.163652<br>
+        dino.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4
+        -56.819013<br>
+        primate.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3
+        -22.229149<br>
+        primate.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4 -20.237899<br>
+        dpo.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        4 -76.336462<br>
+        dpo.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6
+        -77.237999<br>
+        intercept.only.lm&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp; 4.424834</p>
+      <p>This output has the orientation we want, so we're almost there. At this
+        point the output is still a matrix rather than a data frame, which we
+        can fix by wrapping our t(sapply()) inside of a data.frame() command,
+        like so (put this version into the extract.aic chunk of your <strong>Rmd
+          file</strong>):</p>
+      <p><span class="R-code rcmd">model.aic &lt;-
+          data.frame(t(sapply(models.list, extractAIC)))</span></p>
+      <p>If you type model.aic you'll see you now have the data organized as we
+        want, but without informative column names. We can add column names to
+        the model.aic data frame with (in the rename.k.and.aic.columns chunk of
+        your <strong>Rmd file</strong>):</p>
+      <p><span class="R-code rcmd">colnames(model.aic) &lt;- c("K","AIC")</span></p>
+      <p>The final version of the table, with column labels, looks like this:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        K&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AIC<br>
+        body.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        2 -17.367054<br>
+        taxa.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        8 -79.149058<br>
+        taxa.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 14 -70.075416<br>
+        dino.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        3 -58.163652<br>
+        dino.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4 -56.819013<br>
+        primate.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3 -22.229149<br>
+        primate.int.lm&nbsp;&nbsp;&nbsp;&nbsp; 4 -20.237899<br>
+        dpo.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        4 -76.336462<br>
+        dpo.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6 -77.237999<br>
+        intercept.only.lm&nbsp; 1&nbsp;&nbsp; 4.424834</p>
+      <p>The list of model names on the left are row names for the data frame
+        rather than a column of data, so they do not have a column name.</p>
+      <p>3. Now that we have K and AIC for each model in our model.aic data
+        frame, we can calculate AICc. AICc is just AIC plus an additional
+        penalty for each model parameter, equal to 2k(k+1)/(n-k-1). k will come
+        from the K column of model.aic, and n is the sample size (which is 26
+        for this data set).</p>
+      <p>The calculation is thus (in the calculate.AICc chunk of your <strong>Rmd
+          file</strong>):</p>
+      <p><span class="R-code rcmd">model.aic$AICc &lt;- with(model.aic, AIC +
+          2*K*(K+1)/(26-K-1))</span></p>
+      <p> If you type model.aic, you'll see there is now a column called AICc
+        with the results of these calculations. </p>
+      <p>4. We can now calculate delta AIC values, which are much easier to
+        interpret than the raw AICc values. The command is (in the
+        calculate.delta.AICc chunk of the <strong>Rmd file</strong>):</p>
+      <p><span class="R-code rcmd">model.aic$dAICc &lt;- model.aic$AICc -
+          min(model.aic$AICc)</span></p>
+      <p>This command takes the AICc's we just calculated and subtracts the
+        smallest AICc from each of them. Type model.aic in the console and
+        you'll see:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        K&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        AIC&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AICc&nbsp;&nbsp;&nbsp;&nbsp;
+        dAICc<br>
+        body.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        2 -17.367054 -16.845315 57.586385<br>
+        taxa.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        8 -79.149058 -70.678470&nbsp; 3.753230<br>
+        taxa.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 14 -70.075416 -31.893598
+        42.538102<br>
+        dino.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        3 -58.163652 -57.072743 17.358957<br>
+        dino.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4 -56.819013
+        -54.914251 19.517449<br>
+        primate.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3 -22.229149
+        -21.138240 53.293460<br>
+        primate.int.lm&nbsp;&nbsp;&nbsp;&nbsp; 4 -20.237899 -18.333137 56.098563<br>
+        dpo.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        4 -76.336462 -74.431700&nbsp; 0.000000<br>
+        dpo.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6 -77.237999
+        -72.816947&nbsp; 1.614753<br>
+        intercept.only.lm&nbsp; 1&nbsp;&nbsp; 4.424834&nbsp;&nbsp; 4.591501
+        79.023201</p>
+      <p> The model with the smallest AICc has a dAICc of zero, and the rest are
+        differences from this model's AICc.</p>
+      <p>5. Finally, let's calculate the Akaike weights. Remember, these are
+        measures of how often we would expect the model to be best-supported if
+        we repeated the exercise with new data; they are useful for attaching a
+        more intuitive interpretation of degree of support for the models than
+        we get from the ΔAICc values alone. These are calculated with (in the
+        calculate.AICc.weights chunk of your <strong>Rmd file</strong>):</p>
+      <p><span class="R-code rcmd">model.aic$wts &lt;- with(model.aic,
+          exp(-0.5*dAICc)/sum(exp(-0.5*dAICc)))</span></p>
+      <p>This calculation divides each model's exp(-0.5*dAICc) by the sum of the
+        exp(-0.5*dAICc) for all of the models. Since we're dividing each model's
+        value by a total across all of the models, these values are proportions
+        - they must fall between 0 and 1, and sum to 1 across the models.</p>
+      <p> <span style="font-family: &quot;Open Sans&quot;,sans-serif;">6. T</span>raditionally,
+        tables of AIC statistics are sorted on dAICc to make it easier to see
+        which models are best supported. We're going to use the order() command
+        to give the rank order of the dAICc values - in the console write:</p>
+      <p class="rcmd">order(model.aic$dAICc)</p>
+      <p>and you will get:</p>
+      <p class="rout">&nbsp;[1]&nbsp; 8&nbsp; 9&nbsp; 2&nbsp; 4&nbsp; 5&nbsp;
+        3&nbsp; 6&nbsp; 7&nbsp; 1 10</p>
+      <p>After the index, [1], the numbers are the row numbers from dAICc - the
+        eight row is the smallest dAICc, the ninth is the second smallest dAICc,
+        and so on. We can use these numbers to sort the entire model.aic data
+        frame if we use them as the row index - do so with this command (in the
+        <strong>console</strong>):<span style="font-family: &quot;Open Sans&quot;,sans-serif;"></span>
+      </p>
+      <p><span class="R-code rcmd">model.aic[order(model.aic$dAICc), ]</span></p>
+      <p>which gives you:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        K&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        AIC&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AICc&nbsp;&nbsp;&nbsp;&nbsp;
+        dAICc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wts<br>
+        dpo.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        4 -76.336462 -74.431700&nbsp; 0.000000 6.252494e-01<br>
+        dpo.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6 -77.237999
+        -72.816947&nbsp; 1.614753 2.788778e-01<br>
+        taxa.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        8 -79.149058 -70.678470&nbsp; 3.753230 9.573036e-02<br>
+        dino.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        3 -58.163652 -57.072743 17.358957 1.063172e-04<br>
+        dino.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4 -56.819013
+        -54.914251 19.517449 3.613209e-05<br>
+        taxa.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 14 -70.075416 -31.893598
+        42.538102 3.622611e-10<br>
+        primate.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3 -22.229149
+        -21.138240 53.293460 1.673113e-12<br>
+        primate.int.lm&nbsp;&nbsp;&nbsp;&nbsp; 4 -20.237899 -18.333137 56.098563
+        4.115334e-13<br>
+        body.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        2 -17.367054 -16.845315 57.586385 1.955819e-13<br>
+        intercept.only.lm&nbsp; 1&nbsp;&nbsp; 4.424834&nbsp;&nbsp; 4.591501
+        79.023201 4.328956e-18</p>
+      <p>This command put the row numbers from the order() command into the row
+        index position for model.aic, which puts the model.aic data in order by
+        the dAICc column.</p>
+      <p>We can compare the weights more easily if we suppress the scientific
+        notation - use the command (in your <strong>Rmd file</strong>,
+        sort.and.display.output chunk): </p>
+      <p><span class="R-code rcmd">format(model.aic[order(model.aic$dAICc),],
+          digits = 2, scientific = F)</span></p>
+      <p>which gives you:<br>
+      </p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        K&nbsp;&nbsp; AIC&nbsp; AICc
+        dAICc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        wts<br>
+        dpo.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        4 -76.3 -74.4&nbsp;&nbsp; 0.0 0.6252493597029067374<br>
+        dpo.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6 -77.2
+        -72.8&nbsp;&nbsp; 1.6 0.2788778324035202094<br>
+        taxa.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        8 -79.1 -70.7&nbsp;&nbsp; 3.8 0.0957303581929313807<br>
+        dino.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        3 -58.2 -57.1&nbsp; 17.4 0.0001063172432656724<br>
+        dino.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4 -56.8
+        -54.9&nbsp; 19.5 0.0000361320928347135<br>
+        taxa.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 14 -70.1 -31.9&nbsp;
+        42.5 0.0000000003622611060<br>
+        primate.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3 -22.2
+        -21.1&nbsp; 53.3 0.0000000000016731133<br>
+        primate.int.lm&nbsp;&nbsp;&nbsp;&nbsp; 4 -20.2 -18.3&nbsp; 56.1
+        0.0000000000004115334<br>
+        body.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        2 -17.4 -16.8&nbsp; 57.6 0.0000000000001955819<br>
+        intercept.only.lm&nbsp; 1&nbsp;&nbsp; 4.4&nbsp;&nbsp; 4.6&nbsp; 79.0
+        0.0000000000000000043</p>
+      <p>As you interpret this table, remember:</p>
+      <ul>
+        <li>The best-supported model has the lowest AICc, and will have a dAICc
+          of 0</li>
+        <li>dAICc values below 2 are considered more or less equivalent models -
+          they are both well supported by the data, and the data provides little
+          basis for preferring one over the other</li>
+        <li>dAICc values of 4 to 10 indicate substantially lower support than
+          the best supported model</li>
+        <li>dAICc values over 10 are sufficiently large that the models can be
+          disregarded</li>
+      </ul>
+      <p>You should see that the weight is biggest for the model with a dAICc of
+        0, but for models with dAICc's less than 4 the weights are still fairly
+        high. The weights indicate the relative frequency with which we would
+        expect the model to be best if we collected a new data set. Based on
+        these weights we can be confident that some hypotheses are very poorly
+        supported by the data (intercept.only.lm, body.lm, and the other models
+        with dAICc above 10), but there are three with dAICc values less than 4
+        (taxa.lm, dpo.int.lm, and dpo.lm), one of which has a dAICc of only 1.6.
+        With these data we have weak support for interpreting just the
+        bet-supported model, and should consider dpo.int.lm as fairly equivalent
+        to dpo.lm. The taxa.lm model has substantially less support than either
+        dpo.int.lm or dpo.lm, but with a weight slightly below 4 it cannot be
+        completely discounted. </p>
+      <p>7. At this point we have information about how much support there is
+        for each model in the data, but that's only the first step in data
+        analysis. We can address how important individual <strong><em>variables</em></strong>
+        are by summing the weights for the models each variable appears in.
+        There are various ways of doing this, but the seemingly simplest method
+        of calculating them by hand is error-prone, and it would be much better
+        to take advantage of the fact that we already have the information we
+        need in the models.list and model.aic objects. We just need to figure
+        out how to get it in a form that can be used to calculate the weights by
+        variable.</p>
+      <p>To do this calculation, we will:</p>
+      <ul>
+        <li>Make a data frame with variable names as columns, and model names as
+          rows, with a 1 entered when a variable appears in a model, and a 0
+          when it does not</li>
+        <li>Multiply the matrix of 0's and 1's by the model weights, and sum the
+          columns</li>
+      </ul>
+      <p>The data frame we want to make looks like this:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        log.body taxa dino primate dpo<br>
+        body.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; 0<br>
+        taxa.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; 0<br>
+        taxa.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; 0<br>
+        dino.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; 0<br>
+        dino.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; 0<br>
+        primate.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp; 0<br>
+        primate.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp; 0<br>
+        dpo.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; 1<br>
+        dpo.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; 1<br>
+        intercept.only.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp;&nbsp;
+        0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0&nbsp;&nbsp; 0</p>
+      <p>Each row is a model, and they are in the same order as they appear in
+        models.list. Each column is the name of one of our predictor variables.
+        If the variable appears in the model it gets a 1 for that row, and if
+        the variable does not it gets a 0. If you look at the log.body column,
+        there are 1's in each row except for intercept.only.lm, because log.body
+        occurs in every model but the intercept only model. Reading across
+        columns by row, the body.lm model had only log.body as a predictor, so
+        there is a 1 for the log.body variable, and a 0 for the rest.</p>
+      <p>To make this table, we will make the columns as vectors, and then
+        combine the columns together in a data frame. In the
+        which.models.variables.are.in chunk of your Rmd file enter the first
+        column:</p>
+      <p class="rcmd">log.body &lt;- c(1,1,1,1,1,1,1,1,1,0)</p>
+      <p>We entered the values as a vector, so we had to enter them
+        horizontally, but you'll see we have 9 1's in a row followed by a 0,
+        which is the same as the log.body column.</p>
+      <p>To make taxa we need a 1 as the second and the third elements, and 0's
+        for the other eight:</p>
+      <p class="rcmd">taxa &lt;- c(0,1,1,0,0,0,0,0,0,0)</p>
+      <p>The dino variable appears in the fourth and fifth models, so we have:</p>
+      <p class="rcmd">dino &lt;- c(0,0,0,1,1,0,0,0,0,0)</p>
+      <p>The primate variable is in the sixth and seventh models:</p>
+      <p class="rcmd">primate &lt;- c(0,0,0,0,0,1,1,0,0,0)</p>
+      <p>And last, dpo is in the eighth and ninth models:</p>
+      <p class="rcmd">dpo &lt;- c(0,0,0,0,0,0,0,1,1,0)</p>
+      <p>To combine these into a data frame we use (in the
+        make.variable.inclusion.data.frame chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">data.frame(log.body, taxa, dino, primate, dpo) -&gt;
+        variables.in.model</p>
+      <p>You can use the names of the models from models.list as the row names
+        for this data frame (in the same chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">row.names(variables.in.model) &lt;- names(models.list)</p>
+      <p>If you then display the variables.in.model data frame you'll see we
+        have the same table shown above - if you see any 1's in the wrong
+        location go back and check your vectors to make sure they were all done
+        correctly.</p>
+      <p>Now that we have the variables.in.model data frame, we can use it to
+        select which model weights to include when calculating the importance
+        for each variable. If we multiply the model weights by each column in
+        the variables.in.matrix data frame, we'll get the weight everywhere we
+        have a 1, and a 0 everywhere we have a 0. In the <strong>console</strong>
+        type:</p>
+      <p class="rcmd">model.aic$wts * variables.in.model</p>
+      <p>to get:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        log.body&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        taxa&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        dino&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        primate&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dpo<br>
+        body.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1.955819e-13 0.000000e+00 0.000000e+00 0.000000e+00 0.0000000<br>
+        taxa.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        9.573036e-02 9.573036e-02 0.000000e+00 0.000000e+00 0.0000000<br>
+        taxa.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3.622611e-10
+        3.622611e-10 0.000000e+00 0.000000e+00 0.0000000<br>
+        dino.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1.063172e-04 0.000000e+00 1.063172e-04 0.000000e+00 0.0000000<br>
+        dino.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3.613209e-05
+        0.000000e+00 3.613209e-05 0.000000e+00 0.0000000<br>
+        primate.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.673113e-12
+        0.000000e+00 0.000000e+00 1.673113e-12 0.0000000<br>
+        primate.int.lm&nbsp;&nbsp;&nbsp; 4.115334e-13 0.000000e+00 0.000000e+00
+        4.115334e-13 0.0000000<br>
+        dpo.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        6.252494e-01 0.000000e+00 0.000000e+00 0.000000e+00 0.6252494<br>
+        dpo.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2.788778e-01
+        0.000000e+00 0.000000e+00 0.000000e+00 0.2788778<br>
+        intercept.only.lm 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00
+        0.0000000</p>
+      <p>Each number in the output is now either the weight for the model, if a
+        variable occurred in it, or a 0, if the variable did not occur in it.
+        This means that every column has the weight for every model it occurs
+        in, and we can just sum the columns to get a measure of how important
+        the variable is.</p>
+      <p>To do this, change the last command to (in the console): </p>
+      <p class="rcmd">colSums(model.aic$wts * preds.by.model)</p>
+      <p>and you will see:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;
+        log.body&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        taxa&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        dino&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        primate&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dpo <br>
+        1.000000e+00 9.573036e-02 1.424493e-04 2.084647e-12 9.041272e-01 </p>
+      <p>These values too fall between 0 and 1 - the closer to 1 they are the
+        more important the variable is to include, and the better supported it
+        is by the data. </p>
+      <p>These variable importance values are complete, but are a little hard to
+        compare because of the scientific notation. So, for the final command
+        for the calculate.variable.weights chunk of your <strong>Rmd file</strong>
+        should use the format() command to suppress scientific notation:</p>
+      <p class="rcmd">format(colSums(model.aic$wts * variables.in.model),
+        scientific = F)</p>
+      <p> you'll see: </p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        log.body&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Taxa&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Dino.nodino&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Primate.noprimate
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Dino.prim.other<br>
+        "1.000000000000000000" "0.095730358555192491" "0.000142449336100386"
+        "0.000000000002084647"&nbsp; "0.904127192106426891"</p>
+      <p>What can we learn from these? At the level of the models, we couldn't
+        be too certain that the best model to explain the brain data was the one
+        with Dino.prim.other and log.body without an interaction, because
+        including an interaction between Dino,prim.other and log.body was also
+        fairly well supported. However, based on these variable weights we can
+        be very confident that Dino.prim.other and log.body are both very
+        important - the sum of the weights for the nine models that include
+        log.body is very close to 1, and the sum of the weights for the two
+        models that include Dino.prim.other is 0.904. We may not be too certain
+        of whether the slopes of the lines are the same or different, but the
+        best grouping of the taxa to use is to separate dinosaurs and primates,
+        but keep the rest of the species lumped together.</p>
+      <p>Taxa is interesting as a variable, because it separates all of the taxa
+        - this means that it too separates primates and separates dinosaurs.
+        Taxa differs from Dino.prim.other only in that it keeps all the mammal
+        Orders separate that Dino.prim.other lumps together into the "Other"
+        category. Since Taxa splits the groups that are also split in
+        Dino.prim.other, its log likelihood has to be at least as big as
+        Dino.prim.other, but the extra parameters needed to split the other
+        mammal Orders evidently penalizes Taxa more than it gains in a higher
+        log likelihood by including them. It may be that with a larger sample
+        size that Taxa could be better supported, but at this sample size the
+        trade-off between complexity and fit is working against Taxa, and
+        because of this the data doesn't support interpreting differences among
+        groups other than those used in Dino.prim.other.</p>
+      <blockquote>
+        <h3>Post-hocs from a Method of Support perspective</h3>
+        <p>For the Method of Support to be a viable alternative to using a
+          conventional approach, with null hypothesis significance testing and
+          p-values, we need to be able to answer the questions we would normally
+          ask with conventional methods. If we had only been interested in a
+          typical ANCOVA analysis, in which we used Dino.prim.other as a
+          grouping variable and log.body as a covariate, we would have run into
+          the problem that we don't just want to know that Dino.prim.other is
+          well supported - we also want to know which of the three groups are
+          different from one another. Having found that Dino.prim.other is well
+          supported as a variable, we wouldn't want to fall back on using Tukey
+          tests, because those are based on null hypothesis testing. How could
+          we find out which groups are different from which using the Method of
+          Support?</p>
+        <p>The way to do it is to evaluate which groupings are best supported.
+          When you find that groups are not different in a Tukey test, you
+          conclude they are not actually two separate groups, so a model that
+          lumps them together would be better supported than one that splits
+          them apart. If we used different models that had species grouped in
+          different ways, we could see which was best supported, and interpret
+          that model - groups that were split apart are different, those that
+          are lumped together are not, according to the best-supported model.</p>
+        <p>If you look at the graph for dpo.lm above, you'll see that primates
+          have the biggest brains for their body sizes, followed by the
+          non-primate mammals, followed by dinosaurs. Combining primates and
+          dinosaurs together, but leaving the other mammals separate doesn't
+          make sense because we would be combining the biggest and smallest
+          brains together and leaving the medium-sized brains in their own group
+          - we can leave this possibility out of the analysis (you could make a
+          predictor that represents this grouping, but it isn't necessary). The
+          groupings we would want to hypothesize would thus be: </p>
+        <ul>
+          <li>All three groups are the same</li>
+          <li>Primates and mammals are together, separate from dinosaurs</li>
+          <li>Mammals and dinosaurs are together, separate from primates</li>
+          <li>All three groups are separate</li>
+        </ul>
+        <p>To do post-hoc analysis on the Dino.prim.other variable we would have
+          a model for each of these. As it happens, we already have them:</p>
+        <ul>
+          <li>All three groups are hypothesized to be the same by the body.lm
+            model</li>
+          <li>Dinosaurs are hypothesized to be different from all of the
+            mammals, but the mammals are grouped together, in the dino.lm model</li>
+          <li>Primates are separated, but the rest of the mammals and the
+            dinosaurs are grouped in the primate.lm model</li>
+          <li>All three are separate in the dpo.lm model</li>
+        </ul>
+        <p>We can pull these out of model.aic (in the <strong>console</strong>):</p>
+        <p class="rcmd">model.aic[
+          c("body.lm","dino.lm","primate.lm","dpo.lm"),]</p>
+        <p>which gives you:</p>
+        <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          K&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          AIC&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AICc&nbsp;&nbsp;&nbsp;
+          dAICc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wts<br>
+          body.lm&nbsp;&nbsp;&nbsp; 2 -17.36705 -16.84531 57.58639 1.955819e-13<br>
+          dino.lm&nbsp;&nbsp;&nbsp; 3 -58.16365 -57.07274 17.35896 1.063172e-04<br>
+          primate.lm 3 -22.22915 -21.13824 53.29346 1.673113e-12<br>
+          dpo.lm&nbsp;&nbsp;&nbsp;&nbsp; 4 -76.33646 -74.43170&nbsp; 0.00000
+          6.252494e-01</p>
+        <p>Since the AIC and AICc calculations are done at the level of
+          individual models they don't need to be re-calculated in this new
+          table. dAICc would need to be re-calculated if the model with the
+          lowest AICc wasn't included in the table, but dpo.lm is included - all
+          of these dAICc numbers are differences from dpo.lm already, so they
+          don't need to be updated. The weights are calculated from dAICc's for
+          all ten of the models in model.aic, so these would need to be
+          re-calculated to use them, but we don't need them here - we'll just
+          look at the dAICc numbers.</p>
+        <p>Based on this table, the dpo.lm model that separates dino, primate,
+          and other has much lower AICc than the next closest grouping, which is
+          found in dino.lm. The dino.lm dAICc is -17.35, which is much larger
+          than the 10 units considered sufficient to discount a hypothesis
+          completely. Given this, separating all three groups in Dino.prim.other
+          is far and away the best grouping, and we can take this as evidence
+          that all three are different from one another.</p>
+        <p>So, from this you can see that it's possible to use the Method of
+          Support to analyze data that we've used hypothesis tests for up until
+          now.</p>
+        <p>The other question we would ask in a typical ANCOVA is about the
+          covariate, log.body - how do we know that log.body is supported? We
+          could include the intercept only model as well in our analysis:</p>
+        <p class="rcmd">model.aic[ c("intercept.only.lm",
+          "body.lm","dino.lm","primate.lm","dpo.lm"),]</p>
+        <p>which shows us:</p>
+        <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          K&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          AIC&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; AICc&nbsp;&nbsp;&nbsp;
+          dAICc&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; wts<br>
+          intercept.only.lm 1&nbsp;&nbsp; 4.424834&nbsp;&nbsp; 4.591501 79.02320
+          4.328956e-18<br>
+          body.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2
+          -17.367054 -16.845315 57.58639 1.955819e-13<br>
+          dino.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3
+          -58.163652 -57.072743 17.35896 1.063172e-04<br>
+          primate.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3 -22.229149
+          -21.138240 53.29346 1.673113e-12<br>
+          dpo.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          4 -76.336462 -74.431700&nbsp; 0.00000 6.252494e-01</p>
+        <p>The difference between the intercept.only.lm and body.lm is about 22
+          units, so we have excellent reason to conclude there is a relationship
+          between brain size and body size as well. </p>
+        <p>Note too that this approach puts the null hypothesis on the same
+          footing as the hypotheses of a relationship between predictors and
+          response - rather than testing the null and then treating a conclusion
+          of "not the null" as though it is support for a particular
+          relationship between variables, we treat the hypothesis of no
+          relationship between the variables the same as the hypotheses of
+          various affirmative relationships between variables, and then let the
+          data tell us which is best supported. This gets away from the false
+          dichotomies of null hypothesis testing, while letting us retain the
+          hypothesis of no relationship whatsoever in our analysis.</p>
+      </blockquote>
+      <p>Note one more quirk of the way that I've designed this analysis -
+        log.body is in every model except for the intercept only model. Not
+        surprisingly, its importance is near 1, because we haven't really made
+        it compete against other hypotheses in which is was omitted. If we
+        seriously thought that there might not be a relationship between brain
+        size and body size at all then this would be a bad thing to do - instead
+        we should have models that have the grouping variables without log.body
+        included to assess the possibility that the different groupings of taxa
+        are all we needed to understand differences in brain size, and that
+        knowing the body size was not needed. Essentially, by structuring the
+        analysis the way I did we took as a given that bigger animals should
+        have bigger brains, and we focused only on which taxonomic grouping
+        added the most to our understanding. The point is not that this was
+        either a correct or incorrect choice, but just consider that your
+        choices of models affects what you learn from the analysis.</p>
+      <p>8. Using model selection doesn't relieve us of the responsibility to
+        make sure that our model fits the data. Ultimately it only really
+        matters that the models we interpret meet GLM assumptions, so we will
+        focus on dpo.lm and dpo.int.lm. In the chunk check.assumptions of your <strong>Rmd
+          file</strong> enter:</p>
+      <p class="rcmd">par(oma = c(0,0,3,0), mfrow = c(2,2))<br>
+        <br>
+        plot(models.list$dpo.lm)<br>
+        <br>
+        plot(models.list$dpo.int.lm)</p>
+      <p>You'll see that the residual plots look really good - these models fit
+        well.</p>
+      <p>We don't need to worry about whether poorly supported models meet GLM
+        assumptions, because one of the reasons they might not is that they
+        don't include the right predictors, and that is already accounted for
+        when we compare AICc values. For example, if there are groupings in the
+        data we're not accounting for in our categorical predictors, or
+        differences in slopes of lines that we haven't accounted for with an
+        interaction term, or some such failure of our model to properly
+        represent the structure of the data, the models that fit poorly because
+        of these issues will have high AICc values and won't be interpreted.
+        But, for the models we do want to interpret we should confirm we are
+        meeting the assumptions of our linear models so that we know that our
+        interpretations will be accurate.</p>
+      <p>9. One last thing before we put too much confidence in our
+        best-supported models are: we need to stop and remember that "best
+        supported" is a relative term, and it is only meaningful relative to the
+        models we've included in the analysis. With our analysis of brain sizes,
+        all we have done so far is to establish that models that include the dpo
+        predictor along with log.body are well supported compared to models that
+        use other groupings of the taxa. But, it could be that dpo.lm and
+        dpo.int.lm are just the best of ten terrible models.</p>
+      <p>For example, we could get big differences in AICc between models with
+        multiple R<sup>2</sup> of 0.1, 0.01, 0.001, or 0 (with 0 for the R<sup>2</sup>
+        of the intercept-only model), but the best of this sorry bunch still
+        only explains 10% of the variation in the response and should not be the
+        basis for any firm conclusions about what determines brain size. We do
+        not have a large sample size here, but the point is even more important
+        with larger data sets, because the amount of difference btween the AICc
+        values gets bigger for a given effect size with larger sample sizes.</p>
+      <p>So, in addition to dAiCc and model weights, we should always have a
+        measure of how well the model explains variation in the response
+        variable. We can extract the multiple R<sup>2</sup> for each of the
+        models with (in the extract.r.squared chunk of the <strong>Rmd file</strong>):</p>
+      <p class="Rcmd">sapply(models.list, FUN = function(x)
+        summary(x)$r.squared)</p>
+      <p>You should see the following:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        body.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        taxa.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        taxa.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        dino.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dino.int.lm <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.5995125&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.9765490&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.9790453&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.9227799&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.9247020 <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; primate.lm&nbsp;&nbsp;&nbsp;
+        primate.int.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        dpo.lm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; dpo.int.lm
+        intercept.only.lm <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.6924136&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.6925171&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.9644556&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0.9705627&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0000000</p>
+      <p>Aside from the intercept only model, which explains no variation in the
+        response at all and will always have an R<sup>2</sup> of 0, all of the
+        other models have R<sup>2</sup> of 0.6 or higher. The best-supported
+        models have values of 0.96 or 0.97, which are close to perfect. From
+        this we can conclude that the best supported models are also very good
+        models of variation in brain size for these species. </p>
+      <h2>What more do you want to know?</h2>
+      <p>We won't be taking the interpretation of our models any further today
+        for lack of time, but if we were, all of the interpretation steps we
+        have used all semester are still appropriate here. For example, our
+        models are ANCOVA's, so for the best supported models we could:</p>
+      <ul>
+        <li>
+          <p>Use least squares means to compare the brain sizes across the
+            levels of the dpo categorical variable, for dpo.lm</p>
+        </li>
+        <li>
+          <p>Compare the slopes across the categories for dpo.int.lm</p>
+        </li>
+      </ul>
+      <p><strong></strong></p>
+      <p> </p>
+      <p> That's it! Knit and upload your Word file and you're all done. Next
+        stop, final exam!</p>
+      <p> </p>
+    </div>
+  </body>
+</html>
