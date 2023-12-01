@@ -1,0 +1,847 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+    
+    <title>Likelihood</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Likelihood</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#analytical">ML analytical solutions</a></p>
+      <p><a href="#numerical">ML numerical solutions</a></p>
+      <p><a href="#mle">Numerical ML estimate of the mean</a></p>
+      <p><a href="#mle_slope">ML estimate of slope</a></p>
+      <p><a href="#hyp_test">Hypothesis testing</a></p>
+      <p><a href="#mle_int_only">Intercept only models</a></p>
+    </div>
+    <div id="content">
+      <p class="part" id="intro"> We will learn to use likelihoods of models as
+        the basis for drawing scientific conclusions, using the <strong>method
+          of support</strong>, next week. To prepare you to use this new
+        approach we will spend spend today working with likelihoods. The
+        examples we use today are things you already know how to do, like
+        estimating a mean and fitting a regression line to some data, but we
+        will learn to do them using likelihood instead of least squares.</p>
+      <p>We will be using numerical approaches that give approximate values of
+        maximum likelihood estimates. It isn't always necessary to find
+        approximate solutions when we work with likelihoods, so as an aside
+        let's see how a likelihood function can be used to find an exact maximum
+        likelihood estimate.</p>
+      <h2 class="part" id="analytical">Analytical solutions with likelihoods</h2>
+      <p>In lecture, we looked at the basic conceptual basis for finding maximum
+        likelihood estimates - we used a likelihood function to calculate the
+        likelihoods of a range of possible values for a parameter (using the
+        example of the population mean, μ), and then we selected as our estimate
+        the value with the greatest likelihood given the data. A maximum
+        likelihood estimate is considered to be the value for the estimated
+        parameter that is most likely given the data - this is called the <strong>maximum
+          likelihood criterion</strong>. You can think of the maximum likelihood
+        estimate as the parameter value that is most likely to have given rise
+        to the data.</p>
+      <p>In many cases it's possible to derive <strong>analytical formulas</strong>
+        that give exact maximum likelihood estimates, instead of approximations.
+        You will see that the approximations we use are very good, but to give
+        you an idea of how an analytical approach would work we will find the
+        maximum likelihood estimator for the population mean, given a collection
+        of data with values 119.42, 123.67, 124.86, 125.17, 125.3, 126.9,
+        126.96, 128.13, 128.31, 128.74, 130.36, 130.63, 130.78, 132.53, 135.6</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <table width="100%" border="0">
+        <tbody>
+          <tr>
+            <td><img style="float:left; margin-right: 10px" alt="Mean" src="mean.png">
+              <p>We have an analytical formula for a sample estimate of the
+                population mean (μ) that we've always been told is the best
+                estimate, but how do we know that's really true?</p>
+            </td>
+          </tr>
+          <tr>
+            <td><br>
+            </td>
+          </tr>
+          <tr>
+            <td><img style="float: left; margin-right: 10px" alt="Normal log likelihood" src="normal_log_likelihood.png">
+              <p>The normal log-likelihood function is shown to the left - using
+                the normal log-likelihood means that we are assuming the data
+                are normally distributed around μ. We are interested in finding
+                the best value of <span class="math">μ̂</span>, which is an
+                estimate of the population mean, μ.</p>
+              <p>If we define "best estimate" as the estimate that has the
+                highest likelihood given the data, then to find the best
+                estimate for μ we need to find the value of <span class="math">μ̂</span>
+                that maximizes this function.</p>
+            </td>
+          </tr>
+          <tr>
+            <td><img style="float: left; margin-right: 10px" alt="Normal likelihood" src="norm_likelihood_mu.png"><br>
+              <p>The log likelihood function for μ given the data is graphed to
+                the left in black. Slopes of tangent lines to a curve give a
+                rate of change at a single point - here we get the change in
+                LogLikelihood due to a change in&nbsp;μ. The red line at the top
+                of the curve is tangent to the log likelihood at the curve's
+                maximum, and you can see the line is flat - the slope of the red
+                tangent line is 0. This means we can find the maximum of the log
+                likelihood function by finding where the slope of a tangent line
+                is equal to 0.</p>
+              <p>The first derivative of a function is an equation that gives
+                the slope of tangent lines at a specified location. Once we have
+                the first derivative of the log-likelihood function we can set
+                it equal to 0, and then solve for <span class="math">μ̂</span>
+                - the result will be the value of <span class="math">μ̂</span>
+                that maximizes the log-likelihood function, which is thus the <strong>
+                  maximum likelihood estimator</strong> for μ.</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p>You have probably learned about derivatives before in your
+                pre-calc or calculus classes. We actually need to use <strong>partial
+                  derivatives</strong> because there is another parameter in the
+                function, σ; partial derivatives treat variables other than the
+                one we are solving for as though they are constants - we can
+                find the derivative of the likelihood function using the
+                polynomial rule, treating σ as a constant. </p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p> <img style="float: left; margin-right: 10px" alt="First derivative" src="partial.png"> Treating σ as a constant means that the
+                first two terms in the likelihood function, -0.5<em> n</em>
+                ln(2π) and -0.5 <em>n</em> ln(σ<sup>2</sup>), are constants
+                that are dropped from the first derivative. What's left is (-1/σ<sup>2</sup>)Σ(x<sub>i</sub>
+                - <span class="math">μ̂</span>). The σ<sup>2</sup> in the
+                denominator of -1/σ<sup>2</sup> can't be dropped because it is
+                being multiplied by <span class="math">μ̂</span>.</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p><img src="partial_set_to_zero.png" style="float:left; margin-right: 10px" alt="Partial set to 0">Once we have the partial derivative of
+                the likelihood function with respect to <span class="math">μ̂</span>,
+                we set it equal to 0. Now to find the value of <span class="math">μ̂</span>
+                where the tangent line has a slope of 0 we just need to solve
+                for <span class="math">μ̂</span>.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="height: 140.8px;">
+              <p>We couldn't drop -1/σ<sup>2</sup> from the partial derivative
+                of the log likelihood function, but notice that no matter what
+                value we assign to σ<sup>2</sup> we can only make this partial
+                derivative equal 0 if Σ(x<sub>i</sub> - <span class="math">μ̂</span>)
+                is equal 0 (a standard deviation of 0 is possible, but since 1/0
+                is undefined it isn't a solution). Given that, we can disregard
+                σ<sup>2</sup> and focus on finding the value of <span class="math">μ̂</span>
+                that makes Σ(x<sub>i</sub> - <span class="math">μ̂</span>)
+                equal 0.</p>
+              <img style="float:left; margin-right: 10px" alt="Sum equal zero" src="sum_equal_zero.png">
+              <p>Since <span class="math">μ̂</span> is repeated once for each
+                of the n differences within the summation, we can re-express the
+                summation as the sum of the data values (x<sub>i</sub>) minus n
+                times&nbsp;<span class="math">μ̂</span>.</p>
+            </td>
+          </tr>
+          <tr>
+            <td><img style="float:left; margin-right: 10px" alt="Esimate" src="estimate.png">
+              <p>Solving for <span class="math">μ̂</span> gives us the sum of
+                data values divided by the sample size, which is the formula for
+                <span class="math">x̄</span>. </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>What, exactly do we learn from this? Since the&nbsp;<span class="math">μ̂</span>
+        value that maximizes the likelihood function is <span class="math">x̄</span>,
+        we can conclude that <span class="math">x̄</span> is the maximum
+        likelihood estimate of&nbsp;μ given the data, provided that the data are
+        normally distributed. We are justified in treating <span class="math">x̄</span>
+        as the best estimate we can make of μ, in the sense that it's the value
+        of μ that is most likely to have given rise to the data.</p>
+      <h2 class="part" id="numerical">Numerical solutions for likelihood
+        functions</h2>
+      <p>Likelihood functions don't always have analytical solutions like the
+        one for the population mean. When analytical solutions are not available
+        it's possible to find solutions by trying out different possible values
+        for the parameter until the smallest possible value of the likelihood
+        function is achieved; solutions found by trial and error are called <strong>numerical
+          solutions</strong>. </p>
+      <iframe src="Likelihood_app.html" style="width: 1200px; height: 800px"> </iframe>
+      <p>A simplified explanation of how numerical solutions are found is: a
+        numerical solution starts with a guess of the value of the parameter.
+        Solutions above and below the initial guess are then checked, and if
+        either one improves on the initial guess it is taken as a better guess
+        at the value of the parameter. This process is repeated until values
+        above and below are no better than the current best guess, and the
+        current guess becomes the final numeric estimate. </p>
+      <p>The actual procedure is actually a little more complicated than this
+        simplified explanation, and there are various methods for searching for
+        the best estimate that are very quick and efficient, but fundamentally
+        they all work this way. Computers are very good at doing this kind of
+        work, and numerical methods usually arrive at correct solutions very
+        quickly.</p>
+      <p>When we use the formula Σx/n to calculate a mean we are calculating an
+        analytical solution, we expect it to be mathematically correct to as
+        many decimal places as we want - that is, analytical solutions are
+        correct to an <em>arbitrary</em> level of precision, meaning it's up to
+        us how many decimal places to use. Numerical methods only give
+        approximate solutions, which means they are only correct to a particular
+        fixed level of precision, but this is not really a strike against them.
+        Experimental data does not have infinite precision, and even if we are
+        using an analytical formula to calculate a mean we would only calculate
+        one digit more than were recorded in the data. Provided that a numerical
+        estimate is identical to the analytical formula's solution to the number
+        of digits we calculate for the estimate, both types of estimate can be
+        considered equally accurate.</p>
+      <p>The lm() function in R can do a wide variety of regressions, ANOVA's,
+        and ANCOVA's. The parameters for most of the models lm() fits could be
+        solved analytically, but because numerical solutions are usually just as
+        good as analytical solutions, it uses numerical methods for everything,
+        even when analytical solutions are available.</p>
+      <h2 class="part" id="mle">Using Excel's Solver for numerical analysis</h2>
+      <p> </p>
+      <p>We are going to take a break from R today (and rejoicing was heard
+        throughout the land) and will use Excel instead. R is a much better
+        platform for actually doing model selection work than Excel, and we'll
+        go back to it in the next activity, but working with Excel is a good way
+        to learn how likelihood works. Excel both makes it easier to see how
+        calculations are being done, and to change values of one thing (like <span style="font-family: monospace;">μ̂</span>) and watch how another thing
+        changes (like the log-likelihood).</p>
+      <blockquote>
+        <h3>A brief Excel tutorial</h3>
+        <p>By the way, the instructions that follow assume that you know the
+          basics about using cell formulas in Excel. If that isn't the case for
+          you, open a blank worksheet and read through the following for a quick
+          tutorial:</p>
+        <ul>
+          <li>Cells that do calculations must begin with an equal sign:</li>
+          <ul>
+            <li>1+2 enters the characters "1+2" into a cell</li>
+            <li>=1+2 enters a formula, and returns the result of the formula as
+              the numeric value "3"</li>
+          </ul>
+          <li>Cell functions have a name, followed by parentheses, followed by
+            arguments (although some functions do not require arguments at all,
+            and others have optional arguments), and return a value</li>
+          <ul>
+            <li>=rand() gives a random number between 0 and 1 - no arguments
+              required</li>
+            <li>=sum(10, 6, 18) sums the values 10, 6 and 18 and returns 34 -
+              sum() can take as many arguments as there are numbers to sum</li>
+            <li>=normdist(5, 8, 2) returns the probability density for the value
+              5 for a normal distribution with a mean of 8 and a standard
+              deviation of 2 - the function has an optional argument indicating
+              if the function should return probability density for the first
+              argument, or the cumulative probability from -∞ to the first
+              argument. Changing the function to =normdist(5,8,2,1) returns the
+              cumulative probability. Leaving the final argument out sets it to
+              its default value of 0, and returns the probability density - you
+              could use =normdist(5,8,2,0) instead of =normdist(5,8,2) if you
+              wanted to.</li>
+          </ul>
+          <li>It is possible to refer to cells in the worksheet by the
+            combination of a column letter and a row number</li>
+          <ul>
+            <li>If you enter 1 in cell A1, and a 2 in cell A2, then entering
+              =sum(A1,A2) in cell A3 will return the sum of these two numbers
+              (3). Changing the number in A1 to 3 causes the formula to
+              re-calculate and return 5.</li>
+          </ul>
+          <li>Cell references can be relative or absolute</li>
+          <ul>
+            <li>If you enter the formula =A1 in cell B1, this is interpreted by
+              Excel as "The cell in the same row as me, but one column over".
+              This is a <strong>relative reference</strong>, because where the
+              formula points depends on where the formula is entered.</li>
+            <ul>
+              <li>If you copy the formula in B1 and paste it to B2 you'll see
+                that the cell reference changes to A2 - this is because the cell
+                in the same row, one column over is now A2.</li>
+            </ul>
+            <li>If you enter the formula = $A$1 in cell C1, this is interpreted
+              by Excel as "Cell A1". The dollar signs in front of the column
+              letter and row number anchor the reference to cell A1, and prevent
+              the reference from changing when it is copied and pasted.</li>
+            <ul>
+              <li>If you copy cell C1 and paste it to C2 it will still read
+                =$A$1</li>
+            </ul>
+            <li>You can mix relative and absolute references - if you enter the
+              formula =A$1 in cell E1 then copying and pasting it elsewhere will
+              allow the column to change to a new value if you move right or
+              left to paste, but will prevent the row from changing even if you
+              move up or down to paste.</li>
+          </ul>
+          <li>What it means to copy cells - to copy a cell to another cell you
+            need to:</li>
+          <ul>
+            <li>Select the cell by left-clicking <strong>once</strong> - do not
+              double-click, as this will put the cell in editing mode.</li>
+            <li>Copy the cell - right-click and select "Copy", or use the key
+              combination CTRL+C</li>
+            <li>Select the cell you want to paste into by left-clicking <strong>once</strong>
+              - again, do not double-click!</li>
+            <li>Paste by right-clicking and selecting "Paste", or using CTRL-V</li>
+          </ul>
+          <li>Beware the fill handle! The little black square in the lower-right
+            corner of the currently selected cell is called the "fill handle".
+            Under most circumstances, you can use it as a shortcut to
+            copying/pasting a cell - if you hover over it until your pointer
+            turns into a black plus, left-click, hold, and then drag up or down
+            or right or left, you will get copies of the cell everywhere you
+            drag. But, this is not always what happens, because:</li>
+          <ul>
+            <li>The fill handle creates series of dates out of a single entered
+              date. If you enter 1/1/2018 as a date and then use the fill handle
+              you will see the next cell has the value 1/2/2018. Instead of
+              copying the value 1/1/2018 Excel recognized this as a date and
+              increased the day by 1 when you used the fill handle - this is the
+              default behavior for the fill handle when the cell contents are
+              dates.</li>
+            <li>The fill handle makes series of days of the week from a single
+              day of the week. Enter "Monday" into a cell and use the fill
+              handle to extend it - you'll see you get "Tuesday", "Wednesday",
+              etc. instead of copies of "Monday".</li>
+            <li>The fill handle makes series out of mixes of letters and
+              numbers. If you enter "a" and use the fill handle you get copies
+              of "a". If you enter "1" and use the fill handle you get copies of
+              "1". If you enter "a1" and use the fill handle you get "a2", "a3",
+              "a4", etc.</li>
+          </ul>
+        </ul>
+      </blockquote>
+      <p> </p>
+      <p> Okay, you should be ready to do the Excel work now. The spreadsheet
+        you'll need for this exercise is <a href="likelihood_data.xlsx">here</a>.
+        Download it to your computer and open it in Excel. </p>
+      <p> </p>
+      <p>In the worksheet EstimateMean you'll find 15 data points in column A,
+        labeled "Data". We'll start by setting up this worksheet to calculate
+        the likelihood of each data point, given an initial guess at the
+        estimate of the mean of 127 and of the standard deviation of 3.95.</p>
+      <p>We will be using Excel's tool for finding numerical solutions, called
+        the Solver. Solver needs several things to work properly:</p>
+      <ul>
+        <li>An objective cell - this is a single cell in the spreadsheet
+          containing a spreadsheet formula that depends on one or more values we
+          wish to estimate. We also need to tell Solver whether we want the
+          value of the objective cell to be:</li>
+        <ul>
+          <li>Maximized - values of the estimates will be found that make the
+            objective as big as possible.</li>
+          <li>Minimized - values of the estimates will be found that make the
+            objective as small as possible.</li>
+          <li>Set to a specified target value - values of the estimates will be
+            found that make the objective equal the value we specify.</li>
+        </ul>
+        <li>One or more cells to change - these are the cells that contain the
+          parameters we want to estimate. Our parameters have to be used,
+          directly or indirectly, in the formula for the objective cell, but we
+          can specify as many cells to change as we want.</li>
+      </ul>
+      <p>We will set up log-likelihood functions of our initial guess for the
+        mean given each data value, sum the individual log-likelihoods to get an
+        overall log-likelihood given all the data, and then use Solver to
+        maximize the model log-likelihood function by changing the estimated
+        values. The values of the estimates that maximize the log-likelihood
+        function will thus be our maximum likelihood estimates.</p>
+      <ul>
+      </ul>
+      <h2>Maximum likelihood estimation of the mean</h2>
+      <p>1. Set up some column labels, and enter the initial guesses for mean
+        and standard deviation, like so:<br>
+      </p>
+      <p> </p>
+      <p> </p>
+      <ul>
+        <li>
+          <p>In the first row of column B, type "Likelihood". </p>
+        </li>
+        <li>
+          <p>In cell A19 type the word "Mean", and in B19 type 127. </p>
+        </li>
+        <li>
+          <p>In cell A20 type the word "StDev", and in cell B20 type "3.95".
+            Your sheet should look like <a href="individual_likelihood1.png">this</a>.</p>
+        </li>
+      </ul>
+      <p> </p>
+      <p> </p>
+      <p> 2. Calculate the likelihood of a mean of 127 according to the first
+        data point. Into cell B2 type the function:</p>
+      <p><span class="Excel">=normdist(a2, b$19, b$20, 0)</span></p>
+      <p> </p>
+      <p> This function gives the normal probability density for a number (the
+        data point in a2) with a specified mean (mean in b$19) and standard
+        deviation (the standard deviation in b$20). The last argument, 0,
+        indicates that this is not a cumulative probability, but rather a
+        probability density at the data value specified.</p>
+      <p>Recall that we can use probability distributions as likelihood
+        functions, so even though the normdist() function is calculating
+        probability densities, we can interpret these probability densities as
+        likelihoods.</p>
+      <p> </p>
+      <p> 3. Now you can calculate the likelihoods of a mean of 127 for the
+        remaining data points. Copy cell B2, and paste it to B3 through B16.
+        Since the formula used absolute cell references for the mean (in B$19)
+        and standard deviation in (B$20) but used a relative reference (A2) for
+        the data value, each formula in B2 through B16 uses the same mean and
+        standard deviation, but points to the data value in its own row.
+        Consequently, you now have normal likelihoods for the estimate of the
+        mean and standard deviation for every data value in the sample.</p>
+      <p> </p>
+      <p> As you scan through the likelihoods you just calculated, you'll see
+        that some are bigger than others. What do you notice about which data
+        values have the largest likelihoods? <a href="javascript:ReverseDisplay('big_likelihood')">Click
+          here to see if you're right</a> </p>
+      <div id="big_likelihood" style="display:none;">
+        <p style="border-style:solid;padding:10px;">Data values that are near
+          this initial guess of 127 give high likelihoods, while values far from
+          127 give low ones.</p>
+      </div>
+      <p> </p>
+      <p> 4. You can now calculate the likelihood of the mean and standard
+        deviation given all 15 of the data points. In cell A22 type "Overall
+        likelihood", and in B22 type: </p>
+      <p> </p>
+      <p><span class="Excel"> =product(b2:b16)</span></p>
+      <p> </p>
+      <p> Likelihoods are combined by multiplying them, and the function
+        "product" multiplies all the values from B2-B16 together - remember from
+        lecture, the symbol indicating that data values should be multiplied
+        together is capital Greek pi, Π. </p>
+      <p>Since the individual likelihoods are values between 0 and 1, the
+        largest of which is 0.1, the product across these 15 values is very
+        small (on the order of 10<sup>-19</sup>). Make a note of the mean and
+        its likelihood in your worksheet.</p>
+      <p> </p>
+      <p> 5. To get a feeling for how the maximum likelihood will be found,
+        change the value of the mean in cell b19 to other possible values. </p>
+      <ul>
+        <li>
+          <p>Set the mean in b19 to 119.42, which is the value of the first data
+            point (they are sorted in order, so this is also the smallest
+            number). You'll see the likelihood of this possible value of the
+            mean is high judged by the first data point, but for most of the
+            rest of the data points it is less likely than 127 was, and you'll
+            see that the overall likelihood in cell B22 gets smaller. </p>
+        </li>
+        <li>
+          <p>Set the mean in b19 to 135.61 (the value of the largest data
+            point), and you'll see the likelihoods change again, with the last
+            data point indicating high likelihood. As with the value of 119.42,
+            only a couple of data points give a higher likelihood to 135.61 than
+            to 127, and the overall likelihood given the entire data set is
+            lower than for the value of 127.</p>
+        </li>
+      </ul>
+      <p>You can set the mean in b19 back to 127 - this is a good starting point
+        because it is near the middle of the data.</p>
+      <ul>
+      </ul>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> 6. Working with these tiny numbers makes it more likely that we'll run
+        into numeric problems, so we usually want to work with likelihoods on a
+        log scale. Using the negative of the log likelihood is a convenience -
+        it prevents us from having to interpret the relative sizes of negative
+        numbers. In this step we will calculate the negative log-likelihoods for
+        each data value, and then combine them by summing them (remember:
+        multiplication on a linear scale is addition on a log scale).</p>
+      <p>Label column C "-LogLikelihood" (you'll need the quotes or Excel will
+        think the negative sign is part of a formula and give you an error
+        message), and in cell C2 type:</p>
+      <p> </p>
+      <p><span class="Excel"> =-ln(b2)</span></p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> You can now copy and paste this equation to cells C3-C16. </p>
+      <p>In cell A23 write "Overall -LogLikelihood", and in cell B23 type:</p>
+      <p> </p>
+      <p><span class="Excel"> =sum(C2:C16).</span></p>
+      <p> </p>
+      <p> </p>
+      <p>You should get a value of 41.724 (to three decimal places).<br>
+      </p>
+      <p>7. Now it's time to find the best value for the mean. We have tried
+        three guesses for the mean so far - 127, 119.42, and 135.61 - and of the
+        three 127 gave us the highest likelihood. To find the best possible
+        value of the mean we need to try values that differ by tiny amounts so
+        that we can find the best value to multiple decimal places - obviously,
+        this would be tedious to do by hand. Instead we will use Excel's Solver
+        plug-in to conduct this search using formal numerical analysis methods.</p>
+      <p> </p>
+      <p> </p>
+      <p> Switch to the Data tab and see if you have a Solver button on the far
+        right - it looks like <img src="solver_button.png" alt="Solver button">.
+        If not, you will need to turn it on:</p>
+      <ul>
+        <li>Go to the "File" tab in the upper left corner of Excel, and select
+          the "Options" near the bottom of the list on the left. </li>
+        <li>In the window that pops up, select the "Add-Ins" option out of the
+          list, and click on the "Go..." button next to "Manage: Excel Add-ins".
+        </li>
+        <li>Click on the check-box next to the "Solver Add-in", and click "OK".
+        </li>
+      </ul>
+      <p>If you now click on the "Data" tab, you should see "Solver" as one of
+        the data analysis options.</p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p> </p>
+      <p>To run Solver:</p>
+      <ul>
+        <li>Click the "Solver" button in the "Data" tab.</li>
+        <li>Use the following settings:</li>
+        <ul>
+          <li>Enter $B$23 into the "Set Objective" box - this is the negative
+            log likelihood.</li>
+          <li>Click on the "Min" option so that we will minimize the negative
+            log-likelihood in cell B23 (minimizing the negative log-likelihood
+            maximizes the likelihood).</li>
+          <li>Enter $B$19 as "By Changing Cells:". We are only estimating the
+            mean this time, so don't include the cell with the standard
+            deviation here.</li>
+          <li>Check the box for "Make unconstrained variables non-negative".
+            This means that Solver only needs to consider non-negative numbers
+            as possible solutions. We don't need to consider a negative value
+            for the mean, if the data can't possibly have negative values.</li>
+          <li>You are now set to find the value of the mean in B19 that makes
+            the sum of the negative log-likelihoods as small as possible (it
+            should look like <a href="solver.png">this</a>). </li>
+        </ul>
+        <li>Click "Solve" to run. When Solver has found a solution, select "OK"
+          to keep it.</li>
+      </ul>
+      <p> </p>
+      <p> For comparison, in cell C19 type =average(A2:A16). The analytical
+        solution provided by average() should match Solver's estimate out to six
+        or more decimal places. With only two decimal points recorded in the
+        data, if they are the same to three decimal points then they are
+        identical at the level of precision you require. </p>
+      <p>The take-home message being, numerically minimizing a negative
+        log-likelihood to find an estimate for a parameter works.</p>
+      <p> </p>
+      <p> Now that you have a basic idea of what likelihoods are, and how they
+        can be used, we will use likelihood to find the best-fit line through a
+        data set.</p>
+      <p> </p>
+      <h2 class="part" id="mle_slope">Maximum likelihood estimation of the slope
+        and intercept of a regression line</h2>
+      <p> The next step is to use this approach to estimate the slope (β) and
+        intercept (α) of a linear regression model. The log likelihood function
+        looks like this:</p>
+      <p> </p>
+      <img alt="Log likelihood" src="log_like_function.png">
+      <p> </p>
+      <p> The cursive L is the symbol for likelihood. The parameters we are
+        estimating are on the left side of the vertical line, meaning they are
+        unknowns, and the data values (y<sub>i</sub>) are on the right side of
+        the vertical line, meaning that the data values are known. The
+        log-likelihood function has terms for the sample size (n), the variance
+        (σ<sup>2</sup>), the predicted value of y (ŷ), and the data values (y<sub>i</sub>).</p>
+      <p>Notice that two of the parameters we want to estimate, β and&nbsp;α,
+        don't seem to be in the likelihood function. This is because we won't be
+        maximizing the likelihood of β or α individually - instead, we will be
+        maximizing the likelihood of the linear regression model as a whole. The
+        likelihoods we calculate will be based on the residuals, which are the
+        differences between data values and predicted values (y<sub>i</sub> -
+        ŷ). The predicted values (ŷ) come from the linear regression model,
+        which has a slope of β and an intercept of α. When Solver changes the
+        possible value of β and&nbsp;α it causes the predicted values to change,
+        which in turn changes the likelihood. Values for slope and intercept
+        that maximize the likelihood across the full set of data will be our
+        estimates of β and&nbsp;α.</p>
+      <p>The other parameter in the log likelihood that we need to be concerned
+        with is σ, the standard deviation of the residuals - in addition to the
+        slope and intercept parameters we can change the value of σ, which
+        allows us to estimate σ at the same time as we estimate slope and
+        intercept.</p>
+      <p> </p>
+      <p> 1. Switch to the sheet "Regression". You'll see a set of data, labeled
+        y and x. I've labeled columns C for "Predicted values", D for
+        "Likelihood", and E for "-LogLikelihood". Below, in rows 20-23 of Column
+        B are initial values for the slope, intercept, and standard deviation of
+        the residuals. </p>
+      <p>To calculate the first predicted value, type into C2:</p>
+      <p> </p>
+      <p><span class="Excel"> =b$20*b2 + b$21</span></p>
+      <p> </p>
+      <p> Copy and paste this formula to C3 through C17. These are the predicted
+        means for y from a straight line with a slope of 1 and an intercept of
+        8.755. If you compare the predictions to the y data values you'll see
+        the predictions are terrible - never fear, we know these are not good
+        estimates, we just need to specify starting values to give the Solver
+        something to modify.</p>
+      <p> </p>
+      <p> 2. To calculate the likelihoods for each data point, we are going to
+        use a function that gives probability densities from the normal
+        distribution of a data value, given a mean and a standard deviation.
+        Remember that we can use probability distributions as likelihood
+        functions, and Excel has this function built-in - using it saves us from
+        typing the complicated normal log-likelihood function as an Excel cell
+        formula, and helps us avoid errors.</p>
+      <p>So, type into D2: </p>
+      <p> </p>
+      <p><span class="Excel"> =normdist(a2, c2, b$23, 0)</span></p>
+      <p> </p>
+      <p> This gives the probability density of the y data point from a normal
+        distribution with a mean equal to the predicted value (in c2) and with a
+        standard deviation equal to the standard deviation of the residuals in
+        b$23. Recall that for a single data value the only difference between a
+        probability distribution and a likelihood function is in how we
+        interpret what it is telling us - to interpret this formula as a
+        likelihood function, we just think of it as the likelihood of the
+        predicted value in c2 and the standard deviation of the residuals in
+        b$23 given the data value in a2.</p>
+      <p>The last thing to bear in mind is that the normal likelihood function
+        is based on the difference between data values and predicted values,
+        which are the residuals. We're not calculating residuals to use with
+        normdist() because the function does it for us - we specify the data
+        value and predicted value, and it does the needed differencing for us.
+        We could have used residuals if we wanted, but then the formula would
+        have been =normdist(a2-c2, 0, b$23, 0) - that would have used the
+        residual as the first argument, set the mean of the residuals to 0, and
+        used the standard deviation of the residuals as before. Both approaches
+        are equivalent, and give the same results.</p>
+      <p>Copy and paste this formula from D2 to D3 through D17.</p>
+      <p>3. Now, calculate negative log-likelihoods from the likelihoods you
+        just calculated. In cell E2 type:</p>
+      <p> </p>
+      <p><span class="Excel"> =-ln(d2)</span></p>
+      <p> </p>
+      <p> Make sure you include the negative sign before the ln(). Copy this
+        into E3 through E17. </p>
+      <p>To get the negative log-likelihoods for the model given the entire set
+        of data, we just need to sum these values - in cell B25 type:</p>
+      <p> </p>
+      <p><span class="Excel"> =sum(e2:e17)</span></p>
+      <p> </p>
+      <p>If everything went as planned this number is 1393 - if not, go back and
+        check your cell formulas.<br>
+      </p>
+      <p>4. You can now use Solver to find the best values for the slope,
+        intercept, and standard deviation of the residuals. </p>
+      <p>Start up the Solver, and use the settings:</p>
+      <ul>
+        <li> Use B25 as the objective (the sum of the negative log likelihoods)</li>
+        <li>Minimize the objective cell</li>
+        <li>Use B20, B21, and B23 as the cells to change. </li>
+        <li>Do not make unconstrained variables non-negative (that is, since the
+          slope and intercept could be negative numbers we want Solver to
+          consider negative numbers as possible solutions)</li>
+        <li>The Solver should look like <a href="solver_regression.png">this</a>.
+          Click "Solve", and then accept the solution.</li>
+      </ul>
+      <p>If all went well you should have a slope of 0.228 and an intercept of
+        5.788.</p>
+      <ul>
+      </ul>
+      <p>You can compare the solutions to what you would get by fitting a linear
+        regression by typing into C20 and C21:</p>
+      <p> </p>
+      <p><span class="Excel"> =slope(a2:a17, b2:b17)</span></p>
+      <p><span class="Excel"> =intercept(a2:a17, b2:b17)</span></p>
+      <p> </p>
+      <p> These are the usual estimates of slope and intercept for a linear
+        regression based on analytical formulas, and they should match the
+        maximum likelihood estimates...this means that the analytical formulas
+        for slope and intercept are the maximum likelihood estimates.</p>
+      <p> </p>
+      <p>Stop and think for a moment about what we did - we were able to get
+        accurate estimates of slope and intercept by maximizing the likelihood
+        of the model given the data. We were able to get these estimates without
+        specifying a formula for slope or a formula for intercept, and without
+        having to specify a separate likelihood function for each parameter we
+        estimated. Maximum likelihood is a popular method for estimating
+        parameters of a model fitted to data because of this.</p>
+      <p> </p>
+      <h2 class="part" id="hyp_test">Hypothesis testing with likelihood -
+        comparing two nested models with a likelihood ratio test</h2>
+      <p>You have now used likelihood to estimate a single parameter (the
+        population mean) and the coefficients for a linear model. The other
+        major application of likelihood you will learn today is hypothesis
+        testing. Although the goal is to obtain a p-value for a hypothesis, we
+        will be using <em>models</em> as hypotheses rather than some null value
+        for a parameter. Our focus will be on whether there is a statistically
+        significant change in the likelihood of a model given the data when we
+        add a term to the model - if so, we would have evidence that the more
+        complex model is significantly better than the simpler model.</p>
+      <p> To use this approach, we need to fit two different models to the data
+        and then compare their likelihoods. We already have a simple linear
+        regression on the "Regression" tab, so we will make that model more
+        complex by adding a quadratic term and see if this significantly
+        improves the likelihood of the model given the data. To use this
+        approach we need to use the same set of y data for both models, and the
+        more complex model has to have everything that's included in the simpler
+        model - that is, the simpler model has to be <strong>nested</strong>
+        within the more complex model.</p>
+      <p>1. Switch to the "Quadratic" tab. You'll see that the data are the same
+        as on the "Regression" tab, and the layout of the column names and
+        coefficients is very similar: </p>
+      <ul>
+        <li>Now we have a coefficient labeled "Linear" (instead of "Slope") to
+          represent the linear term - set to the maximum likelihood estimate
+          from the Regression page.</li>
+        <li>We have an additional coefficient for the quadratic term (that is,
+          the value multiplied by x<sup>2</sup>) labeled "Quadratic" - set to 0
+          initially.</li>
+        <li>A coefficient labeled "Intercept", set to the maximum likelihood
+          estimate from the Regression page.</li>
+        <li>The intercept is still labeled "Intercept", and the standard
+          deviation of the residuals is still "StDev of residuals" - set to the
+          maximum likelihood estimate from the Regression page.</li>
+      </ul>
+      <p>The biggest differences from what we have done already is to change the
+        label on the linear slope, and to add a coefficient for the quadratic
+        term. We will have Solver minimize the negative log likelihood by
+        changing all three of the model coefficients in B20 through B22, as well
+        as the standard deviation of the residuals in cell B24.</p>
+      <p> </p>
+      <p>To make the task of finding the estimates easier for Solver, starting
+        values for slope, intercept, and standard deviations of the residuals
+        are all set to the values Solver found for the simple linear regression,
+        and the initial guess for the quadratic term is set to 0 - this set of
+        values sets the Quadratic sheet's initial conditions to be the same as
+        the maximum likelihood solution from the Regression tab. Solver will
+        thus have a starting point that already has a fairly high likelihood,
+        and it will be able to attempt to increase the likelihood by making the
+        quadratic term non-zero.</p>
+      <p>Calculate the predicted values (starting in cell c2) using the formula:</p>
+      <p><span class="Excel">=B$21*B2^2+B$20*B2+B$22</span></p>
+      <p>This adds the squared (quadratic) term to the predicted value, using
+        the coefficient in b21 multiplied by the x-value in b2 squared.</p>
+      <p>Once you have predicted values for every row of data you can calculate
+        the likelihoods, and the -log-likelihoods as before. Put the sum of the
+        negative log-likelihoods in cell B26, and you're ready to use Solver to
+        estimate the coefficients.</p>
+      <p>2. Use Solver with the settings:</p>
+      <ul>
+        <li>The negative log-likelihood in B26 is the objective cell, and it
+          should be minimized.</li>
+        <li>Change the values of B20:B22, B24. </li>
+        <li>Un-check the box that says "Make unconstrained variables
+          non-negative" - we want Solver to be able to try out negative
+          coefficients.</li>
+      </ul>
+      <p>If all goes well the -LogLikelihood should be equal to 12 - smaller
+        than we got with just a linear regression (recall that a smaller
+        negative log-likelihood means a higher likelihood).</p>
+      <ul>
+      </ul>
+      <p>3. Adding more coefficients will always increase the likelihood of a
+        model, so now we have to see if the increase in likelihood is
+        statistically significant. You have negative log-likelihoods for two
+        nested models, so we can test for a difference between them using a
+        likelihood ratio test.</p>
+      <p>In cell A28 of the Quadratic sheet enter "Test of quadratic vs.
+        linear".</p>
+      <p>In cell A30 of the Quadratic sheet, type "Chisquare", and in B30 type:</p>
+      <p><span class="Excel">=2*(Regression!B25 - Quadratic!B26)</span></p>
+      <p>This will give you twice the differences in the negative
+        log-likelihoods (one that is on the Regression sheet in cell B25, the
+        other on the Quadratic sheet in cell B30). We can use this value as a
+        Chi-square test statistic - it should be equal to 3.084 if the
+        calculations are all done correctly. Chi-square values have to be
+        positive, so don't accept -3.084 - re-write the formula to switch the
+        order of the differencing if needed.</p>
+      <p>Now to get a p-value for this test statistic, in cell A31 type "p", and
+        in B31 type:</p>
+      <p><span class="Excel">=chidist(B30,1)</span></p>
+      <p>This function gives probabilities from the Chi-square distribution. The
+        first argument is the Chi-square test statistic you calculated in cell
+        B30, and the second argument it the degrees of freedom. The quadratic
+        model has three coefficients and the regression model has two, for a
+        difference of 1, so the degrees of freedom is 1.</p>
+      <p>What did we learn from this? You'll see that the p-value is over 0.05,
+        which tells us that adding the quadratic term didn't give us a
+        significant increase in the likelihood of the model, so we wouldn't
+        consider the quadratic term to be significant.</p>
+      <h2 class="part" id="mle_int_only">Is the best-supported hypothesis any
+        good at all?</h2>
+      <p>Note that our likelihood ratio test gave us a comparison of two models,
+        simple linear regression and quadratic regression, that don't differ
+        significantly. Our results tell us that the quadratic model doesn't have
+        a significantly higher likelihood than the simpler linear model does.
+        Based on those results we would prefer the linear model to the quadratic
+        one because the linear model is simpler.</p>
+      <p>But, the likelihood ratio test bypassed the crucial step of testing if
+        the simple linear regression is significant - comparing a linear model
+        to a quadratic one only allows us to tell which of the two is better
+        supported by the data, but it does not tell us if either one of them is
+        a good model for the data.</p>
+      <img alt="Intercept only" src="int_only.png" style="float:left; margin-right: 10px">
+      <p>A model-based approach to addressing this question is to fit an <strong>intercept
+          only</strong> model to the data and compare it to the linear
+        regression model. A model that only has an intercept hypothesizes no
+        relationship between y and x at all - or, if you prefer, it hypothesizes
+        a flat line with a slope of 0 and an intercept at <span class="math">ȳ</span>,
+        like the graph on the left. We can calculate the likelihood of the
+        intercept-only model given the data the same way that we calculated the
+        likelihood of the mean given the data in the EstimateMean sheet. Since
+        the intercept-only model has a subset of the terms that the regression
+        model has, we can compare them with a likelihood ratio test to see if
+        the regression model has a significantly higher likelihood. If it does,
+        then we would conclude that including a slope to represent the
+        dependency of y on x increases the likelihood of the model, and is
+        statistically significant.<br style="clear:both">
+      </p>
+      <p>1. We will calculate the likelihood of the intercept only model in the
+        Quadratic sheet. All we need to do is to calculate the mean of the y
+        data, and then sum the -log likelihood of the mean for each y data
+        value. We can do all of this in a single cell using an <strong>array
+          formula</strong>.</p>
+      <p>In the Quadratic sheet, write "Intercept only -LogLik" into cell A33.</p>
+      <p>In cell B33 enter the formula (note the negative sign in front of the
+        sum):</p>
+      <p><span class="Excel">=-sum(ln(normdist(a2:a17, average(a2:a17),
+          stdev(a2:a17), 0)))</span></p>
+      <p>and hold down CTRL+SHIFT as you hit ENTER to make it an array formula
+        (if you did it right you should get a value of 18.34317..). If you get
+        an error message, #VALUE, then click into formula bar to get into edit
+        mode and try again. </p>
+      <p>Array formulas can apply an Excel function to a range of cells, one at
+        a time. This formula is calculating the normal probabilities for the
+        data in A2 through A17 one at a time, using the average and standard
+        deviation of the data, then calculates the natural log of each normal
+        probability, and then finally sums them and multiplies the sum by -1.
+        The result is thus the negative log-likelihood of a model that only
+        includes the mean of the y data, i.e. the intercept-only model. Note
+        that we're using average() and stdev() instead of using Solver to
+        estimate these parameters - we know that the mean is a maximum
+        likelihood estimator, so to save some time we'll take this shortcut.</p>
+      <p>2. In cell A35 enter "Test of linear vs. intercept only". To get the
+        likelihood ratio test for linear regression vs. intercept only:</p>
+      <ul>
+        <li>In cell A37 enter "Chisquare".&nbsp;</li>
+        <li>In B37 enter <span class="Excel">=2*(Quadratic!B33-Regression!B25)</span>.
+          This is the Chi-square test statistic for the difference in
+          likelihoods between linear and intercept only models, and should equal
+          9.6.</li>
+        <li>In cell A38 enter "p", and in B38 enter <span class="Excel">=chidist(b37,
+            1)</span>. Like the comparison of linear to quadratic regression,
+          the intercept only model has one fewer coefficients than the linear
+          regression (i.e. no slope for intercept only), so the degrees of
+          freedom is 1.</li>
+      </ul>
+      <p>You'll see that the p-value is less than 0.05, which means that
+        including a slope in the model is well supported - we get a
+        significantly higher likelihood for a model that includes a slope than
+        one that does not.<br>
+      </p>
+      <p> </p>
+      <p> For your assignment, upload the spreadsheet to Cougar Courses.</p>
+      <br>
+    </div>
+</body></html>
