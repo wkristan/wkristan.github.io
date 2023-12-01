@@ -1,0 +1,614 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>One-way ANOVA and simple linear regression</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body dir="ltr" lang="en-US">
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Review: ANOVA, simple linear regression</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#anova">One-way analysis of variance (ANOVA)</a></p>
+      <p><a href="#regression">Simple linear regression</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <p>Our next review exercise will focus on ANOVA and simple linear
+        regression. You learned to do these in your introductory statistics
+        classes, but they were probably taught as two distinct types of
+        analysis, one that is good for comparing means between groups (ANOVA),
+        and one that is good for measuring the straight-line relationship
+        between two numeric variables (regression). For interpretation of
+        results, ANOVA focuses on differences between group means, and
+        regression focuses on the slope (which is the measure of change in the
+        response per unit change in the predictor variable) and the coefficient
+        of determination (r<sup>2</sup>, which measures the strength of the
+        relationship between predictor and response).</p>
+      <p>Even though they seem to be really different, one hint that regression
+        and ANOVA share an underlying similarity is that we produce an ANOVA
+        table for both of them. In both cases, we calculate how much variation
+        in a measured <strong>response variable</strong> can be accounted for
+        by a <strong>predictor variable</strong>. This is fairly obvious with a
+        regression analysis, because both the predictor and response are numeric
+        - in any regression data set they will each be in a column, with the
+        variable name used as the column header. It's less obvious with ANOVA,
+        because it is possible to arrange ANOVA data with a column of data for
+        each group being compared. However, it is better to think of ANOVA as
+        having a numeric response variable, which are all stored in one column,
+        and a categorical predictor, stored in another column. The categorical
+        predictor is called a <strong>factor</strong> by R, and factors are
+        made up of the groups that are being compared (the <strong>levels</strong>
+        of the factor). If we were doing an experiment on crop yield for fields
+        fertilized with one of three different fertilizers, we would put all the
+        measurements of yield into one column (called Yield), and the three
+        different fertilizers would all be in another (called Treatment, or
+        something like that), with the type of fertilizer used on the fields
+        being the levels. Each row of the data would be one field, with the
+        fertilizer type indicated in the Treatment column, and the amount of
+        crops harvested from the field recorded in the Yield column.</p>
+      <p>So, if we consider both regression and ANOVA to be an analysis of the
+        effects of a predictor variable on the response by our experimental
+        subjects, the fact that both use an ANOVA table is easier to understand.
+        In both cases, we partition the variation in the response variable into
+        a component that can be explained by the predictor and a component that
+        is unpredictable, random variation. We then compare these two different
+        sources of variation with an F test. The ANOVA table collects and
+        organizes all of the information needed for the F test into a standard
+        form that allows the reader to see exactly how the p-value is obtained.
+        As we will be learning shortly, the fact that ANOVA and regression both
+        generate an ANOVA table is not a coincidence, they are actually special
+        cases of the same <strong>linear model</strong>.</p>
+      <p>But, for today we will review what you have already learned about ANOVA
+        and regression - we will save the demonstration that ANOVA and
+        regression are special cases of the same model for next week.</p>
+      <h2 id="anova" class="part">One-way ANOVA</h2>
+      <p> <img src="daphnia.jpeg" alt="Daphnia" style="float: left; padding-right: 10px">Daphnia
+        are small aquatic organisms, like the one pictured to the left.
+        Cyanobacteria are low-quality food for Daphnia because cyanobacteria
+        produce toxins that slow down growth and development. Consequently,
+        Daphnia fed on cyanobacteria have slow growth rates.</p>
+      <p> However, over time it is expected that Daphnia living in water bodies
+        that have high levels of cyanobacteria will evolve resistance to
+        cyanobacterial toxins, so that they can take advantage of the abundant
+        food source. Hairston and colleagues (1999) tested this hypothesis
+        experimentally by measuring the rate of weight gain in Daphnia fed on
+        cyanobacteria, using individuals that came from lakes with high, medium,
+        or low densities of cyanobacteria. Weight gain rate is used as an
+        indication of resistance to cyanobacteria toxins, with large rates of
+        weight gain indicating high levels of resistance. </p>
+      <p>1. Start RStudio, and create a new project called "review2". Download
+        the <a href="review_data.xls">Excel file</a> with today's data sets
+        into the project folder. Download <a href="review2.Rmd">this</a> R
+        markdown file and place it in the review2 folder, then open it in R
+        Studio.</p>
+      <p>Then, import the worksheet "anova" from "review_data.xls" into a data
+        set called "daphnia". Enter the import command in the code chunk called
+        "anova.import.data" of your <strong>R markdown file</strong> (you need
+        to load the readxl library and then import the anova worksheet).</p>
+      <p>Once the daphnia data set is in your environment click on its name to
+        open it for viewing. If you look at how the data are organized, you'll
+        see that you have one column called "cyandensity" that indicates the
+        cyanobacteria density where the Daphnia was sampled, and "resistance"
+        gives the growth rate of the Daphnia. Each row is a replicate, which in
+        this case is an individual Daphnia. To address Hairston's question we
+        will need to compare the means between high, medium, and low
+        cyanobacteria densities - with three group means to compare, we will use
+        an ANOVA. Provided that growth rate is highest where cyanobacteria are
+        the most abundant, you would conclude that the difference indicates
+        increased resistance to cyanobacterial toxins.</p>
+      <p>2. We are going to make a graph of the data, but strangely enough there
+        is not a graph type in "base" R that plots means and error bars. Yes,
+        this is strange, since this is a dead standard kind of graph for grouped
+        data, which is an extremely common type of data. But, one of the
+        side-effects of using a programming language to do data analysis is that
+        some seemingly pretty basic things are left up to you to do yourself.</p>
+      <blockquote>
+        <h3>Adding capabilities to R</h3>
+        <p>When there is something you need to do in R that is not part of <strong>base</strong>
+          R you have several options:</p>
+        <ul>
+          <li>Do the calculations step by step with functions that are included
+            in R</li>
+          <li>Write your own functions</li>
+          <li>Install an extension library that has the capabilities you need</li>
+        </ul>
+        <p>What we need in order to plot means with standard errors for the
+          error bars is a table that gives each level of cyandensity, a mean
+          resistance for each, and a standard error for each mean resistance. R
+          provides a function called aggregate() that can be used to make the
+          table we need, but it will require several steps. The syntax for
+          aggregate() is (don't write this yet, just explaining still): </p>
+        <p>aggregate(formula, data, function.to.use)</p>
+        <p>The simplest way to use aggregate() to calculate one of the
+          statistics we need, such as the mean (in the <strong>console</strong>):</p>
+        <p class="rcmd">aggregate(resistance ~ cyandensity, data = daphnia, FUN
+          = mean) -&gt; resistance.mean</p>
+        <p>You can read the formula, resistance ~ cyandensity, as "resistance
+          grouped by cyandensity", so this will calculate mean resistance for
+          each cyandensity group. If you type the name resistance.mean in the <strong>console</strong>
+          will see a table with mean resistances at the three cyanobacteria
+          densities, like so<strong></strong>:</p>
+        <p class="rout">&nbsp; cyandensity resistance<br>
+          1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; high&nbsp; 0.8000000<br>
+          2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; low&nbsp; 0.6833333<br>
+          3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; med&nbsp; 0.7830000</p>
+        <p>We could use aggregate() to calculate other statistics, such as the
+          standard deviation (in the <strong>console</strong>):</p>
+        <p class="rcmd">aggregate(resistance ~ cyandensity, data = daphnia, FUN
+          = sd) -&gt; resistance.sd</p>
+        <p>which gives us:</p>
+        <p class="rout">&nbsp; cyandensity resistance<br>
+          1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; high 0.07859884<br>
+          2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; low 0.10333822<br>
+          3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; med 0.04738729</p>
+        <p>Those are standard deviations in the resistance column - one of the
+          disadvantages of using aggregate() is that it uses the name of the
+          variable as the column name, so you need to be careful to identify
+          what the numbers are (we used .sd in the name of the object for that
+          reason). To get the sample size we could use (in the <strong>console</strong>):</p>
+        <p class="rcmd">aggregate(resistance ~ cyandensity, data = daphnia, FUN
+          = length) -&gt; resistance.n</p>
+        <p>Which gives us:</p>
+        <p class="rout">&nbsp; cyandensity resistance<br>
+          1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          high&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10<br>
+          2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          low&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 12<br>
+          3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          med&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 10</p>
+        <p>You may be wondering, the length of what, exactly? The way aggregate
+          works is to split the resistance data based on the cyandensity level,
+          and feed one set of data at a time as a vector of numbers to the
+          function we identify with FUN =. The length of a vector is the number
+          of elements it contains, so the length of one of these subsets of
+          resistance data is also the sample size for that group.</p>
+        <p>Now we have pieces of the table we need in three different objects,
+          and we need to assemble these into a single summary data set for
+          graphing. We can do this with the data.frame() command (in the <strong>console</strong>):</p>
+        <p class="rcmd">data.frame(cyandensity = resistance.mean$cyandensity,
+          mean = resistance.mean$resistance, sd = resistance.sd$resistance, n =
+          resistance.n$resistance, se =
+          resistance.sd$resistance/sqrt(resistance.n$resistance)) -&gt;
+          daphnia.sumstats</p>
+        <p>Notice that in addition to making a column for each statistic and
+          assigning the appropriate object's column to it, we calculated the
+          standard error as well - the standard error is the standard deviation
+          divided by the square root of the sample size, which is calculated and
+          assigned to a column called se as the last part of our data frame.</p>
+        <p>If you open daphnia.sumstats you will see:</p>
+        <p class="rout">&nbsp; cyandensity&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          mean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; sd&nbsp;
+          n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; se<br>
+          1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; high 0.8000000 0.07859884
+          10 0.02485514<br>
+          2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; low 0.6833333
+          0.10333822 12 0.02983117<br>
+          3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; med 0.7830000
+          0.04738729 10 0.01498518</p>
+        <p>This is exactly what we need - took several steps, and created
+          several objects to get it, but there it is!</p>
+        <p>Since this is a table we will want to create often it might be worth
+          making this whole process simpler, do-able with a single command, and
+          with less opportunity for errors. To get that, we can create our own
+          function that does these steps for us.</p>
+        <h3>Making your own function from these commands </h3>
+        <p>It's a nuisance to have to run through these commands each time you
+          want to make yourself a summary table, so you can make the process
+          more convenient by defining a function that does these steps, which
+          you can then use on other data sets. For example, to define a function
+          called summarySE() that produces our table of means and standard
+          errors for plotting, you could define the summarySE() function like
+          so:</p>
+        <span class="rcmd">summarySE &lt;- function(dataset, measure.vars,
+          groups) {<br>
+          &nbsp; grps &lt;- aggregate(as.formula(paste(measure.vars, "~",
+          groups)), data = dataset, FUN = mean)[,groups]<br>
+          &nbsp; m &lt;- aggregate(as.formula(paste(measure.vars, "~", groups)),
+          data = dataset, FUN = mean)[,measure.vars]<br>
+          &nbsp; s &lt;- aggregate(as.formula(paste(measure.vars, "~", groups)),
+          data = dataset, FUN = sd)[,measure.vars]<br>
+          &nbsp; n &lt;- aggregate(as.formula(paste(measure.vars, "~", groups)),
+          data = dataset, FUN = length)[,measure.vars]<br>
+          &nbsp; se &lt;- s/sqrt(n)<br>
+          &nbsp; sumstats &lt;- data.frame(grps, m, s, n, se)<br>
+          &nbsp; colnames(sumstats) &lt;- c(groups, "mean","sd","n","se")<br>
+          &nbsp; return(sumstats)<br>
+          }</span>
+        <p>These commands create a function called summarySE that takes as its
+          arguments the name of a dataset, the measured variable you want to
+          summarize, and the names of the column(s) with the groups you want to
+          use. Each aggregate() command calculates one of the summary statistics
+          and assigns it to an object (the first one pulls out the list of
+          groups being summarized). When you write a function to be used with
+          other any data set you don't know what the names of the variables will
+          be, so there is some code that assembles the input variables into a
+          formula (the as.formula() statements inside of the aggregate()
+          functions). Similarly, to make the final sumstats object with the
+          table of statistics it's easiest to make the data frame using the
+          objects first (which will assign the object names as column names at
+          first), and then change the names of the columns in sumstats to
+          reflect the final names we want to use. Once an object called sumstats
+          is created and given final column names, it is returned as the output
+          from the function, with return(sumstats).</p>
+        <p>You can copy and paste this entire function into the <strong>console</strong>
+          and run it, and you will see summarySE in your environment as a
+          function. To use it you could then use summarySE(daphnia,
+          "resistance", "cyandensity") to get your table.</p>
+      </blockquote>
+      <p>The simplest way to get a function added to R is to install an
+        extension library that contains it already. An equivalent to this
+        summarySE() function is available in several different libraries on
+        cran.r-project.org, including one called summarySE in the Rmisc library.
+        But, I have written a library that has summarySE and a few other
+        commands we'll be using later this semester, which we'll use for now. It
+        is already installed on cougarapps, but if you are running R Studio from
+        your own computer you will need to install it now:</p>
+      <ul>
+        <li>First, install the package multcomp from CRAN - go to the Packages
+          tab, click "Install", and with the "Install From" option set to
+          "Repository (CRAN)", start typing multcomp into the "Packages" field.
+          Once you have it typed in click "Install" and let the installation
+          complete.</li>
+      </ul>
+      <ul>
+        <li>Everyone (not just Mac users, it turns out) can install the biol531
+          library from this tar.gz file, <a href="biol531_0.1.2.tar.gz">Biol531_0.1.2.tar.gz</a>.
+          Download it to a location you can find it.</li>
+      </ul>
+      <p>**Beware that R needs these files to be a zipped file**. When it
+        downloads you should end up with a single file with a .tar.gz extension.
+        If your browser is helpfully unzipping the file when you download it you
+        won't be able to install the library.</p>
+      <ul>
+        <li>Back in R Studio, go back to the Packages tab and click the Install
+          button again.</li>
+        <li>Switch from the default install from location (Repository (CRAN)) to
+          "Package Archive File". You will then get a find-file dialog that
+          allows you to go find Biol531_0.1.2.tar.gz - find it and select it,
+          and click "Open", and then click "Install". </li>
+      </ul>
+      <p>When it is done you will have a new Biol531 library in your "User
+        library" list, which you can load using library(biol531). To get the
+        summary statistics you need for your graph add these commands to the
+        daphnia.sumstats chunk in your <strong>Rmd file</strong>:</p>
+      <p class="rcmd">library(biol531)</p>
+      <p class="rcmd">summarySE(daphnia, "resistance", "cyandensity") -&gt;
+        daphnia.sumstats</p>
+      <p> In the daphnia.sumstats data set you now have the cyandensity labels
+        we need for the x-axis, the means we need for y-axis, and the standard
+        errors we need for the error bars. We are ready to graph them.</p>
+      <p>3. Now we will plot the means found in the daphnia.sumstats data frame.
+        Again, R doesn't make this as easy as we might like, and there are many
+        ways to go about getting the results we want. In the last several years
+        an add-on package called <strong>ggplot2</strong> has become very
+        popular, and although it too has a learning curve, it makes very nice
+        graphs. ggplot2 uses what it calls the grammar of graphics to build
+        graphs, and the best way to learn what it's doing is to work your way
+        from the basic command to the final version one piece at a time - the
+        following instructions do that, so for each new version of the command
+        just edit the previous one until you're done (don't write a separate
+        graph command for each one, you'll just have one graph with all the
+        bells and whistles at the end).</p>
+      <p>The basic approach taken by ggplot2 is to identify the data you will
+        use, and assign variables from the data frame to <strong>aesthetic
+          mappings</strong> (aes) that identify a role for the variable. We will
+        use daphnia.sumstats, and will assign cyandensity levels to the x axis,
+        and the mean resistance values to the y-axis. In your <strong>R
+          markdown file</strong>, in the daphnia.plot.means chunk, enter the
+        lines:</p>
+      <p class="rcmd">library(ggplot2)</p>
+      <p class="rcmd">ggplot(daphnia.sumstats, aes(x = cyandensity, y = mean))</p>
+      <p>and submit the code chunk. You'll see a graph with cyandensities on the
+        x-axis, a y-axis labeled "mean", and with nothing in it. This is because
+        so far all we did was load the library, and then use the ggplot()
+        command to identify the data set (daphnia.stats) and which variables to
+        use for the x and y axes (the aesthetic mappings, aes()), but we haven't
+        added anything to the plot yet. </p>
+      <p>We will represent the means with points, so we need to add those to our
+        ggplot() command - <strong><em>modify the command</em></strong> you
+        entered already to read:</p>
+      <p class="rcmd">ggplot(daphnia.sumstats, aes(x = cyandensity, y = mean)) +
+        geom_point()</p>
+      <p>The plus sign extends the ggplot() command - we are adding points as a
+        geometric object (geom) to the plot. We now have a point for each mean
+        on the plot. We can change the appearance of the points by adding some
+        arguments to the geom_point() command - we can make them big and red
+        with:</p>
+      <p class="rcmd">ggplot(daphnia.sumstats, aes(x = cyandensity, y = mean)) +
+        geom_point(size = 3, color = "red")</p>
+      <p>To add the error bars we add an additional geom, using geom_errorbar():</p>
+      <p class="rcmd">ggplot(daphnia.sumstats, aes(x = cyandensity, y = mean)) +
+        geom_point(size = 3, color = "red") + geom_errorbar(aes(ymax = mean +
+        se, ymin = mean - se))</p>
+      <p>The geom_errorbar() command also has an aes() within it, which sets the
+        top of the errorbar (ymax) to be the mean for each point plus the
+        standard error for each point, and the minimum to be the mean minus the
+        standard error. Bear in mind that both mean and se are columns in our
+        data set, so when we calculate the top and bottom in the aes() statement
+        we use the mean and se for each row, which are all different numbers.</p>
+      <p>The error bars are a little wide and are drawing over the points. We
+        can make the points draw over the error bars by moving the
+        geom_errorbar() statement before the geom_point() statement:</p>
+      <p class="rcmd">ggplot(daphnia.sumstats, aes(x = cyandensity, y = mean)) +
+        geom_errorbar(aes(ymax = mean + se, ymin = mean - se)) + geom_point(size
+        = 3, color = "red")</p>
+      <p>and we can make the widths look better by setting their width within
+        the geom_errorbar() command - note that we will want this width to apply
+        to all of the error bars, and the width isn't present in a column in the
+        data set, so we put it outside of the aes() statement:</p>
+      <p class="rcmd">ggplot(daphnia.sumstats, aes(x = cyandensity, y = mean)) +
+        geom_errorbar(aes(ymax = mean + se, ymin = mean - se), width = 0.1) +
+        geom_point(size = 3, color = "red")</p>
+      <p>which looks much nicer. Finally, the labels are variable names, which
+        are okay for analysis but don't make a lot of sense for a graph (the
+        y-axis plots resistance, and the points are the means, but the y-axis
+        isn't the mean of resistance - confusing at best, inaccurate at worst).
+        We can change the labels using the labs() command:</p>
+      <p class="rcmd">ggplot(daphnia.sumstats, aes(x = cyandensity, y = mean)) +
+        geom_errorbar(aes(ymax = mean + se, ymin = mean - se), width = 0.1) +
+        geom_point(size = 3, color = "red") + labs(x = "Cyanobacteria density",
+        y = "Resistance")</p>
+      <p>Based on this graph it looks like resistance to cyanobacterial toxins
+        is greatest in "High" cyanobaceria densities, least in "Low" densities,
+        and in between at moderate densities.</p>
+      <p>4. We need to fix the order of the levels of cyandensity on the graph -
+        they are in alphabetical order, which doesn't match the order of the
+        levels.</p>
+      <p>Currently, cyandensity is an unordered <strong>factor</strong>, which
+        is R's data type for a variable that is used for grouping. When you look
+        at the data set all you see is the labels for each cyandensity level,
+        but in addition to these text labels a factor also has a numbers
+        assigned to each level that R uses internally, but does not display by
+        default. In an un-ordered factor these numbers are assigned to the
+        levels alphabetically, and their ordering is never used in data analysis
+        (they are used for other purposes, such as picking colors on plots).
+        When we have a factor that is ordinal like this one, we need to make an
+        <strong>ordered factor</strong>, which assigns the underlying numbering
+        to match the order of the labels. To do this go back to the
+        daphnia.sumstats code chunk and add a command at the end that says:</p>
+      <p class="rcmd">daphnia.sumstats$cyandensity &lt;-
+        ordered(daphnia.sumstats$cyandensity, levels = c("low","med","high"))</p>
+      <p>You won't see an obvious difference, but if you type
+        daphnia.sumstats$cyandensity at the console you'll see that now the
+        levels are listed in the correct order (low, med, high), with less than
+        symbols between them to indicate the ordering assigned.</p>
+      <p>If you execute the daphnia.plot.means code chunk again the graph will
+        show the levels in the correct order. This, by the way, is an example of
+        why the Rmd system is so nice - if you decide to make a change in one
+        command, you can then run each code chunk that comes after and your
+        output will all reflect the change.</p>
+      <p>5. Check your normality assumption and HOV assumption. This is done
+        using the same commands as you used in your two-sample t-tests. We will
+        be using the daphnia data frame for this - put these tests into your <strong>R
+          markdown file</strong>.</p>
+      <p>6. Now you can conduct the ANOVA. Because R is object-oriented we will
+        be doing this analysis in two stages - first, the ANOVA model is
+        calculated (or "fitted" in statistical modeling terminology), and once
+        that is done the ANOVA table is obtained as a summary of the fitted
+        model. To fit the model, in the <strong>R markdown file</strong> use:</p>
+      <p class="rcmd">daphnia.aov &lt;- aov(resistance ~ cyandensity, data =
+        daphnia)</p>
+      <p>The work is being done by the aov() function, which identifies the data
+        set being used (data = daphnia), and specifies the <strong>model
+          formula</strong>. We will be using these in all of our analyses,
+        because they specify the dependent variable (on the left of the tilde)
+        that is to be explained by one or more independent variables (on the
+        right of the tilde). This model formula, resistance ~ cyandensity, says
+        that we will explain variation in resistance as a function of the
+        cyandensity levels.</p>
+      <p>You won't see anything on the screen, because the output of the aov()
+        function is put into the daphnia.aov object. If you type daphnia.aov at
+        the <strong>console</strong> you'll see that the output isn't organized
+        as an ANOVA table yet. To get an ANOVA table we need to apply the
+        anova() command to the fitted model in daphnia.aov (in your <strong>R
+          markdown file</strong>, on the next line after the aov() command):</p>
+      <p class="rcmd">anova(daphnia.aov)</p>
+      <p>Remember that when you do an ANOVA the p-value tells you if there is
+        reason to think that there are differences between means, but with three
+        or more means being compared you can't tell which are different - it
+        could be that all three means are different from one another, but any
+        combination of significant and non-significant differences between the
+        pairs of means is possible. After receiving a p-value less than 0.05
+        with our ANOVA we need to conduct a post-hoc procedure to determine
+        which of the groups are different from which. You learned about Tukey
+        tests in Biol 215, so we will stick with those for now.</p>
+      <blockquote>
+        <h2> Naming objects </h2>
+        <p> We have made a few objects, and I've been choosing names for them
+          for you. Objects names can be anything (as long as you don't use
+          characters like spaces, quotes, dollar signs, or other "reserved"
+          characters that are used by R for other things), but they should be
+          sensible. Notice that I used a name for the dataset that told us
+          something about what it contained (rather than something generic, like
+          dataset1). Each time we created objects from an analysis of those data
+          we used the name of the dataset first, followed by a period, followed
+          by something that indicated what that object contained. For example,
+          daphnia.sumstats tells us that object contains summary statistics for
+          the daphnia data.</p>
+        <p>When you're using Rmd files you're less likely to confuse yourself
+          with poor object naming, but even with an Rmd file to help you
+          document your work it's always a good idea to make your code as
+          self-documenting as possible. Adopting sensible naming practices
+          helps.</p>
+      </blockquote>
+      <p>To get Tukey post-hoc comparisons use the command (in your <strong>R
+          markdown file</strong>, anova.tukey code chunk):</p>
+      <p class="rcmd"> TukeyHSD(daphnia.aov)</p>
+      <p>You will see all three of the possible comparisons (med-low, high-low,
+        high-med) listed, with a difference between the means (diff), a lower
+        and upper limits to a confidence interval on the difference (lwr and
+        upr), and a p-value. We will go over post-hocs in much greater detail in
+        week 4, for now just identify which comparisons have p-values less than
+        0.05 and consider those groups to be significantly different.</p>
+      <ul>
+      </ul>
+      <p>You can interpret these differences in the context of your graph of
+        means - if there is a statistically significant difference refer to the
+        graph to see which mean is greater than which.</p>
+      <h2 id="regression" class="part">Regression</h2>
+      <p><img src="225px-Operophtera_brumata01.jpg" alt="Winter moths" style="float: left; padding-right: 10px">The
+        worksheet "regression" has some (instructor generated) data on
+        environmental temperature, abdomen temperature, and thorax temperature
+        in winter moths. Winter moths are ectotherms that live in cold climates,
+        yet are able to fly in the winter months by using a "pre-flight warmup"
+        in which they move their wings to generate heat in their flight muscles.
+        The high temperatures allow them to sustain the high rates of energy use
+        that are needed to power flight. Because the heat is generated locally
+        in the thorax, we expect that the temperature in other parts of the body
+        that are far from the thorax (such as the abdomen) would not warm up,
+        and should more closely match ambient temperature.</p>
+      <p style="clear: both">1. Import the sheet "regression" into an R dataset
+        called "moth". If you open the data set you'll see that there is a
+        column for environmental temperature, which will be the independent
+        variable, and then two different dependent variables, Thorax.temp and
+        Abdomen.temp. We will do two different regression analyses, one for each
+        body part.</p>
+      <p style="clear: both">2. Before we analyze the data, we should plot it.
+        If you open the moth data set you'll see that there are three columns,
+        one called Env.temp, one called Thorax.temp, and one called
+        Abdomen.temp. To make the graph we want to stack the thorax and abdomen
+        temps, make a column that indicates which is which, and then use the
+        environmental temps for each of the two body temperatures (that is,
+        we'll need to duplicate Env.temp and stack one copy on top of the
+        other). We can do all of this in a couple of steps.</p>
+      <p style="clear: both">First, to stack the two body temperatures, in your
+        <strong>R markdown file</strong>, use the stack() command:</p>
+      <p style="clear: both" class="rcmd">stack(moth, c(2,3)) -&gt; moth.stacked</p>
+      <p style="clear: both">This stacks the two body temperature variables, and
+        makes a column to indicate which is which. If you click on
+        moth.stacked&nbsp; but it doesn't name them well, and doesn't include
+        Env.temp yet. To add Env.temp we can use the data.frame() command (in
+        your <strong>R markdown file</strong>, below the stack() command):</p>
+      <p style="clear: both" class="rcmd">data.frame(Env.temp = moth$Env.temp,
+        moth.stacked) -&gt; moth.stacked</p>
+      <p style="clear: both">This command may seem like it shouldn't work,
+        because we only had 10 rows for the Env.temp variable in moth, but 20
+        rows in our moth.stacked data frame. However, when R is put in this
+        position it will "recycle" the set of numbers from the shorter data set
+        and use them again to fill in the gaps - this had the effect of
+        duplicating the Env.temp values for us.</p>
+      <p style="clear: both">Finally, the column names created by the stack()
+        command aren't very good - "values" for the body temperatures, and "ind"
+        for the body parts - so let's fix that. We can ask for the names in a
+        data frame with the command (in the <strong>console</strong>):</p>
+      <p style="clear: both" class="rcmd">names(moth.stacked)</p>
+      <p style="clear: both">You will see the three column names reported. We
+        can assign new names like so (in your <strong>R markdown file</strong>):</p>
+      <p style="clear: both" class="rcmd">names(moth.stacked) &lt;-
+        c("Env.temp","Body.temp","Body.part")</p>
+      <p style="clear: both">The names() function on the left accesses the names
+        in moth.stacked, and we use the assignment operator (&lt;-) to set these
+        to the names we want to use. If you look at moth.stacked (click on the
+        name in your Environment) you'll see the three columns with these new
+        names.</p>
+      <p style="clear: both">3. We can set up the ggplot() command using
+        environmental temperature as the x-axis variable, and one of the two
+        response variables as the y-axis - we will use abdomen temperature. In
+        your <strong>R markdown file</strong> enter:</p>
+      <p style="clear: both" class="rcmd">ggplot(moth.stacked, aes(x = Env.temp,
+        y = Body.temp, group = Body.part, color = Body.part)) + geom_point()</p>
+      <p style="clear: both">You'll see the body temperatures plotted, color
+        coded by the body part - with a numeric x-axis and a numeric y-axis this
+        is a <strong>scatter plot</strong>. Based on this graph it looks like
+        abdomen temperature changes as the environmental temperature changes,
+        but thorax temperature does not. </p>
+      <p>4. Now we can run the regression analysis. The function that fits a <strong>linear
+          model</strong> (i.e. a straight line) to the data is called lm(), and
+        it is a lot like the aov() function we used above - we identify a data
+        set, and a model formula to get our fitted model:</p>
+      <p class="rcmd">lm(Abdomen.temp ~ Env.temp, data = moth) -&gt; abdomen.lm</p>
+      <p> The object abdomen.lm is the <strong>fitted model</strong> for the
+        relationship between abdomen temperature and environmental temperature.
+        Just like with the ANOVA, though, the contents of the fitted model is
+        not the ANOVA table that we need for our significance test. We will get
+        the ANOVA table we need shortly.</p>
+      <p>First, though, repeat this procedure with thorax temperature - in the
+        next line below your previous lm() command write the command:</p>
+      <p class="rcmd">lm(Thorax.temp ~ Env.temp, data = moth) -&gt; thorax.lm</p>
+      <p>run this command and you will now also have an object called thorax.lm
+        in your Environment.</p>
+      <p>5. The ANOVA table is obtained with the command (in your <strong>R
+          markdown file</strong>):</p>
+      <p class="rcmd">anova(abdomen.lm)</p>
+      <p>Note that the response variable is given above the table, and the table
+        itself has the test of significance for environmental temperature as a
+        predictor of abdomen temperature.</p>
+      <p>You can do the same with thorax.lm to get its ANOVA table. You'll see
+        that (as we thought) abdomen temperature increases significantly with
+        environmental temperature but thorax temperature does not.</p>
+      <p>6. To get r<sup>2</sup> and the regression equation we need to ask for
+        a summary() of each fitted model. Try getting the summary() of
+        abdomen.lm (enter the command in your R markdown file), and you should
+        see this:</p>
+      <p class="rout">Call: <br>
+        lm(formula = Abdomen.temp ~ Env.temp, data = moth) <br>
+        &nbsp;<br>
+        Residuals: <br>
+        &nbsp;&nbsp;&nbsp;&nbsp; Min&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1Q&nbsp;&nbsp; Median&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        3Q&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Max&nbsp; <br>
+        -1.16297 -0.57980&nbsp; 0.03181&nbsp; 0.61661&nbsp; 1.04760&nbsp; <br>
+        &nbsp;<br>
+        Coefficients: <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Estimate Std. Error t value Pr(&gt;|t|)&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        (Intercept) -0.31194&nbsp;&nbsp;&nbsp; 0.96637&nbsp;
+        -0.323&nbsp;&nbsp;&nbsp; 0.755&nbsp;&nbsp;&nbsp;&nbsp; <br>
+        Env.temp&nbsp;&nbsp;&nbsp;&nbsp; 1.01080&nbsp;&nbsp;&nbsp; 0.01775&nbsp;
+        56.931 1.01e-11 *** <br>
+        --- <br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1 <br>
+        &nbsp;<br>
+        Residual standard error: 0.8063 on 8 degrees of freedom <br>
+        Multiple R-squared:&nbsp; 0.9975,&nbsp;&nbsp;&nbsp; Adjusted
+        R-squared:&nbsp; 0.9972&nbsp; <br>
+        F-statistic:&nbsp; 3241 on 1 and 8 DF,&nbsp; p-value: 1.006e-11</p>
+      <p> You'll find the r<sup>2</sup> labeled "Multiple R-squared" - ignore
+        adjusted r<sup>2</sup> for now, we'll learn about it later. The
+        regression equation is built from the coefficients listed in this output
+        - you'll see them listed as the "Estimate" for (Intercept) and Env.temp.
+        A straight line equation is mx + b, where m is the slope and b is the
+        y-intercept. Our predictor variable here is environmental temperature,
+        so the regression equation for abdomen temperature is:</p>
+      <p>Abdomen.temp = -0.31194 + 1.01080 Env.temp</p>
+      <p>The coefficients are each reported with tests of the hypothesis that
+        they are equal to 0 - you'll see that the test of the slope has a
+        p-value that is equal to that in the ANOVA table - it is highly
+        statistically significant. The intercept is not different from zero.
+        This tells us that the slope is very close to 1, and the intercept is
+        not significantly different from 0.</p>
+      <p>You can do the same set of steps to get r<sup>2</sup> and coefficients
+        for thorax temperature and put together the regression equation for that
+        model.</p>
+      <p>7. Now, before we finish let's add the regression lines to the graph
+        you made. Go back to the ggplot() command, and we will modify it with:</p>
+      <p class="rcmd">ggplot(moth.stacked, aes(x = Env.temp, y = Body.temp,
+        group = Body.part, color = Body.part)) + geom_point() +
+        geom_smooth(method = "lm", se = F)</p>
+      <p>This is the same command as above, except that we added a geom_smooth()
+        to the plot. A geom_smooth() is a line fit through a data set, and the
+        "lm" method of finding the line is a simple linear regression. Grouping
+        by body part (the group = Body.part added to the aes() statement) causes
+        R to calculate a different line for each body part, and the
+        geom_smooth() command specifies that the lines should be straight
+        (method = "lm") and the standard error bands should not be used (se =
+        F). If you want to see what the graph looks like with the standard error
+        bands you can remove the se = "F" setting and re-run the graph - it
+        places a band around the line indicating uncertainty about where the
+        population line would fall.</p>
+      <p>Based on your regression analysis you now know that the relationship
+        between environmental temperature and abdomen temperature is
+        significant, but environmental temperature and thorax temperature is
+        not. </p>
+      <h2 id="assignment" class="part">Knit, quit and save</h2>
+      <p>That's it! Knit your R markdown file to upload to get your Word file to
+        submit to the course web site. Don't forget to save when you quit.</p>
+      <p><br>
+      </p>
+    </div>
+  </body>
+</html>
