@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Log transformation activity</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Log transformation for right-skewed data -
+        activity</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="act10_transformation.html#intro">Introduction</a></p>
+      <p><a href="act10_transformation.html#cancer_survival">Cancer survival
+          data</a></p>
+      <p><a href="act10_transformation.html#back_trans">Back transform- ation</a></p>
+      <p><a href="act10_transformation.html#challenge">Challenge question</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="intro">Introduction</h2>
+      <p> Today we will be using data from the Veterans Administration (VA)
+        about survival times in patients suffering from one of two different
+        types of lung cancer, small cell or large cell. Survival times are in
+        weeks, following positive diagnosis of the disease and beginning of
+        treatment. Survival times are often skewed, because most patients having
+        relatively short survival times, but some survive for long periods. Each
+        patient was also diagnosed as having one of two different kinds of
+        cancer cells, small cell or large cell, which might affect survival
+        times. The data are <a href="lung_cancer_survival.MTW">here</a>, in a
+        file called "lung_cancer_survival.mtw".</p>
+      <p>The first step will be to use normal probability plots and AD tests to
+        check whether your data are normally distributed. Survival data is often
+        skewed, and when you detect skew in these data, you will log-transform
+        them and then re-check to see if you have improved their fit to the
+        normal distribution. Skewed data will often also violate the HOV
+        assumption, and transformation will frequently make the variances equal
+        in addition to making the distributions normal, but you will need to
+        check HOV after transformation to be sure. Then, you will then test the
+        log-transformed data for effects of cell type on survival, using
+        two-sample t-tests.</p>
+      <h2 class="part" id="cancer_survival">Cancer survival data</h2>
+      <p>1. Open the file, and test whether the variable "time" is normally
+        distributed, using probability plots and AD tests.<br>
+      </p>
+      <p>You need to test cell type groups separately, because differences
+        between groups could affect the normality of the data, even though
+        within groups the data are normally distributed. <br>
+      </p>
+      <p>To avoid this, use the "Single" probability plot type (rather than
+        "Multiple"), but use cell type as a "By variable" for each plot. To
+        access the "By variable" option, click on the "Multiple graphs" button,
+        and switch to the "By variable" tab. You may also place each plot in
+        separate panels of the same graph to keep everything you need together
+        in the same graph - check the "In separate panels of the same graph"
+        option on the "Multiple Variables" tab.</p>
+      <p>2. Construct a boxplot and histogram for the data, using "cell type" as
+        "By variables". You should be able to tell from the histograms and box
+        plots the cause of the non-normality.</p>
+      <p>3. Test for HOV for time, grouped by cell type. You learned to do this
+        as part of the two-sample t-test activity.</p>
+      <p>Based on your results, you fail the normality test badly for one group
+        (small cell), and fail the HOV test. We can't go forward with a t-test
+        with both assumptions violated, so we need to try a transformation.</p>
+      <p>4. To transform the data do the following: </p>
+      <ul>
+        <li>Select "Calc" → "<a href="transform1.png">Calculator</a>" </li>
+        <ul>
+          <li>Enter "log.time" as the "Store result in variable" box.</li>
+          <li>Find "Natural log (log base e)" in the function list, and
+            double-click it to enter it into the "Expression" box - this will
+            give you a template to fill in that reads "LN(number)".</li>
+          <li>Double-click "time" from the list of variables on the left - this
+            will substitute the variable name "time" for "number" in the
+            "LN(number)" function. </li>
+        </ul>
+        <li>When you then click "OK", natural log of all of the survival times
+          will be calculated, and placed in column C4, with the title
+          "log.time". When it's set up right, the calculator window will look
+          like <a href="transform2.png">this</a>. </li>
+      </ul>
+      <p>Once you have your log.time numbers, assess normality and HOV for
+        log.time. You will see that you still fail the normality test for one
+        group (large cell), but you pass HOV now. Since we are only violating
+        one assumption with the log-transformed data, and only slightly in one
+        group, it's okay to do a t-test now. </p>
+      <p>5. Use a two-sample t-test to test for differences between cell types
+        using the log-transformed "log.time" variable.<br>
+      </p>
+      <h2 class="part" id="back_trans">Back-transformation of the t-test results</h2>
+      <p>Once you know that you reject the null, you need to interpret the
+        results. It is a good idea to interpret the statistics that are actually
+        analyzed, rather than switching to arithmetic means for interpretation.
+        To get the statistics that are actually used back into the units that
+        the data were recorded in we need to back-transform them.</p>
+      <p>6. You can back-transform values from log weeks to weeks by using the
+        "exp" function, which raises the base e to the power of x (where x is
+        the value you want to back-transform). Below are the methods for
+        calculating the exp function using MINITAB, Excel, or a scientific
+        calculator.<br>
+      </p>
+      <p>In MINITAB, you can back transform using the calculator. Select "Calc"
+        → "Calculator", and enter "Output" in the "Store result in variable"
+        box. In the "Expression" box type exp(4.766) and hit "OK" (this is the
+        large cell mean survival time on a log scale). You will now have a
+        column named "Output" in your worksheet, and a value of 117.45 in the
+        first row, which is the geometric mean survival time in weeks for the
+        large cell group.</p>
+      <p> Calculators differ in how they refer to the exp function, but the two
+        common ways are EXP or e<sup>x</sup>. Type 4.766 into your calculator,
+        then hit whichever of these two buttons you have - you should see 117.45
+        as the answer. Since exp is the inverse of the natural log, you may find
+        the exp function as the second function for the natural log key (often
+        called "ln" on scientific calculators).</p>
+      <p>Repeat this back-transformation for the small cell mean, and for the
+        difference you recorded from the t-test results.</p>
+      <h2>Confidence intervals with log-transformed data</h2>
+      <p>Confidence intervals are important for assessing how good the estimates
+        we are basing our conclusions on are. Since we are using geometric
+        means, we want the confidence intervals we report to be for the
+        geometric means as well. To do this, we need to calculate the confidence
+        intervals on a log scale, and then back-transform the upper and lower
+        limits.</p>
+      <p>7. Calculate a confidence interval for log.time for large and small
+        cell cancers. You can use MINITAB's interval plots for this (as you
+        learned in the confidence interval activity), or you can use the
+        "graphical summary" to obtain the confidence interval. To use the
+        graphical summary, select "Stat" → "Basic statistics" → "Graphical
+        summary". In the form that pops up, use "log.time" as the variable, and
+        "celltype" as the "By variable" and click "OK". The graphs that pop up
+        have all sorts of useful information, including a 95% confidence
+        interval for the mean.</p>
+      <p>8. Once you have the upper and lower limits recorded on your worksheet,
+        use the exp() function to back-transform them. This will give you the
+        95% confidence intervals for the geometric means for each group, in
+        units of weeks of survival.</p>
+      <p>That's it! Answer the questions on your worksheet to complete the
+        assignment.</p>
+      <h2 class="part" id="challenge">Challenge Question</h2>
+      <p> A biologist is studying how hunger influences movement distances in
+        snails. She collects 70 snails from the grounds of her university, and
+        randomly divides them into two groups. The first group of 35 is given
+        water but is kept without food for five days. The other group of 35 is
+        treated the same way, but is given leaves to eat for five days. At the
+        end of the five day period, she places each snail, one at a time, in the
+        center of a circular arena, and measures the distance traveled in a
+        5-minute period. The data for this experiment is in <a href="challenge_q_lab8a.MTW">this
+          file</a>, which represent distances moved in centimeters.</p>
+      <p> A. Test whether these data are normally distributed. Apply an
+        appropriate transformation, then re-test for normality. Report results
+        in the table below.</p>
+      <p> </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th><br>
+            </th>
+            <th>Group</th>
+            <th>AD</th>
+            <th>p-value</th>
+            <th>Normal?</th>
+          </tr>
+          <tr>
+            <td>Distance</td>
+            <td>Fed</td>
+            <td><br>
+            </td>
+            <td><br>
+            </td>
+            <td><br>
+            </td>
+          </tr>
+          <tr>
+            <td><br>
+            </td>
+            <td>Hungry</td>
+            <td><br>
+            </td>
+            <td><br>
+            </td>
+            <td><br>
+            </td>
+          </tr>
+          <tr>
+            <td>Transformed distance</td>
+            <td>Fed</td>
+            <td><br>
+            </td>
+            <td><br>
+            </td>
+            <td><br>
+            </td>
+          </tr>
+          <tr>
+            <td><br>
+            </td>
+            <td>Hungry</td>
+            <td><br>
+            </td>
+            <td><br>
+            </td>
+            <td><br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p> </p>
+      <p>B. Test for HOV between Fed and Hungry groups, using whichever data set
+        (the raw data or transformed data) is normally distributed.</p>
+      <p> </p>
+      <p>C. Test whether distance traveled differs between groups. Report the
+        test statistic, p-value, and whether you reject Ho:. Interpret the
+        result - does hunger affect distance moved?</p>
+      <p> </p>
+      <p>D. Fill in the table below. Calculate the "difference" as the
+        difference between the two geometric means (Fed - Hungry).</p>
+      <p> </p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th>Group<br>
+            </th>
+            <th>Geom. mean</th>
+          </tr>
+          <tr>
+            <td>Fed</td>
+            <td><br>
+            </td>
+          </tr>
+          <tr>
+            <td>Hungry</td>
+            <td><br>
+            </td>
+          </tr>
+          <tr>
+            <td>Difference</td>
+            <td><br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>E. From your t-test output, find the difference between means of the
+        transformed data and back-transform it.</p>
+      <p>F. Explain what the difference between geometric means (from the table
+        above), and the back-transformed difference between means of transformed
+        data (from E), each tell you about the effects of hunger on snail
+        movements.</p>
+    </div>
+  </body>
+</html>

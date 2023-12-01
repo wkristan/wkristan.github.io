@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Transformations prep reading</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Treating violations of assumptions with transformations</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="act10_transformation_prelab.html#intro">Introduction</a></p>
+      <p><a href="act10_transformation_prelab.html#transformations">Transformations</a></p>
+      <p><a href="act10_transformation_prelab.html#back_transformations">Back-
+          transforming results</a></p>
+      <p><a href="act10_transformation_prelab.html#other_transformations">Other
+          transformations</a></p>
+      <p><a href="act10_transformation_prelab.html#next_activity">Next activity</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="intro">Introduction</h2>
+      <p>There are two assumptions of t-tests we now know we are supposed to
+        check before we run a t-test, normality and homogeneity of variance, so
+        that the p-values will be accurate when we conduct our t-tests. We also
+        know about the central limit theorem, which reassures us that a big
+        sample size will save us from non-normality problems. However, we we may
+        not always have the sample size needed for the central limit theorem to
+        cover us.</p>
+      <p>As we have discussed before, in biological data skewed distributions
+        are usually right skewed, due to the "basement effect". Basement effect
+        means that there is a lower limit to our data values, and that
+        observations tend to pile up near that lower limit, but are free to
+        extend as far in the positive direction without limit. The reason that
+        basements are more common than ceilings (which are maximum limits, which
+        tend to produce left-skewed data) is that data such as counts of
+        objects, weights, lengths, and other physical dimensions can't go below
+        zero, but have no upper limit.</p>
+      <p>Another common data type we use that are often skewed are ratios, such
+        as sex ratios. Ratios of two positive numbers also can't go below zero
+        but can be infinitely large, so they too show a basement effect. A sex
+        ratio is the ratio of number of males to number of females (or,
+        equivalently, proportion of males to proportion of females), and when
+        males and females are equally common, such that the population has a 1:1
+        sex ratio, the number of males divided by the number of females will
+        equal 1. If we had data on the proportion of females and the proportion
+        of makes in 1000 populations, we might get something like this:</p>
+      <table style="width: 100%">
+        <tbody>
+          <tr>
+            <td><img title="Males" alt="Males" src="prop_males.png"><br>
+            </td>
+            <td><img title="Females" alt="Females" src="prop_females.png"><br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>We can look at the proportion of males in each population or the
+        proportion of females and we see the same thing - the distribution looks
+        bell-shaped, and they are centered on 0.5. If the proportion of males on
+        average is 0.5, the proportion of females on average also has to be 0.5
+        (since proportion females is 1-proportion males). We can test whether
+        the mean proportion of males is different from 0.5 with a one-sample
+        t-test, and we would find:</p>
+      <p>x̄ = 0.495</p>
+      <p>t<sub>obs</sub> = -0.9685, df = 999, p = 0.333</p>
+      <p>The 95% confidence interval for the mean is 0.486 to 0.504, so there's
+        little doubt that the population has close to 50% males.</p>
+      <p>Given this, if we calculated a sex ratio by dividing the proportion of
+        males by the proportion of females we should see a majority of
+        populations close to an even sex ratio of 1.</p>
+      <table style="width: 100%" border="0">
+        <tbody>
+          <tr>
+            <td><img alt="Sex ratios" src="sex_ratios.png"><br>
+            </td>
+            <td>
+              <p>And in fact that's exactly what we see - a peak at 1 where the
+                proportion males and proportion females is equal. </p>
+              <p>But also notice that the distribution is no longer bell-shaped.
+                Because means are affected by skew in data, the mean sex ratio
+                is 1.23, which is a male-biased number. If we did a one-sample
+                t-test of this mean against a hypothetical sex ratio of 1 we
+                would see:</p>
+              <p>t = 7.0919, df = 999, p-value = 2.5e-12</p>
+              <p>The 95% confidence interval for the mean is 1.16 to 1.29.</p>
+              <p>So, if we analyze the data as proportion of one sex or the
+                other we get an equal number on average, but if we analyze the
+                same data as sex ratios we get strong evidence of a male-biased
+                ratio.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Having the results depend on an arbitrary choice is a Bad Thing. Bear
+        in mind that the problem isn't that we're violating the assumptions of a
+        t-test per se - it's true that normality is an assumption of t-tests,
+        but we often worry about violating assumptions because the p-values we
+        obtain become unreliable. That's not the problem here - the p-value is
+        probably a very good indication of the probability of obtaining a mean
+        of 1.23 from a population with a mean of 1.</p>
+      <p><em><strong>The problem is that the mean is a terrible indicator of
+            where the majority of the data are for this distribution.</strong></em></p>
+      <p>If we want to test whether the sex ratios are biased towards males or
+        females, how would we proceed? There are several approaches, but the one
+        we will learn today is to use a <strong>transformation</strong>.</p>
+      <h2 class="part" id="transformations">Transformations</h2>
+      <p>Transformations are mathematical functions that are applied to our data
+        set to change its distribution. If we can find a transformation that
+        makes our data approximately normal with equal variances between groups,
+        we can go ahead and use the t-tests on the data. To change the <em>shape</em>
+        of a distribution, a transformation has to change more than the location
+        of the mean or the size of the variance, it has to change the relative
+        spacing among observations.</p>
+      <p>One commonly used transformation to treat right-skew in a data set is
+        the <strong>log transformation</strong>. Log transforming a variable
+        just means to take the log of each data value. After transforming the
+        data, they are on a <strong>log scale</strong>.</p>
+      <p>Recall from your high school math classes that the log of a number is
+        the exponent a base needs to be raised to get your number. For example,
+        if we used base 10 logarithms (to make the numbers easy to work in our
+        heads), then the log of the number 100 is 2, because we need to raise
+        the base of 10 to the power of 2 to get 100 (10<sup>2</sup> = 100). </p>
+      <p>Remember also that you can use different bases to calculate logarithms
+        - to make the math easier to follow we used base 10 logs above, but a
+        more common choice is to use <strong>natural logs</strong>, which are
+        often symbolized as log<sub>e</sub>, or ln. Natural logs use the base <strong>e</strong>,
+        which is approximately equal to 2.718 - this is an irrational constant,
+        like π. Natural logs are related to continuous growth rates, and they
+        have some nice theoretical properties that base 10 logs don't share.
+        Don't worry too much about why, but bear in mind that unless
+        specifically told otherwise, a log transformation is probably done with
+        natural logs (in some statistical packages the "log" function gives
+        natural logs, and the "log10" function gives logs of the base 10).</p>
+      <p>So, if we take the natural logs of all the sex ratios in the data set,
+        we would see this (run the animation to see the x-axis change from a
+        linear scale to a log scale):</p>
+      <table style="width: 100%">
+        <tbody>
+          <tr>
+            <td> <video style="float:left" controls="controls" width="600" height="350">
+                <source src="animated_transformation.mp4"></video>
+              <p>The top x-axis has the sex ratios shown in the un-transformed
+                units so that you can see how the transformation stretches the
+                left side and compresses the right side of the scale. The bottom
+                x-axis transitions from using the un-transformed data scale to
+                displaying the natural logs of the data.<br>
+              </p>
+              <p>As the animation runs, the upper and lower ends of each bin on
+                the histogram are kept the same so that you can see how
+                re-scaling the numbers affects the distribution.</p>
+              <p>Also watch the location of the blue vertical line - it is
+                positioned at a value of 1, which is an equal sex ratio, and
+                during the transition to log scale it moves to a position of 0
+                on the bottom x-axis, because the natural log of 1 is 0.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>A histogram with different-sized bins may look a little odd, so the
+        histogram below gives the log-transformed data with equally spaced bins.
+        You'll see the right skew in the data is gone.</p>
+      <table style="width: 100%" border="0">
+        <tbody>
+          <tr>
+            <td>
+              <p><img alt="Log-transformed" src="log_sex_ratio.png" style="float: left; padding: 10px;">Notice
+                a couple of things about the log-scale data: </p>
+              <ul>
+                <li>It's centered at 0. This is because the sex ratio data shows
+                  a peak at 1 in the histogram above, and the log of 1 is 0. The
+                  middle of the distribution on a log scale corresponds to the
+                  peak of the data distribution at 1 on the original scale of
+                  the data.</li>
+                <li>It's symmetrical. If a population has a big imbalance in
+                  favor of males of 10:1, it will have a sex ratio of 10/1 = 10,
+                  which is 9 units away from an equal sex ratio. The same amount
+                  of imbalance in favor of females of 1:10 has a sex ratio of
+                  1/10 = 0.1, which is only 0.9 units from even. The
+                  un-transformed data is skewed because of this effect. But, the
+                  natural log of 10 is 2.30, and the natural log of 0.1 is
+                  -2.30, which are both 2.3 units away from an equal ratio of 0.
+                  On a log scale the distribution of sex ratios is symmetrical
+                  around the mean.</li>
+              </ul>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>If we take the average of these log-transformed sex ratios it's -0.02,
+        which is very close to 0 - the average of the data is now a good
+        representative for the typical value. If we did a one-sample t-test of
+        the mean against 0 we would get:</p>
+      <p>t = -1.047, df = 999, p = 0.2953</p>
+      <p>which indicates that the mean is not significantly different from 0.</p>
+      <p>Testing on a log scale allowed us to ask the right question about our
+        data, but it has one down side - the results results are in log units,
+        which are hard to interpret. To interpret what the analysis is telling
+        us about the data we must convert the results back into the original
+        data scale. For that we need a back-transformation.</p>
+      <h2 class="part" id="back_transformations">Back-transformation</h2>
+      <p><strong>Back-transformation</strong> means to take our results from our
+        analysis on a log scale and re-scale it back to the original data units
+        so we can interpret the results. We have to do this because our
+        understanding of our data expressed on a log scale isn't nearly as good
+        as our understanding on the original data units, and we want to make
+        sure we understand the results properly. The back-transformation for a
+        log transformation is the "exp" function, which means to take our
+        log-scale value and use it as the exponent in e<sup>x</sup>. The
+        function that takes the base <strong>e</strong> and raises it to the
+        number you supply is called <strong>exp()</strong> in both Excel and
+        MINITAB (on your calculator, you may have a button with e<sup>x</sup>
+        which is the same thing).</p>
+      <p>The mean on a log scale for our sex ratios of -0.02 is equal to a sex
+        ratio of exp(-0.02) = 0.98.</p>
+      <p>Now we have a puzzle to solve: the average we tested in our one-sample
+        t-test of -0.02 on a log scale is equivalent to a sex ratio of 0.98, but
+        notice that this is not equal to the mean of the sex ratio data -
+        remember, the mean of the sex ratios is 1.23. So what, exactly, does
+        this value of 0.98 represent?</p>
+      <h3>What are you calculating when you calculate a mean of log-transformed
+        data?</h3>
+      <p>When we calculate a mean of log-transformed data, we sum the logs of
+        data values, and divide by the number of data values.</p>
+      <p>Remember again your high school math class that taking the log of a
+        product is equal to the sum of the logs:</p>
+      <p><img name="Object1" src="lab8_transformation_nonpar_prelab_html_5c360911.gif"
+          alt="formula" style="border: 0px solid ; width: 219px; height: 22px;"
+          hspace="8" align="middle"></p>
+      <p>Remember too that another way of writing the square root of x is to
+        write x<sup>1/2</sup>. Finally, recall that taking the log of a number
+        raised to an exponent is equal to multiplying the log of the number by
+        the exponent:</p>
+      <p><img name="Object2" src="lab8_transformation_nonpar_prelab_html_43cbe108.gif"
+          alt="formula" style="border: 0px solid ; width: 229px; height: 49px;"
+          hspace="8" align="middle"></p>
+      <p>Putting these two rules together, we can see that:</p>
+      <p><img name="Object3" src="lab8_transformation_nonpar_prelab_html_m11ad6f2f.gif"
+          alt="formula" hspace="8" align="middle"></p>
+      <p>The right side of this formula is just the arithmetic mean of the two
+        numbers on a log scale, log(3) and log(2). So, if we reverse this series
+        of steps by back-transforming the mean of our log-transformed data, we
+        would get:</p>
+      <p><img src="backtrans.png" alt="formula" style="width: 222px; height: 39px;"><br>
+      </p>
+      <p>This simple example is for just two numbers, but if we have n numbers
+        the calculation is:</p>
+      <p><img name="Object5" src="lab8_transformation_nonpar_prelab_html_m5d08aeee.gif"
+          alt="" style="border: 0px solid ; width: 179px; height: 28px;" hspace="8"
+          align="middle"></p>
+      <p>The left side of the equation is just e raised to the mean of the
+        log-transformed data. The right side is the n<sup>th</sup> root of the
+        product of all the raw data values (the x<sub>i</sub>'s), which is the
+        definition of a quantity called the <span style="font-weight: bold;">geometric
+          mean</span>. If we used the formula directly to calculate the
+        geometric mean of our data we would multiply all 100 sex ratios
+        together, then 1000'th root, and we would get a geometric mean of 0.98,
+        the same number we got by back-transforming the mean of log-transformed
+        sex ratios.</p>
+      <p>What is the geometric mean? The geometric mean is another measure of
+        central tendency for a data set, and it equals the arithmetic mean in a
+        symmetrical distribution. However, the geometric mean of a skewed
+        distribution will be closer to the mode than either the mean or median
+        will be. This is a good thing for our example, because the geometric
+        mean of 0.98 is where the peak in the histogram falls, and thus is where
+        most of the sex ratios are.</p>
+      <h3>Back-transforming a confidence interval</h3>
+      <p>The mean of the log transformed data is -0.02. We can calculate a
+        confidence interval for this mean like so:</p>
+      <p>s = 0.673</p>
+      <p>s<sub>x̄</sub> = 0.673/sqrt(1000) = 0.021</p>
+      <p>t<sub>(0.025, 999)</sub> = 1.96</p>
+      <p>Upper limit = -0.02 + 1.96 x 0.021 = <strong>0.019</strong></p>
+      <p>Lower limit = -0.02 - 1.96 x 0.021 = <strong>-0.064</strong></p>
+      <p>Notice that when we calculate the confidence interval on a log scale,
+        we use the usual confidence interval formula we've used before: mean ±
+        uncertainty. Since we are adding and subtracting the same uncertainty
+        value, the confidence interval is symmetrical around the mean on a log
+        scale.</p>
+      <p>The confidence interval we just calculated is for the mean on a log
+        scale, which we now know is the geometric mean on the original data
+        scale. If we back-transform the upper and lower limit we get the
+        confidence interval for the geometric mean on the original scale of the
+        data, like so:</p>
+      <p>Upper limit on data scale = exp(0.019) = 1.019</p>
+      <p>Lower limit on data scale = exp(-0.064) = 0.938</p>
+      <p>This means that our estimate of the geometric mean sex ratio is 0.98,
+        and we have 95% confidence it lies between 0.938 and 1.019. After
+        back-transformation the interval is no longer symmetrical, however,
+        since the upper limit is a little further away from the geometric mean
+        than the lower limit is.</p>
+      <table style="width: 100%" border="0">
+        <tbody>
+          <tr>
+            <td><img alt="Asym error" src="assymetrical_error_bars.png"><br>
+            </td>
+            <td>
+              <p>Again, this is different than we're used to, but it makes sense
+                - since sex ratios can't go below 0 we can be very certain that
+                the lower limit is between 0 and 0.98, but ratios can be
+                infinitely large. It makes sense for the lower limit to be
+                closer to the geometric mean than the upper limit is.</p>
+              <p>The confidence intervals are pretty small, but you can see the
+                point if we do the same type of calculation using ± 2 standard
+                deviations around the mean on a log scale and then
+                back-transform these limits, shown as the black bar above the
+                histogram. Remember that this interval is expected to contain
+                95% of the data values, and according to the error bars half of
+                that 95% falls between 0.25 and 0.98, while the other half falls
+                between 0.98 and 3.76.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h2 id="geo_mean">What does a t-test on log-transformed data test?</h2>
+      <h3>One-sample designs</h3>
+      <p>The one-sample example above compared the log-transformed mean sex
+        ratios to a value of 0. Remember one last rule of logs, that:</p>
+      <p>log(a/b) = log(a) - log(b)</p>
+      <p>A one-sample t-test hypothesizes that the population mean, μ, equals a
+        hypothetical value, such as an even sex ratio of 1. On a log scale, the
+        hypothesis is that log(μ) - log(1) = 0. When we do the test, we use the
+        mean of the log-transformed sex ratios as an estimate of μ. According to
+        the rule of logarithmic division, what we are testing about sex ratios,
+        then, is:</p>
+      <p>Ho: g/1 = 1</p>
+      <p>where g represents the geometric mean of the population.</p>
+      <h3>Two-sample designs</h3>
+      <p>What would change if we had two groups instead of one? Two sample
+        designs compare two population means, so our null hypothesis would be
+        that:</p>
+      <p>H<sub>o</sub>: μ<sub>1</sub> - μ<sub>2</sub> = 0</p>
+      <p>If the μ's are on a log scale, then this is equivalent to testing
+        testing the hypothesis:</p>
+      <p>H<sub>o</sub>: g<sub>1</sub>/g<sub>2</sub> = 1</p>
+      <p>where the g's are the population geometric means of the two groups. If
+        you back-transform the difference between two means of log-transformed
+        data, you will obtain the ratio of the geometric means on the original
+        data scale.</p>
+      <p>As an example, we can split the data on sex ratios into two groups and
+        compare them. After log-transforming, the summary statistics are:</p>
+      <table class="tableLarge">
+        <thead>
+          <tr>
+            <th>Group</th>
+            <th>Mean</th>
+            <th>s</th>
+            <th>n</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Group 1</td>
+            <td>0.003</td>
+            <td>0.66</td>
+            <td>500</td>
+          </tr>
+          <tr>
+            <td>Group 2</td>
+            <td>-0.047</td>
+            <td>0.69</td>
+            <td>500</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>A two-sample t-test gives us:</p>
+      <p>t = 0.615, df = 998, p = 0.5386</p>
+      <p>The (non-significant) difference between means that was tested in this
+        t-test is 0.05. Back-transformed, we get exp(0.05) = 1.05, which tells
+        us that the geometric mean for Group 1 is 1.05 times as big as the
+        geometric mean for Group 2. We can get the same result by calculating
+        the geometric means for the groups and then dividing them, like so:</p>
+      <table class="tableLarge">
+        <tbody>
+          <tr>
+            <th>Group</th>
+            <th>Geometric mean</th>
+          </tr>
+          <tr>
+            <td>Group 1</td>
+            <td>exp(0.003) = 1.003</td>
+          </tr>
+          <tr>
+            <td>Group 2</td>
+            <td>exp(-0.047) = 0.952</td>
+          </tr>
+        </tbody>
+      </table>
+      <p></p>
+      <p>The ratio of these geometric means is 1.003/0.952 = 1.05, the same as
+        the back-transformed difference.</p>
+      <p>So, bear in mind: when you use a transformation on your data to improve
+        normality and to meet the HOV assumption of a t-test, your test is <em>no
+          longer testing whether the difference in the arithmetic means of the
+          raw data is equal to 0</em>, but instead it is testing whether the
+        ratio of the geometric means of the raw data is equal to 1. Using
+        geometric means is a good thing for these skewed ratios, as they more
+        accurately represents what's going on in the population, but be aware
+        how this transformation changes things, and interpret your results
+        accordingly. </p>
+      <h2 class="part" id="other_transformations">Transformations for different
+        degrees of skewness</h2>
+      <p>The first example of a transformation was based on sex ratios because
+        the cause of the skewness and its solution make some intuitive sense
+        (hopefully!), but log-transformation is an effective treatment for
+        heavily right-skewed distributions regardless of the cause of the skew.
+        However, skewed variables are not all equally skewed, and
+        log-transformation may not always be needed. For example:</p>
+      <table style="width: 100%">
+        <tbody>
+          <tr>
+            <td> <img name="graphics4" alt="" style="border: 0px solid ; width: 576px; height: 384px; float: left; padding: 10px;"
+                src="skewed.jpg" align="left">
+              <p>In the two distributions above the skew in the left panel is
+                not as severe as the skew in the right panel. If we applied a
+                log-transformation to the mildly skewed variable, we would
+                over-correct and produce a left-skewed distribution instead of a
+                normal one. </p>
+            </td>
+          </tr>
+          <tr>
+            <td> <img name="graphics5" alt="" style="border: 0px solid ; width: 576px; height: 384px; float: left; padding: 10px;"
+                src="sqrt_transformed.jpg">
+              <p> Taking the square root of each observation is often an
+                effective treatment for mildly skewed variables:</p>
+            </td>
+          </tr>
+          <tr>
+            <td> <img name="graphics6" alt="" style="border: 0px solid ; width: 576px; height: 384px; float: left; padding: 10px"
+                src="sqrt_transformed_qq.jpg">
+              <p>The normal probability plot confirms that this worked well:</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>To sum up: in general, if you have a right-skewed variable, try a
+        square-root transformation and a log-transformation, and see which one
+        results in the best normal probability plot. What you should definitely
+        not do is to transform your data both ways, do a t-test on each, and
+        then choose the transformation that gives you the desired result in your
+        t-test!</p>
+      <h2 id="next_activity">Next activity</h2>
+      <p>We will use data on survival of lung cancer patients from a drug trial
+        done by the Veterans Administration (VA). Survival data is another
+        common biological variable that is usually skewed - most patients live
+        for a short period of time, but a few live for substantially longer than
+        average. We will see how different approaches to analyzing the
+        effectiveness of a drug at extending survival time affects the results.
+        Additionally, survival times for two different cancer types (small cell
+        and large cell) will be compared.</p>
+    </div>
+  </body>
+</html>
