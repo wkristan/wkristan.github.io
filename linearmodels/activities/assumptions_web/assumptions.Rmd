@@ -1,0 +1,290 @@
+---
+title: "Checking assumptions"
+author: "Your Name"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Assumption checking
+
+Before now we have treated checking of assumptions as a pre-flight check; that is, something that we do with the data before doing any analysis. We will learn today to use **model criticism** instead, which is an interactive approach of fitting models and inspecting residuals to find a combination of model structure and data scale that meet the assumptions of GLM.
+
+We will work with the bacteria dataset from your book.
+
+First, import the data:
+
+```{r import.data}
+
+
+
+```
+
+Convert the categorical predictors, day, sucrose, and leucine, to factors:
+
+```{r convert.factors}
+
+
+
+```
+
+
+Plot a histogram:
+
+```{r plot.histogram}
+
+
+
+```
+
+#### Question: do the data look normally distributed based on this histogram? How do you know?
+
+>
+
+## First analysis
+
+Fit a linear model of density as a funciton of day + sucrose + leucine - no transformation, and no interactions between the predictors.
+
+```{r fit.model.no.interactions.no.transformation}
+
+
+
+```
+
+Get the predicted values from this model:
+
+```{r predicted.density}
+
+
+
+```
+
+#### Question: what is the problem with these predicted values? They are supposed to be means for the combinations of day, leucine, and sucrose found in each row of the table, why do you know these are poor estimates for mean densities?
+
+>
+
+Now calculate the residuals for the model:
+
+```{r density.resids}
+
+
+
+```
+
+#### Question: is it a problem that some of the residuals are negative? Why or why not?
+
+>
+
+Plot the residuals:
+
+```{r plot.residuals.from.first.model}
+
+
+
+```
+
+#### Question: do the plots give you any reason to think the residuals are not meeting the normality or HOV assumptions? Explain.
+
+>
+
+
+Confirm that you are violating normality and/or HOV with quantitative tests:
+
+```{r shapiro.bp.test.first.model}
+
+
+
+```
+
+#### Question: are the residuals normally distributed? How do you know?
+
+>
+
+#### Question: do the groups have equal variances? How do you know?
+
+>
+
+
+Try adding an interaction between sucrose and leucine:
+
+```{r interaction.sucrose.leucine}
+
+
+
+```
+
+#### Question: although it is not a good idea to interpret results of models that do not meet assumptions, we will revisit the interaction in this model in a later question. Is the interaction between sucrose and leucine significant?
+
+>
+
+Plot the residuals:
+
+```{r plot.residuals.from.second.model}
+
+
+
+```
+
+#### Question: are there still signs that the data violate the normality and HOV assumptions? Explain.
+
+>
+
+Test the assumptions quantitatively:
+
+```{r shapiro.bptest.second.model}
+
+
+
+```
+
+#### Question: do you meet the normality and HOV assumptions now that an interaction term has been added? How do you know?
+
+>
+
+Try log-transforming density:
+
+```{r log.density}
+
+
+
+```
+
+Produce the plots:
+
+```{r plot.residuals.from.third.model}
+
+
+
+```
+
+#### Question: now do the residual plots look like they should if you meet the normality and HOV assumptions? Explain.
+
+>
+
+Confirm your impression that we meet the assumptions - run the quantitative tests:
+
+```{r shapiro.bptest.third.model}
+
+
+
+```
+
+## Question: did you pass the normality and HOV assumption tests?
+
+>
+
+## Second analysis
+
+Fit one more model that log-transforms density, but does not include the interaction between sucrose and leucine:
+
+```{r log.but.no.interaction}
+
+
+
+```
+
+Plot the residuals:
+
+```{r plot.residuals.from.fourth.model}
+
+
+
+```
+
+#### Question: do these graphs look different from the graph of the log-transformed data with an interaction between sucrose and leucine that you made in the previous step?
+
+>
+
+Confirm that these graphs look okay - check assumptions quantitatively:
+
+```{r shapiro.bp.fourth.model}
+
+
+
+```
+
+#### Question: do you pass the normality and HOV tests?
+
+>
+
+#### Question: given that both of models that used log-transformed data met the assumptions, why might you want to try using an interaction first and only transform if that isn't sufficient, like the book did?
+
+>
+
+## Getting the right stats for interpreting your results
+
+We will use the emmeans library to get the predicted means for leucine.
+
+Load the emmeans library:
+
+```{r load.emmeans}
+
+
+
+```
+
+Estimate the means on the log density scale used to fit the logdens.nointer.lm model:
+
+```{r log.scale.leucine}
+
+
+
+```
+
+Plot these means using a y-axis showing the log of density. The plot symbols will be means of log bacterial density:
+
+```{r plot.log.leucine.linear.y}
+
+
+
+```
+
+Get the means as back-transformed, geometric means:
+
+```{r linear.scale.leucine}
+
+
+
+```
+
+#### Question: what kind of means are these back-transformed values, arithmetic or geometric?
+
+>
+
+Plot the leucine effect from logdens.nointer.eff again, but this time using density as the y-axis values.
+
+```{r plot.leucine.linear.y}
+
+
+
+```
+
+#### Question: why are the confidence intervals asymmetrical?
+
+>
+
+Finally, plot the leucine effect from logdens.nointer.eff using densities, but log-scale the y-axis.
+
+```{r plot.leucine.log.y}
+
+
+
+```
+
+#### Question: the y-axis is a log axis - does that mean that the tick labels are the log of density, or are they density?
+
+>
+
+## What do interactions on a log scale mean?
+
+#### Question: we found that there is no interaction between sucrose and leucine on a log scale, but there was one on the linear scale. Why would the interaction be significant on the original data scale but not on a log scale?
+
+>
+
+

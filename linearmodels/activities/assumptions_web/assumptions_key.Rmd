@@ -1,0 +1,306 @@
+---
+title: "Checking assumptions"
+author: "Key"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Assumption checking
+
+Before now we have treated checking of assumptions as a pre-flight check; that is, something that we do with the data before doing any analysis. We will learn today to use **model criticism** instead, which is an interactive approach of fitting models and inspecting residuals to find a combination of model structure and data scale that meet the assumptions of GLM.
+
+We will work with the bacteria dataset from your book.
+
+First, import the data:
+
+```{r import.data}
+
+library(readxl)
+read_excel("bacteria.xls","bacteria") -> bacteria
+
+```
+
+Convert the categorical predictors, day, sucrose, and leucine, to factors:
+
+```{r convert.factors}
+
+bacteria$day <- factor(bacteria$day)
+bacteria$sucrose <- factor(bacteria$sucrose)
+bacteria$leucine <- factor(bacteria$leucine)
+
+```
+
+
+Plot a histogram:
+
+```{r plot.histogram}
+
+library(ggplot2)
+ggplot(bacteria, aes(x = density)) + geom_histogram()
+
+```
+
+**Question: do the data look normally distributed based on this histogram? How do you know?**
+
+> No, they have a long right tail, so they look positively skewed.
+
+## First analysis
+
+Fit a linear model of density as a funciton of day + sucrose + leucine - no transformation, and no interactions between the predictors.
+
+```{r fit.model.no.interactions.no.transformation}
+
+dens.nointer.lm <- lm(density ~ day + sucrose + leucine, data = bacteria)
+
+```
+Get the predicted values from this model:
+
+```{r predicted.density}
+
+predict(dens.nointer.lm)
+
+```
+**Question: what is the problem with these predicted values? They are supposed to be means for the combinations of day, leucine, and sucrose found in each row of the table, why do you know these are poor estimates for mean densities?**
+
+> Many of them are negative numbers, and since densities can't be negative the mean of density can't be negative either.
+
+Now calculate the residuals for the model:
+
+```{r density.resids}
+
+residuals(dens.nointer.lm)
+
+```
+**Question: is it a problem that some of the residuals are negative? Why or why not?**
+
+> No, residuals are observed - predicted, so any observed value that falls below the mean will have a negative residual. Residuals can be negative.
+
+Plot the residuals:
+
+```{r plot.residuals.from.first.model}
+
+oldpar <- par()
+par(oma = c(0,0,3,0), mfrow = c(2,2))
+plot(dens.nointer.lm)
+
+```
+
+**Question: do the plots give you any reason to think the residuals are not meeting the normality or HOV assumptions? Explain.**
+
+> The predicted values don't go through the middle of the data, which you can see by the residuals vs. fitted value plot in the upper left. The data also appear to be more variable at larger predicted values.
+
+
+Confirm that you are violating normality and/or HOV with quantitative tests:
+
+```{r shapiro.bp.test.first.model}
+
+shapiro.test(residuals(dens.nointer.lm))
+library(lmtest)
+bptest(dens.nointer.lm)
+
+```
+
+**Question: are the residuals normally distributed? How do you know?**
+
+> No, the Shapiro-Wilk normality test has p less than 0.05, so the residuals are not normal.
+
+**Question: do the groups have equal variances? How do you know?**
+
+> The BP test has a p-valeu below 0.05, so the variances are not the same.
+
+
+Try adding an interaction between sucrose and leucine:
+
+```{r interaction.sucrose.leucine}
+
+dens.inter.lm <- lm(density ~ day + sucrose * leucine, data = bacteria)
+summary(dens.inter.lm)
+anova(dens.inter.lm)
+
+```
+
+**Question: although it is not a good idea to interpret results of models that do not meet assumptions, we will revisit the interaction in this model in a later question. Is the interaction between sucrose and leucine significant?**
+
+> Yes it is, the p-value for sucrose:leucine is less than 0.05.
+
+Plot the residuals:
+
+```{r plot.residuals.from.second.model}
+
+par(oma = c(0,0,3,0), mfrow=c(2,2))
+plot(dens.inter.lm)
+
+```
+
+**Question: are there still signs that the data violate the normality and HOV assumptions? Explain.**
+
+> Yes, the predicted values still don't go through the middle of the data, and there is a change in variance as predicted values increase.
+
+Test the assumptions quantitatively:
+
+```{r shapiro.bptest.second.model}
+
+shapiro.test(residuals(dens.inter.lm))
+bptest(dens.inter.lm)
+
+```
+
+**Question: do you meet the normality and HOV assumptions now that an interaction term has been added? How do you know?**
+
+> Both tests fail, since both have p less than 0.05.
+
+Try log-transforming density:
+
+```{r log.density}
+
+dens.inter.log.lm <- lm(log(density) ~ day + sucrose * leucine, data = bacteria)
+summary(dens.inter.log.lm)
+
+```
+
+Produce the plots:
+
+```{r plot.residuals.from.third.model}
+
+par(oma = c(0,0,3,0), mfrow=c(2,2))
+plot(dens.inter.log.lm)
+
+```
+
+**Question: now do the residual plots look like they should if you meet the normality and HOV assumptions? Explain.**
+
+> The residual plots are much better. The predicted values are in the middle of the data, and the amount of variation is the same from low to high fitted values. The points follow the straight diagonal line on the normal probability plot.
+
+Confirm your impression that we meet the assumptions - run the quantitative tests:
+
+```{r shapiro.bptest.third.model}
+
+shapiro.test(residuals(dens.inter.log.lm))
+bptest(dens.inter.log.lm)
+
+```
+
+**Question: did you pass the normality and HOV assumption tests?**
+
+> Yes, both tests have p greater than 0.05 now.
+
+## Second analysis
+
+Fit one more model that log-transforms density, but does not include the interaction between sucrose and leucine:
+
+```{r log.but.no.interaction}
+
+logdens.nointer.lm <- lm(log(density) ~ day + sucrose + leucine, data = bacteria)
+summary(logdens.nointer.lm)
+
+```
+
+Plot the residuals:
+
+```{r plot.residuals.from.fourth.model}
+
+par(oma = c(0,0,3,0), mfrow=c(2,2))
+plot(logdens.nointer.lm)
+
+```
+
+**Question: do these graphs look different from the graph of the log-transformed data with an interaction between sucrose and leucine that you made in the previous step?**
+
+> Yes the residuals look nearly the same with or without an interaction included on a log scale.
+
+Confirm that these graphs look okay - check assumptions quantitatively:
+
+```{r shapiro.bp.fourth.model}
+
+shapiro.test(residuals(logdens.nointer.lm))
+bptest(logdens.nointer.lm)
+
+```
+
+**Question: do you pass the normality and HOV tests?**
+
+> Yes, both tests are passed on a log scale, even though no interaction was included.
+
+**Question: given that both of models that used log-transformed data met the assumptions, why might you want to try using an interaction first and only transform if that isn't sufficient, like the book did?**
+
+> The interaction assesses whether the response to leucine depends on sucrose level, which is a scientifically interesting part of the analysis. The experiment uses crossed factor levels for leucine and sucrose, and it is thus well designed to test for main effects and interactions between them. Given that one would want to test for an interaction anyway, it makes sense to include the interaction term first, and only transform if the model with an interaction doesn't fit the data.
+
+## Getting the right stats for interpreting your results
+
+We will use the emmeans library to get the predicted means for leucine.
+
+Load the emmeans library:
+
+```{r load.emmeans}
+
+library(emmeans)
+
+```
+
+Estimate the means on the log density scale used to fit the logdens.nointer.lm model:
+
+```{r log.scale.leucine}
+
+emmeans(logdens.nointer.lm, specs = "leucine")
+
+```
+
+Plot these means using a y-axis showing the log of density. The plot symbols will be means of log bacterial density:
+
+```{r plot.log.leucine.linear.y}
+
+emmip(logdens.nointer.lm, formula = ~ leucine, CIs = T) + labs(y = "Log of Density")
+
+```
+
+Get the means as back-transformed, geometric means:
+
+
+```{r linear.scale.leucine}
+
+emmeans(logdens.nointer.lm, specs = "leucine", type = "response")
+
+```
+
+**Question: what kind of means are these back-transformed values, arithmetic or geometric?**
+
+> These are geometric means.
+
+Plot the leucine effect from logdens.nointer.eff again, but this time using density as the y-axis values.
+
+```{r plot.leucine.linear.y}
+
+emmip(logdens.nointer.lm, formula = ~ leucine, CIs = T, type = "response") + labs(y = "Density")
+
+```
+
+**Question: why are the confidence intervals asymmetrical?**
+
+> The confidence intervals are calculated on a log scale and back-transformed, so symmetrical intervals on a log scale are asymmetrical on the original data scale.
+
+Finally, plot the leucine effect from logdens.nointer.eff using densities, but log-scale the y-axis.
+
+```{r plot.leucine.log.y}
+
+emmip(logdens.nointer.lm, formula = ~leucine, CIs = T, type = "response") + labs(y = "Density") + scale_y_log10()
+
+```
+
+**Question: the y-axis is a log axis - does that mean that the tick labels are the log of density, or are they density?**
+
+> They are density - the spacing between the ticks are log scale, but the numbers are un-transformed density.
+
+## What do interactions on a log scale mean?
+
+**Question: we found that there is no interaction between sucrose and leucine on a log scale, but there was one on the linear scale. Why would the interaction be significant on the original data scale but not on a log scale?**
+
+> The plot of the data on the original data scale shows the lines diverging, which is why the interaction is significant. However, the lines were diverging because the treatment effects were constant multipliers. On a log scale these multiplicative effects become additive effects, and constant multipliers become constant additive effects. When the effects of predictors are additive only the main effects will be significant, so on a log scale there are only significant main effects in the model.
+
+

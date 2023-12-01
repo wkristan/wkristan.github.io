@@ -1,0 +1,869 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Checking assumptions</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="estimation.js"></script>
+    <script type="text/javascript" src="swap_groupings.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Model criticism - Checking the assumptions of GLM</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#factors">Numeric codes as factors</a></p>
+      <p><a href="#first">First model</a></p>
+      <p><a href="#second">Second model</a></p>
+      <p><a href="#interp">Interpreting results</a></p>
+      <p><a href="#interp_stats">Getting the needed statistics</a></p>
+      <p><a href="#advice">Advice</a></p>
+    </div>
+    <div id="content">
+      <p class="part" id="intro">You may have noticed that we've been ignoring
+        assumption checking for the last several weeks. You have been taught
+        that assumptions are supposed to be a "pre-flight check" that one does
+        before proceeding to data analysis, and we haven't been doing our
+        pre-flight checks. In fact, we have been doing assumption checks, but
+        I've been doing them for you - I've been giving you data sets to work
+        with that meet GLM assumptions. But, it is true that I have not been
+        asking you to check assumptions yourselves.</p>
+      <p class="part">In part this is because our usual method of checking
+        assumptions isn't very good, but before we could understand what was
+        wrong with it (and how the alternative you will be working with today is
+        better) we needed to learn more about how linear models work. We're
+        going to start including assumption checking as part of the process of
+        constructing our GLM's.</p>
+      <h2>How you have been taught to check assumptions</h2>
+      <p> The way I taught you to test normality and homogeneity of variances
+        only works with grouped data - that's a problem already, because we
+        sometimes only use numeric predictors and don't have a categorical
+        predictor that groups the data. But, even when we do have grouped data
+        we run into a built-in problem with formal hypothesis tests as a way of
+        evaluating whether we violate assumptions. The problem is easiest to see
+        with our approach to normality testing, so we'll use that as an example.</p>
+      <div id="wrapper" style="float:left;display:block;padding-bottom:20px">
+        <div id="ungrouped" style="display:block"> <img id="ungrouped_img" src="histogram_ungrouped.png"
+            style="float:left; padding-right: 10px" onclick="swapGrouping(this)">
+          <div style="float:left; clear:both"> <span class="rout">Shapiro-Wilk
+              normality test<br>
+              <br>
+              data: norms$values <br>
+              W = 0.92348, p-value = 2.833e-11</span></div>
+        </div>
+        <div id="grouped" style="display:none;">
+          <div style="float:left;clear:both"> <img id="grouped_img" src="histogram_grouped.png"
+              style="float:left; padding-right: 10px" onclick="swapGrouping(this)">
+            <span class="rout"> <br>
+              $X1<br>
+              <br>
+              Shapiro-Wilk normality test<br>
+              <br>
+              data: X[[i]]<br>
+              W = 0.98484, p-value = 0.3093<br>
+              <br>
+              <br>
+              $X2<br>
+              <br>
+              Shapiro-Wilk normality test<br>
+              <br>
+              data: X[[i]]<br>
+              W = 0.98903, p-value = 0.5873<br>
+              <br>
+              <br>
+              $X3<br>
+              <br>
+              Shapiro-Wilk normality test<br>
+              <br>
+              data: X[[i]]<br>
+              W = 0.98105, p-value = 0.1605<br>
+              <br>
+            </span> </div>
+        </div>
+      </div>
+      <p>The way that I taught you to test normality is to split the data and
+        test for normality within each group. When we're working with grouped
+        data, in which the groups have received different treatments and we're
+        testing for a response, we expect each group might have a different
+        mean. If we don't account for the grouping we might think the data are
+        non-normal because the group means form different modes in the data.
+        This possibility is illustrated in the histogram to the left, and the
+        Shapiro-Wilk test below the histogram confirms that the data are indeed
+        non-normal if we test the entire data set together. </p>
+      <p>Our solution to this problem was to test normality by group. If you
+        click on the graph you'll see the same data split into three groups,
+        which are tested for normality separately below. Since each group now
+        has a single mode with a more or less bell-shaped distribution of data
+        around it, we pass the normality tests - the p-values are all well above
+        0.05. All is well, right? </p>
+      <h2 style="clear:both">Why this is wrong</h2>
+      <p>Splitting the data and testing by groups solves one problem, but it
+        causes another one. Tests of assumptions, like the Shapiro-Wilk test,
+        are formal null hypothesis significance tests, and the null hypothesis
+        they test are that the data meet the assumption. A Shapiro-Wilk test
+        statistic (W) is a measure of how much the data deviate from the normal
+        distribution, and the closer to normal the data are the smaller the W
+        value will be. Data that are perfect fits to the normal distribution
+        will have a W of 0, and a p-value of 1. If we have a p-value above 0.05
+        we retain the null and conclude that we have met the normality
+        assumption. But, the test is affected by sample size - the amount of
+        deviation from normality that we're able to detect gets smaller as the
+        sample size gets larger. Or, conversely, we could say that we can only
+        detect large deviations from normality when the sample size is small.
+        When we test for normality by group we split the data in three, such
+        that each test is conducted with only 1/3 of the data, and we lose some
+        of the test's sensitivity to small deviations from normality.</p>
+      <p>Why is this a problem? It turns out that violating the normality
+        assumption matters more when sample sizes are small. So, deviation from
+        normality matters most when it is hardest to detect.</p>
+      <p>Why does normality matter less as sample size increases? We get our
+        p-values from <strong>sampling distributions</strong>, which are
+        distributions of sample statistics (such as sample means, or t-values,
+        or F-values). The sample means drawn from a population become
+        increasingly bell-shaped as the sample size increases, even for very
+        non-normal distributions of data. Because of this we can use a
+        bell-shaped distribution, like the t-distribution, as a mathematical
+        model for random sampling from our population even when the data are not
+        at all normally distributed, provided the sample size is large. The same
+        will be true for ratios of sample variances (which give us our F
+        values). In other words, when we say that GLM assumes that the data are
+        normally distributed, we mean that if we meet this assumption GLM will
+        give accurate p-values - but, we if the sample size is large enough we
+        don't actually need the data to be normally distributed. The fact that
+        GLM works well when we violate the assumption of normality means that
+        GLM is <strong>robust</strong> to violations of normality - but, GLM is
+        only robust to violations of normality if the sample sizes are large
+        enough.</p>
+      <div id="wrapper_div1" style="float: left; border: solid black 4px; margin-right: 10px; width: 805px;">
+        <div id="controls_div" style="float: right; clear: both; margin-right: 30px">
+          <p>Enter a sample size: <input id="n_clt" min="1" value="10" onchange="drawChart()"
+              style="width: 50px" type="number"></p>
+        </div>
+      </div>
+      <p>This tendency for sampling distributions to become
+        bell-shaped at large sample sizes, regardless of the distribution of the
+        data, is called the <strong>central limit theorem</strong>. An
+        illustration of how it works is shown in this app - the smooth curve on
+        the left represents the distribution of the data. The experiment this
+        illustration is based on the amount of time it took subjects to push a
+        button after the researchers flashed a light. You can see that the
+        distribution is very non-normal - it has a basement at 0 (since negative
+        reaction times are not possible), and two modes (a big one at
+        approximately 201 ms, and a smaller, flatter one at about 600 ms). The
+        mean for this distribution is actually between these two modes, at
+        333.33 ms.</p>
+      <p>The histogram to the right of the smooth curve represents 1000 random
+        samples of size 10 drawn from the distribution of reaction times - this
+        is the actual (or <strong>empirical</strong>) sampling distribution we
+        would get at that sample size. At n = 10 the sampling distribution is
+        fairly bell-shaped already, but a little right skewed. It doesn't show
+        the odd bimodal distribution of the data at all, though. As you increase
+        the sample size it becomes increasingly bell-shaped, to the point that
+        it isn't even right skewed anymore. On the other hand, if you reduce the
+        sample size below 10 you'll see that the sampling distribution starts to
+        become bimodal around n = 4, and when you get to n = 1 the sampling
+        distribution looks much like the distribution of the data.</p>
+      <p>If we use a bell-shaped curve, like the t-distribution, as a
+        mathematical model of this sampling distribution, we would expect it to
+        be a good model for large sample sizes, and a poor one for small sample
+        sizes. And, because of this, the p-values we get from a t-distribution
+        will be accurate at large sample sizes, but will not be accurate at
+        small sample sizes. We wouldn't want to draw conclusions about our data
+        based on inaccurate p-values.</p>
+      <br style="clear:both">
+      <br>
+      <p><img src="assumption_trade-off.png" alt="Trade-off" title="Trade-off" style="float:left; margin-right: 30px;border: 1px solid black">The
+        illustration to the left summarizes the situation we face: </p>
+      <ul>
+        <li>At small sample sizes we have low statistical power to detect
+          deviations from normality in the data, but our sampling distribution
+          is strongly affected by the data distribution, so it matters if the
+          data are normally distributed. </li>
+        <li>At large sample sizes we have good power to detect deviations from
+          normality in the data, but our sampling distribution is likely to be
+          bell-shaped, and we don't need the data to be normally distributed to
+          get accurate p-values.</li>
+      </ul>
+      <p>This unfortunate trade-off is unavoidable if we rely on null hypothesis
+        tests to test for normality. But, even though we can't avoid the problem
+        entirely, we certainly don't want to make it worse by cutting our sample
+        size in 1/3, as we did with the first example.</p>
+      <h2>The solution: use residuals to assess assumptions</h2>
+      <p><img src="residual_hist.png" style="float:left;padding-right:10px">To
+        address this problem, we start by recognizing that the normality
+        assumption is not really about the distribution of the data, it's about
+        the distribution of the <strong>residuals around our GLM model</strong>.
+        When we split the data by group we were recognizing this - group means
+        are predicted values for a GLM, and the distances of data values from
+        their group means are the residuals. If instead of splitting the data by
+        group we had calculated differences between observed data values and
+        their group means (i.e. the residuals) and then tested all of the
+        residuals together for normality we would have used all of the data in
+        the test, and would have avoided the sample size issue caused by
+        splitting the data into thirds. The histogram to the left shows the
+        residuals for the grouped data, above, with residuals for all 300 data
+        points included. Since residuals are differences from group means we
+        expect their average to be 0, as it is in the histogram. </p>
+      <p>We can use exactly the same approach with numeric predictors as well -
+        the difference between data values and their predicted value along a
+        regression line are also residuals, and we can test residuals around a
+        regression line for normality too (and, for that matter, any GLM
+        produces predicted values that we can use to calculate residuals, so we
+        can base or normality tests on residuals for any GLM).</p>
+      <h2 style=" clear:both">The assumptions that we need to meet</h2>
+      <p style="clear:both">We have been focusing on normality, but there are
+        actually three assumptions that we will need to assess before we can use
+        linear models to understand our data.</p>
+      <ul>
+        <li>
+          <p>The response variable must be linearly related to the predictor. If
+            this assumption is met, we will see a straight line relationship
+            between numeric predictors and the response variable, and there will
+            be no apparent pattern in the residuals. For grouped data, the GLM
+            predicted value for groups will be nearly equal to the group mean.</p>
+        </li>
+        <li>
+          <p>Residuals must be normally distributed, and centered on the
+            predicted values. If this assumption is met the residuals will have
+            a mean of 0.</p>
+        </li>
+        <li>Residuals must have equal variances between categorical treatment
+          groups, and along the predicted values of regression lines. We can
+          assess this using the usual tests of HOV on the residuals, and by
+          using graphs to see how the scatter in the residuals changes as the
+          predicted values change.</li>
+      </ul>
+      <p>We will primarily use graphs, called residual plots, to determine
+        whether we have met GLM assumptions. Since residuals are differences
+        between the means predicted by the GLM and the actual data values, the
+        residuals we get will depend on the model we use. Decisions about
+        whether to include an interaction between predictors or not, and whether
+        to use a data transformation, will change the distribution of the
+        residuals. As such, finding a model that fits the data is necessarily an
+        iterative, trial and error process. That process is called <strong>model
+          criticism</strong>.</p>
+      <h2 style="clear:both">Model criticism - finding the right model to
+        interpret</h2>
+      <p>The goal of model criticism is to find a model that meets GLM
+        assumptions. The basic approach is as follows:</p>
+      <p> </p>
+      <p>1. Fit a GLM model.</p>
+      <p> </p>
+      <p>2. Examine the residuals for evidence of non-normality,
+        heteroscedasticity (i.e. lack of homogeneity of variances),
+        non-linearity, and lack of independence. We will see how each of the
+        residual plots R provides lets you assess these assumptions when we
+        first use them, below.</p>
+      <p> </p>
+      <p>3. If any of these problems are detected, make a single change to the
+        model (add a predictor variable, an interaction term, or apply a
+        transformation).</p>
+      <p> </p>
+      <p>4. Repeat steps 1-3 until the assumptions are met.<br>
+      </p>
+      <p>Bear in mind that it's okay to use an approach like this to find a
+        model that meets GLM assumptions, but it would not be okay to use it to
+        find a model that gives us the scientific results we want. Each time you
+        fit a model you could in principle get an ANOVA table, coefficients,
+        and/or Tukey tests, but you shouldn't - it isn't appropriate to
+        interpret a model that doesn't fit your data, and the focus in model
+        criticism should just be on whether you meet GLM assumptions.</p>
+      <p></p>
+      <div>
+        <h2>Today's activity</h2>
+        <p>We are going to analyze a data set presented in your book, which
+          gives the results of a bacterial growth experiment. In this
+          experiment, bacteria were grown in agar plates that contained all
+          possible combinations of four levels of sucrose, and three levels of
+          the amino acid leucine. Only one plate with each combination was used,
+          so this is considered an <strong>unreplicated</strong> design, even
+          though we get the "hidden replication" associated with our crossed
+          design. Estimates of bacterial density (in cells per square
+          centimeter) were made on four consecutive days, and bacterial density
+          is the response variable. Bacteria reach staggeringly high densities,
+          so the numbers are large (on the order of millions to billions of
+          cells per square centimeter).</p>
+        <p>Start a new project, in a folder called "assumptions". Download&nbsp;<a
+            href="bacteria.xls">this</a> data file, and import it as the R
+          dataset "bacteria". Download <a href="assumptions.Rmd">this</a> Rmd
+          file for your commands.</p>
+        <p> Convert the three predictors we will use (day, sucrose, and leucine)
+          to factors. I'll give you the first one - to convert day to a factor
+          use (in the convert.factors chunk of your <strong>Rmd file</strong>):</p>
+        <p class="rcmd">bacteria$day &lt;- factor(bacteria$day)</p>
+        <p>You'll see that the day variable now shows as a "Factor" instead of
+          "chr" in your environment. Repeat this procedure with leucine and
+          sucrose, just make sure you change the name of the variable on both
+          sides of the assignment arrow, or you'll end up scrambling the data.<br>
+        </p>
+        <h3 class="part" id="factors">Graphing the data:</h3>
+        <p>It's a good idea to always start by looking at the distribution of
+          the data, so let's make a histogram. You can do this with ggplot()
+          using geom_hist() (in the plot.histogram chunk of your <strong>Rmd
+            file</strong>): </p>
+        <p class="rcmd">ggplot(bacteria, aes(x = density)) + geom_histogram()</p>
+        <p>The data look very right-skewed. However, remember that the
+          distribution of the <em>data</em> is not the important issue, it's
+          the distribution of the <em><strong>residuals</strong></em> around
+          the fitted model that determines whether we're meeting our normality
+          and homogeneous variances assumptions. It's conceivable that once we
+          have accounted for the effects of day, sucrose, and leucine that the
+          residuals will meet our assumptions even if the raw data plot does
+          not, so we need to fit a model before we can decide if we have a
+          distribution problem. If the residuals are not okay, though, the right
+          skew in the histogram here is a clue that we might want to consider a
+          transformation.</p>
+        <h2 class="part" id="first">First analysis:</h2>
+        <p>1. Fit a linear model of density, with day, sucrose, and leucine
+          included, but with no interactions, like so (in the
+          fit.model.no.interactions.no.transformation chunk of your <strong>Rmd
+            file</strong>):</p>
+        <p class="rcmd">dens.nointer.lm &lt;- lm(density ~ day + sucrose +
+          leucine, data = bacteria)</p>
+        <p>2. Next we need to plot the residuals for the fitted model. As good
+          as ggplot() is, it is not what R uses by default to plot residuals
+          from a fitted model. Plots of residuals are usually not presented in
+          publications, and are mostly useful to you as the data analyst in
+          assessing model fit. So, even though they will be un-lovely, it will
+          be much easier to use R's default residual plots than it would be to
+          learn how to reproduce them using ggplot().</p>
+        <p>First, let's take a look at these graphs one at a time - in the
+          console, enter:</p>
+        <p class="rcmd">plot(dens.nointer.lm)</p>
+        <p>You will see this residuals vs. fitted values plot:</p>
+        <img src="res_vs_fitted.png" alt="Resid vs fitted" style="float:left"></div>
+      <div>
+        <p>The y-axis is the residual, and the x-axis is the model predicted
+          value (called a "fitted" value here). Points with row numbers shown
+          (like 36, 48, and 32) are unusual observations, that are more than 2
+          standard deviations from the predicted values. What can you tell from
+          this about:</p>
+        <p>- Linearity = if the model fit the data well, the fitted values would
+          be accurate estimates of the mean density at a given combination of
+          day, sucrose, and leucine - because of this, the residuals should on
+          average be 0 anywhere along the x-axis. The red line shows where the
+          middle of the residuals is as you move from left to right, and the
+          horizontal dotted line at 0 is the model predicted density - the red
+          line is not flat at 0, so the model is not predicting the middle of
+          the data well.</p>
+        <p>- Normality = the distribution of residuals around the line should be
+          normal, so the data points should be symmetrical around the model
+          predicted values, with points becoming less common as you move up or
+          down away from the predicted values. The residuals are not symmetrical
+          around 0, so we aren't meeting the normality assumption.</p>
+        <p>- Homogeneity of variances (HOV) = variability of the residuals
+          around 0 should be equal as you move from left to right. If you divide
+          the graph into four equal sections from left to right you would expect
+          to see roughly the same amount of scatter within each section, but
+          we're clearly getting much more variability at high predicted values
+          compared to what we see at low predicted values. We do not meet the
+          HOV assumption either.</p>
+        <p>If you hit Return you get the next graph, which is a normal
+          probability plot (also called a quantile-quantile, or Q-Q plot):</p>
+        <img src="qqplot.png" alt="qq plot" style="float:left">
+        <p>This plot is exclusively used to determine if the data are normally
+          distributed. The x-axis tells us how far from the mean we would expect
+          the 1st data value to be (that is, the smallest), then the 2nd, 3rd,
+          and so on, if our data were perfectly normally distributed. Then, we
+          can use how many standard deviations each residual is from its
+          predicted value (i.e. "standardized" residuals), and plot what we
+          observe against what we expect. The diagonal dotted line is the line
+          of perfect agreement between the observed standardized residuals (y)
+          and the values we would expect from normally distributed data (x). The
+          further the points are from the diagonal line the less reason we have
+          to think the data are normally distributed. A random scatter around
+          the dotted line is less problematic than deviations that form a
+          pattern - there is an apparent curve to the residuals in this graph,
+          which is strong evidence that the data are not normally distributed.</p>
+        <p>A Q-Q plot really doesn't tell us much about linearity or HOV. An
+          upward-pointing curve like this is usually associated with positively
+          skewed data, which suggests that a log transformation may be helpful,
+          and log transformation affects both linearity and HOV as well as
+          normality. But, the purpose of this graph is to assess normality.</p>
+        <br style="clear:both">
+        <br>
+        <p>If you hit Return again you will see a scale-location plot:</p>
+        <img src="scale_location.png" alt="scale location" style="float: left">
+        <p> Like with the residual vs. fitted plot, the x-axis is the predicted
+          value of cell density. The y-axis is the square root of the absolute
+          value of the standardized residual. Using the absolute value of the
+          residuals puts all of them above 0, and using the square root changes
+          the scale in a way that makes spacing between small values easier to
+          see. This plot is primarily useful for assessing HOV - you would
+          expect an even amount of variation around the middle of the points
+          (indicated by the red line) as you go from left to right. What we see
+          here is almost no variability at low fitted values, and more
+          variability as you move to big fitted values - not an equal amount of
+          variation, so we do not have HOV. </p>
+        <br style="clear:both">
+        <br>
+        <p> Hitting Return one more time gives us a leverage plot: </p>
+        <img src="leverage.png" alt="leverage" style="float: left">
+        <p> Leverage refers to how influential a data value is on the estimate
+          of a slope in a regression. We don't have much use for it here, but R
+          includes it by default for all GLMs.</p>
+        <br style="clear: both">
+        <br>
+        <p>Now that you know what these are and how to interpret them, it's
+          convenient to get all four of them reported at once in our knitted
+          output. To get this, we need to tell R that we want two rows and two
+          columns of graphs for the plots.</p>
+        <p>We set graphical parameters in R base graphics with the par()
+          command. If you type par() in the console you'll see a long list of
+          cryptic codes and numbers that set various default properties of R's
+          graphs. We want to be able to restore these default settings when
+          we're done, so use the command (in the plot.residuals.from.first.model
+          chunk of your <strong>Rmd file</strong>):</p>
+        <p class="rcmd">oldpar &lt;- par()</p>
+        <p>This puts a copy of all the default settings into the object oldpar -
+          to restore these default settings we will just use the command
+          par(oldpar), and everything will be back to normal.</p>
+        <p>To tell R that we want to a) plot all four graphs as panels in a
+          single graph, and b) make room for a label for the model that's being
+          plotted, we need to set the numbers of rows and columns of plots to
+          create (for a), and to set the margins (for b). The command is (in the
+          same chunk):</p>
+        <p class="rcmd">par(oma = c(0,0,3,0), mfrow=c(2,2))</p>
+        <p>The oma parameter is the outer margin in order bottom, left, top,
+          right - we're adding some space to the top for the model statement to
+          be printed. The mfrow parameter gives the number of rows and columns
+          of panels to be used in the plot - we'll have 2 rows and 2 columns, so
+          all four of the plots will be presented at once. The par() command
+          sets these parameters internally, so we don't need to assign the
+          output to anything for them to take effect.</p>
+        <p>Now, to get the plots, use the command (in the same chunk):</p>
+        <p class="rcmd">plot(dens.nointer.lm)</p>
+        <p>and you'll see all four of the residual plots grouped together below
+          the code chunk. </p>
+        <p>You are encouraged to rely on these plots to decide whether you meet
+          GLM assumptions eventually, but the decisions about whether
+          assumptions are being met may seem uncomfortably subjective to you at
+          this point. Although you are encouraged to take the book's advice to
+          not be too picky, as you are learning what constitutes acceptable
+          levels of deviation from assumptions you can use some numeric methods
+          to double-check your impressions of the graphical diagnostics. </p>
+        <table class="tableLarge">
+          <tbody>
+            <tr>
+              <th style="width: 20%;">
+                <p>Potential violation of assumptions</p>
+              </th>
+              <th style="width: 80%;">
+                <p>Quantitative test</p>
+              </th>
+            </tr>
+            <tr>
+              <td>
+                <p>Lack of normality </p>
+              </td>
+              <td>
+                <p>Shapiro test of normality. The Shapiro test can be run
+                  through the Script Window with the command (in the
+                  shapiro.bp.test.first.model chunk of your <strong>Rmd file</strong>):</p>
+                <p> </p>
+                <p><span class="rcmd">shapiro.test(residuals(dens.nointer.lm))</span><br>
+                </p>
+                <p> </p>
+                <p>This command first extracts the residuals from
+                  dens.nointer.lm using the residuals() command, then feeds the
+                  residuals into the shapiro.test() command to test for
+                  normality. This is a hypothesis test, with the null hypothesis
+                  being that your data are normally distributed. Consequently, a
+                  p greater than 0.05 indicates normality, because retaining the
+                  null hypothesis means concluding your data are normal.</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p>Lack of homogeneous variances</p>
+              </td>
+              <td>
+                <p>The Breusch-Pagan (BP) test of homogeneity of variances is
+                  also available.</p>
+                <p>Load the library lmtest, and then use the command (in the
+                  same chunk):</p>
+                <p class="rcmd">bptest(dens.nointer.lm)</p>
+                <p> The null hypothesis for this test is that your data has
+                  equal variances, so a p greater than 0.05 indicates that
+                  you've met the assumption.</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p> </p>
+        <p>3. At this point you should see that the model assumptions are not
+          met, and we need to do something differently.</p>
+        <p>The first attempt to fix our distributional problem will be to add an
+          interaction between sucrose and leucine. Interactions allow the
+          predicted values to get closer to the observed data, which can help
+          with linearity, and when the model predicts the means well you will
+          sometimes fix apparent non-normality and lack of HOV problems too.</p>
+        <p> Fit a model that still uses day as a block (that is, with no
+          interaction), but has a sucrose*leucine interaction. Call the model <strong>dens.inter.lm</strong>
+          (put this command in the interaction.sucrose.leucine of your <strong>Rmd
+            file</strong>).<br>
+        </p>
+        <p>4. Produce your diagnostic plots for this model (in chunk
+          plot.residuals.from.second.model of your <strong>Rmd file</strong>),
+          and run the quantitative tests to confirm your impression (in chunk
+          shapiro.bptest.second.model of your <strong>Rmd file</strong>).
+          You'll see that we're not out of the woods yet, we need to try another
+          fix.<br>
+        </p>
+        <p>5. Next we will try log-transforming the densities. We might expect
+          that log transformation will help because the densities were
+          right-skewed in our histograms - we have two choices for making R use
+          a log-scale response:</p>
+        <ul>
+          <li>Make a new variable in the bacteria data set that has the log of
+            each density</li>
+          <li>Specify log(density) as the response variable in the model
+            statement for lm()</li>
+        </ul>
+        <p>The second approach is the simplest, in that it only requires us to
+          make a simple change to the lm() statement - we can use the command
+          (in chunk log.density of the <strong>Rmd file</strong>):</p>
+        <p class="rcmd">dens.inter.log.lm &lt;- lm(log(density) ~ day + sucrose
+          * leucine, data = bacteria)<br>
+        </p>
+        <p>This will cause R to log-transform the densities for analysis without
+          changing the data in the bacteria data set. In R, <strong>log()</strong>
+          is the natural log, whereas <strong>log10()</strong> is the log base
+          10. The base you use won't affect the result, so we will use the
+          natural log - it's important to know which base you used so that you
+          can back-transform your results correctly.<br>
+        </p>
+        <p>6. Produce your diagnostic plots for this model (in the
+          plot.residuals.from.third.model chunk of your <strong>Rmd file</strong>).
+          As your book points out, after transforming the data and including an
+          interaction, you have produced a good looking set of diagnostic plots,
+          with only minor deviations from model assumptions. Confirm this
+          impression with a Shapiro test for normality of the residuals, and a
+          BP test for homogeneous variance (shapiro.bptest.third.model chunk) -
+          we pass both of them.<br>
+        </p>
+        <h2 class="part" id="second">Second analysis:</h2>
+        <p>The first analysis just repeats the example used in your book. The
+          book does a good job of explaining the steps and illustrating the
+          process, but it does not address one important issue: which treatment
+          for violations of assumptions should we try first? And, when the first
+          treatment doesn't fix our problems, why should we apply the second
+          treatment on top of the first, rather than applying the second
+          treatment <strong><em>instead</em></strong> of the first?</p>
+        <p>Given the highly skewed distribution of the data, it's not surprising
+          that log transformation was effective in helping us meet GLM
+          assumptions, and it's entirely possible that a log transformation is
+          all we need to do - the interaction between sucrose and leucine may be
+          an unnecessary step (note that the interaction becomes non-significant
+          after the data are log-transformed). </p>
+        <p>To address this question, fit one more model using the log of
+          density, but with only main effects of day, sucrose, and leucine (call
+          it <strong>logdens.nointer.lm</strong>, in log.but.no.interaction
+          chunk). Produce the diagnostic plots for this model
+          (plot.residuals.from.fourth.model chunk), and see whether there are
+          distributional problems still evident. Run the BP and Shapiro tests to
+          confirm your impressions of the graphical diagnostic plots
+          (shapiro.bp.fourth.model chunk).</p>
+        <p>Based on your graphs and assumption tests you should find that log
+          transformation is all that is needed to meet GLM assumptions - the
+          interaction was not necessary. Why, then, did your book try the
+          interaction first, and keep it in when they log transformed the data?</p>
+        <p>The reason is that the interaction was of interest experimentally,
+          even if it wasn't needed to meet GLM assumptions. Given that you would
+          want to know if sucrose and leucine interacted in their effects on
+          density, it makes sense to try including the interaction first, in
+          case it was sufficient to meet GLM assumptions. When it proved not to
+          be enough, there is no harm in leaving the interaction in, because you
+          will want to test for the interaction once GLM assumptions are met
+          anyway - log-transforming without the interaction included isn't a bad
+          thing to do, but it would still leave you with one more model to fit
+          in order to test for the interaction, so it makes sense to include the
+          interaction anyway.</p>
+        <h2 class="part" id="interp">What does it all mean? Interpreting
+          analysis of log-transformed data.</h2>
+        <p>Sometimes researchers use log-transformed data for all of their
+          statistical testing, and then present their results using arithmetic
+          means. This is the simplest choice for the researcher, but it obscures
+          the relationship between the data analysis and the data that's
+          presented for interpretation. Sometimes this can even lead to the
+          appearance that you've done something wrong. </p>
+        <img alt="Predicted values" src="suc_leuc_inter.png" style="float:left; margin-right: 10px;"
+          onclick="var images=['suc_leuc_log_inter.png', 'dens_log_y.png', 'suc_leuc_inter.png']; changeImage(this, images)">
+        <p>For example, the graph to the left shows the densities for the
+          combinations of leucine and sucrose. As you now know, when you see
+          lines on an interaction plot that are not parallel you should expect a
+          statistically significant interaction between the predictors. But,
+          after we log-transformed the data the interaction between sucrose and
+          leucine was not significant. Why does it appear to be significant
+          here?</p>
+        <p>To see why, click on the graph to see the same data plotted with log
+          of density on the y-axis. The lines on a log scale are nearly
+          parallel, with only the decline in density for Leucine 2 between
+          Sucrose 3 and Sucrose 4 breaking the pattern - a single group that's
+          different from the rest may not be enough to be statistically
+          significant, so the lack of a significant interaction when we use log
+          density makes much more sense.</p>
+        <p>The only issue with using the log of density on the y-axis is that
+          it's hard to relate the results back to the real world - we can see
+          from the graph that the mean for Sucrose 3, Leucine 3 is a log density
+          of a little more than 22, but we would have to do the math to
+          back-transform this number into units of cell density. A good
+          alternative is to use a log-scaled y-axis - click once more and you'll
+          see that the ticks along the y-axis are all an order of magnitude
+          apart, but are evenly spaced - the lowest tick is 1e+07, the next is
+          ten times as big at 1e+08, the next is another ten times as big at
+          1e+08, and so on. This axis scaling shows what the pattern is on the
+          scale that we did the analysis (i.e. relatively parallel lines), but
+          using axis labels in the same units as the data (density, instead of
+          log of density).</p>
+        <p>Let's see how we get what we need to properly interpret our results.</p>
+        <h2 class="part" id="interp_stats">Getting the statistics you need to
+          interpret model results</h2>
+        <p>Getting the means, error bars, and graphs we need to interpret
+          analysis of log-transformed data involves back-transforming from a log
+          scale back to the original data scale. A little review of
+          transformations and back-transformations, and what they do to our
+          analysis:</p>
+        <blockquote>
+          <h3>Transformation changes what type of mean the model is predicting</h3>
+          <p>Linear models predict the arithmetic mean of y based on the values
+            of the predictors. If we are using log-transformed responses, then
+            the linear model predicts the arithmetic mean of the log of the
+            responses. However, the arithmetic mean of log-transformed data is
+            actually a <strong>geometric mean</strong> in the original data
+            units. Geometric means are the n<sup>th</sup> root of product of n
+            data values. Using arithmetic means of log-transformed data is
+            equivalent to using geometric means in the original scale of the
+            data.</p>
+          <p>The function that reverses natural log-transformation is the exp()
+            function, which is the base e raised to the power of the value
+            entered into the parentheses. We can calculate our group means of
+            log-densities, and then back-transform them using exp() to get
+            geometric means in the original data units of density.</p>
+          <p>Let's look at a simple example of a model that only includes
+            sucrose, with log-transformed densities. The coefficients for this
+            (significant) model are: </p>
+          <p><span class="rout">Coefficients:<br>
+              (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;
+              sucrose2&nbsp;&nbsp;&nbsp;&nbsp; sucrose3&nbsp;&nbsp;&nbsp;&nbsp;
+              sucrose4&nbsp; <br>
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              17.443&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              1.484&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              3.307&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3.823&nbsp; </span></p>
+          <p>As always, the intercept is the mean of the baseline group, which
+            in this case is sucrose1. If we wanted to know what density this
+            value of 17.443 was equivalent to, we just need to use exp(17.443),
+            which is equal to a geometric mean density of 37,618,255 cells per
+            ml.</p>
+          <p>That's simple enough, but we have sucrose2, sucrose3, and sucrose4
+            as well. We can get the predicted means on a log scale for these
+            groups like so:</p>
+          <p>sucrose2 = 17.443 + 1.484 = 18.927</p>
+          <p>sucrose3 = 17.443 + 3.307 = 20.750</p>
+          <p>sucrose4 = 17.443 + 3.823 = 21.266</p>
+          <p>When we use log-transformed data, adding these coefficients on a
+            log scale is equivalent to multiplying them in the original data
+            scale.</p>
+          <p>For example, to calculate the predicted bacteria density in sucrose
+            level 2, we could calculate the predicted value on the log scale and
+            back-transform, like so:</p>
+          <p>GM<sub>sucrose2</sub> = exp(17.443 + 1.484) = e<sup>17.443</sup>e<sup>1.484</sup>
+            = 37618255 x 4.41 = 165,917,295 cells per ml</p>
+          <h3>Main effects of sucrose and leucine</h3>
+          <p>If we fit a model of main effects of sucrose and leucine with
+            log-transformed densities, we get the coefficients:</p>
+          <p><span class="rout">Coefficients:<br>
+              (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;
+              sucrose2&nbsp;&nbsp;&nbsp;&nbsp; sucrose3&nbsp;&nbsp;&nbsp;&nbsp;
+              sucrose4&nbsp;&nbsp;&nbsp;&nbsp; leucine2&nbsp;&nbsp;&nbsp;&nbsp;
+              leucine3&nbsp; <br>
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              15.953&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              1.484&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              3.307&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              3.823&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              1.314&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3.157&nbsp;&nbsp;</span></p>
+          <p>Now, if we want to know the geometric mean predicted for sucrose 2
+            and leucine 2, we would either calculate:</p>
+          <p>GM<sub>sucrose2, leucine2</sub> = exp(15.953 + 1.484 + 1.314) =
+            139,141,227</p>
+          <p>Now that you see how the back-transformed geometric means are
+            calculated, we can use the effects() package to do much of the work
+            for us.</p>
+        </blockquote>
+        <p>Base R has some functions that help us do transformations, but the
+          "effects" package makes the calculations much simpler.</p>
+        <p>1. Load the effects library (load.effects chunk of your <strong>Rmd
+            file</strong>):</p>
+        <p><span class="rcmd">library(effects)</span></p>
+        <p>2. We are going to use a couple of commands from the effects package
+          to get the marginal means for each of the predictors in the model.
+          Since the interaction term wasn't significant for the
+          logdens.nointer.lm model we will use it as an example. The marginal
+          means are the means for a predictor averaged over the other predictors
+          in the model.</p>
+        <p>First, let's do a couple of commands in the console so you can see
+          how the commands work. We can get all of the effects in the model and
+          put them into an object first (get.all.effects chunk of your <strong>Rmd
+            file</strong>):</p>
+        <p class="rcmd">allEffects(logdens.nointer.lm, se = TRUE, transformation
+          = list(link = log, inverse = exp)) -&gt; logdens.nointer.eff</p>
+        <p>This model includes the effect of day, sucrose, and luceine. We are
+          including the standard errors, and established what the transformation
+          is by creating a list with the link function used (we log-transformed
+          the response variable), and the inverse of that transformation (the
+          exp function). </p>
+        <p>We can extract a table of the predicted values for each of the
+          predictor levels (in chunk get.effects.tables of your <strong>Rmd
+            file</strong>):</p>
+        <p class="rcmd">data.frame(logdens.nointer.eff$day) -&gt; day.eff<br>
+          data.frame(logdens.nointer.eff$sucrose) -&gt; sucrose.eff<br>
+          data.frame(logdens.nointer.eff$leucine) -&gt; leucine.eff</p>
+        <p>If you type leucine.eff in the console you will see that you have a
+          table of predicted values, on a log scale:</p>
+        <p class="rout">&nbsp;&nbsp;&nbsp; leucine&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          fit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; se&nbsp;&nbsp;&nbsp;
+          lower&nbsp;&nbsp;&nbsp; upper<br>
+          1 Leucine 1 18.10612 0.283703 17.53228 18.67996<br>
+          2 Leucine 2 19.42059 0.283703 18.84675 19.99444<br>
+          3 Leucine 3 21.26306 0.283703 20.68921 21.83690</p>
+        <ul>
+        </ul>
+        <p>Similarly, typing sucrose.eff and day.eff in the console will show
+          you a table with the mean of the transformed data, standard error, and
+          lower and upper limits of a 95% confidence interval for each level of
+          the predictor.</p>
+        <p>4. We will continue to use the built-in graphics to make it easy to
+          compare the effects on different y-axis scales. We'll just look at the
+          leucine effect so that the graphs are large enough to read properly
+          (if you do not specify which effect you want this command would plot
+          all of them, and they become too small to see well). To get plots of
+          the geometric means with 95% confidence intervals for the days use the
+          command (in chunk plot.leucine.effects.log.y): </p>
+        <p><span class="rcmd">plot(logdens.nointer.eff$leucine, ylab =
+            "Density")</span></p>
+        <p>This first plot command plots the bacterial density on the y-axis,
+          and the three levels of leucine on the x-axis, with plot symbols for
+          the (geometric) means, and 95% confidence intervals as error bars. The
+          ylab = "Density" option specifies the label for the y axis. The
+          default option is to use a <strong>log-scale y-axis</strong> to match
+          the log link we used. A log-scale axis uses data labels that are
+          evenly spaced in the original data units, but spaces them along the
+          y-axis according to their natural logarithms (this is why big numbers
+          are compressed and smaller numbers are stretched apart on the y-axis).
+        </p>
+        <p>To plot the log-transformed numbers on the y-axis, the "type" option
+          in your command would change to (plot.leucine.log.trans.y chunk):</p>
+        <p><span class="R-code rcmd">plot(logdens.nointer.eff$leucine, ylab =
+            "ln Density", type = "link")</span></p>
+        <p>The transformation applied to the dependent variable is sometimes
+          referred to as the "link" function, so type = link means to show the
+          transformed values - the y-axis now shows the logs of the data values,
+          instead of their original units. Note that we needed to change the
+          y-axis label to reflect the numbers on the y-axis. You won't see much
+          of a difference in the graph itself, because in both cases the data
+          are being plotted on a log scale, and the only difference is whether
+          the y-axis shows the original data units of cell densities or the
+          log-transformed cell densities.</p>
+        <p>Plotting on a y-axis with the original data scale gives you something
+          different. Change the command once again to (plot.leucine.linear.y
+          chunk):</p>
+        <p><span class="R-code rcmd">plot(logdens.nointer.eff$leucine, ylab =
+            "Density", type = "response")</span></p>
+        <p>Using type = response causes the plot() command to set the y-axis to
+          a be a linear, un-transformed scale. The plot symbols are, correctly,
+          the geometric means of densities - using the same scale as the data
+          makes it easier to see the magnitude of change in densities, and can
+          help you interpret the results correctly.</p>
+        <p>Also notice that confidence intervals are asymmetrical in this plot.
+          Asymmetrical confidence intervals should make sense to you - the
+          densities have a basement at 0, but can extend to huge numbers.
+          Because of this, our estimates of geometric means shouldn't be allowed
+          to be negative numbers, which means that we can't be off by as much in
+          the negative direction as we can be in the positive direction. The
+          longer interval in the positive direction reflects this asymmetry in
+          our uncertainty.</p>
+        <p>5. These graphs are fine for your own use to help you understand your
+          results, but ggplot() makes much nicer, publication-quality graphs.
+          Let's continue to focus on the leucine effect and see how to make
+          these graphs using ggplot2. </p>
+        <p>You created a data frame that has all the values you need for the
+          plot above, and called it leucine.eff. The numbers in the "fit" column
+          are the predicted cell density on a log scale. To make the <strong>link</strong>
+          style of graph, in which the y-axis uses logs of the data values, you
+          would just make the kind of ggplot() graph of means and error bars
+          that we have been making all semester. </p>
+        <p>So, in chunk make.link.graph.in.ggplot2 of the <strong>Rmd file</strong>
+          make a ggplot() of leucine.eff. Use the variable leucine for x, fit
+          for y, lower for ymin, and upper for ymax. You can name the y-axis "ln
+          Density" using the labs() command. You know how to do this, please do
+          so.</p>
+        <p>To make the other two graphs we need to tell ggplot() to use the
+          exp() of the fits (means), and of the lower and upper limits of the
+          confidence interval. The easier one is the "response" version which
+          uses a regular, linear y-axis in the original density units (in
+          ggplot.leucine.response.type chunk of your <strong>Rmd file</strong>):</p>
+        <p class="rcmd">ggplot(leucine.eff, aes(x = leucine, y = exp(fit)) +
+          geom_point() + geom_errorbar(aes(ymin = exp(lower), ymax =
+          exp(upper)), width = 0.1) + labs(y = "Density")</p>
+        <p>This will produce a graph that has back-transformed means and error
+          bars, but with spacing on a linear scale instead of a logarithmic one.
+          You will see that the error bars are asymmetrical, just like the type
+          = response version above.</p>
+        <p>To make the last version of the graph, with a log-scaled y-axis, we
+          just need to take the previous command and add a log-scale y-axis
+          (ggplot.log.y.axis):</p>
+        <p class="rcmd">ggplot(leucine.eff, aes(x = leucine, y = exp(fit))) +
+          geom_point() + geom_errorbar(aes(ymin = exp(lower), ymax =
+          exp(upper)), width = 0.1) + scale_y_log10() + labs(y = "Density")</p>
+        <p>You'll see that the scale_y_log10() command set the y-axis to use
+          labels that indicate the density of bacteria (not log densities,
+          densities), but the spacing between the labels is such that distances
+          between them are based on ten-fold changes, instead of changing by a
+          constant, additive amount. Using a log-scale y-axis makes the
+          confidence intervals symmetrical again, because the wider interval
+          above the geometric mean is compensated for by the additional
+          compression of distances between the numbers that happens as you
+          increase along the axis.</p>
+        <h2 class="part" id="advice" style="clear:both">Wrapping up with some
+          advice</h2>
+        <p>You used model criticism to produce two different models that
+          satisfied the assumptions of GLM. So, which is the better way to
+          proceed? It depends on the goals of your analysis, but a few things to
+          consider:</p>
+        <ul>
+          <li>
+            <p>If the goal is to develop the simplest model that meets GLM
+              assumptions, trying each possible treatment one at a time to fix
+              distributional problems is better. Only use combinations of two or
+              more approaches if single treatments aren't effective.</p>
+          </li>
+          <li>
+            <p>If you designed the experiment to test for main effects and
+              interactions between variables anyway, include the interaction as
+              your first attempt to fix distributional problems. If the problems
+              aren't fixed, keep the interaction in as you try other treatments
+              (such as transformations).</p>
+          </li>
+          <li>
+            <p>If you find that either a transformation or an interaction term
+              works equally well for meeting GLM assumptions, be aware that this
+              is because additive effects on a log scale are multiplicative on a
+              linear scale - the interactions you are measuring are due to
+              constant multiplicative effects. Either way of representing them
+              is fine, but be aware that is the reason either will work.</p>
+          </li>
+        </ul>
+        <p>That's it! Knit and upload your Word document.</p>
+        <p><br>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
