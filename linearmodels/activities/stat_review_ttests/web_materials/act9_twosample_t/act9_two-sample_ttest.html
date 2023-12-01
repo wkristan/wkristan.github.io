@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <title>Two-sample t-test activity</title>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Two-sample t-tests - activity</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="act9_two-sample_ttest.html#intro">Introduction</a></p>
+      <p><a href="act9_two-sample_ttest.html#darwin">Example 1: height/stride by
+          sex</a></p>
+      <p><a href="act9_two-sample_ttest.html#bicep_arm">Example 2: bicep and arm
+          - paired design</a></p>
+      <p><a href="act9_two-sample_ttest.html#challenge">Challenge question</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="intro">Introduction</h2>
+      <p> As of the end of today, you will have learned three different types of
+        t-test: the one-sample t, the paired t, and the independent samples
+        t-test (a.k.a. 2-sample t-test). You will have a chance to work with the
+        independent samples and paired t today, but as you are working through
+        the examples, keep in mind that in your work (or on an exam) you will
+        need to pick which test to use, given what you know about the data. The
+        way to do this is to match the test to the experimental design: if only
+        a single sample is being drawn that is being compared to a hypothetical
+        population mean, it is a one-sample design, and should be tested with a
+        one-sample t-test. If there are two groups being compared, and there is
+        a natural pairing between data values in the first group and data values
+        in the second group, it is a paired design that should be tested with a
+        paired t-test. If you are comparing two independently measured sets of
+        data, it is an independent samples design, and should be compared with a
+        2-sample t-test.</p>
+      <h2 class="part" id="darwin">Example 1 - Differences in height/stride
+        ratio between sexes.</h2>
+      <p>In our last exercise, we compared height/stride ratios of a sample of
+        men and a sample of women to hypothetical values of 1.20 for men, and
+        1.21 for women. From this we learned that the observed height to stride
+        ratios were significantly different from the hypothetical values for
+        women, but not for men. We didn't test whether the sexes differed from
+        one another last time, only whether the sexes differed from their
+        hypothetical population means. Today we will compare the two sexes to
+        one another.</p>
+      <p>A comparison of two samples means is a two-sample hypothesis - we're
+        using differences between two sample means to test a hypothesis about a
+        lack of difference in the means of the populations the samples were
+        drawn from.</p>
+      <p>1. Use <a href="ht_stride_stacked2.MTW">this version of the data</a> -
+        this is the same data we used last time, but it is "stacked", with the
+        measured height to stride ratios in one column, and the sex of the
+        person indicated in a second column.</p>
+      <p>2. Test for homogeneity of variances (HOV), by selecting "Stat" →
+        "Basic Statistics" → "<a href="twosample_HOV_menu.jpg">2 Variances</a>".
+      </p>
+      <ul>
+        <li>In the form that pops up, put "Sex" in the "Sample IDs" box, and
+          "HtToStride" in the "<a href="twosample_HOV2.jpg">Samples</a>" box. </li>
+        <li>Click on "Options", and in the "Two Sample Variance: Options" window
+          check the "Use test and confidence intervals based on normal
+          distribution" (this will give us an F-test for our comparison of
+          variances. If you DON'T get an F test, you didn't check this box!). </li>
+      </ul>
+      <p>In the Session window, you will get output from the F test. The "Test
+        statistic" is the F-value, which is the ratio of the variances - you'll
+        see that ratio is 0.24, meaning that the women's variance is 0.24 times
+        the men's variance.</p>
+      <p>Note that the p-value reporting is a little weird in MINITAB - the
+        p-value is shown as 0.000, but we know that a probability of 0 means
+        that it's impossible to get a ratio of variances equal to 0.24 when the
+        null hypothesis of equal variances is true, and that can't be the case.
+        What MINITAB is actually doing is reporting a probability that is really
+        tiny (p = 4.8x10<sup>-12</sup>) to only the third decimal place, and
+        discarding all the other digits. When you see a probability of 0.000
+        reported in MINITAB, interpret it as telling you that the probability is
+        less than 0.001, which is the smallest number that can be displayed with
+        three decimal places - report p-values like this as &lt; 0.001 instead
+        of 0.</p>
+      <p>With a tiny p-value like this that is much less than 0.05 we reject the
+        null hypothesis of equal variances - when we do the t-test in step 4 we
+        will have to not assume HOV.</p>
+      <p>3. Test for normality. Group by sex, and report the results on your
+        worksheet. We did this last week on these data, but we want to get in
+        the habit of doing this test every time.</p>
+      <p>4. Test for differences between men and women. Select "Stat" → "Basic
+        Statistics" → "Two-sample t-test". The default option is for the data to
+        be "stacked", which means that each row is a different person, one
+        column indicates the group, and the other is the numeric data - the
+        drop-down menu option states this as "Both samples are in one column".
+        The "Samples" are the measured data (HtToStride), and "Sample IDs" are
+        the group indicator (Sex). Since we did not meet the HOV assumption in
+        step 2, click on "Options...", and make sure the "Assume equal
+        variances" check box is not checked. If you don't check the box Welch's
+        t-test is used, which compensates for the lack of equal variances by
+        reduce the degrees of freedom.</p>
+      <p>Click "OK" for the options, and then "OK" for the two-sample t window
+        to run the test.</p>
+      <p>Refer to the assignment sheet for results to report. </p>
+      <h2 class="part" id="bicep_arm">Example 2 - Bicep circumference and arm
+        length</h2>
+      <p> Although we are used to thinking of ourselves as being symmetrical on
+        our left and right sides, most of us are either right-handed or
+        left-handed. We will refer to the side each person prefers as their
+        "dominant" arm, and the other, non-preferred side the "subordinate" arm.
+      </p>
+      <p><img alt="Rafael Nadal" src="nadal.jpg" style="float:left; margin-right: 10px"><img
+          alt="Rod Laver" src="rod_laver.jpg" style="float:right;margin-left: 10px">Handedness
+        can produce differences between the right and left sides of our body.
+        The effect of preferential use of one side should be most obvious for
+        muscle mass, since it responds directly to exercise. Tennis players are
+        good examples of this effect - their racket arm is often much more
+        muscular than their other arm, as you can see in these pictures of
+        Rafael Nadal (left) and Rod Laver (right). </p>
+      <p>For most people if there is any difference in muscle sizes between
+        their dominant and subordinate arms it is likely to be much less
+        dramatic than what we see in tennis players. Additionally, the amount of
+        difference between dominant and subordinate arms would probably be small
+        compared to the large amount of variation in sizes of arms between
+        people.</p>
+      <p>Given this, if we used a sample of people and measured their dominant
+        arms, and a separate independent sample of people to measure their
+        subordinate arms, the amount of difference between the two groups might
+        be obscured by the individual variation among people. If instead we used
+        one sample of people and measured the dominant and subordinate bicep
+        circumferences on each one, we might find a small but consistent amount
+        of difference at the level of individuals. Focusing on the differences
+        eliminates the variation from person to person, and consistent small
+        differences can be detected reliably once this <strong>nuisance</strong>
+        variation between people is removed statistically.</p>
+      <p>We wouldn't necessarily expect the sizes of the bones in the arms to be
+        as responsive to exercise as muscle mass is, so we will also look at arm
+        lengths. People's arms may not be exactly the same length, but we
+        wouldn't necessarily expect the dominant arm to be longer than the
+        subordinate arm. </p>
+      <h3 style="text-align: left;"><span class="part" style="font-weight: bold;">Paired
+          t-test for two group data - using MINITAB's paired t-test function:</span></h3>
+      <p>Download and open <a href="arm_bicep.mtw">this</a> file. Once you have
+        the file open, notice that the organization of the data is different
+        here. The first data set was a "stacked" arrangement, in which we had
+        one column indicating the treatment group, and another with the measured
+        data. When we do a paired t-test, MINITAB requires the data to be
+        unstacked, with the data from one type of measurement (dominant arm)
+        next to the data for the other type (subordinate arm).</p>
+      <p>The first column indicates the sex of the person - we won't be using
+        this column directly, because the differences between the sexes will get
+        eliminated when we subtract the dominant and subordinate measurements
+        for each person; in other words, as long as both women and men
+        consistently increase in bicep size in their dominant arm the sizes of
+        their arms won't matter anymore once we have calculated the differences.</p>
+      <p>Columns "DomBicep" and "SubBicep" have measurements of the dominant and
+        subordinate biceps for each person, and columns "DomArmLength" and
+        "SubArmLength" have the lengths of their two arms. Since we are
+        measuring both arms on each person there is a natural pairing between
+        the values for the same variable in the same row - this is a paired
+        design. When we use a paired design we need to use a paired t-test to
+        account for the lack of independence of the two measurements.</p>
+      <p>1. First we need to check for normality of differences for bicep. Since
+        these are pairs of measurements for each person in class, the rows
+        represent a single person's measurements. A paired t-test is a
+        one-sample test of the differences between the pairs of measurements
+        against 0, and the paired t-test assumes these differences are normally
+        distributed. When MINITAB does a paired t-test it calculates the
+        differences for you internally, but the differences aren't put into the
+        worksheet. To test for normality of the differences we need to enter
+        them into the worksheet first, which we can do as a calculation.</p>
+      <p>Select "Calc" → "Calculator". In "Store result in variable" type in
+        "Bicep diffs". Build the expression "DomBicep" - "SubBicep", and click
+        "OK".</p>
+      <p>Now you should see a column of differences called "Bicep diffs" that
+        you can test for normality. Do a normal probability plot, and check the
+        AD and p-values to determine if the data pass the normality test.</p>
+      <p>2. Select "Stat" → "Basic Statistics" → "<a href="paired_t3.png">Paired
+          t</a>". In the form that pops up:</p>
+      <ul>
+        <li>Put "DomBicep" in the "Sample 1" box</li>
+        <li>Put "SubBicep" in the "<a href="paired_t4.png">Sample 2</a>" box.</li>
+        <li>Click on the "Graphs..." button, and select the "Histogram of
+          differences" option.</li>
+      </ul>
+      <p>Run the test.</p>
+      <p>4. Record the t-test results on your assignment sheet. You'll find the
+        mean of the differences, t-value, and p-value for the test in the
+        Session window. The graph shows the distribution of differences - two of
+        the differences are negative, meaning that the subordinate bicep was
+        bigger than the dominant bicep for two people, but most differences were
+        positive, and on average the difference was 0.2607 inches. The
+        differences were sufficiently consistent that this roughly 1/4 inch
+        difference is statistically significant.</p>
+      <p>5. Repeat for arm length. You will see that arm lengths are not
+        different between dominant and subordinate sides. The mean difference is
+        much smaller, 0.0213, which you can see from the histogram is due to the
+        fact that positive and negative differences happen about equally
+        frequently.</p>
+      <p>Answer the questions on your worksheet based on your analysis. You do
+        not need to print graphs for this assignment.<br>
+      </p>
+      <h2 class="part" id="challenge">Challenge Question</h2>
+      <p> Insects and crustaceans lack our complex immune system, but they do
+        produce simple antiviral proteins that protect them from infections. A
+        biotech company has synthesized one of these compounds, and is
+        interested in testing its effectiveness in curing the common cold. They
+        experimentally infect 18 mice with rhinovirus (the virus that causes
+        colds) and randomly select half to receive the antiviral medication. The
+        other half are used as untreated controls. Blood tests are conducted
+        each day, and the presence of viral DNA is assessed. The file <a href="challenge_q_lab7.mtw">here</a>
+        has data on the number of days each of these 18 mice carried the virus.</p>
+      <p>Part I.</p>
+      <p>A. Test for normality, and report the AD and p values.</p>
+      <p>B. Test for HOV, and report the F and p values.</p>
+      <p>C. What is the null and alternate hypothesis for this test?</p>
+      <p>D. Test for effects of the antiviral on duration of infection. Give the
+        observed t-value, the p-value, and give your conclusion (did you reject
+        Ho:?).</p>
+      <p>E. Interpret your results - was this compound effective at changing the
+        duration of the common cold?</p>
+      <p>Part II.</p>
+      <p>Instead of using two different groups of mice above, the experiment
+        could have used the same mice for both treatments. For example, they
+        could have infected a group of mice and observed how long they took to
+        recover without the antiviral protein, and then infected the same mice
+        again and observed how long they took to recover when they were given
+        the antiviral protein.</p>
+      <p>A. How would this change in design change the statistical test used?
+        What would be the proper test?</p>
+      <p>B. Would it be necessary to test HOV? Why or why not?</p>
+      <p> C. Would this experimental design be as good as the previous one? Why
+        might this design lead to misleading results?</p>
+    </div>
+  </body>
+</html>
