@@ -1,0 +1,240 @@
+---
+title: "ANCOVA"
+author: "KEY"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Analysis of covariance
+
+We will work on morphological data on three species of hawks, red-tailed hawk (RT), Cooper's hawk (CH), and sharp-shinned hawks (SS). We want to make weight-adjusted comparisons between the species in their wing chords and their tail lengths.
+
+Import the data:
+
+```{r import.data}
+
+library(readxl)
+data.frame(read_excel("hawks.xlsx")) -> hawks
+hawks$Species <- factor(hawks$Species)
+
+```
+
+Note that although these data are real, the original dataset had a fair number of outliers that were very likely to be data recording errors (the values were too large or too small to be correct for these species). Outliers were deleted to make the data set better for teaching purposes.
+
+Before starting on a statistical analysis, we should plot the data:
+
+```{r plot.wing}
+
+library(ggplot2)
+ ggplot(hawks, aes(x = Weight, y = Wing, color = Species, group = Species)) + geom_point(size = 0.5) + geom_smooth(method = "lm") + scale_x_log10() + scale_y_log10() 
+ 
+```
+
+**Question: which species is heaviest? Which has the longest wing chord?**
+
+> RT are both the heaviest and have the longest wings.
+
+**Question: we expect RT to have long wings and CH and SS to have short wings, given the differences in how they hunt. Why can't we just compare the wing chords of these birds directly (that is, why do we need to adjust for their weights)?**
+
+> The birds are very different in size, so the longer wings of RT could just be because they are bigger (bigger birds have bigger parts). We need to adjust for their weights so we can compare the wing lengths as though the birds were the same size.
+
+Since log of wing chord and log of weight gives us lines that are closest to parallel, we should use the log of the variables in our analysis too. Log-transform wing chord and weight:
+
+```{r log.transform.wing.weight}
+
+hawks$log.wing <- log(hawks$Wing)
+hawks$log.weight <- log(hawks$Weight)
+
+```
+
+Fit the ANCOVA of log of wing chord - use log.wing as the response variable, and log.weight and Species as predictors.
+
+```{r wing.ancova.model}
+
+lm(log.wing ~ log.weight + Species, data = hawks) -> wing.lm
+wing.lm
+
+```
+**Question: which coefficient is the slope of the lines that represents the relationship between log.wing and log.weight? Give the label for the coefficient, and its estimated value to two decimal places.**
+
+> The slope is log.weight, and it's equal to 0.26.
+
+**Question: the (Intercept) term is actually the intercept of the regression line for one of the species - which one? How do you know?**
+
+> It is the intercept for CH, because that's the only species that doesn't have a Species coefficient (it's the first alphabetically, so it was selected as the baseline).
+
+**Question: what does SpeciesRT tell us? Hint: is it the slope of a line, an intercept, or a difference in intercepts between RT and CH?**
+
+> It is the difference in intercepts between RT and CH.
+
+Get the ANOVA table for the wing ANCOVA model:
+
+```{r wing.ancova.anova.table}
+
+anova(wing.lm)
+
+```
+
+**Question: is there a statistically significant relationship between the log of wing chord and the log of weight? How do you know?**
+
+> Yes, because the log.weight predictor is statistically significant.
+
+**Question: do the species have different wing chords, after adjusting for weight? How do you know?**
+
+> Yes, because Species is statistically significant.
+
+**Question: can you tell which species are different at this point, or can you only tell that at least one pair of species is different?**
+
+> From a significant grouping variable that has three or more groups, you only know that at least one pair of means is different.
+
+Now graph the model using emmip() from the emmeans package, and place a vertical line at the mean of log.weight to indicate where the least squares means are calculated:
+
+```{r wing.graph.ancova}
+
+library(emmeans)
+
+emmip(wing.lm, Species ~ log.weight, cov.reduce = range) + geom_point(data = hawks, aes(x = log.weight, y = log.wing, color = Species)) + geom_vline(xintercept = mean(hawks$log.weight))
+
+```
+
+**Question: the two lines for CH and SS are so similar that you can barely see that there are two of them - what does this tell you about CH and SS wings? Specifically, are their wings shaped differently, or do they only differ in size?**
+
+> The fact that the lines are almost the same is because the intercepts are nearly identical, and this indicates that the accipiters only differ in size, not shape.
+
+**Question: why does the amount of difference in wing chord disappear for CH and SS, and get smaller for RT and the two accipiters, when we adjust for log.weight? Answer in terms of the locations of the least squares means compared to the locations of the middle of the data clouds for each species.**
+
+> After adjusting for size, the RT actually have the smaller wing chord. The means are adjusted along the regression lines, and shifting the data to the mean of log.mass for each species puts the RT data below the other two species, and puts SS and CH nearly on top of each other.
+
+
+Test for which species differ in weight-adjusted wing chords using Tukey tests, and get the weight-adjusted least squares means for the species:
+
+```{r wing.tukey}
+
+library(emmeans)
+emmeans(wing.lm, tukey ~ Species)
+
+```
+**Question: which species have statistically significantly different wing chords? Which do not?**
+
+> SS and CH do not have different wing chords, but RT and CH, and SS and RT are different.
+
+**Question: accipiters, like CH and SS, are supposed to have short wings compared to buteos, like red-tailed hawks. Is this true, according to your results? Explain how you reached this conclusion - if the species are statistically significantly different, refer to the amount of difference between these least squares means in your answer. If they are not statistically significantly different, consider the amount of difference between the least squares means to just be random variation, and do not interpret it.**
+
+> Yes, the accipiters have shorter wings for their size than RT, because RT is signficantly different from the other two species, and has a smaller mass-adjusted wing chord.
+
+**Question: both CH and SS are accipiters, do they also differ in weight-adjusted wing chords? How do you know?**
+
+> No they do not differ, they have a p-value that is greater than 0.05.
+
+Now make a plot that illustrates the model used to analyze these data - put the parallel lines through the data for each species, and then plot a vertical line at the mean of log.weight - where the vertical line crosses the parallel lines through the data are the least-squares means.
+
+Compare the predicted mean wing spans for the species at different body weights:
+
+```{r wing.lsmeans}
+
+emmeans(wing.lm, ~Species)
+emmeans(wing.lm, ~Species, at=list(log.weight = 0))
+emmeans(wing.lm, ~Species, at=list(log.weight = 10))
+
+```
+
+**Question: is the amount of difference between the species always the same, regardless of the log.mass used?**
+
+> Yes, the amount of difference is always the same, regardless of the log.mass used.
+
+**Question: are the standard errors the same for every log.mass used? Where are they smallest (and why)?**
+
+> The standard errors are smallest when we used the mean of log.mass as the location for estimating the emmeans. This is the case because the standard error around a regression line is smallest at the mean of y and mean of x, and becomes bigger as you move to smaller or larger values of x.
+
+## Tail length
+
+Now repeat the analysis using tail length. Plot the data, and confirm that log-transformation of tail length is needed to produce straight lines:
+
+```{r plot.tail}
+
+ ggplot(hawks, aes(x = Weight, y = Tail, color = Species, group = Species)) + geom_point(size = 0.5) + geom_smooth(method = "lm", se = F) + scale_x_log10() + scale_y_log10()
+
+
+```
+
+**Question: are the patterns the same here as with wing chord? Specifically, do RT have the largest tails, followed by CH and SS?**
+
+> Yes, the ordering is RT > CH > SS, but there is some overlap between RT and CH.
+
+**Question: do you expect that adjusting for weight will keep the ordering we see here of RT > CH > SS? Or might the adjustment put a different species on top? Why?**
+
+> Since the lines through the data would move RT below the other two, it will probably not have the longest tail after adjustment.
+
+Log of tail and log of weight give us nearly straight lines, better than just transforming weight. So, log-transform tail length:
+
+```{r log.transform.tail}
+
+hawks$log.tail <- log(hawks$Tail)
+
+```
+
+Fit the ANCOVA of tail length - use log.tail as the response variable, and log.weight and Species as predictors.
+
+```{r tail.ancova.model}
+
+lm(log.tail ~ log.weight + Species, data = hawks) -> tail.lm
+tail.lm
+
+```
+
+Get the ANOVA table for the tail ANCOVA model:
+
+```{r tail.ancova.anova.table}
+
+anova(tail.lm)
+
+```
+**Question: do you still have a statistically significant difference between the species for this variable?**
+
+> Yes, Species is still significant.
+
+
+Test for which species differ in mass-adjusted tail lengths:
+
+```{r tail.tukey}
+
+emmeans(tail.lm, tukey ~ Species)
+
+```
+**Question: which species are statistically significantly different now? Are any not different, like we saw with log.wing?**
+
+> All three of the species differ in tail length after adjusting for mass.
+
+**Question: interpret these least squares means - when you adjust for differences in weight, which species has the longest tail? Which has the shortest? Only interpret differences that are statistically significant.**
+
+> CH has the longest tail and RT has the shortest tail after adjustment.
+
+Make a data frame with the points data, with Species called tvar, log.weight called xvar, and log.tail called yvar:
+
+```{r make.ancova.tail.points.df}
+
+tail.points.df <- data.frame(tvar = hawks$Species, yvar = hawks$log.tail, xvar = hawks$log.weight)
+
+```
+
+Use emmip() to graph the model, with the data points from tail.points.df and a vertical line at the mean of log.tail:
+
+```{r tail.graph.ancova}
+
+emmip(tail.lm, Species ~ log.weight, cov.reduce = range) + geom_point(data = tail.points.df) + geom_vline(xintercept = mean(hawks$log.weight))
+
+```
+
+**Question: explain how the adjustment for log.weight put the birds with the largest tails (RT) at the bottom.**
+
+> The regression line for RT is below the other two, so when they are slid along it to the mean of log.weight they end up below the other two species.
+
+**Question: let's wrap this up by revisiting the original scientific hypothesis, that adaptation to different methods of hunting would produce different wing and tail morphology. Based on your results did we find the expected difference between the buteo and the two accipiters? Were the accipiters shaped the same, but only different in size, for both of the variables, or only one of them? Why was it necessary to adjust for the size of the birds in order to see these patterns clearly?**
+
+> The accipiters are similar in wing size, but CH have longer tails than SS after accounting for body mass. The buteo, RT, has longer wings and a shorter tail than the accipiters, even after body size is adjusted for, which is consistent with their hunting strategy.

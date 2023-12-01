@@ -1,0 +1,360 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+    
+    <title>Analysis of Covariance</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Analysis of covariance</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#Intro">Introduction</a></p>
+      <p><a href="#size_corr">Size corrected differences</a></p>
+      <p><a href="#data_types">R data types</a></p>
+      <p><a href="#ls_means">Least-squares means</a></p>
+      <p><a href="#allo_iso">Isometric and allometric scaling</a></p>
+    </div>
+    <div id="content">
+      <p id="Intro" class="part">So far we have seen how GLM can model effects of categorical predictors (<strong>ANOVA</strong>)
+        and numeric predictors (<strong>regression</strong>). We have also seen that it's easy to extend the GLM to
+        model more than one numeric predictor (<strong>multiple regression</strong>). Since it's possible to model
+        either categorical or numeric variables with a GLM, and to use more than one predictor at a time, it stands to
+        reason that we should be able to use two predictors in the same model, one of which is categorical and the other
+        of which is numeric. A model like this with a mix of categorical and numeric predictors is called <strong>Analysis
+          of Covariance</strong>, or <strong>ANCOVA</strong>. </p>
+      <p>We usually mix categorical and linear predictors for one of three reasons:</p>
+      <ul>
+        <li>
+          <p><strong>To improve a regression analysis</strong>. The regression is the scientifically important thing,
+            but there is a grouping in the data that needs to be accounted for. We may need to account for a categorical
+            nuisance variable (greenhouse, growth chamber), or a characteristic of our study organisms (species, sex,
+            age class). Using ANCOVA allows us to have lines with different intercepts for each of the groups, which may
+            fit the data much better than a single line would.</p>
+        </li>
+        <li>
+          <p><strong>To improve an ANOVA</strong>. Comparison among categorical treatment group levels is the
+            scientifically important thing, but there is a continuous variable that adds statistical noise to the data
+            that needs to be statistically eliminated. Examples like this often use a measure of initial conditions as a
+            covariate (e.g. initial bacterial density, initial weights of mice, etc.) to compensate for our inability to
+            hold all variables constant. There is often little or no association between the treatment groups and the
+            covariate (that is, there may be no difference on average in the initial conditions between the treatment
+            levels), so the primary effect of including the covariate is to remove random variation from the residual
+            term.</p>
+        </li>
+        <li>
+          <p><strong>To make covariate-adjusted comparisons between groups</strong>. Comparison among treatment group
+            levels is the important thing, but can't be done directly because of a confounded variable that we need to
+            adjust for, but can't simply hold constant experimentally. A classic example of this type of analysis is
+            mass-adjusting some feature of interest - using mass as a covariate compensates for our inability to set
+            every individual to the same mass experimentally.</p>
+        </li>
+      </ul>
+      <p>The GLM that we would use is the same in all three cases - we would have a numeric response explained by two
+        predictors, one that is numeric and another that is categorical. The only difference would be in the part of the
+        results on which we focus our attention.</p>
+      <img alt="Silhouettes" src="rt_ch_ss.jpg" style="float: right; border: 1px solid; margin-left: 10px">
+      <p>Today we will work on an example of the third case, in which we want to make covariate-adjusted comparisons
+        between groups. Our question will be about differences between three species in their wings and tail lengths,
+        which is complicated by large differences in the size of the species. We will use data from three species of
+        birds of prey, red-tailed hawks (RT), Cooper's hawks (CH), and sharp-shinned hawks (SS), shown in the image to
+        the right. A summary table of the weights (g), wing chords (which measures the length of the longest primary
+        feather to the wrist, and is a standard measure of wing size, in mm), and tail lengths (mm) of these species
+        shows us the following:</p>
+      <p class="rout">&nbsp; Species Weight&nbsp; Wing&nbsp; Tail<br>
+        1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CH&nbsp; 415.6 243.7 202.6<br>
+        2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; RT 1098.8 386.3 222.8<br>
+        3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SS&nbsp; 140.1 183.4 145.5</p>
+      <p>RT are by far the biggest bird in the picture, and not surprisingly RT have the largest means on all three of
+        these variables - as one might expect, big birds have big parts. However, you can see in the picture that RT are
+        shaped very differently than the other two species. RT are in a group of hawks called the buteos that hunt
+        ground-based prey, usually either from a perch or while soaring (soaring is a style of flight in which the wings
+        are held outstretched without flapping, and the birds stay aloft by riding updrafts). In contrast, both CH and
+        SS are accipiters, which hunt by chasing down smaller birds in flight through dense vegetation. Rather than
+        being adapted to soaring, CH and SS need to be highly maneuverable. The illustration certainly makes it appear
+        as though CH and SS have longer tails <em>for their body sizes</em> than RT. The wings of the accipiters also
+        seem to be smaller than RT for their sizes, but the amount of difference is difficult to judge given the
+        differences in overall size of the species - that is, comparison of shapes of the birds is confounded with
+        differences in size.</p>
+      <p>So, how do we make a comparison of the shapes of the species with respect to their wing and tail dimensions
+        when they differ so much in their overall sizes?</p>
+      <p>The first thing we should do is define weight as a simple measure of size.<strong></strong> As you learned in
+        the experimental design activity, the ideal way to eliminate the confounding effects of a variable is to hold it
+        constant experimentally, but we don't get to set the weights of these birds to desired values. Even if we could
+        find some RT, CH, and SS that were all the same weight they would probably not be normal animals (the RT would
+        be emaciated, and the CH and SS would be obese). But, we can correct for the differences in size by including
+        weight as a covariate, so that we can estimate what the difference in wing and tail lengths between the species
+        would be if we could make them the same size. </p>
+      <div style="clear: both"> <img alt="Lots of red tails" src="size_only.jpg" style="float: right; border: 1px solid; margin-left: 20px">
+        <h3>Possible outcomes</h3>
+        <p>One possibility is that, despite the impression the picture above gives us, the hawks differ only in size but
+          are the same shape. If this is the case then all three of the hawk species are essentially the same model that
+          is scaled to different sizes. If that were the case, then the wing chords would look like the figure to the
+          right, which shows the red-tailed hawk silhouette magnified to different sizes.</p>
+      </div>
+      <div style="clear: both"> <br>
+      </div>
+      <div style="clear:both"> <img alt="Scale models" src="one_line.png" style="float: right; border: 1px solid; margin-left: 20px">
+        <p>If raptors were all just different magnifications of the same basic model, a regression of wing vs. body
+          would look like the illustration to the right. A single line with a single intercept is fitted through all
+          three of the species, and it fits well. If we adjusted for body mass by calculating the wing chords of each
+          species at the same mass, this would be like sliding the RT and SS points along the line such that their mean
+          body masses are the same as the CH in the middle, and all three would all have the same mass-adjusted wing
+          chords.</p>
+        <p>So, what would a GLM that included body size and species as predictors show if this is the outcome? Body size
+          is explaining the wing chord well, and we don't need lines with different intercepts to explain the scaling
+          relationship. Adding species as a categorical predictor only helps if we need different intercepts, so
+          including species as a predictor would not be expected to improve the fit - species would not be a significant
+          predictor as long as body size was also included.</p>
+      </div>
+      <div style="clear:both"> <img title="Parallel lines" alt="Parallel lines" src="parallel_lines.png" style="float: right; border: 1px solid; margin-left: 20px">
+        <p>But, if raptors aren't just different magnifications of the same basic model, each species might require a
+          different line. If this is true a set of parallel lines would describe the data better than a single line
+          could, like the graph to the right. The implication of using parallel lines is that we are assuming the
+          scaling relationship is the same for every species, but they differ in wing chords at a given body weight -
+          that is, the slope for the lines is the same, and only the intercepts differ. Since the lines are parallel,
+          the difference between the intercepts represents the vertical difference between the lines, which is the same
+          at any body weight. This vertical difference is a mass-adjusted comparison, since it compares what the wing
+          chord would be for each species at a specified body weight.</p>
+      </div>
+      <p>So, for today, we will analyze the differences between these three species of raptor in their mass-adjusted
+        wing chords, and in their mass-adjusted tail lengths. If we find that the species categorical variable is
+        significant, then we'll conclude that the species are not just different scales of the same model - that is,
+        they have different shapes, and not just different sizes. Once we have established that there is a difference
+        between the species, we can also use our model to estimate wing chords and body lengths of all the species at a
+        common weight - these "least squares means" are then used to interpret how much difference there is between
+        species after accounting for the covariate.</p>
+      <h2 class="part" id="size_corr">Analyze size-corrected differences in wing chord and body length. </h2>
+      <p>1. Make a new project in R Studio called "ancova". The data set you will analyze is <a href="hawks.xlsx">here</a>,
+        and here is the <a href="ancova.Rmd">Rmd</a> file - download both into the ancova project folder. Open the Rmd
+        file, and write the commands needed to import the data into a data set called "hawks".</p>
+      <p>If you open the hawks dataset and look it over, you'll see that there are columns for Species, Weight, Wing,
+        and Tail, as well as some columns indicating the date that the bird was captured and measured, and its age and
+        sex. We won't be using age or sex in this analysis, so the only categorical variable we will have is Species. We
+        should convert Species to a factor (in your <strong>Rmd file</strong>, on the next line of the import.data code
+        chunk): </p>
+      <p class="rcmd">hawks$Species &lt;- factor(hawks$Species)</p>
+      <p> 2. Now we are going to look at the data. First you need to load the ggplot2 library (plot.wings chunk of your
+        <strong>Rmd file</strong>):</p>
+      <p class="rcmd">library(ggplot2)</p>
+      <p class="rcmd"> ggplot(hawks, aes(x = Weight, y = Wing, color = Species, group = Species)) + geom_point(size =
+        0.5) + geom_smooth(method = "lm", se = F)</p>
+      <p> This command is much like the scatterplot with a line through it that we've been using all semester, but by
+        grouping and coloring by Species we get a separate line for each species' data - by making the points smaller
+        you can see the lines better, and you'll see that they don't all seem to have the same slope. This is not
+        surprising, because scaling of body parts is often <strong>allometric</strong>, meaning that the parts change
+        at different rates. Weight is a volumetric property - the bigger the volume of the animal the heavier it will be
+        - and for any change in a linear dimension the volume increases roughly to that amount cubed.</p>
+      <p>We can potentially straighten out those lines by plotting axes on a log scale - the log of a number is the
+        exponent needed to raise a base to equal the number. If we use log base 10, then the logs are the exponent
+        needed to raise 10 to equal the number (the log base 10 of 10 is 1, of 100 is 2, of 1000 is 3, and so on). We
+        can set an axis to use a log scale in ggplot with by adding scale_x_log10() or scale_y_log10() to our command.
+        Let's set the x-axis to a log scale first to see if that's enough (add the scale command on to your existing
+        ggplot() command, like so):</p>
+      <p class="rcmd"> ggplot(hawks, aes(x = Weight, y = Wing, color = Species, group = Species)) + geom_point(size =
+        0.5) + geom_smooth(method = "lm", se = F) + scale_x_log10()</p>
+      <p>You'll see that CH and SS seem to have the same slope, but RT still do not, so let's set the y-axis to a log
+        scale as well:</p>
+      <p class="rcmd"> ggplot(hawks, aes(x = Weight, y = Wing, color = Species, group = Species)) + geom_point(size =
+        0.5) + geom_smooth(method = "lm", se = F) + scale_x_log10() + scale_y_log10()</p>
+      <p>This time the three lines seem to be more or less sharing the same slope, but to each have different
+        intercepts, which is how the model will work when we run our ANCOVA. For the model to fit the data properly, we
+        will want to use the log of wing chord and the log of weight.</p>
+      <p>3. We can specify a log scale on graph axes easily enough, but if we are going to use the log of wing chord and
+        the log of weight as our variables it's convenient to make log-transformed versions of them. The statistical
+        results will be the same whether we use the log base 10 or natural logs (which are logs for the base e, which is
+        an irrational constant equal to 2.178 for the first three decimal places). In R the log() function is for
+        natural logs, and log10() is for log base 10. We'll go ahead and use natural logs - in the
+        log.transform.wing.weight chunk of your <strong>Rmd</strong> file enter:</p>
+      <p class="rcmd">hawks$log.wing &lt;- log(hawks$Wing)<br>
+        hawks$log.weight &lt;- log(hawks$Weight)</p>
+      <p>Your hawks dataset should now have 11 variables, the last two of which are log.wing and log.weight<br>
+      </p>
+      <p>4. Fit a linear model with log wing chord as the response variable, using log of mass and species as predictors
+        (in that order). Call the model "wing.lm" (for "wing chord linear model") - in the wing.ancova.model chunk of
+        your <strong>Rmd file</strong> enter:</p>
+      <p class="rcmd">lm(log.wing ~ log.weight + Species, data = hawks) -&gt; wing.lm</p>
+      <p>To see what is in this lm object, type its name below this line and run the code chunk - you should see:</p>
+      <p class="rout">Call:<br>
+        lm(formula = log.wing ~ log.weight + Species, data = hawks)<br>
+        <br>
+        Coefficients:<br>
+        (Intercept)&nbsp;&nbsp; log.weight&nbsp;&nbsp;&nbsp; SpeciesRT&nbsp;&nbsp;&nbsp; SpeciesSS&nbsp; <br>
+        &nbsp;&nbsp; 3.907536&nbsp;&nbsp;&nbsp;&nbsp; 0.263949&nbsp;&nbsp;&nbsp;&nbsp; 0.202391&nbsp;&nbsp;&nbsp;&nbsp;
+        0.006265&nbsp; </p>
+      <p>All that is displayed here is the call (which reproduces the command used), and the coefficients for each term.
+        The intercept is the predicted log.wing for Cooper's hawks with log.weight of 0 - how did we know this? By
+        definition, and intercept is the value of the response when all of the predictors are set to 0 - when SpeciesRT
+        and SpeciesSS are both set to zero the bird is a CH, so the intercept is the expected log.wing for a CH with
+        log.weight of 0.</p>
+      <p>5. To get our ANOVA table for the model, use (in the wing.ancova.anova.table of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">anova(wing.lm)</p>
+      <p>The ANOVA table looks like this:</p>
+      <p class="rout">Show in New Window<br>
+        Analysis of Variance Table<br>
+        <br>
+        Response: log.wing<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Sum Sq Mean Sq&nbsp; F
+        value&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+        log.weight&nbsp;&nbsp; 1 101.037 101.037 56125.39 &lt; 2.2e-16 ***<br>
+        Species&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp; 0.948&nbsp;&nbsp; 0.474&nbsp;&nbsp; 263.17 &lt; 2.2e-16 ***<br>
+        Residuals&nbsp; 858&nbsp;&nbsp; 1.545&nbsp;&nbsp; 0.002&nbsp; </p>
+      <p>You'll see that log.weight is a significant predictor, as is Species. This is a case in which we are trying to
+        adjust for the effect of weight as a confounded, nuisance variable, so it should be entered first if we are
+        going to use Type I SS ANOVA. The fact that log.weight is statistically significant supports our choice to
+        account for the effect of weight on wing chord, but all it is telling us scientifically is that wing chord is
+        related to the size of the birds - with a slope of 0.264 we have discovered that bigger birds have bigger wings.
+        Not terribly surprising as a scientific question, but our purpose was to account for the effect of weight on
+        wing chord, rather than to test whether it existed or not.</p>
+      <p>The predictor we're actually interested in is Species - the fact that Species is significant tells us that
+        there are differences between at least two of the species in their mass-adjusted wing chords, but we can't tell
+        which from the ANOVA table. We can do Tukey comparisons to see which are different from which, and we would like
+        to get predicted log wing chords for the species at the same log weight, so that we can compare them. These
+        predicted log wing chords will be mass-adjusted, <strong>least squares means</strong>.</p>
+      <p>To understand what these least squares means represent, let's make a graph that shows them.</p>
+      <p>6. This graph will be similar to the one you already made, but this time it will graph the wing.lm ANCOVA model
+        - whereas the regression lines in the graph of the data were fairly parallel (because that's how the data are
+        distributed), these lines will be exactly parallel (because that's how the model is constructed). We can use the
+        emmeans library's emmip() command - this is short for "expected marginal mean interaction plot" - in the <strong>console</strong>
+        type<strong></strong>: </p>
+      <p class="rcmd">library(emmeans)</p>
+      <p class="rcmd">emmip(wing.lm, Species ~ log.weight, cov.reduce = range)</p>
+      <p>Your graph will look like this:</p>
+      <img alt="The target" src="ancova_with_lines.png">
+      <p>The cov.reduce = range argument causes emmip() to give us a range of log.weights on the x-axis so that we can
+        see the lines. </p>
+      <p>This graph is fine, but it doesn't show the data points - we should only interpret the model if it fits the
+        data well, and plotting the data on the graph helps us confirm that the fit is good. Fortunately, emmip() uses
+        ggplot2 for its graphs, and we can add elements to it by just adding them on as though emmip() was the ggplot()
+        command. Usually we would be able to just use geom_point() to add them without any arguments, but when emmip() graphs a fitted model the variable names are changed. To get the points onto the graph we just need to specify the data and the x and y variables again in the geom_point() command.</p>
+<p>To make the graph, put this command into your <strong>Rmd file</strong> (wing.graph.ancova chunk): </p>
+      <p class="rcmd">emmip(wing.lm, Species ~ log.weight, cov.reduce = range) + geom_point(data = hawks, aes(x = log.weight, y = log.wing, color = Species)) +
+        geom_vline(xintercept = mean(hawks$log.weight))</p>
+      <p>The geom_vline() command adds a vertical line that intersects x-axis at the mean of log.weight. Where this
+        vertical line crosses the regression lines for the three species are the least-squares means. Your final graph
+        should look like this:</p>
+      <img src="lsmeans_wing_graph.png" alt="Final wing graph"><br>
+      <p><br>
+      </p>
+      <p>The Tukey comparisons between these mass-adjusted least-squares means that we will do in the next step will compare the vertical differences between the species lines at the mean of log.weight.</p>
+      <p>7. We can get Tukey post-hocs for the differences between mass-adjusted least-squares means using the emmeans
+        library (in the wing.tukey chunk of your <strong>Rmd file</strong>):</p>
+      <p><span class="R-code rcmd">emmeans(wing.lm, tukey ~ Species)<br>
+        </span></p>
+      <p>There are two parts to the output - first there is an $emmeans block that looks like this:&nbsp; </p>
+      <p class="rout"> $emmeans<br>
+        &nbsp;Species emmean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SE&nbsp; df lower.CL upper.CL<br>
+        &nbsp;CH&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5.575 0.006082 858&nbsp;&nbsp;&nbsp; 5.563&nbsp;&nbsp;&nbsp; 5.587<br>
+        &nbsp;RT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5.778 0.005104 858&nbsp;&nbsp;&nbsp; 5.768&nbsp;&nbsp;&nbsp; 5.788<br>
+        &nbsp;SS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5.582 0.010419 858&nbsp;&nbsp;&nbsp; 5.561&nbsp;&nbsp;&nbsp; 5.602<br>
+        <br>
+        Confidence level used: 0.95 </p>
+      <p>These are the expected marginal means (a.k.a. the least squares means) for log wing span, calculated at the
+        mean log weight. Calculating the least squares means at the mean of the covariate is a good choice, because it
+        is where the standard errors will typically be smallest. You can see that RT still have the largest wing span
+        (5.778) after adjusting for mass, but the difference is much smaller than if we hadn't adjusted them - the RT
+        mean slide down its line to the mean log.weight, and both the CH and SS means slid up, which brought the means
+        closer together.</p>
+      <p>Whether the differences between the species should be interpreted depends on whether the Tukey comparisons are
+        significant - those comparisons are in the next block, and look like this:</p>
+      <p class="rout">$contrasts<br>
+        &nbsp;contrast estimate&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SE&nbsp; df t.ratio p.value<br>
+        &nbsp;CH - RT&nbsp; -0.20239 0.00917 858 -22.072&nbsp; &lt;.0001<br>
+        &nbsp;CH - SS&nbsp; -0.00626 0.01006 858&nbsp; -0.623&nbsp; 0.8077<br>
+        &nbsp;RT - SS&nbsp;&nbsp; 0.19613 0.01519 858&nbsp; 12.911&nbsp; &lt;.0001<br>
+        <br>
+        P value adjustment: tukey method for comparing a family of 3 estimates </p>
+      <p>The comparisons reported are between the log weight-adjusted means for log of wing chord for each species.
+        Based on these results you'll see that the buteo (RT) is different from the two accipiters (CH and SS), but the
+        two accipiters are not different from one another. This isn't too surprising, since the two accipiters look to
+        be very similar in shape, but differ in size, such that once the size difference has been accounted for there
+        isn't really any difference left between the accipiters.</p>
+      <p>8. The choice to get least squares means at the mean of weight is a good one, but is it really the best one?
+        The lines are parallel, so the amount of difference between the species will always be the same, but the
+        standard errors are not. We can ask for the least squares means at any value of the mean of log.mass that we
+        want - the default is to calculate them at the mean of the covariate, so we can get that without specifying the
+        value for log.mass (in the wing.lsmeans chunk of your <strong>Rmd file</strong>):</p>
+      <p class="rcmd">emmeans(wing.lm, ~Species)</p>
+      <p>This gives you the same set of least squares means, standard errors, and 95% confidence limits you got with
+        your Tukey tests:</p>
+      <p class="rout">Species emmean&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; SE&nbsp; df lower.CL upper.CL<br>
+        &nbsp;CH&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5.575 0.006082 858&nbsp;&nbsp;&nbsp; 5.563&nbsp;&nbsp;&nbsp; 5.587<br>
+        &nbsp;RT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5.778 0.005104 858&nbsp;&nbsp;&nbsp; 5.768&nbsp;&nbsp;&nbsp; 5.788<br>
+        &nbsp;SS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5.582 0.010419 858&nbsp;&nbsp;&nbsp; 5.561&nbsp;&nbsp;&nbsp; 5.602</p>
+      <p>To get the least squares means calculated at a log.weight of 0 we just need to enter (below your first
+        emmeans() command, same code chunk):</p>
+      <p class="rcmd">emmeans(wing.lm, ~Species, at = list(log.weight = 0))</p>
+      <p>which specifies the log.weight we want to use as the at = argument. The output looks like this:</p>
+      <p class="rout">Confidence level used: 0.95 <br>
+        &nbsp;Species emmean&nbsp;&nbsp;&nbsp;&nbsp; SE&nbsp; df lower.CL upper.CL<br>
+        &nbsp;CH&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3.91 0.0430 858&nbsp;&nbsp;&nbsp;&nbsp;
+        3.82&nbsp;&nbsp;&nbsp;&nbsp; 3.99<br>
+        &nbsp;RT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 4.11 0.0497 858&nbsp;&nbsp;&nbsp;&nbsp;
+        4.01&nbsp;&nbsp;&nbsp;&nbsp; 4.21<br>
+        &nbsp;SS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 3.91 0.0349 858&nbsp;&nbsp;&nbsp;&nbsp;
+        3.85&nbsp;&nbsp;&nbsp;&nbsp; 3.98</p>
+      <p>Not surprisingly, the means are smaller because we're calculating them at a smaller value of log.mass. The
+        differences between the means are all the same, but the standard errors are quite a bit bigger. If we calculated
+        them at a log.weight of 10 (a truly frighteningly large hawk of 22 kg, but for the sake of argument):</p>
+      <p class="rcmd">emmeans(wing.lm, ~Species, at = list(log.weight = 10))</p>
+      <p>This gives you the output:</p>
+      <p class="rout">Confidence level used: 0.95 <br>
+        &nbsp;Species emmean&nbsp;&nbsp;&nbsp;&nbsp; SE&nbsp; df lower.CL upper.CL<br>
+        &nbsp;CH&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6.55 0.0289 858&nbsp;&nbsp;&nbsp;&nbsp;
+        6.49&nbsp;&nbsp;&nbsp;&nbsp; 6.60<br>
+        &nbsp;RT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6.75 0.0214 858&nbsp;&nbsp;&nbsp;&nbsp;
+        6.71&nbsp;&nbsp;&nbsp;&nbsp; 6.79<br>
+        &nbsp;SS&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6.55 0.0363 858&nbsp;&nbsp;&nbsp;&nbsp;
+        6.48&nbsp;&nbsp;&nbsp;&nbsp; 6.62</p>
+      <p>The amount of difference between the least-squares means is still 0.2 between the accipiters and RT, and around
+        0.01 between SS and CH (yeah, I know - emmeans() is rounding a bit too much to see this, but the difference is
+        the same). Again, the standard errors are larger than what we get when we estimate the means at the mean of the
+        covariate. Regression estimates are most precise close to the mean of the x-data and the mean of the y-data,
+        because they are not affected by error in the estimate of the slope there. </p>
+      <p>9. Now that you've worked through the analysis for wing chord, repeat the analysis for tail length (variable
+        Tail). You will probably need to log-transform Tail, like you did Wing - see the Rmd file for prompts for the
+        steps you need to take (make sure you change variable names to reflect that you're using tail length this
+        time!). </p>
+    </div>
+    <h2 class="part" id="allo_iso">Why not use the easy way?</h2>
+    <p>After all of of this effort to make mass-adjusted comparisons between species using ANCOVA, you may be wondering:
+      why didn't we standardize the data by just dividing wing chord or tail length by the weight of the bird? This
+      would express the data as a set of wing chords per unit mass that would be comparable between the species, so why
+      bother with all these ANCOVA, least squares means shenanigans?</p>
+    <p>The reason to avoid this method of standardizing for body mass is that it doesn't represent the actual scaling
+      relationship well.</p>
+    <p>If you divide the mean wing chord by the mean body mass you are calculating the slope of a line - with the change
+      in wing chord in the numerator being (<span style="text-decoration: overline;">x</span><sub>log.wing</sub> - 0),
+      and the change in log mass in the denominator being (<span style="text-decoration: overline;">x</span><sub>log.mass</sub>
+      - 0). To use this ratio to predict the mean wing chord of a species from its slope you would multiply the ratio by
+      the species' mean log body weight - that is: </p>
+    <p>(x̅<sub>log.wing</sub>/x̅<sub>log.weight</sub>) x̅<sub>log.weight</sub> = x̅<sub>log.wing</sub></p>
+    <p>We got the right answer without having to add an intercept, which means that the intercept for this relationship
+      is zero.</p>
+    <p>We could think of standardizing by dividing by log.mass, then, as equivalent to fitting linear models with
+      intercepts of 0 and slopes that are mean wing chords divided by mean log body weight for each species, like so:</p>
+    <p>CH: log.wing = 0.91 (log.weight)</p>
+    <p>RT: log.wing = 0.85 (log.weight)</p>
+    <p>SS: log.wing = 1.06 (log.weight)</p>
+    <p>Since these ratios are not the same the lines are not parallel. If we use these models to represent the data, we
+      would be hypothesizing that the <em>scaling relationship</em> is different between the species, rather than
+      hypothesizing a single, common scaling relationship with different <em>intercepts</em>. </p>
+    <p>Why would this be a problem? It might not be, it just depends on whether a model with these slopes and an
+      intercept of 0 fits the data well.</p>
+    <div style="clear:both"> <img alt="Dividing ws by log body" src="ws_body_ratio.png" style="float: left; margin-right: 10px">
+      <p>The graph on the left shows each of the three equations running through the data - and, as you can see, these
+        models don't actually fit the data as well as the ANCOVA did, because the data don't fall along the lines, but
+        instead the lines cut through the data at an angle.</p>
+      <p>So, the only advantage of the simple approach is that it's simple, but it isn't a very good model for the data.</p>
+      <h2 style="clear:both">Knit, save, and upload</h2>
+      <p>That's it! You can upload your R stuff to the class web site, and answer the questions on your worksheet. </p>
+      <p><br>
+      </p>
+    </div>
+  
+
+</body></html>
