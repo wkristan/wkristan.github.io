@@ -1,0 +1,202 @@
+---
+title: "ANOVA and regression review"
+author: "KEY"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Analysis of variance (ANOVA)
+
+To review ANOVA, we have data on weight gain in Daphnia fed on cyanobacteria. Import the data into a data frame called "anova"
+
+```{r anova.import.data}
+
+library(readxl)
+
+anova <- read_excel("review_data.xls","anova")
+
+```
+
+To graph the group means and error bars we need to summarize the data. Calculate the means, standard deviations, and sample sizes, assemble them into a data frame, and then calculate the standard errors:
+
+```{r anova.sumstats}
+
+daphnia.means <- with(anova, tapply(resistance, cyandensity, mean))
+daphnia.sd <- with(anova, tapply(resistance, cyandensity, sd))
+daphnia.n <- with(anova, tapply(resistance, cyandensity, length))
+
+daphnia.stats <- data.frame(mean = daphnia.means, sd = daphnia.sd, n = daphnia.n)
+daphnia.stats$cyandensity <- ordered(names(daphnia.means), levels=c("low","med","high"))
+daphnia.stats$se <- daphnia.sd/sqrt(daphnia.n)
+
+```
+
+**Question: what is the null hypothesis for an ANOVA?**
+
+> Ho: mu(high) = mu(med) = mu(low), or in other words, the population means are no different for the three cyanobacteria densities
+
+Plot the means and error bars:
+
+```{r anova.plot.means}
+
+library(ggplot2)
+ggplot(daphnia.stats, aes(x = cyandensity, y = mean)) + geom_errorbar(aes(ymax = mean + se, ymin = mean - se), width = 0.1) + geom_point(size = 3, color = "red") + labs(x = "Cyanobacteria density", y = "Resistance")
+
+```
+
+**Question: based on the graph does it appear that adaptation to cyanobacteria toxins is having the expected effect? How do you know?**
+
+> Yes, the resistance levels go up from low to high cyanobacteria levels.
+
+Test for normality:
+
+```{r anova.normality}
+
+with(anova, tapply(resistance, cyandensity, shapiro.test))
+
+```
+
+**Question: do we meet the normality assumption for all three groups? How do you know?**
+
+> Yes, the p-values are all greater than 0.05, and since normality is the null hypothesis we meet the normality assumption.
+
+Test for HOV:
+
+```{r anova.hov}
+
+with(anova, bartlett.test(resistance, cyandensity))
+
+```
+
+**Question: do we meet the HOV assumption? How do you know?**
+
+> Yes, p is greater than 0.05.
+
+Run the ANOVA:
+
+```{r anova.run.anova}
+
+daphnia.aov <- aov(resistance ~ cyandensity, data = anova)
+summary(daphnia.aov)
+
+```
+
+**Question: do we reject the null hypothesis? How do you know?**
+
+> Yes, p is less than 0.05
+
+**Question: what do you know about differences between the three densities at this stage?**
+
+> There is at least one pair of means that is different, but we don't know which ones.
+
+Run a Tukey HSD procedure to evaluate which means are different from which:
+
+```{r anova.tukey}
+
+TukeyHSD(daphnia.aov)
+
+```
+
+**Question: which means are differnet from which?**
+
+> Low is different from high, medium is different from low, but high and medium are not different.
+
+## Simple linear regression
+
+These data represent an experiment on the effects of environmental temperature on body temperature, measured in the thorax or in the abdomen of winter moths. We will use simple linear regression to evaluate how body temperature is affected by environmental temperature.
+
+**Question: what is the null hypothesis for a simple linear regression?**
+
+> Ho: beta = 0, where beta is the slope of the line (thus, the null is that the line is flat)
+
+**Question: what should the y-intercept be if the null hypothesis is true?**
+
+> It should be equal to the mean of the body temperature variable.
+
+
+Import the regression worksheet:
+
+```{r regression.import}
+
+library(readxl)
+
+regression <- read_excel("review_data.xls","regression")
+
+```
+
+Stack the data for plotting:
+
+```{r regression.stack}
+
+stack(regression, c(2,3)) -> regression.stacked
+data.frame(Env.temp = regression$Env.temp, regression.stacked) -> regression.stacked
+names(regression.stacked) <- c("Env.temp","Body.temp","Body.part")
+
+```
+
+
+
+Plot the data:
+
+```{r regression.plot}
+
+ggplot(regression.stacked, aes(x = Env.temp, y = Body.temp, group = Body.part, color = Body.part)) + geom_point() + geom_smooth(method = "lm", se = F)
+
+```
+
+**Question: which body temperature measurement appears to change when environmental temperature changes?**
+
+> Abdomen temperature. Thorax temperature is flat across the range of environmental temperatures tested.
+
+
+Run the regressions to get the fitted models:
+
+```{r regression.run.lm}
+
+lm(Abdomen.temp ~ Env.temp, data = regression) -> abdomen.lm
+lm(Thorax.temp ~ Env.temp, data = regression) -> thorax.lm
+
+```
+
+Get the ANOVA tables:
+
+```{r regression.anova.tables}
+
+anova(abdomen.lm)
+anova(thorax.lm)
+
+```
+
+**Question: which body temperature variable(s) are related to environmental temperature?**
+
+> Abdoment temperature is, but thorax temperature is not.
+
+Get the coefficients and r2:
+
+```{r regression.coeff}
+
+summary(abdomen.lm)
+summary(thorax.lm)
+
+```
+
+**Question: what is the slope estimate for thorax temperature? If the null is true what should it be? Is it a problem that it isn't exactly equal to the null hypothetical value?**
+
+> The slope is -0.01693, and the null hypothesis is that it's equal to 0. It's fine that the estimate isn't equal 0, because the null value is what we expect at the population level, and the estimate is taken from our sample of data. We don't expect sample estimates to be exactly equal to their population values.
+
+**Question: give the regression equation for each model.**
+
+> Thorax: Thorax.temp = 73.47 -0.01693 Env.temp
+
+> Abdomen: Abdomen.temp = -0.312 + 1.01 Env.temp
+
+**Question: do your regression results support your interpretation of the graphs? In other words, did you get the results you expected given that the graph showed a flat line for thorax temperature and sloped line for abdomen temperature?**
+
+> Yes, the thorax temperature is very flat on the graph, and has a non-significant slope that is close to 0. The abdomen temperature is sloped, and has a significant slope that's near 1.
