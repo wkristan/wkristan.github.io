@@ -1,0 +1,305 @@
+---
+title: "Canonical correlation"
+author: "KEY"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 3)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Canonical correlation
+
+We will work with data on blood analysis from sea turtles in Florida. Import the data into a data frame called blood:
+
+```{r import.blood.data}
+
+library(readxl)
+
+data.frame(read_excel("sea_turtle_blood_chemistry.xlsx")) -> blood
+
+```
+
+Make lists of ions and large molecules that will be used to make the matrices for our canonical correlation analysis:
+
+```{r make.variable.lists}
+
+ions <- c("log.ca", "log.p",  "log.mg", "log.na", "log.k",  "cl" )
+
+big.molecules <- c("glucose",  "urea.nitrogen", "log.uric.acid", "cholesterol", "log.total.protein", "log.albumin")
+
+```
+
+Calculate the correlations between ions and big molecules:
+
+```{r correlations}
+
+cor(blood[big.molecules],blood[ions])
+
+```
+
+#### Question: what are the two strongest correlations between the two sets of variables (give the correlation coefficients and the pairs of variables)?
+
+> The strongest correlations are not very big - there is a correlation of 0.57 between log.total.protein and log.ca, and one of -0.558 between urea.nitrogen and log.ca.
+
+
+### Conduct the CC
+
+Load the library:
+
+```{r load.vegan}
+
+library(vegan)
+
+```
+
+Run the canonical correlation analysis:
+
+```{r run.cc}
+
+CCorA(X = blood[ions], Y = blood[big.molecules], stand.X = T, stand.Y = T) -> blood.cc
+
+blood.cc
+
+```
+
+#### Question: what is the first canonical correlation (report the number)? What is it the correlation between?
+
+> 0.79, and it is the correlation between an axis through the ions with an axis through the big.molecules. 
+
+Test each CC axis for statistical signficance using the CCP library:
+
+```{r blood.cc.pvals}
+
+library(CCP)
+p.asym(rho = c(blood.cc$CanCorr), N = 77, p = 6, q = 6)
+
+```
+
+Make a scatterplot for the scores on the first three CC axes to visualize what the canonical correlations are telling you about the data:
+
+```{r cc.scatters}
+
+par(mfrow = c(1,3))
+
+plot(blood.cc$Cy[,1]~blood.cc$Cx[,1], xlab = "Ions CC1", ylab = "Big molecules CC1", main = "CC1")
+plot(blood.cc$Cy[,2]~blood.cc$Cx[,2], xlab = "Ions CC2", ylab = "Big molecules CC2", main = "CC2")
+plot(blood.cc$Cy[,3]~blood.cc$Cx[,3], xlab = "Ions CC3", ylab = "Big molecules CC3", main = "CC3")
+
+
+```
+
+#### Question: CC1 has the highest correlation, can you see this in the graphs? Explain.
+
+>
+
+The blood.cc output is a list with named elements - get the loadings for ions.
+
+```{r ion.loadings}
+
+blood.cc$corr.X.Cx
+
+```
+
+#### Question: interpret the first canonical correlation axis for ions - what does the first axis tell us about blood ions?
+
+> It is primarily a measure of total ion concentration, because all but one ion has the same sign, and the one with a different sign (cl) is close to zero.
+
+Now get the loadings for big molecules:
+
+```{r big.molecules.loadings}
+
+blood.cc$corr.Y.Cx
+
+```
+
+#### Question: what does the first axis tell us about the blood big molecules?
+
+> It is a trade-off between urea.nitrogen and the other big molecules.
+
+Enter the Unicode characters that we want to use as plot symbols for the two species:
+
+```{r unicode.symbols}
+
+plotsymbols <- c("\U25CB", "\U25CF")
+blood$plotsym <- plotsymbols[as.numeric(factor(blood$species))]
+blood$plotsym[45] <- c("G")
+blood$plotsym[18] <- c("L")
+
+```
+
+Plot the CCA results:
+
+```{r plot.cca}
+
+biplot(blood.cc, plot.type = "b", xlabs = blood$plotsym)
+# legend(legend=c("Green","Loggerhead"), pch = c("\U25CB","\U25CF"), xpd = T, x = 0, y = 0.88, cex = 0.4)
+
+```
+
+#### Question: what does the plot on the right showing the ions (in blue) and on the left showing big molecules (in red) tell you about the way that ions and big molecules are related?
+
+> The ions and big molecules are mostly positively correlated, except for cl and urea.nitrogen. The second CC axis also shows that there is a trade-off between cl, log.p and glucose against log.mg and log.uric.acid.
+
+#### Question: we set the green turtle that is animal number 45 to a different plot symbol (two concentric circles), and you can see it on the far right of the graph. What would you expect the blood chemistry to be like for this turtle (as in, which substances would be at high levels, and which would be at low levels)?
+
+> That animal should have high levels of ca, total protein, k, and all of the other substances on the left side of the graph.
+
+#### Question: loggerhead turtle number 18 also has a different plot symbol (a solid dot with a circle around it), and is at the top of the graph. What would you expect its blood chemistry to be like?
+
+> Turtle 18 should have high levels of cl, glucose, and phosphorus.
+
+Calculate communalities for ions:
+
+```{r ion.communalities}
+
+ones.matrix <- round(upper.tri(matrix(nrow = 6, ncol = 6), diag = T))
+
+blood.cc$corr.X.Cx^2 %*% ones.matrix -> ions.communalities
+
+ions.communalities
+
+```
+
+#### Question: which ion is least well represented by the first axis? Which is the best represented?
+
+> cl has the lowest communality on the first axis, and log.ca has the highest.
+
+Calculate communalities for big molecules:
+
+```{r big.molecule.communalities}
+
+blood.cc$corr.Y.Cy^2 %*% ones.matrix -> big.molecules.communalities
+
+big.molecules.communalities
+
+```
+
+#### Question: which big molecule is least well represented, and which is best represented by the first axis?
+
+> Glucose has the lowest communality, and urea.nitrogen has the highest.
+
+Redundancy is a measure of how much variation in ions is shared with big molecules, and vice versa.
+
+Calculate the redundancy for ions first:
+
+```{r redundancy}
+
+colMeans(blood.cc$corr.X.Cx^2) * blood.cc$CanCorr^2 -> ion.redundancy
+
+ion.redundancy
+
+sum(ion.redundancy)
+
+```
+
+#### Question: for the first CCA axis, what percentage of the variation in ions is shared with big molecules?
+
+> The redundancy coefficient is 0.183, so 18.3%.
+
+#### Question: the sum of the ion.redundancies is supposed to be the same as the redundancy coefficient listed in the output above as X|Y. Does your calculation equal that value?
+
+> Yes it does.
+
+Calculate the redundancy for big molecules:
+
+```{r redundancy.big.molecules}
+
+colMeans(blood.cc$corr.Y.Cy^2) * blood.cc$CanCorr^2 -> big.molecule.redundancy
+
+big.molecule.redundancy
+
+sum(big.molecule.redundancy)
+
+```
+
+#### Question: for the first CCA axis, what percentage of the variation in big molecules is shared with ions?
+
+> The redundancy coefficient is 0.222, so 22.2%.
+
+#### Question: does your calculation of the sum of the redundancies match the reduncancy of Y|X listed above?
+
+> Yes it does.
+
+## Optional - CC after removing species differences
+
+Obtain residuals from a MANOVA relating all of the blood variables to species:
+
+```{r residuals}
+
+manova(as.matrix(blood[c(ions,big.molecules)])~species, data = blood) -> blood.sp.manova
+
+data.frame(residuals(blood.sp.manova)) -> resids
+
+```
+
+Now repeat the CC with the residuals
+
+```{r cc.resids}
+
+CCorA(resids[big.molecules], resids[ions], stand.Y = T, stand.X = T) -> resids.cc
+resids.cc
+
+```
+
+Test the CC axes for statistical significance:
+
+```{r cc.resids.pvals}
+
+p.asym(rho = resids.cc$CanCorr, N = 77, p = 6, q = 6)
+
+```
+
+Get the loadings for ions:
+
+```{r ion.loadings.resids}
+
+resids.cc$corr.X.Cx
+
+```
+
+Get the loadings for big molecules:
+
+```{r big.molecule.loadings.resids}
+
+resids.cc$corr.Y.Cy
+
+```
+
+#### Question: how did removing the differences between the species change the interpretation of the CC axes?
+
+>
+
+Add plot symbols to resids:
+
+```{r unicode.symbols.resid}
+
+resids$plotsym <- plotsymbols[as.numeric(factor(blood$species))]
+
+```
+
+Make biplots of the results:
+
+```{r biplots.resids}
+
+biplot(resids.cc, xlabs = resids$plotsym, plot.type = "b")
+
+```
+
+
+#### Question: how can you tell from the graph that using residuals from the MANOVA removed the effect of species?
+
+>
+
+#### Question: what is the relationship between ions and big molecules now, based just on CanAxis1?
+
+>
+
+#### Question: what does the change in associations between ions and big molecules after removing the effect of species differences tell you about how differences in species blood chemistry was affecting the results?
+
+>

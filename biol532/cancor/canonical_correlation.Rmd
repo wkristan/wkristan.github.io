@@ -1,0 +1,270 @@
+---
+title: "Canonical correlation"
+author: "Your Name"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 3)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Canonical correlation
+
+We will work with data on blood analysis from sea turtles in Florida. Import the data into a data frame called blood:
+
+```{r import.blood.data}
+
+
+
+```
+
+Make lists of ions and large molecules that will be used to make the matrices for our canonical correlation analysis:
+
+```{r make.variable.lists}
+
+
+
+```
+
+Calculate the correlations between ions and big molecules:
+
+```{r correlations}
+
+
+
+```
+
+#### Question: what are the two strongest correlations between the two sets of variables (give the correlation coefficients and the pairs of variables)?
+
+> 
+
+
+### Conduct the CC
+
+Load the library:
+
+```{r load.vegan}
+
+
+
+```
+
+Run the canonical correlation analysis:
+
+```{r run.cc}
+
+
+
+```
+
+#### Question: what is the first canonical correlation (report the number)? What is it the correlation between?
+
+> 
+
+Test each CC axis for statistical signficance using the CCP library:
+
+```{r blood.cc.pvals}
+
+
+
+```
+
+Make a scatterplot for the scores on the first three CC axes to visualize what the canonical correlations are telling you about the data:
+
+```{r cc.scatters}
+
+
+
+```
+
+#### Question: CC1 has the highest correlation, can you see this in the graphs? Explain.
+
+>
+
+The blood.cc output is a list with named elements - get the loadings for ions.
+
+```{r ion.loadings}
+
+
+
+```
+
+#### Question: interpret the first canonical correlation axis for ions - what does the first axis tell us about blood ions?
+
+> 
+
+Now get the loadings for big molecules:
+
+```{r big.molecules.loadings}
+
+
+
+```
+
+#### Question: what does the first axis tell us about the blood big molecules?
+
+> 
+
+Enter the Unicode characters that we want to use as plot symbols for the two species:
+
+```{r unicode.symbols}
+
+
+
+```
+
+Plot the CCA results:
+
+```{r plot.cca}
+
+
+```
+
+#### Question: what does the plot on the right showing the ions (in blue) and on the left showing big molecules (in red) tell you about the way that ions and big molecules are related?
+
+> 
+
+#### Question: we set the green turtle that is animal number 45 to a different plot symbol (two concentric circles), and you can see it on the far right of the graph. What would you expect the blood chemistry to be like for this turtle (as in, which substances would be at high levels, and which would be at low levels)?
+
+> 
+
+#### Question: loggerhead turtle number 18 also has a different plot symbol (a solid dot with a circle around it), and is at the top of the graph. What would you expect its blood chemistry to be like?
+
+> 
+
+Calculate communalities for ions:
+
+```{r ion.communalities}
+
+
+
+```
+
+#### Question: which ion is least well represented by the first axis? Which is the best represented?
+
+> 
+
+Calculate communalities for big molecules:
+
+```{r big.molecule.communalities}
+
+
+
+```
+
+#### Question: which big molecule is least well represented, and which is best represented by the first axis?
+
+> 
+
+Redundancy is a measure of how much variation in ions is shared with big molecules, and vice versa.
+
+Calculate the redundancy for ions first:
+
+```{r redundancy}
+
+
+
+```
+
+#### Question: for the first CCA axis, what percentage of the variation in ions is shared with big molecules?
+
+> 
+#### Question: the sum of the ion.redundancies is supposed to be the same as the redundancy coefficient listed in the output above as X|Y. Does your calculation equal that value?
+
+> 
+
+Calculate the redundancy for big molecules:
+
+```{r redundancy.big.molecules}
+
+
+
+```
+
+#### Question: for the first CCA axis, what percentage of the variation in big molecules is shared with ions?
+
+> 
+
+#### Question: does your calculation of the sum of the redundancies match the reduncancy of Y|X listed above?
+
+> 
+
+## Optional - CC after removing species differences
+
+Obtain residuals from a MANOVA relating all of the blood variables to species:
+
+```{r residuals}
+
+
+
+```
+
+Now repeat the CC with the residuals
+
+```{r cc.resids}
+
+
+
+```
+
+Test the CC axes for statistical significance:
+
+```{r cc.resids.pvals}
+
+
+
+```
+
+Get the loadings for ions:
+
+```{r ion.loadings.resids}
+
+
+
+```
+
+Get the loadings for big molecules:
+
+```{r big.molecule.loadings.resids}
+
+
+
+```
+
+#### Question: how did removing the differences between the species change the interpretation of the CC axes?
+
+>
+
+Add plot symbols to resids:
+
+```{r unicode.symbols.resid}
+
+
+
+```
+
+Make biplots of the results:
+
+```{r biplots.resids}
+
+
+
+```
+
+
+#### Question: how can you tell from the graph that using residuals from the MANOVA removed the effect of species?
+
+>
+
+#### Question: what is the relationship between ions and big molecules now, based just on CanAxis1?
+
+>
+
+#### Question: what does the change in associations between ions and big molecules after removing the effect of species differences tell you about how differences in species blood chemistry was affecting the results?
+
+>

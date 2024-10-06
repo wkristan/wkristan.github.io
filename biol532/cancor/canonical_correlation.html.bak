@@ -1,0 +1,473 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Canonical correlation</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <h1>Canonical Correlation</h1>
+    <p>Canonical correlation analysis finds the multivariate correlations between two sets of variables. Previously, we
+      used linear combinations of raw variables to understand structure in a single matrix of data (PCA), and to
+      understand how group centroids differed from one another (DFA), and now with canonical correlation we will use
+      linear combinations to see how collections of variables in two different matrices are correlated with one another.</p>
+    <p> </p>
+    <p>In canonical correlation analysis we have two different sets of variables all measured on the same subjects, and
+      we want to know how the two sets relate with one another. We would come close to canonical correlation analysis if
+      we conducting a PCA on each set and then correlating the PCA scores with one another. But, CC find the linear
+      combinations that are maximally correlated between the two data sets, and the CC axes are independent of one
+      another - PCA would find the axes that explained the maximum variation within each matrix, and the correlation
+      between the PCA axes for the two different data sets would not be as high; additionally, the axes would be
+      independent within each PCA, but if you correlated the PCA scores for one data set with the PCA scores for the
+      other the first PCA axis for data set 1 would not be independent of the second PCA axis for data set 2 (that is,
+      cross correlations would not be 0).</p>
+    <h2>The data<br>
+    </h2>
+    <p>We will be working today with data on blood samples taken from sea turtles in Florida over an 8 year period (I
+      compiled it from <a href="https://accstr.ufl.edu/resources/blood-chemistry-data/">here</a> - feel free to look
+      over the web site if you want to learn more about the data set). Several variables were measured from each sample,
+      including the concentrations of various ions, blood sugar, and several enzymes. We will focus on the correlation
+      between the ions in the blood and several of the other constituents (a handful of big molecules, as well as
+      glucose).</p>
+    <p>Start a new project for today, download and open today's <a href="canonical_correlation.Rmd">Rmd file</a>, then
+      download and import <a href="sea_turtle_blood_chemistry.xlsx">this data set</a> into a data frame called blood.</p>
+    <h2>Check the bivariate relationships</h2>
+    <p>The data set has 31 columns, but we don't want to use all of them. We need to separate the columns of ions (all
+      but one of which needed to be log-transformed) from the columns of big molecules (three of six of which needed to
+      be log transformed), and we can do this easily by making two different lists of the column names we want to use.
+      Note that I already did some data screening, and log-transformed the variables that needed it.</p>
+    <p>The list of ions is (make.variable.lists):</p>
+    <p class="rmd">ions &lt;- c("log.ca", "log.p",&nbsp; "log.mg", "log.na", "log.k",&nbsp; "cl" )</p>
+    <p>and the list of big molecules is (also in make.variable.lists):</p>
+    <p class="rmd">big.molecules &lt;- c("glucose",&nbsp; "urea.nitrogen", "log.uric.acid", "cholesterol",
+      "log.total.protein", "log.albumin")</p>
+    <p>Next, you can look at the bivariate correlations between these two different sets of variables - this will give
+      you some idea of what patterns of correlation to expect in the multivariate analysis (correlations):</p>
+    <p class="rmd">cor(blood[big.molecules],blood[ions])</p>
+    <p>which will give you this set of correlations:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      log.ca&nbsp; log.p&nbsp; log.mg log.na&nbsp; log.k&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cl<br>
+      glucose&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.156 0.4039 -0.0406&nbsp; 0.233&nbsp;
+      0.145&nbsp; 0.28010<br>
+      urea.nitrogen&nbsp;&nbsp;&nbsp;&nbsp; -0.559 0.0153 -0.2324 -0.439 -0.493&nbsp; 0.19066<br>
+      log.uric.acid&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.287 0.0661&nbsp; 0.2770&nbsp; 0.165&nbsp; 0.404 -0.17322<br>
+      cholesterol&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.252 0.2509&nbsp; 0.2194&nbsp; 0.192&nbsp; 0.179 -0.07031<br>
+      log.total.protein&nbsp; 0.577 0.1173&nbsp; 0.1422&nbsp; 0.304&nbsp; 0.403&nbsp; 0.00397<br>
+      log.albumin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.325 0.0928&nbsp; 0.1952&nbsp; 0.397&nbsp; 0.378&nbsp;
+      0.08040</p>
+    <p>Since we're correlating two different sets of variables, rather than a set of variables with itself, each
+      correlation is unique in this table, and you should look at all of them. You'll see that these bivariate
+      correlations are not extremely high, but it's possible that across sets of variables the correlation is stronger.</p>
+    <p>Now that you have some idea of which variables are correlated with which, we can move on to the multivariate
+      analysis.</p>
+    <p> </p>
+    <h2>Using canonical correlation analysis to measure the multivariate relationships</h2>
+    <p>1. <strong>Load the vegan library</strong>. We will use the vegan library to conduct canonical correlation
+      analysis. There are actually several libraries available with various strengths and weaknesses, but I selected
+      vegan because we will also use it next week to conduct canonical correspondence analysis, so we can cut down on
+      the number of libraries you need to install if we use it for canonical correlation analysis today. Load the
+      library with (in chunk load.vegan):</p>
+    <p class="rmd">library(vegan)</p>
+    <p>2. <strong>Run the canonical correlation analysis</strong>. The function in vegan that runs CC is CCorA() -
+      enter the command (run.cc):</p>
+    <p> </p>
+    <p class="rmd"> CCorA(X = blood[ions], Y = blood[big.molecules], stand.X = T, stand.Y = T) -&gt; blood.cc</p>
+    <p>The command syntax is pretty simple - we identify the two matrices to be correlated (X and Y), and then tell
+      CCorA() to standardize the variables in each (standardizing means to calculate z-scores for them). Note an
+      annoying quirk of the CCorA() function - you might expect that the first matrix entered would be treated as X by
+      CCorA() and the second matrix would be treated as Y, but CCorA() instead uses the first matrix as Y and the second
+      as X. As you know, if we label the inputs the order doesn't matter, so I've included X = and Y = to make it clear
+      which is which. The choice of X and Y has no effect on the analysis, but since the output is labeled by X and Y
+      it's important to be clear about which is which to avoid confusion.</p>
+    <p>To see the output write the name of the object in the code chunk and run it (same run.cc code chunk, next line):</p>
+    <p class="rmd"> blood.cc</p>
+    <p>which will give you:</p>
+    <p class="rout">Canonical Correlation Analysis<br>
+      <br>
+      Call:<br>
+      CCorA(Y = blood[big.molecules], X = blood[ions], stand.Y = T, stand.X = T) <br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Y X<br>
+      Matrix Ranks 6 6<br>
+      <br>
+      Pillai's trace:&nbsp; 1.26 <br>
+      <br>
+      Significance of Pillai's trace:<br>
+      from F-distribution:&nbsp;&nbsp; 3e-08 <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      CanAxis1 CanAxis2 CanAxis3 CanAxis4 CanAxis5 CanAxis6<br>
+      Canonical Correlations&nbsp;&nbsp;&nbsp; 0.793&nbsp;&nbsp;&nbsp; 0.522&nbsp;&nbsp;&nbsp; 0.458&nbsp;&nbsp;&nbsp;
+      0.299&nbsp;&nbsp;&nbsp; 0.212&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.1<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Y | X
+      X | Y<br>
+      RDA R squares&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.306&nbsp; 0.27<br>
+      adj. RDA R squares 0.247&nbsp; 0.21</p>
+    <p>There is much more information in blood.cc that we will look at in a minute, but this output tells us among other
+      things whether the relationship between the matrices is significant - below the "Call" and the "Matrix ranks"
+      output there is a Pillai's trace test statistic, and below that there is a p-value (labeled "Significance of
+      Pillai's trace"), which means that the correlation between the matrices is significant. This is good to know, but
+      it doesn't tell us which if the individual canonical correlation axes is significant, so before we start
+      interpreting any of the canonical correlations we should get significance tests for the individual axes.</p>
+    <p>3. <strong>Get significance tests for each axis</strong>. The vegan library provides a test of significance of
+      the correlation between the X and Y matrices overall, but it doesn't test individual canonical axes separately. We
+      would like to know which of the axes represent significant correlations that are worth interpreting, but we need
+      to install the CCP library to get those tests.</p>
+    <p>Install the CCP library, then load it and use the p.asym() command to get significance tests for each CC axis
+      (chunk blood.cc.pvals):</p>
+    <p class="rmd">library(CCP)</p>
+    <p class="rmd">p.asym(rho = c(blood.cc$CanCorr), N = 77, p = 6, q = 6)</p>
+    <p>This command calculates the p-values for the canonical correlations (argument rho = blood.cc$CanCorr), given the
+      sample size (N = 77) and the number of variables in each matrix (p = 6, q = 6; it doesn't matter which is which,
+      as long as the number of variables in one matrix is used for p and the other is used for q).</p>
+    <p>The output looks like this:</p>
+    <p class="rout">Wilks' Lambda, using F-approximation (Rao's F):<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stat approx df1 df2&nbsp; p.value<br>
+      1 to 6:&nbsp; 0.183&nbsp; 3.779&nbsp; 36 288 1.31e-10<br>
+      2 to 6:&nbsp; 0.494&nbsp; 2.062&nbsp; 25 247 2.88e-03<br>
+      3 to 6:&nbsp; 0.679&nbsp; 1.730&nbsp; 16 205 4.33e-02<br>
+      4 to 6:&nbsp; 0.860&nbsp; 1.173&nbsp;&nbsp; 9 166 3.15e-01<br>
+      5 to 6:&nbsp; 0.945&nbsp; 0.987&nbsp;&nbsp; 4 138 4.17e-01<br>
+      6 to 6:&nbsp; 0.990&nbsp; 0.739&nbsp;&nbsp; 1&nbsp; 70 3.93e-01</p>
+    <p>The p-values are calculated for all six axes (1 to 6), for all but the first (2 to 6), for all but the first and
+      second (3 to 6) and so on. You'll see that we have significant p-values for the first three rows, but when we drop
+      the third axis the fourth, fifth, and sixth are no longer significant. This is interpreted to mean that the first
+      three axes are significant, but the remaining are not.</p>
+    <p>The significant canonical correlations are the first three, which are R = 0.793, R = 0.522, and R = 0.458.</p>
+    <p>4. <strong>Plot the canonical correlation axes</strong>. The scores for big molecules and ions are in
+      blood.cc$Cy and blood.cc$Cx, respectively. If you correlated these two sets of scores (in the Console):</p>
+    <p class="rcmd">diag(cor(blood.cc$Cy, blood.cc$Cx))</p>
+    <p>you get:</p>
+    <p class="rout">CanAxis1 CanAxis2 CanAxis3 CanAxis4 CanAxis5 CanAxis6 <br>
+      &nbsp;&nbsp; 0.793&nbsp;&nbsp;&nbsp; 0.522&nbsp;&nbsp;&nbsp; 0.458&nbsp;&nbsp;&nbsp; 0.299&nbsp;&nbsp;&nbsp;
+      0.212&nbsp;&nbsp;&nbsp; 0.102 </p>
+    <p>These are the correlations of the scores for big molecules with the scores for ions for each of the canonical
+      axes - you'll see they are the same as the canonical correlations from your output, above. You can think of the
+      canonical correlations as correlations between the CC axis scores.</p>
+    <p>Given this, we can visualize the multivariate correlation between the two data sets by making a scatterplot of
+      the scores for ions and big molecules for each of the statistically significant CC axes.</p>
+    <p>In chunk cc.scatters enter the following to get the plot of CC1 scores for ions on the x-axis, and CC1 scores of
+      big molecules on the y-axis of a scatter plot:</p>
+    <p class="rmd">par(mfrow = c(1,3))</p>
+    <p class="rmd">plot(blood.cc$Cy[,1]~blood.cc$Cx[,1], xlab = "Ions CC1", ylab = "Big molecules CC1", main = "CC1, R =
+      0.793")</p>
+    <p>This graph shows the scores for big molecules on the first CC axis (using blood.cc$Cy[,1]) against the scores for
+      ions on the first CC axis (using blood.cc$Cx[,1]). The x and y axis are each labeled appropriately, and the graph
+      title is set to the name of the CC axis. You'll see that there is a fairly strong positive relationship between
+      big molecule and ion scores on this first axis, which has a correlation of 0.793. </p>
+    <p>Add the second graph - the command is the same, but change to the second axis (using [,2] as column indexes), and
+      update the graph labels to use CC2 (the canonical correlation is 0.522). Then add the third graph, using the third
+      CC axis (its canonical correlation is 0.458).</p>
+    <p>The axes represent successively weaker correlations, so the first will always have the highest correlation.</p>
+    <p>5. <strong>Interpreting the axes - loadings</strong>. The scatter plots of scores illustrate what the CC is
+      actually a correlation of, but to use these canonical correlations to make sense of our data we still need to
+      figure out what the axes mean.</p>
+    <p>CCorA() gives us loadings for the ions and for big molecules separately. The loadings are named elements in
+      blood.cc, so we can get the loadings for ions with (ion.loadings):</p>
+    <p class="rmd">blood.cc$corr.X.Cx</p>
+    <p>You'll see the loadings reported:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CanAxis1 CanAxis2 CanAxis3 CanAxis4 CanAxis5 CanAxis6<br>
+      log.ca&nbsp;&nbsp; 0.8359&nbsp;&nbsp; -0.217&nbsp;&nbsp; 0.3613&nbsp;&nbsp;&nbsp; 0.160&nbsp;&nbsp;
+      0.1724&nbsp;&nbsp; -0.261<br>
+      log.p&nbsp;&nbsp;&nbsp; 0.2435&nbsp;&nbsp;&nbsp; 0.585&nbsp; -0.2450&nbsp;&nbsp; -0.673&nbsp;
+      -0.1649&nbsp;&nbsp;&nbsp; 0.241<br>
+      log.mg&nbsp;&nbsp; 0.2934&nbsp;&nbsp; -0.429&nbsp; -0.4403&nbsp;&nbsp; -0.402&nbsp;&nbsp; 0.0411&nbsp;&nbsp;
+      -0.610<br>
+      log.na&nbsp;&nbsp; 0.6206&nbsp;&nbsp;&nbsp; 0.077&nbsp; -0.2757&nbsp;&nbsp;&nbsp; 0.396&nbsp; -0.3771&nbsp;&nbsp;
+      -0.484<br>
+      log.k&nbsp;&nbsp;&nbsp; 0.7134&nbsp;&nbsp; -0.258&nbsp; -0.2719&nbsp;&nbsp;&nbsp; 0.166&nbsp;&nbsp;
+      0.4981&nbsp;&nbsp;&nbsp; 0.274<br>
+      cl&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -0.0669&nbsp;&nbsp;&nbsp; 0.697&nbsp; -0.0451&nbsp;&nbsp;&nbsp; 0.265&nbsp;&nbsp;
+      0.4480&nbsp;&nbsp; -0.487</p>
+    <p>We interpret these like all the other loadings we've encountered - these are the correlations of the ions (row
+      labels) with each canonical axis (column labels). You'll see that most of the ions are positively correlated with
+      CanAxis1, except for cl, which is weakly negatively correlated (so weakly that you should consider it uncorrelated
+      with Axis 1). The variables have a mix of positive and negative loadings on CanAxis2, so log.p, log.na, and cl are
+      inversely related to log.ca, log.mg, and log.k (with cl and log.mg being the ions with the largest positive and
+      negative loadings, respectively).</p>
+    <p>We can get the loadings for big molecules next (big.molecules.loadings):</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      CanAxis1 CanAxis2 CanAxis3 CanAxis4 CanAxis5 CanAxis6<br>
+      glucose&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.432&nbsp;&nbsp;
+      0.8605&nbsp; -0.1454&nbsp;&nbsp; -0.210&nbsp;&nbsp; 0.0682&nbsp;&nbsp; 0.0553<br>
+      urea.nitrogen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -0.787&nbsp;&nbsp; 0.3907&nbsp;&nbsp; 0.0597&nbsp;&nbsp;
+      -0.339&nbsp;&nbsp; 0.3102&nbsp; -0.1114<br>
+      log.uric.acid&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.469&nbsp; -0.3996&nbsp; -0.3420&nbsp;&nbsp;
+      -0.303&nbsp;&nbsp; 0.4077&nbsp;&nbsp; 0.4952<br>
+      cholesterol&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.452&nbsp;&nbsp; 0.0416&nbsp;
+      -0.0616&nbsp;&nbsp; -0.717&nbsp; -0.2905&nbsp; -0.4381<br>
+      log.total.protein&nbsp;&nbsp;&nbsp; 0.758&nbsp;&nbsp; 0.0225&nbsp;&nbsp; 0.3567&nbsp;&nbsp; -0.130&nbsp;&nbsp;
+      0.3647&nbsp; -0.3844<br>
+      log.albumin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.561&nbsp;&nbsp; 0.0853&nbsp;
+      -0.4490&nbsp;&nbsp;&nbsp; 0.363&nbsp;&nbsp; 0.1315&nbsp; -0.5723</p>
+    <p>The first axis is positively correlated with every variable except urea.nitrogen, and the second has positive
+      correlations with everything except log.uric.acid (albeit with very small correlations for cholesterol,
+      log.total.protein, and log.albumin).</p>
+    <p>You can interpret how ions and big molecules covary by comparing the loadings between these two sets - ion
+      variables with positive loadings will be positively correlated with big molecule variables with positive loadings;
+      conversely, if the signs are different for the loadings on the same axis the variables will be negatively related
+      to one another along that axis.</p>
+    <p>Probably the easiest way to interpret how the variables relate to one another between the two matrices, though,
+      is by making a biplot for the ions and for the big molecules, which we will do next.</p>
+    <h2>Visualize the multivariate results</h2>
+    <p>1. <strong>Add unicode plot symbols to the blood data</strong>. We need to work around a limitation of the
+      biplot() function as applied to a CCorA() object - biplot() will only let us use text for the the points on the
+      graph, and doesn't give us the option of using plot symbols. This very quickly makes the graph hard to interpret
+      because the over-plotting of the text labels makes them impossible to read. </p>
+    <p>We can get around this problem by adding plot symbols as a column in our blood data set, and then use that column
+      as the labels in our graph. We make this trick work by entering <strong>unicode</strong> character codes for the
+      plot symbols we want into a column in the blood data set.</p>
+    <p>If you've ever used the "Insert special character" functions in Word (or whatever word processor you use) you'll
+      get a list of all the characters that are supported in the font typeface you're using. If you scroll through them
+      you'll see not only letters, numbers, and punctuation symbols like you see on your keyboard, you'll see
+      mathematical symbols, Greek letters, and a variety of dots, circles, and other shapes. Each of these has an
+      underlying alphanumeric code that can be used to identify them, and one of the systems used to encode them is
+      called unicode (you can see a comprehensive list <a href="https://www.htmlsymbols.xyz/geometric-symbols">here</a>,
+      if you're interested). Unicode is a standard for identifying symbols that allows for, among other things, changes
+      between different languages that use different alphabets in electronic documents. </p>
+    <p>We're going to enter unicode alphanumeric codes for the plot symbols we want into a column in the data set, and R
+      will render the codes as the plot symbols they stand for in the graph.</p>
+    <p>For example, code \U25CB is rendered by R as the symbol ○, and code \U25CF is rendered as the symbol ●. We will
+      use the open symbols for green sea turtles, and the black filled circle for loggerhead sea turtles in our biplots.</p>
+    <p>To add these as a column in the blood data set, do the following (unicode.symbols):</p>
+    <p class="rmd">plotsymbols &lt;- c("\U25CB", "\U25CF")</p>
+    <p>Now we want to assign these codes to the green and loggerhead turtles - there's a clever trick for getting the
+      codes assigned properly to each row in the blood data set; let's see how it works one step at a time.</p>
+    <p>First, we can convert the species column in blood into a factor, like so (in the Console):</p>
+    <p class="rcmd">factor(blood$species)</p>
+    <p>You'll see species, and the levels that are present in the species column:</p>
+    <p class="rout">&nbsp;[1] Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead
+      Loggerhead<br>
+      [10] Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead<br>
+      [19] Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead<br>
+      [28] Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead<br>
+      [37] Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Loggerhead Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      [46] Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      [55] Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      [64] Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      [73] Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Green&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Green&nbsp;&nbsp;&nbsp;&nbsp; <br>
+      Levels: Green Loggerhead</p>
+    <p>We happen to have loggerhead turtles entered in the first 42 rows, but when R makes a factor out of the column it
+      puts the levels in alphabetical order - thus, the levels are listed as Green Loggerhead, rather than the order
+      they were entered in the data set.</p>
+    <p>Next, since factors have numeric codes assigned to each level that are replaced by the matching text label in the
+      Levels: list, we can get the underlying numeric codes with (in the Console):</p>
+    <p class="rcmd">as.numeric(factor(blood$species))</p>
+    <p>This time you'll see the numeric values assigned to each level:</p>
+    <p class="rout">&nbsp;[1] 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 1 1
+      1 1 1 1 1 1 1<br>
+      [53] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1</p>
+    <p>The 2's are the second level (Loggerhead), and the 1's are the first level (Green). </p>
+    <p>Now, our list of unicode characters has a character for each level of the species factor, with the first one
+      being the code for green turtles, and the second being the code for loggerheads. This list of 2's and 1's can be
+      used to repeat the loggerhead code for every 2, and the green turtle code for every 1, like so (still in the
+      Console):</p>
+    <p class="rcmd">plotsymbols[as.numeric(factor(blood$species))]</p>
+    <p>R renders the symbols when it displays them, so even though you entered codes in plotsymbols you'll see the plot
+      symbols themselves:</p>
+    <p class="rout">&nbsp;[1] "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●"
+      "●" "●" "●" "●"<br>
+      [27] "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "●" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○"<br>
+      [53] "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○" "○"</p>
+    <p>To finish this step we just need to enter these symbols into a new column in the blood data set called plotsym
+      (chunk unicode.symbols):</p>
+    <p class="rmd">blood$plotsym &lt;- plotsymbols[as.numeric(factor(blood$species))]</p>
+    <p>We now have the symbols we need where we need them.</p>
+    <p>Before we move on to the graph, though, there are also a couple of points I want to highlight on the graph, so
+      we'll replace the symbols in blood$plotsym for these rows with ones that will be easy to see on the graph (same
+      chunk, next lines): </p>
+    <p class="rmd">blood$plotsym[45] &lt;- c("\U25CE")</p>
+    <p class="rmd">blood$plotsym[18] &lt;- c("\U25C9")</p>
+    <p>The code \U25CE renders as ◎ (which is like the green sea turtle plot symbol, but with a ring around it), and
+      \U25C9 renders as ◉ (which is like the loggerhead sea turtle plot symbol with a ring around it).</p>
+    <p>2. <strong>Make the biplots</strong>. Now you can visualize the results with the command (plot.cca):</p>
+    <p class="rmd">biplot(blood.cc, plot.type = "b", xlabs = blood$plotsym)</p>
+    <p>This command will give you two plots. The first is a biplot of the scores of observations (as dots) with the
+      loadings for the big molecules (as arrows) overlaid. The second is the same biplot for the ions. You'll get a
+      warning message in the console about length(x) = 77 &gt; 1, but I'm not sure what its problem is, and it's not
+      affecting the graph, so ignore it.</p>
+    <p>Remember that the open circles are green sea turtles and the filled circles are loggerheads. Note that species is
+      not used in any way by the CC, but differences in the species can contribute to the correlation between the data
+      sets - for example, loggerhead turtles seem to have high levels of urea.nitrogen and low levels of log.abument and
+      total.protein compared with green sea turtles, and this difference can cause those variables to be negatively
+      correlated when we put both species together in one analysis. This is not a bad thing, just something to be aware
+      of (if you want you can do the optional steps below that remove this difference statistically, so that you can see
+      what the pattern is when species no longer differ on average in their blood chemistries).</p>
+    <p>The two points that we set to a different plot symbol should be a green turtle (◎) and a loggerhead (◉) appear in
+      each graph because the graphs show the same set of turtles scored on CC1 and CC2 for both the big molecules and
+      ions. You'll find these points either on the far right or at the top of each graph - there are a couple of
+      questions in your Rmd file about the blood chemistry for these two turtles.</p>
+    <p> </p>
+    <h2>Measure the strength of the relationship between the matrices</h2>
+    <p>Now that we have measures of correlation between the two matrices, we would like to know how much of the
+      variation in ions is shared with variation in large molecules - this is like an R<sup>2</sup> in a regression
+      analysis, but based on multivariate correlations.</p>
+    <p>We would also like to know how well each set of CC axes represents each data set - if we have a strong
+      correlation between CC axes that only capture a small amount of variation in the measured data then we probably
+      don't want to attach much importance to the pattern.<br>
+    </p>
+    <p>1. <strong>Communality</strong>. We have been answering the second question using communalities, which are just
+      sums of squared loadings across the axes. We'll use the same approach we used for PCA - we'll make a matrix with
+      an upper triangle containing 1's, and then use a matrix multiplication of the squared loadings by this matrix to
+      get a running total of variance explained across the CC axes. We can get the communalities for the X (ion) data
+      set with (ion.communalities):</p>
+    <p class="rmd">ones.matrix &lt;- round(upper.tri(matrix(nrow = 6, ncol = 6), diag = T))<br>
+      <br>
+      blood.cc$corr.X.Cx^2 %*% ones.matrix -&gt; ions.communalities<br>
+      <br>
+      ions.communalities</p>
+    <p> You can modify these commands to get communalities for the big molecules matrix as well
+      (big.molecules.communalities - you can use the same ones.matrix, since the number of columns is the same for both
+      data matrices, just use the corr.Y.Cy loadings in place of the corr.X.Cx loadings).</p>
+    <p>The communalities will sum to 1 for both matrices if you have the same number of variables in each matrix - if
+      so, then you will have as many CC axes as you have variables in each matrix, and the CC axes will account for all
+      of the variation in each data matrix, just like a PCA does. You'll see that the communalities all go to 1 by the
+      last CC axis for both ions and big molecules. </p>
+    <p>If the number of variables is different between the two data matrices you'll only get as many CC axes as you have
+      variables in the smaller data matrix - if this were the case we would have fewer CC axes than there are data
+      variables for the bigger matrix, and less than 100% of the variation would be accounted for.</p>
+    <p> </p>
+    <p>2. <strong>Redundancy</strong>. To finish up, you can address how much shared variation there is between the two
+      data sets by calculating redundancy index values for each of the matrices. If you look at the original set of
+      output we did get redundancy index values for the entire set of CC axes - it looks like this:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Y | X X | Y<br>
+      RDA R squares&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.306&nbsp; 0.27<br>
+      adj. RDA R squares 0.247&nbsp; 0.21</p>
+    <p> </p>
+    <p>This output is telling us that the amount of variation in big molecules (Y) that is shared with ions (X) is
+      0.306, and the amount of variation in ions (X) shared with big molecules (Y) is 0.27. The second row is an
+      adjusted estimate that accounts for the number of variables (we can ignore these, they are mostly useful for model
+      selection purposes, which we are not doing here).<br>
+    </p>
+    <p>To calculate redundancy for each CC axis, we will multiply the averages of the squared loadings by the squared
+      canonical correlations. For the proportion of variance in the ion matrix (X) explained by the big molecules matrix
+      (Y), that would be (redundancy.ions):</p>
+    <p class="rmd">colMeans(blood.cc$corr.X.Cx^2) * blood.cc$CanCorr^2 -&gt; ion.redundancy<br>
+      <br>
+      ion.redundancy<br>
+      <br>
+      sum(ion.redundancy)</p>
+    <p>The values stored in ion.redundancy are the variance in the ions matrix explained by each CCA axis, and the sum
+      of these is the total variance explained in ions by the CCA. You'll see that the variation in ions shared with big
+      molecules through the CanAxis1 is 0.18287, or 18.3%. The sum of all six of the redundancy values is 0.273, which
+      is the same as the X|Y redundancy in the CCorA() output. That value of 0.18 is 0.18287/0.273 = 0.67, or two thirds
+      of the total redundancy between the two matrices. The second axis adds another 0.05141/0.273 = 0.188, so between
+      the first two we're accounting for 0.858, or 85.8% of the variation that is shared between the two. Ignoring the
+      rest of the axes is only omitting 14.2% of the variation in the data that is shared between the two matrices.</p>
+    <p>The variance in big molecules explained by ions will be different, so we need to calculate it separately as
+      (redundancy.big.molecules):</p>
+    <p class="rmd">colMeans(blood.cc$corr.Y.Cy^2) * blood.cc$CanCorr^2 -&gt; big.molecule.redundancy<br>
+      <br>
+      big.molecule.redundancy<br>
+      <br>
+      sum(big.molecule.redundancy)</p>
+    <p>You'll see that about 22% of the variation in big molecules is shared with ions through CanAxis1. The sum of the
+      redundancy coefficients is 0.306, or 30.6%, and this matches the CCorA() output.</p>
+    <p>Thus completes the required part of the assignment.</p>
+    <h2>Optional - partial canonical correlation</h2>
+    <p>But, we detected a difference between the two species that likely produced some of the correlation between the
+      ions and big molecules. If we want to see how ions and big molecules are related after this difference between the
+      species is accounted for, we can <strong>statistically eliminate</strong> the differences between species and run
+      the analysis again. This is a form of <strong>partial analysis</strong>, in which we statistically account for an
+      effect and then see how the variables are related after that effect is removed from each of them. After removing
+      the differences between the species we can focus on whether blood chemistry varies in a consistent way within both
+      of the species, without the differences between species as a confounding factor.</p>
+    <p>1. <strong>Calculate residuals for ions and big molecules after accounting for species differences</strong>. One
+      way of accounting for a variable is to use it as a predictor in a model, and then use the residuals as the
+      variables - in the case of species as a predictor, the residuals will be differences between each turtle's
+      measurements and the mean for the species they belong to. This has the effect of setting the species to the same
+      mean of 0 for every variable, but it has no effect on the correlations between the variables within the species. </p>
+    <p>We can get residuals from a MANOVA relating all of the variables (both ions and big molecules) to species. In
+      chunk residuals enter:</p>
+    <p class="rmd">manova(as.matrix(blood[c(ions,big.molecules)])~species, data = blood) -&gt; blood.sp.manova<br>
+      <br>
+      data.frame(residuals(blood.sp.manova)) -&gt; resids</p>
+    <p>The manova() command just fits the MANOVA model and assigns it to the blood.sp.manova object. We have done this
+      several times, the only thing that's different is that I concatenated the two lists of response variables into
+      one, rather than making a separate one - thus, c(ions, big.molecules) is used to identify all of the variables to
+      use as responses.</p>
+    <p>The data.frame(residuals()) command extracts the residuals from the MANOVA model and makes a data frame out of
+      them.</p>
+    <p>We can now do a canonical correlation on these residuals and there will be no difference in blood chemistry on
+      average between the species to affect the results.</p>
+    <p>2. <strong>Run a canonical correlation on the residuals</strong>. Just like before, but using the residuals - in
+      chunk cc.resids:</p>
+    <p class="rmd">CCorA(resids[big.molecules], resids[ions], stand.Y = T, stand.X = T) -&gt; resids.cc</p>
+    <p class="rmd">resids.cc</p>
+    <p>You'll see that the size of the canonical correlations and the redundancy coefficients have gone down a little -
+      this is an indication that the differences in species means was responsible for some of the correlation in the
+      variables.</p>
+    <p>3. <strong>Test the canonical correlations for significance</strong>. Using p.asym() from the CCP library gives
+      us (cc.resids.pvals):</p>
+    <p class="rmd">p.asym(rho = resids.cc$CanCorr, N = 77, p = 6, q = 6)</p>
+    <p>gives us:</p>
+    <p class="rout">Wilks' Lambda, using F-approximation (Rao's F):<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; stat&nbsp; approx df1 df2&nbsp; p.value<br>
+      1 to 6:&nbsp; 0.290 2.61076&nbsp; 36 288 5.68e-06<br>
+      2 to 6:&nbsp; 0.586 1.52710&nbsp; 25 247 5.63e-02<br>
+      3 to 6:&nbsp; 0.792 1.01927&nbsp; 16 205 4.38e-01<br>
+      4 to 6:&nbsp; 0.925 0.59720&nbsp;&nbsp; 9 166 7.98e-01<br>
+      5 to 6:&nbsp; 0.986 0.24441&nbsp;&nbsp; 4 138 9.13e-01<br>
+      6 to 6:&nbsp; 1.000 0.00154&nbsp;&nbsp; 1&nbsp; 70 9.69e-01</p>
+    <p>The first canonical correlation axis is still highly significant, but none of the rest are. We should restrict
+      our interpretation to the first axis.</p>
+    <p>If you look at the loadings for ions (chunk ion.loadings.resids):</p>
+    <p class="rmd">resids.cc$corr.X.Cx</p>
+    <p>and for big molecules (chunk big.molecule.loadings.resids):</p>
+    <p class="rmd">resids.cc$corr.Y.Cy</p>
+    <p>you'll see:</p>
+    <p>(ions)</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CanAxis1 CanAxis2 CanAxis3 CanAxis4 CanAxis5 CanAxis6<br>
+      log.ca&nbsp; 0.63795&nbsp; -0.6072&nbsp;&nbsp; 0.0909&nbsp;&nbsp; -0.295&nbsp;&nbsp;&nbsp; 0.358&nbsp; -0.0255<br>
+      log.p&nbsp;&nbsp; 0.49601&nbsp;&nbsp; 0.4725&nbsp;&nbsp; 0.1637&nbsp;&nbsp;&nbsp; 0.427&nbsp;&nbsp;
+      -0.473&nbsp;&nbsp; 0.3129<br>
+      log.mg&nbsp; 0.00629&nbsp;&nbsp; 0.3092&nbsp;&nbsp; 0.6937&nbsp;&nbsp; -0.126&nbsp;&nbsp;&nbsp; 0.560&nbsp;&nbsp;
+      0.3071<br>
+      log.na&nbsp; 0.46060&nbsp;&nbsp; 0.2493&nbsp; -0.2743&nbsp;&nbsp;&nbsp; 0.108&nbsp;&nbsp;&nbsp; 0.779&nbsp;
+      -0.1768<br>
+      log.k&nbsp;&nbsp; 0.44019&nbsp;&nbsp; 0.0444&nbsp;&nbsp; 0.1921&nbsp;&nbsp; -0.779&nbsp;&nbsp; -0.224&nbsp;
+      -0.3336<br>
+      cl&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.29044&nbsp;&nbsp; 0.1985&nbsp; -0.5870&nbsp;&nbsp; -0.393&nbsp;&nbsp;&nbsp;
+      0.238&nbsp;&nbsp; 0.5665</p>
+    <p>(big molecules)</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      CanAxis1 CanAxis2 CanAxis3 CanAxis4 CanAxis5 CanAxis6<br>
+      glucose&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.8960&nbsp;&nbsp;
+      0.3912&nbsp;&nbsp; -0.158&nbsp;&nbsp; 0.0307&nbsp; -0.1295&nbsp;&nbsp; 0.0375<br>
+      urea.nitrogen&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -0.2397&nbsp;&nbsp; 0.5389&nbsp;&nbsp;&nbsp; 0.409&nbsp;
+      -0.0454&nbsp;&nbsp; 0.0217&nbsp; -0.6943<br>
+      log.uric.acid&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.0996&nbsp;&nbsp; 0.0687&nbsp;&nbsp;&nbsp; 0.511&nbsp;
+      -0.5198&nbsp; -0.6412&nbsp;&nbsp; 0.2085<br>
+      cholesterol&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.5163&nbsp;&nbsp; 0.0745&nbsp;&nbsp;&nbsp;
+      0.614&nbsp;&nbsp; 0.3036&nbsp;&nbsp; 0.3678&nbsp;&nbsp; 0.3520<br>
+      log.total.protein&nbsp;&nbsp; 0.7323&nbsp; -0.4293&nbsp;&nbsp;&nbsp; 0.231&nbsp; -0.3173&nbsp;&nbsp; 0.3301&nbsp;
+      -0.1283<br>
+      log.albumin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.3581&nbsp;&nbsp; 0.2981&nbsp;&nbsp; -0.280&nbsp;
+      -0.4755&nbsp;&nbsp; 0.6568&nbsp;&nbsp; 0.2165</p>
+    <p>All of the ions are now positively correlated with the first axis, and all but urea.nitrogen are positive for the
+      big molecules. This is a very different pattern, so species differences were producing a good deal of the
+      patterning we saw before. Within species, there is a tendency for the total concentration of all of these blood
+      components to increase or decrease together, except for urea.nitrogen, which is negatively related to the rest.</p>
+    <p>4. <strong>Plot the results</strong>. We can add plot symbols by species so that we can confirm that species
+      differences were eliminated (unicode.symbols.resid):</p>
+    <p class="rmd">resids$plotsym &lt;- plotsymbols[as.numeric(factor(blood$species))]</p>
+    <p>We can then get the biplots (biplot.resids):</p>
+    <p class="rmd">biplot(resids.cc, xlabs = resids$plotsym, plot.type = "b")</p>
+    <p>You'll see that the open and filled dots are now intermingled, and don't differ on average anymore. The graphs
+      give you the first two CC axes by default, but remember that only the first is statistically significant, so
+      restrict your interpretation to the left to right patterning.</p>
+    <p> </p>
+    <h2>Assignment</h2>
+    <p>Knit your Rmd file and upload your Word document to complete the assignment.</p>
+  </body>
+</html>
