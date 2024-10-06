@@ -1,0 +1,326 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+    
+    <title>MANOVA</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <h1>MANOVA</h1>
+    <p> Today we'll compare multivariate differences between our two shell types, and between the four different land cover
+      types in the LandSat data. Both of these will be independent samples analyses, equivalent to one-way ANOVA but
+      with multiple response variables (and thus, MANOVA).</p>
+    <p>We will focus in this exercise on the <strong>omnibus</strong> test of significance that we get from our MANOVA
+      - that is, the test of multivariate differences between groups. We will not follow up with post-hoc procedures
+      today, either in the sense of identifying which groups differ from one another (when there are more than two), or
+      which response variables are responsible for the significant differences - learning to do post-hocs on a
+      significant MANOVA will wait until the next exercise.</p>
+    <h2>Today's data sets</h2>
+    <p>Make a new project for today, download <a href="multivariate_data_fixed.xlsx">this</a> data file and <a href="manova.Rmd">this</a>
+      Rmd file into it.</p>
+    <p>The MANOVA procedures we will use today assume multivariate normality, and as we learned in our data screening
+      exercise these data sets violated that assumption. To get the data sets to meet the assumptions of our tests, I
+      did the following things:</p>
+<p><strong>Shell data</strong>
+    </p><ul>
+<li>
+        <p>Re-measured several shells that had big Mahalanobis distances.</p>
+      </li><li>
+        <p>Randomly removed several shells from the data set to use as a "test" set for later analysis (except for one
+          huge white shell that I removed intentionally - its morphology was quite different from the rest), leaving 60          shells per group.</p>
+      </li><li>
+        <p>Log-transformed weight.</p>
+      </li></ul>
+    <p>The scatterplot matrices also <span class="tooltip">look good<span class="tooltiptext" style="width: 400px"><img src="shells_fixed_splot.png" style="width: 400px"></span></span>, but we fail to meet multivariate
+      normality, as you'll see <span class="tooltip">here<span class="tooltiptext" style="width: 400px"><img src="shells_fixed_mahal.png" style="width: 400px"></span></span>. Based on the good looking scatterplot matrices, with no apparent
+      non-linearities or major univariate or bivariate outliers, we will move forward and will use Pillai's Trace as our test statistic to      account for violating the multivariate normality assumption.</p>
+    <p><strong>LandSat data</strong></p>
+    <ul>
+      <li>
+        <p>Removed several points that were outliers. Even though there isn't a possibility that these were measurement
+          errors per se, the points had high values on all of the bands, which means that light was bouncing off of a
+          reflective surface on the ground straight back at the sensor.</p>
+      </li>
+      <li>
+        <p>Randomly selected several points to use as a "test" set for later analysis, leaving 50 points per cover type
+          in today's data set.</p>
+      </li>
+      <li>Log-transformed all of the bands except 4 and 6.</li>
+    </ul>
+    <p>The scatterplot matrix looks okay, as you'll see <span class="tooltip">here<span class="tooltiptext" style="width:400px"><img src="landsat_pairs.png" style="width: 400px"></span></span>. The histograms of the bands look reasonably
+      bell shaped, as you can see <span class="tooltip">here<span class="tooltiptext" style="width: 400px"><img src="landsat_hists.png" style="width: 400px"></span></span>. With the oddball points deleted we meet multivariate normality and
+      equality of covariance assumptions, as you'll see <span class="tooltip">here<span class="tooltiptext" style="width:400px"><img src="landsat_mahal.png" style="width: 400px"></span></span>.</p>
+    <p> </p>
+<p><strong>Bird sexual size dimorphism data</strong></p>
+    <p>We didn't collect any of our own multivariate paired data, but we can try out multivariate paired analysis using
+      the bird sexual size dimorphism data we saw in lecture.</p>
+    <h2>MANOVA of the shell data</h2>
+    <ul>
+    </ul>
+    <p><strong></strong>1. <strong>Import the data and get your list of response variables</strong>.</p>
+    <p>The data set is called "multivariate_data_fixed.xlsx", and the sheet is "shells" - import the data into a data
+      set called <strong>shells</strong> (don't forget to convert to a data frame). Do this in chunk import.shells.</p>
+    <p>The variable names are major.axis, minor.axis, surface.len, height, depth, and ln.weight - put these into a
+      vector called <strong>shell.variables</strong>, in chunk shells.response.variables.</p>
+    <p>2. <strong>Conduct the MANOVA</strong>. Since we already graphed these data when we screened them we'll skip that (very important!) step of analysis and move straight to the MANOVA.</p>
+    <p>MANOVA uses a matrix of response variables, but the syntax is otherwise just like the univariate analysis. We ran
+      a MANOVA when we screened the data in order to get residuals, so you've seen this command before, but this time
+      we'll do the analysis for real (chunk shells.manova):</p>
+    <p class="rmd">manova(as.matrix(shells[shell.variables]) ~ shell.type, data = shells) -&gt; shells.manova</p>
+    <p>This command fits the model, using a matrix of response variables instead of a single one. To get the MANOVA
+      table with the default Pillai's Trace test statistic, below the manova() command (same chunk) enter:</p>
+    <p class="rmd">summary(shells.manova)</p>
+    <p>You'll get this table:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Pillai approx F num Df
+      den Df&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp; &nbsp;<br>
+      shell.type&nbsp;&nbsp; 1 0.97442&nbsp;&nbsp; 717.38&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 6&nbsp;&nbsp;&nbsp; 113 &lt;
+      2.2e-16 ***<br>
+      Residuals&nbsp;
+      118&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      &nbsp;<br>
+      ---<br>
+      Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</p>
+    <p>The p-value is tiny, so we reject the null hypothesis that the mean of every response variable is equal between
+      the shell types.</p>
+    <p>R uses Pillai's Trace as its default, because it performs similarly to the other multivariate test statistic
+      options when we meet normality and equal covariance matrix assumptions, but performs better when those assumptions
+      are violated. Since we know we have some cases with Mahalanobis distances outside of the confidence band we should
+      definitely use Pillai's Trace.</p>
+    <p>There are only two groups being compared here, so we know that they are different based on this result. We don't
+      yet know whether they are different on every variable, and they could be different on as few as one variable out
+      of the six. We will learn next week how to find out which of the variables are responsible for the difference.</p>
+    <h2>MANOVA of the Landsat data</h2>
+    <p>We'll be using the LandSat data as our example of a MANOVA with more than two groups. We have seven measured
+      variables (bands 1-7), and six different cover types, and we'll be testing whether there is significant variation
+      in means of bands (centroids) among the cover types. Remember that in MANOVA differences among group centroids are
+      assessed by partitioning the generalized variance into between-groups and within-groups pieces, then testing
+      whether the ratio of within-groups to total variance is significant. </p>
+    <p> </p>
+    <p> 1. To begin,<span style="font-weight: bold;"> import</span> the landsat worksheet into a data frame called
+      landsat.</p>
+    <p>2. <strong>Prepare the data</strong>. LandSat data comes in seven bands, and to get the data to meet the
+      assumption of multivariate normality each of the bands except for Band4 and Band6 needed to be log-transformed.</p>
+    <p>I would have provided you with the log-transformed versions of the variables to save some time, but I just learned a command I want
+      you to know about that makes these calculations a little easier, called transform(). In the Console enter:</p>
+    <p class="rcmd">transform(landsat, ln.band1 = log(band1))</p>
+    <p>You'll see that a column called ln.band1 has been added as the last column in the landsat data set - we identify
+      the data set name as the first argument, and then give the name of a variable that will receive the transformed
+      data (ln.band1) along with the transformation to use. We can do all of the transformations we want to do in a
+      single command - in the Console enter:</p>
+    <p class="rcmd">transform(landsat, ln.band1 = log(band1), ln.band2 = log(band2), ln.band3 = log(band3), ln.band5 =
+      log(band5), ln.band7 = log(band7))</p>
+    <p>You'll see that this appends a log-transformed column for bands 1, 2, 3, 5, and 7 to the end of the landsat data
+      set. All we need to do now is to replace the old landsat data set with the new one that includes these additional
+      columns - in the landsat.transforms chunk enter:</p>
+    <p class="rmd">landsat &lt;- transform(landsat, ln.band1 = log(band1), ln.band2 = log(band2), ln.band3 = log(band3),
+      ln.band5 = log(band5), ln.band7 = log(band7))</p>
+    <p>This puts the output of the transform() command back into the landsat data set, which replaces the old version of
+      landsat with the updated one.</p>
+    <p>3.<strong> Make a list of response variables</strong>. Make a landsat.variables list with the log-transformed
+      bands, and with band4 and band6 un-transformed (chunk landsat.make.response.list) - call the list
+      landsat.variables.</p>
+    <p> </p>
+    <p> 4. <span style="font-weight: bold;">Run the MANOVA</span>. The MANOVA is just like the one you did for the
+      shells (chunk landsat.manova):</p>
+    <p> </p>
+    <p class="rmd">manova(as.matrix(landsat[landsat.variables])~cover.type, data = landsat) -&gt; landsat.manova</p>
+    <p> </p>
+    <span style="font-family: &quot;Open Sans&quot;,sans-serif;">The MANOVA model is fitted and assigned to
+      landsat.manova, and we can get the MANOVA table in the next step.</span><br>
+    <p> </p>
+    <p> </p>
+    <p> 5. <span style="font-weight: bold;">Obtain the MANOVA table and p-value</span>. To generate an ANOVA table with
+      a hypothesis test and p-value, type (landsat.manova, next line):</p>
+    <p> </p>
+    <p class="rmd"> summary(landsat.manova)</p>
+    <p> </p>
+    <p>The MANOVA table looks like this:</p>
+    <p class="rmd">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Pillai approx F num Df
+      den Df&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+      cover.type&nbsp;&nbsp; 3 0.66146&nbsp;&nbsp; 7.7583&nbsp;&nbsp;&nbsp;&nbsp; 21&nbsp;&nbsp;&nbsp; 576 &lt; 2.2e-16
+      ***<br>
+      Residuals&nbsp;
+      196&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      <br>---<br>
+      Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</p>
+    <p>There is a significant difference between at least two of the cover types in at least one of the bands base on
+      this. A more detailed, post-hoc analysis will have to wait until next week.<br>
+    </p>
+    <p> </p>
+    <h2>Bird sexual size dimorphism - paired multivariate analysis</h2>
+    <p>We will be working with data on sexual size dimorphism in birds for this example (the same example used in
+      lecture). Import the "bird_ssd" worksheet from your Excel file, into a data frame called "birds". </p>
+    <p>There are 1,366 species in the data set, but if you click on the birds object in your environment it will open up
+      for you to scroll through. You'll see the data are arranged with male measurements indicated by an m in the column
+      names, and the female measurements indicated by an f.</p>
+    <p>1. <strong>Confirm that the differences are right skewed</strong>. In lecture I showed you histograms of the
+      differences and they were right skewed, but let's check that now that we have the data in hand. </p>
+    <p>First, make a list of the male variables and the female variables that you can use in your calculations. The
+      measurements are mass, wing, tarsus, bill, and tail for each sex, so the male list will be
+      (make.variable.lists.by.sex chunk):</p>
+    <p class="rmd">male.variables &lt;- c("m.mass","m.wing","m.tarsus","m.bill","m.tail")</p>
+    <p>Now make a female.variables list as well (same chunk, next line) - make sure the female variables are in the same
+      order as the male variables, so that you will be subtracting masses from masses, wings from wings, and so on, when
+      you calculate the differences between the sexes.</p>
+    <p>Next, to calculate the differences between males and females use the command (calculate.diffs chunk):</p>
+    <p class="rmd">birds[male.variables] - birds[female.variables] -&gt; diffs</p>
+    <p>If you open diffs you'll see that the male variable names were used to label the output - these are actually
+      differences between the sexes, so the names are not entirely accurate. You can re-name the columns in diffs by
+      making a list of names (one for each of the 5 columns, chunk names.of.diffs):</p>
+    <p class="rmd">diff.names &lt;- c("mass.diff","wing.diff","tarsus.diff","bill.diff","tail.diff")</p>
+    <p>and then assigning them as the names of the columns (chunk rename.columns.diffs):</p>
+    <p class="rmd">colnames(diffs) &lt;- diff.names</p>
+    <p>Now you can use an lapply() command to make your histograms, using diff.names as the first argument
+      (hists.of.diffs chunk). Try this yourself, but <a href="javascript:ReverseDisplay('hist_lapply')">click here to
+        see the command if you get stuck.</a></p>
+    <div id="hist_lapply" style="display:none;">
+      <p style="border-style:solid;padding:10px;">You have your list of columns of differences in diff.names, so you
+        just need to use: <br>
+        <br>
+        <span class="rmd">par(mfrow = c(2,3))</span> <br>
+        <br>
+        <span class="rmd">lapply(diff.names, FUN = function(x) hist(diffs[,x], main = x, xlab = x))</span> <br>
+        <br>
+        Using two rows of three graphs gives you sufficient room for all five histograms.</p>
+    </div>
+    <p>The graphs are pretty strongly right-skewed.</p>
+    <p>2. <strong>Prepare the data for analysis</strong>. Log-transformation is our first choice to treat a
+      right-skewed variable, but we have a problem in that some of the differences are 0 (no dimorphism between sexes -
+      the sexes are <strong>monomorphic</strong>) or negative (males smaller than females - the species has <strong>reverse
+        sexual size dimorphism</strong>). Since the logs of 0 and negative numbers are undefined we can't log-transform
+      the differences, so we'll have to fix the right skew some other way.</p>
+    <p>Another approach would be to take the log of the variables first before taking the differences - since all of the
+      measurements have positive non-zero values all of the logs would be defined. We could then subtract the log of the
+      female measurements from the log of the make measurements to use as our differences. </p>
+    <p>If you recall, the difference between logs is equivalent to the ratio of the numbers on the original data scale,
+      so log(m.mass) - log(f.mass) is the same as log(m.mass/f.mass). The null hypothesis we want to test is that the
+      males equal the females, which would give us male/female ratios of 1. Since the log of 1 is 0 the null hypothesis
+      is still that the mean of the log ratios is equal to 0 - we can do the usual paired analysis on the logs of the
+      ratios of male to female measurements.</p>
+    <p>Calculate the log of the ratios with (in the bird.log.ratios chunk):</p>
+    <p class="rmd">log(birds[male.variables]/birds[female.variables]) -&gt; bird.log.ratios</p>
+    <p>If you open bird.log.ratios you'll see that it too has columns labeled for the male variable names again. Do the
+      column re-naming routine again for bird.log.ratios, but this time use names like "mass.lr", with lr indicating
+      "log ratio" - <a href="javascript:ReverseDisplay('rename_diffs')">click here to see the command if you get stuck.</a></p>
+    <div id="rename_diffs" style="display:none;">
+      <p style="border-style:solid;padding:10px;">Just like you did for diff.names make a list of the names you want to
+        use (names.of.lr chunk): <br>
+        <br>
+        <span class="rmd">lr.names &lt;- c("mass.lr","wing.lr","tarsus.lr","bill.lr","tail.lr")</span> <br>
+        <br>
+        and then use them to rename the columns of logs of ratios:<br>
+        <br>
+        <span class="rmd">colnames(bird.log.ratios) &lt;- lr.names</span> <br>
+        <br>
+      </p>
+    </div>
+    <p>Make the histograms for the bird.log.ratios in the bird.log.ratios.histograms chunk - you've done this a few
+      times, but <a href="javascript:ReverseDisplay('bird_lr_hists')">click here to see the command if you get stuck.</a></p>
+    <div id="bird_lr_hists" style="display:none;">
+      <p style="border-style:solid;padding:10px;">The par() and lapply() commands you need are: <br>
+        <br>
+        <span class="rmd">par(mfrow = c(2,3))</span> <br>
+        <br>
+        <span class="rmd">lapply(lr.names, FUN = function(x) hist(bird.log.ratios[,x], main = x, xlab = x))</span> <br>
+        <br>
+      </p>
+    </div>
+    <p>You'll see that they are, mostly, bell-shaped - since tail.lr ist still skewed we should continue to use Pillai's
+      Trace as our test statistic.</p>
+    <p>3. <strong>Conduct the test</strong>. The general syntax for a paired analysis using manova() is the same as we
+      used for the two-sample test we just used with the shells, but now we want to compare the means of differences
+      against 0 instead of comparing group means to one another.</p>
+    <p>To get a comparison of group means to 0 use (chunk paired.manova): </p>
+    <p class="rmd">manova(as.matrix(bird.log.ratios) ~ 1) -&gt; bird.paired.manova</p>
+    <p>This fits the MANOVA as an intercept-only model. We can see what the intercepts are with (same chunk, next line):</p>
+    <p class="rmd">coef(bird.paired.manova)</p>
+    <p>which will give you:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      mass.lr&nbsp;&nbsp;&nbsp; wing.lr&nbsp; tarsus.lr&nbsp;&nbsp;&nbsp; bill.lr&nbsp;&nbsp;&nbsp; tail.lr<br>
+      (Intercept) 0.04954856 0.03661648 0.02371554 0.03000172 0.04953044</p>
+    <p>When there are no predictors in a model the intercepts are the means of each lr column. Intercepts are tested
+      against 0, so the multivariate intercept test for this model is a test of every mean of the log ratios against 0;
+      the intercept test in an intercept-only model of differences (or log ratios) between pairs of observations is thus
+      a multivariate paired analysis.</p>
+    <p>To get the MANOVA table enter (in paired.manova.test):</p>
+    <p class="rmd">anova(bird.paired.manova)</p>
+    <p>Note that we used anova() instead of summary() here - using summary() on the fitted model suppresses the test of
+      the intercept in the MANOVA table. Normally this is fine since we don't interpret the intercept in a normal
+      MANOVA, but for a paired analysis the intercept test is exactly what we need, and we have to use the anova()
+      function to get it. You will see:</p>
+    <p class="rout">Analysis of Variance Table<br>
+      <br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Pillai approx F num Df den
+      Df&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp; &nbsp;<br>
+      (Intercept)&nbsp;&nbsp;&nbsp; 1 0.43711&nbsp;&nbsp; 211.38&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5&nbsp;&nbsp; 1361 &lt;
+      2.2e-16 ***<br>
+      Residuals&nbsp;&nbsp;
+      1365&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      &nbsp;<br>
+      ---<br>
+      Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</p>
+    <p>The intercept is statistically significant, which means that at least one of the log ratio variables is
+      significantly different from zero - the sexes differ on at least one of the variables.</p>
+    <blockquote>
+      <h3>One-sample testing</h3>
+      <p>A paired MANOVA is a one-sample test of differences between pairs against null values of 0 for every variable.
+        We can use this approach for any one-sample test, but we would need to specify the null values for the
+        variables.</p>
+      <p><img src="onesample.png" alt="One sample" style="float:left; margin-right: 20px" onclick="var images=['onesample.png','onesample_105.png']; changeImage(this, images)">For
+        example, if we wanted to test the hypothesis that male birds are 5% larger than female birds on average, the
+        null hypothesis is that the ratio of male to female measurements is 1.05.</p>
+      <p>This hypothesis is illustrated in the picture to the left - the mean log ratios for each of the five variables
+        are being compared against the null value of log(1.05), which is equal to 0.0488.</p>
+      <p>The problem is that there isn't an argument in the MANOVA function that we can use to specify the null values
+        for the intercepts. But, if you click on the graph you'll see that we can accomplish the same thing by
+        subtracting log(1.05) from the data, and then testing the differences against 0.</p>
+      <br style="clear:both">
+      <p>We can do this within our MANOVA command, with a slight modification from the one we used for the paired
+        analysis. You can try this in the Console:</p>
+      <p class="rconsole">coef(manova(as.matrix(bird.log.ratios - log(1.05)) ~ 1))</p>
+      <p>which gives you:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        mass.lr&nbsp;&nbsp;&nbsp;&nbsp; wing.lr&nbsp;&nbsp; tarsus.lr&nbsp;&nbsp;&nbsp;&nbsp;
+        bill.lr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; tail.lr<br>
+        (Intercept) 0.0007583932 -0.01217368 -0.02507462 -0.01878844 0.0007402792</p>
+      <p>You'll see that the (Intercept) coefficients are now the mean amount of difference from log(1.05) for each
+        variable - that is, they are 0.0488 units less than the intercepts you got above.</p>
+      <p>Wrapping the manova() command inside an anova(), instead of coef(), gives us (still in the Console):</p>
+      <p class="rcmd">anova(manova(as.matrix(bird.log.ratios - log(1.05)) ~ 1))</p>
+      <p>gives you:</p>
+      <p class="rout">Analysis of Variance Table<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Pillai approx F num Df
+        den Df&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp; &nbsp;<br>
+        (Intercept)&nbsp;&nbsp;&nbsp; 1 0.38944&nbsp;&nbsp; 173.62&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 5&nbsp;&nbsp; 1361 &lt;
+        2.2e-16 ***<br>
+        Residuals&nbsp;&nbsp; 1365</p>
+      <p>which shows that the male/female ratios are significantly different from 1.05. This basic approach can be used
+        for any one-sample null that you want to test (although if you had different null values for the means you would
+        need a matrix of those null values to subtract from the data - this simpler approach worked because we were
+        subtracting the same number from every data value).</p>
+    </blockquote>
+    <p> 4. <strong>Interpret the differences</strong>. Remember that the point of the analysis is to compare between
+      the two sexes. Our "differences" are actually the logs of ratios. To interpret how males and females differ we
+      need to back-transform the intercepts (which are the means of the log-ratios for each variable) with
+      (back-transform.mean.diffs chunk):</p>
+    <p class="rmd">exp(bird.paired.manova$coefficients)</p>
+    <p>which gives you:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mass.lr&nbsp; wing.lr
+      tarsus.lr&nbsp; bill.lr&nbsp; tail.lr<br>
+      (Intercept) 1.050797 1.037295&nbsp; 1.023999 1.030456 1.050778</p>
+    <p>The exp() function reverses the log transformation, and gives us the geometric mean ratio of male to female sizes
+      for each variable - in each case on average males are larger than females, because the ratios are over 1. Since
+      these are male data divided by female data, the ratios tell you how many times larger the males are than the
+      females - males are between 2.3 and 5.1% larger than females on all of the variables. Since these are multiples
+      they don't have units.</p>
+    <h2>Assignment </h2>
+    <p> That's it! Knit and upload your Word file to the course web site.</p>
+    <p></p>
+    <p></p>
+    <p> </p>
+  
+
+</body></html>

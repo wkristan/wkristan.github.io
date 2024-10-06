@@ -1,0 +1,275 @@
+---
+title: "DFA"
+author: "Your Name"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Discriminant analysis
+
+We will be using Discriminant Function Analysis (DFA) to help us understand the multivariate differences between shells, and to predict cover type from LandSat imagery data.
+
+### Shell data - understanding multivariate differences between groups
+
+To begin, import the shells data:
+
+```{r import.shells.data}
+
+
+
+```
+
+Load the MASS library:
+
+```{r load.MASS.library}
+
+
+
+```
+
+
+Conduct the Linear Discriminant Analysis (lda, which is what the MASS package calls Discriminant Function Analysis):
+
+```{r shells.lda}
+
+
+
+```
+
+#### Question: are all of the coefficients the same sign? What does this tell you about whether the shells are just different in size, or differ in shape?
+
+> 
+
+Use predict() to obtain LD1 scores, which we will use to calculate loadings:
+
+```{r shells.predict.lda}
+
+
+
+```
+
+Make a vector of response variable names:
+
+```{r shell.response.variables}
+
+
+
+```
+
+Calculate loadings (i.e. correlations between the data and the LD1 scores):
+
+```{r shells.loadings}
+
+
+
+```
+
+#### Question: which variables are most strongly correlated with LD1? Are the signs the same for the loadings as for the coefficients?
+
+> 
+
+
+Plot the histograms of scores for each shell.type group:
+
+```{r shells.plot.scores}
+
+
+```
+
+#### Question: is there any overlap in shell morphology based on these LD1 axis scores?
+
+> 
+
+#### Question: how do white shells compare with calico shells morphologically, based on the loadings?
+
+> 
+
+#### Question: compare the histograms of LD1 scores you just produced here to the smoothed histograms of each individual variable at the beginning of the online instructions. Did we achieve better separation between the groups by using a multivariate method than was evident one variable at a time? Explain.
+
+> 
+
+Obtain a confusion matrix that compares actual shell types to predicted shell types:
+
+```{r shells.confusion.matrix}
+
+
+
+```
+
+#### Question: do the white shells and calico shells separate completely, or is there overlap in their morphology? How can you tell (what would the confusion matrix look like if we couldn't tell them apart)?
+
+> 
+
+## LandSat Data - classifying cover types with reflectances
+
+Import the data:
+
+```{r import.landsat}
+
+
+
+```
+
+Transform all but band4 and band6
+
+```{r transform.bands}
+
+
+
+```
+
+
+Make a list of the variables:
+
+```{r landsat.variable.list}
+
+
+
+```
+
+Make a column that has abbreviations of the cover types:
+
+```{r landsat.row.names.abbreviated.cover.types}
+
+
+
+```
+
+
+Run the LDA:
+
+```{r landsat.lda}
+
+
+
+```
+
+#### Question: why are there three LD axes? Do we need all three to tell the cover types apart, based on the variance explained (i.e. the Proportion of trace)?
+
+> 
+
+Plot the scatterplot matrix of scores:
+
+```{r landsat.plot.scores}
+
+
+
+```
+
+#### Question: does it look like the cover types separate completely on any of the LD axes? How can you tell?
+
+> 
+
+Predict the cover types:
+
+```{r landsat.predict.lda}
+
+
+
+```
+
+Make a biplot of LD1 and LD2 scores, with the coefficients for the bands plotted as vectors:
+
+```{r landsat.biplot}
+
+
+
+```
+
+#### Question: based on the coefficients, which variables are primarily responsible for the position of LD1? Which are responsible for the position of LD2?
+
+> 
+
+Make histograms for LD1 and LD2:
+
+```{r landsat.ldahistograms, fig.height = 8}
+
+
+
+```
+
+#### Question: based on the histograms does it look like the cover types will separate? Do some separate better on LD1 than LD2?
+
+> 
+
+Calculate loadings:
+
+```{r landsat.loadings}
+
+
+
+```
+
+#### Question: which bands have the strongest correlation with LD1? Which have the strongest correlation with LD2?
+
+> 
+
+#### Question: all of the bands are negatively correlated with LD2. In what sense does this mean that LD2 is a "brightness" indicator for these data?
+
+> 
+
+To get a test of significance for the LD axes individually we can test for differences between the cover types in the LD scores:
+
+```{r ld.significance.test}
+
+
+
+```
+
+Make a biplot of scores with loadings as the vectors:
+
+```{r landsat.biplot.scores.and.loadings}
+
+
+
+```
+
+#### Question: the biplot using loadings is quite different from the biplot using coefficients. Why?
+
+> 
+
+Make a confusion matrix:
+
+```{r landsat.convusion.matrix}
+
+
+
+```
+
+#### Question: do the cover types separate completely, or do they have overlapping values on the seven bands? How do you know?
+
+> 
+
+Next you will calculate Cohen's kappa using your own function. Follow the instructions online to write the function in a separate script file.
+
+When your script is complete and saved to your project folder as cohens_kappa.R, source the file:
+
+```{r source.cohens_kappa.R}
+
+
+
+```
+
+Calculate kappa using your function:
+
+```{r calculate.kappa}
+
+
+
+```
+
+#### Question: is this considered a good value for kappa? To get a higher value what would we need to be true about the amount of separation between the cover types?
+
+> 
+
+#### Question: the purpose of using LDA on the Landsat data is to use satellite data to map land cover. The MANOVA told us that cover types were significantly different in their centroids, but the predictive accuracy of the lda() on the same data was poor. Which matters more, the highly significant p-value, or the low predictive accuracy, given that the purpose is to classify cover type?
+
+> 
+

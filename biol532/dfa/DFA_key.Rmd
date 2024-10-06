@@ -1,0 +1,290 @@
+---
+title: "DFA"
+author: "KEY"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Discriminant analysis
+
+We will be using Discriminant Function Analysis (DFA) to help us understand the multivariate differences between shells, and to predict cover type from LandSat imagery data.
+
+### Shell data - understanding multivariate differences between groups
+
+To begin, import the shells data:
+
+```{r import.shells.data}
+
+library(readxl)
+read_excel("multivariate_data_fixed.xlsx","shells") -> shells
+
+```
+
+Load the MASS library:
+
+```{r load.MASS.library}
+
+library(MASS)
+
+```
+
+
+Conduct the Linear Discriminant Analysis (lda, which is what the MASS package calls Discriminant Function Analysis):
+
+```{r shells.lda}
+
+lda(shell.type ~ major.axis + minor.axis + surface.len + height + depth + ln.weight, data = shells) -> shells.lda
+
+shells.lda
+
+```
+
+#### Question: are all of the coefficients the same sign? What does this tell you about whether the shells are just different in size, or differ in shape?
+
+> No, height and depth are positive and the rest are negative.
+
+Use predict() to obtain LD1 scores, which we will use to calculate loadings:
+
+```{r shells.predict.lda}
+
+predict(shells.lda) -> shells.pred
+
+shells.pred
+
+```
+
+Make a vector of response variable names:
+
+```{r shell.response.variables}
+
+shells.responses <- c("major.axis","minor.axis","surface.len","height","depth","ln.weight")
+
+```
+
+Calculate loadings (i.e. correlations between the data and the LD1 scores):
+
+```{r shells.loadings}
+
+cor(shells[,shells.responses], shells.pred$x) -> shells.loadings
+
+shells.loadings
+
+```
+
+#### Question: which variables are most strongly correlated with LD1? Are the signs the same for the loadings as for the coefficients?
+
+> Yes, the signs are all the same (this won't always be true, but they are the same for this data set).
+
+
+Plot the histograms of scores for each shell.type group:
+
+```{r shells.plot.scores}
+
+plot(shells.lda)
+
+```
+
+#### Question: is there any overlap in shell morphology based on these LD1 axis scores?
+
+> There doesn't appear to be - the histogram of LD1 scores for the Calico shells seems to end below 0 and the histogram for the White group starts well above zero.
+
+#### Question: how do white shells compare with calico shells morphologically, based on the loadings?
+
+> Since white shells have big LD1 scores, they are taller and deeper than calico shells, but calico shells are heavier, have longer major and minor axes, and bigger suface lengths than white shells.
+
+#### Question: compare the histograms of LD1 scores you just produced here to the smoothed histograms of each individual variable at the beginning of the online instructions. Did we achieve better separation between the groups by using a multivariate method than was evident one variable at a time? Explain.
+
+> Yes, there is a much better separation between these histograms than between the species on any one of the variables.
+
+Obtain a confusion matrix that compares actual shell types to predicted shell types:
+
+```{r shells.confusion.matrix}
+
+table(shells.pred$class, shells$shell.type, dnn = c("Predicted","Observed"))
+
+```
+
+#### Question: do the white shells and calico shells separate completely, or is there overlap in their morphology? How can you tell (what would the confusion matrix look like if we couldn't tell them apart)?
+
+> As we expected from the histograms, the groups separate completely. All of the Calico shells are predicted to be Calico, and all the White shells are predicted to be White.
+
+## LandSat Data - classifying cover types with reflectances
+
+Import the data:
+
+```{r import.landsat}
+
+data.frame(read_excel("multivariate_data_fixed.xlsx","landsat")) -> landsat
+
+```
+
+Transform all but band4 and band6
+
+```{r transform.bands}
+
+transform(landsat, log.band1 = log(band1), log.band2 = log(band2), log.band3 = log(band3), log.band5 = log(band5), log.band7 = log(band7)) -> landsat
+
+```
+
+
+Make a list of the variables:
+
+```{r landsat.variable.list}
+
+landsat.variables <- c("log.band1","log.band2","log.band3","band4","log.band5","band6","log.band7")
+
+```
+
+Make a column that has abbreviations of the cover types:
+
+```{r landsat.row.names.abbreviated.cover.types}
+
+landsat$ct <- as.factor(abbreviate(landsat$cover.type))
+
+```
+
+
+Run the LDA:
+
+```{r landsat.lda}
+
+lda(ct ~ log.band1 + log.band2 + log.band3 + band4 + log.band5 + band6 + log.band7, data=landsat) -> landsat.lda
+landsat.lda
+
+```
+
+#### Question: why are there three LD axes? Do we need all three to tell the cover types apart, based on the variance explained (i.e. the Proportion of trace)?
+
+> You will get one less LD axes than there are groups - with four groups you get three axes.
+
+Plot the scatterplot matrix of scores:
+
+```{r landsat.plot.scores}
+
+plot(landsat.lda, col = as.integer(landsat$ct))
+
+```
+
+#### Question: does it look like the cover types separate completely on any of the LD axes? How can you tell?
+
+> No, there is a lot of overlap in the colors that indicate different cover types.
+
+Predict the cover types:
+
+```{r landsat.predict.lda}
+
+predict(landsat.lda) -> landsat.pred
+
+```
+
+Make a biplot of LD1 and LD2 scores, with the coefficients for the bands plotted as vectors:
+
+```{r landsat.biplot}
+
+biplot(landsat.pred$x, landsat.lda$scaling, cex = 0.7, xlabs = landsat$ct)
+
+```
+
+#### Question: based on the coefficients, which variables are primarily responsible for the position of LD1? Which are responsible for the position of LD2?
+
+> The variables that reach the furthest right or left are log.band7 and log.band5. The ones that extend furthest top to bottom are log.band1 and log.band2.
+
+Make histograms for LD1 and LD2:
+
+```{r landsat.ldahistograms, fig.height = 8}
+
+ldahist(landsat.pred$x[,1], landsat$ct)
+ldahist(landsat.pred$x[,2], landsat$ct)
+ldahist(landsat.pred$x[,3], landsat$ct)
+
+```
+
+#### Question: based on the histograms does it look like the cover types will separate? Do some separate better on LD1 than LD2?
+
+> No, there is a lot of overlap in the histograms for both LD1 and LD2.
+
+Calculate loadings:
+
+```{r landsat.loadings}
+
+cor(landsat[landsat.variables], landsat.pred$x) -> landsat.loadings
+
+landsat.loadings
+
+```
+
+#### Question: which bands have the strongest correlation with LD1? Which have the strongest correlation with LD2?
+
+> The strongest correlations with LD1 are band6 and log.band1. The strongest correlations with LD2 are log.band1, log.band2, log.band3, and band6.
+
+#### Question: all of the bands are negatively correlated with LD2. In what sense does this mean that LD2 is a "brightness" indicator for these data?
+
+> The reflectance is high for all of them when LD2 scores are low, so brighter pixels have low LD2 scores and dark pixels have high LD2 scores.
+
+To get a test of significance for the LD axes individually we can test for differences between the cover types in the LD scores:
+
+```{r ld.significance.test}
+
+summary(aov(landsat.pred$x[,1] ~ ct, data = landsat))
+summary(aov(landsat.pred$x[,2] ~ ct, data = landsat))
+summary(aov(landsat.pred$x[,3] ~ ct, data = landsat))
+
+```
+
+Make a biplot of scores with loadings as the vectors:
+
+```{r landsat.biplot.scores.and.loadings}
+
+biplot(landsat.pred$x, landsat.loadings, cex = 0.5)
+
+```
+
+#### Question: the biplot using loadings is quite different from the biplot using coefficients. Why?
+
+> The coefficients are like regression slopes, and they are estimated as a group. Correlations between the variables are accounted for, and this can change the sign of the coefficients. Loadings are calculated one at a time, and the correlations between the bands are not accounted for. The loadings are better for understanding what pixels with high or low scores on LD1 or LD2 would look like, but the coefficients are used to calculate the scores in the first place.
+
+Make a confusion matrix:
+
+```{r landsat.convusion.matrix}
+
+table(landsat.pred$class, landsat$ct, dnn=c("Predicted","Observed")) -> landsat.confusion
+landsat.confusion
+```
+
+#### Question: do the cover types separate completely, or do they have overlapping values on the seven bands? How do you know?
+
+> No, they are overlapping because there are a lot of mis-classifications.
+
+Next you will calculate Cohen's kappa using your own function. Follow the instructions online to write the function in a separate script file.
+
+When your script is complete and saved to your project folder as cohens_kappa.R, source the file:
+
+```{r source.cohens_kappa.R}
+
+source("cohens_kappa.R")
+
+```
+
+Calculate kappa using your function:
+
+```{r calculate.kappa}
+
+kappa.biol532(landsat.confusion)
+
+```
+
+#### Question: is this considered a good value for kappa? To get a higher value what would we need to be true about the amount of separation between the cover types?
+
+> No, this means we're only doing 40% better than random chance. We would like kappa to be 0.7 or higher.
+
+#### Question: the purpose of using LDA on the Landsat data is to use satellite data to map land cover. The MANOVA told us that cover types were significantly different in their centroids, but the predictive accuracy of the lda() on the same data was poor. Which matters more, the highly significant p-value, or the low predictive accuracy, given that the purpose is to classify cover type?
+
+> 
+

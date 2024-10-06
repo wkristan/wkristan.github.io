@@ -1,0 +1,377 @@
+---
+title: "Data screening"
+author: "KEY"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Screening data for use in multivariate analysis
+
+First, import the shells data.
+
+```{r import.shells}
+
+library(readxl)
+read_excel("multivariate_data_f22.xlsx","shells") -> shells
+
+```
+
+Check if the file has complete data (no missing cells):
+
+```{r complete.cases.shells}
+
+table(complete.cases(shells))
+
+```
+
+
+## Initial graphical screening
+
+We will need to make boxplots, normal probability plots, and histograms for each variable to check for outliers and distributional issues.
+
+Since we are screening multiple variables we will lay out the plots in a single multiple-panel graph so that we can more easily look at all of the variables at once. Set up the graphical parameters (par()) for 2 rows of graphs with 3 columns, and then plot the boxplots (don't worry about the results='hide' in the curly braces, this just suppresses text output from the graph functions you use, but the graphs are still displayed).
+
+```{r shell.boxplots, results='hide'}
+
+library(car)
+par(mfrow=c(2,3))
+boxplot(major.axis ~ shell.type, data = shells, main = "major.axis")
+boxplot(minor.axis ~ shell.type, data = shells, main = "minor.axis")
+boxplot(surface.len ~ shell.type, data = shells, main = "surface.length")
+boxplot(height ~ shell.type, data = shells, main = "height")
+boxplot(depth ~ shell.type, data = shells, main = "depth")
+boxplot(weight ~ shell.type, data = shells, main = "weight")
+
+```
+
+#### Question: how can you detect a skewed distribution in a boxplot?
+
+> If the median is not in the middle of the box, or the whiskers are different lengths the data are skewed.
+
+For the normal probability plots and histograms we will need to calculate residuals, which will be easier to do if we make a vector that has the names of the numeric variables in it:
+
+```{r make.shell.var.list}
+
+shell.vars <- c("major.axis", "minor.axis", "surface.len", "height", "depth", "weight")
+
+```
+
+We will want to use residuals for normality plots to get rid of differences between group means. We will get those by fitting a MANOVA first, and then extracting residuals from the fitted model.
+
+```{r residuals.from.MANOVA}
+
+manova(as.matrix(shells[shell.vars]) ~ shell.type, data = shells) -> shells.manova
+data.frame(residuals(shells.manova)) -> shells.resid
+
+```
+
+Now make normal probability plots with the residuals:
+
+```{r shell.qqplot, results='hide'}
+
+library(car)
+par(mfrow=c(2,3))
+qqPlot(shells.resid$major.axis, distribution = "norm", main = "major.axis", ylab = "major.axis")
+qqPlot(shells.resid$minor.axis, distribution = "norm", main = "minor.axis", ylab = "minor.axis")
+qqPlot(shells.resid$surface.len, distribution = "norm", main = "surface.len", ylab = "surface.len")
+qqPlot(shells.resid$height, distribution = "norm", main = "height", ylab = "height")
+qqPlot(shells.resid$depth, distribution = "norm", main = "depth", ylab = "depth")
+qqPlot(shells.resid$weight, distribution = "norm", main = "weight", ylab = "weight")
+
+```
+
+#### Question: how do you know from a normal probability plot if the variable is normally distributed?
+
+> The points follow the diagonal line when the data are normally distributed.
+
+#### Question: which variable is the most right-skewed, according to your boxplots and normal probability plots?
+
+> Weight is right skewed.
+
+We can check the distribution of the residuals using histograms as well:
+
+```{r shells.histo, results='hide'}
+
+par(mfrow = c(2,3))
+hist(shells.resid$major.axis, main = "Major axis", xlab = "major.axis")
+hist(shells.resid$minor.axis, main = "Minor axis", xlab = "minor.axis")
+hist(shells.resid$surface.len, main = "Surface length", xlab = "surface.len")
+hist(shells.resid$height, main = "Height", xlab = "height")
+hist(shells.resid$depth, main = "Depth", xlab = "depth")
+hist(shells.resid$weight, main = "Weight", xlab = "weight")
+
+```
+
+#### Question: is the same variable you thought was right-skewed based on boxplot and normal probability plot also right skewed as a histogram? How can you tell skew from a histogram?
+
+> Yes, weight is still right skewed.
+
+Next we can make a scatterplot matrix that puts scatterplots in the lower triangle, and correlations in the upper triangle. Run this code chunk to add the panel.cor() function into your environment:
+
+```{r panel.cor.function}
+
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+
+```
+
+We can make the scatterplot matrix using the pairs() function:
+
+```{r pairs.plot}
+
+pairs(shells[shell.vars], upper.panel = panel.cor, col = factor(shells$shell.type))
+
+```
+
+#### Question: which variable is involved in the plots that show non-linear relationships?
+
+> Weight has non-linear relationships with other variables.
+
+Weight seems to be right-skewed and non-linearly related to other variables, so let's try log-transforming it:
+
+```{r log.transform.weight}
+
+shells$ln.weight <- log(shells$weight)
+
+```
+
+Add the residuals for ln.weight to shells.resid:
+
+```{r log.transformed.residuals}
+
+
+shells.resid$ln.weight <- residuals(aov(ln.weight ~ shell.type, data = shells))
+
+```
+
+
+Now make a boxplot and qqPlot for ln.weight.
+
+```{r replot.ln.weight, results='hide'}
+
+par(mfrow = c(2,2))
+boxplot(ln.weight ~ shell.type, data = shells)
+qqPlot(shells.resid$ln.weight, dist = "norm")
+hist(shells.resid$ln.weight, main = "Log weight")
+
+
+
+```
+
+#### Question: did log-transforming weight help with the distribution?
+
+> Yes, weight now looks bell-shaped.
+
+Make a list of the variables you will use in the pairs() plot, with ln.weight taking the place of weight:
+
+```{r shell.variables}
+
+shell.vars[6] <- "ln.weight"
+
+```
+
+Plot the scatterplot matrix using log.weight instead of weight.
+
+```{r pairs.plot.log.weight}
+
+pairs(shells[shell.vars], col = factor(shells$shell.type), upper.panel = panel.cor)
+
+```
+
+#### Question: did the transformation straighten out the curved relationships with weight? Did it introduce any new issues that weren't there before?
+
+> Yes, the relationships now look linear.
+
+## Multivariate distribution check
+
+Now we will get the residuals from a MANOVA of the shells data, and check if their Mahalanobis distances follow the Chi-square distribution, like we expect them to.
+
+Calculate the means of the residuals (these should all be 0 or very close to it):
+
+```{r means.of.residuals}
+
+colMeans(shells.resid[shell.vars]) -> shell.means
+
+```
+
+The covariance matrix of the residuals next:
+
+```{r covariance.matrix}
+
+var(shells.resid[shell.vars]) -> shell.cov
+
+```
+
+Mahalanobis distances are calculated from the residuals, the vector of means, and the covariance matrix:
+
+```{r mahalanobis.distances}
+
+mahalanobis(shells.resid[shell.vars], shell.means, shell.cov) -> shells$mahal
+
+```
+
+Compare the Mahalanobis distances to the Chi-square distribution:
+
+```{r mahalanobis.vs.chisquare, results='hide'}
+
+library(car)
+
+qqPlot(shells$mahal, distribution = "chisq", df = 6, id = list(n = 8), ylab = "Mahalanobis distance")
+
+```
+
+#### Question: based on the graph, are there multivariate outliers?
+
+> Yes, there are still multivariate outliers, because there are points outside of the confidence bands.
+
+Make a parallel coordinates plot to help identify which variables are responsible for those big Mahalanobis distance values:
+
+```{r ggparcoord}
+
+library(GGally)
+
+ggparcoord(shells, columns = c(3:7,9), alphaLines = 0.2, groupColumn = "shell.type") + facet_wrap(~shell.type) + theme(legend.position = "none", axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+
+```
+
+#### Question: for the observations that are out of the ordinary, which variables are responsible? Look for lines that are in the middle of the distribution for most of the variables, but have one or more measurements that are really high or low.
+
+>
+
+#### Question: we still have the shells, what could we do to fix the problem? If we didn't have the shells anymore what would our options be?
+
+>
+
+## Teeth
+
+Repeat the steps on the buffalo teeth.
+
+Import the data:
+
+```{r import.teeth}
+
+data.frame(read_excel("multivariate_data_f22.xlsx","teeth")) -> teeth
+
+```
+
+Plot boxplots and normal probability plots - note that there is no grouping variable for the teeth, so you don't need to split the variables by groups for the boxplots this time. Put the variable names into an object called teeth.names, and then use lapply() to make the plots:
+
+```{r boxplots.teeth, results='hide'}
+
+c("weight", "length", "width.crown", "width.root", "depth", "surface.len", "thickness") -> teeth.names
+
+par(mfrow = c(2,4))
+lapply(teeth.names, FUN = function(x) boxplot(teeth[,x], main = x, ylab = x))
+
+```
+
+Now use lapply() to get normal probability plots:
+
+```{r qqPlots.teeth, results='hide'}
+
+par(mfrow = c(2,4))
+lapply(teeth.names, FUN = function(x) qqPlot(teeth[,x], distribution = "norm", main = x, ylab = x))
+
+```
+
+Now use an lapply() to get histograms:
+
+```{r teeth.histograms, results='hide'}
+
+par(mfrow = c(2,4))
+lapply(teeth.names, FUN = function(x) hist(teeth[,x], main = x, xlab = x))
+
+```
+
+Scatterplot matrix (no need to color by groups this time):
+
+```{r pairs.plot.teeth}
+
+pairs(teeth[teeth.names], upper.panel = panel.cor)
+
+```
+
+### Log transformation - only if needed, skip if not needed
+
+If there are any right-skewed variables log-transform them:
+
+```{r log.transform.teeth}
+
+
+
+```
+
+Re-do the boxplots and normal probability plots using the variables you log-transformed in place of their un-transformed versions:
+
+```{r boxplots.normal.probability.plots.log.teeth}
+
+
+```
+
+Re-do the scatterplot matrix using the log-transformed variables:
+
+```{r scatterplot.matrix.log.teeth}
+
+
+```
+
+### Mahalanobis distances for teeth data
+
+Calculate Mahalanobis distances - since there are no groups in the teeth data you just need to use colMeans on the variables, and var() to get the covariance matrix for the variables (no need to do a MANOVA and extract residuals):
+
+```{r colMeans.and.var.teeth}
+
+colMeans(teeth[teeth.names]) -> teeth.means
+var(teeth[teeth.names]) -> teeth.covar
+
+
+```
+
+Calculate the Mahalanobis distances and add them as a variable in your teeth data:
+
+```{r mahalanobis.distances.to.teeth.dataset}
+
+mahalanobis(teeth[teeth.names], teeth.means, teeth.covar) -> teeth$mahal
+
+```
+
+Do a qqPlot on the Mahalanobis distances (remember, df is equal to the number of variables):
+
+```{r mahalanobis.quantile.plot.teeth}
+
+qqPlot(teeth$mahal, df = 7, dist = "chisq", id = list(n = 10))
+
+```
+
+#### Question: are there multivariate outliers? Could you see them in the other plots, or was the Mahalanobis distance needed to identify them?
+
+> Yes, several.
+
+Make a parallel coordinates plot for the teeth data:
+
+```{r teeth.parallel}
+
+ggparcoord(teeth, columns = c(2:8), alphaLines = 0.2) + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+```
+
+#### Question: which variables are producing unusual measurements in the teeth data?
+
+>
+
+

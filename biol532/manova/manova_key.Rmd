@@ -1,0 +1,227 @@
+---
+title: "MANOVA"
+author: "KEY"
+date: "2/18/2020"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## MANOVA of shell measurements by shell type
+
+Import the sheet "shells" from "multivariate_data_fixed.xlsx", into a data frame called "shells":
+
+```{r import.shells}
+
+library(readxl)
+data.frame(read_excel("multivariate_data_fixed.xlsx", "shells")) -> shells
+
+```
+
+Make a vector with the names of the response variables in it:
+
+```{r shells.response.variables}
+
+shell.variables <- c("major.axis","minor.axis","surface.len","height","depth","ln.weight")
+
+```
+
+Conduct the MANOVA:
+
+```{r shells.manova}
+
+manova(as.matrix(shells[shell.variables]) ~ shell.type, data = shells) -> shells.manova
+summary(shells.manova)
+
+```
+
+#### Question: are the shell types different? How do you know?
+
+> Yes they are, the p-value is less than 0.05, and there are only two shell types.
+
+#### Question: can you tell from this MANOVA table if the shells are different on every variable, or is it possible that they are only different on some variables but not all of them?
+
+> No, you can only tell that they are on at least one variable.
+
+## MANOVA of the LandSat data by cover type
+
+Import the LandSat data.
+
+```{r import.landsat}
+
+data.frame(read_excel("multivariate_data_fixed.xlsx", "landsat")) -> landsat
+
+```
+
+Transform all of the bands except band4 and band6:
+
+```{r landsat.transforms}
+
+landsat <- transform(landsat, ln.band1 = log(band1), ln.band2 = log(band2), ln.band3 = log(band3), ln.band5 = log(band5), ln.band7 = log(band7))
+
+```
+
+Make a list of response variables for the landsat dataset:
+
+```{r landsat.make.response.list}
+
+landsat.variables <- c("ln.band1","ln.band2","ln.band3","band4","ln.band5","band6","ln.band7")
+
+```
+
+Run the MANOVA and get the MANOVA table:
+
+```{r landsat.manova}
+
+manova(as.matrix(landsat[landsat.variables])~cover.type, data = landsat) -> landsat.manova
+
+summary(landsat.manova)
+
+```
+
+#### Question: are cover types different in their reflectances across these bands? How do you know?
+
+> Yes, the p-value is less than 0.05.
+
+#### Question: can you tell which cover types are different from these results?
+
+> You cannot tell, since there are more than 2 of them.
+
+## Paired comparison of bird sexual size dimorphism
+
+Import the birds data:
+
+```{r import.bird_ssd}
+
+data.frame(read_excel("multivariate_data_fixed.xlsx", "bird_ssd")) -> birds
+
+```
+
+Make lists of the variables for each sex:
+
+```{r make.variable.lists.by.sex}
+
+male.variables <- c("m.mass","m.wing","m.tarsus","m.bill","m.tail")
+female.variables <- c("f.mass","f.wing","f.tarsus","f.bill","f.tail")
+
+```
+
+Make a matrix of differences:
+
+```{r calculate.diffs}
+
+birds[male.variables] - birds[female.variables] -> diffs
+
+```
+
+Make a list of names for the diffs:
+
+```{r names.of.diffs}
+
+diff.names <- c("mass.diff","wing.diff","tarsus.diff","bill.diff","tail.diff")
+
+```
+
+And then assign the names of the columns to diffs:
+
+```{r rename.columns.diffs}
+
+colnames(diffs) <- diff.names
+
+```
+
+Make histograms of the diffs:
+
+```{r hists.of.diffs, results='hide'}
+
+par(mfrow = c(2,3))
+lapply(diff.names, FUN = function(x) hist(diffs[,x], main = x, xlab = x))
+
+```
+
+#### Question: based on the histograms would we meet the (multivariate) normality assumption? How can you tell?
+
+> No, the differences are right skewed.
+
+Calculate the log of the ratios of male to female sizes:
+
+```{r bird.log.ratios}
+
+log(birds[male.variables]/birds[female.variables]) -> bird.log.ratios
+
+```
+
+Make a list of names for the log ratios:
+
+```{r names.of.lr}
+
+lr.names <- c("mass.lr","wing.lr","tarsus.lr","bill.lr","tail.lr")
+
+```
+
+Rename the columns in bird.log.ratios:
+
+```{r rename.lr.columns}
+
+colnames(bird.log.ratios) <- lr.names
+
+```
+
+Plot the histograms of bird.log.ratios:
+
+```{r bird.log.ratios.histograms, results='hide'}
+
+par(mfrow = c(2,3))
+lapply(lr.names, FUN = function(x) hist(bird.log.ratios[,x], main = x, xlab = x))
+
+```
+
+#### Question: are the distributions of log ratios more bell-shaped than the distribution of differences?
+
+> Yes, they are better, although tail.lr is still pretty right skewed.
+
+#### Question: why couldn't we just use the log of the differences to fix the right-skew?
+
+> Many of the differences are 0, and the log of 0 is undefined.
+
+#### Question: are males always bigger in birds, according to these histograms? How do you know?
+
+> No, because there are some negative log ratios.
+
+Conduct the paired analysis as an intercept-only model - this will test the means of the log-ratios against 0, which will give us the multivariate paired analysis we are looking for:
+
+```{r paired.manova}
+
+manova(as.matrix(bird.log.ratios) ~ 1) -> bird.paired.manova
+coef(bird.paired.manova)
+
+```
+
+Get the paired analysis test output:
+
+```{r paired.manova.test}
+
+anova(bird.paired.manova)
+
+```
+
+#### Question: are the sexes the same size on average? How do you know?
+
+> No, because the p-value is less than 0.05.
+
+Back-transform the mean differences:
+
+```{r back-transform.mean.diffs}
+
+exp(bird.paired.manova$coefficients)
+
+```
+
+#### Question: which sex is generally bigger? How do you know?
+
+> The males are generally bigger, because the ratios are greater than 1 on average.

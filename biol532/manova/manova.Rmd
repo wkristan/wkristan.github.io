@@ -1,0 +1,219 @@
+---
+title: "MANOVA"
+author: "Your Name"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## MANOVA of shell measurements by shell type
+
+Import the sheet "shells" from "multivariate_data_fixed.xlsx", into a data frame called "shells":
+
+```{r import.shells}
+
+
+
+```
+
+Make a vector with the names of the response variables in it:
+
+```{r shells.response.variables}
+
+
+
+```
+
+Conduct the MANOVA:
+
+```{r shells.manova}
+
+
+
+```
+
+#### Question: are the shell types different? How do you know?
+
+> 
+
+#### Question: can you tell from this MANOVA table if the shells are different on every variable, or is it possible that they are only different on some variables but not all of them?
+
+> 
+
+## MANOVA of the LandSat data by cover type
+
+Import the LandSat data.
+
+```{r import.landsat}
+
+
+
+```
+
+Transform all of the bands except band4 and band6:
+
+```{r landsat.transforms}
+
+
+
+```
+
+Make a list of response variables for the landsat dataset:
+
+```{r landsat.make.response.list}
+
+
+
+```
+
+Run the MANOVA and get the MANOVA table:
+
+```{r landsat.manova}
+
+
+
+```
+
+#### Question: are cover types different in their reflectances across these bands? How do you know?
+
+> 
+
+#### Question: can you tell which cover types are different from these results?
+
+> 
+
+## Paired comparison of bird sexual size dimorphism
+
+Import the birds data:
+
+```{r import.bird_ssd}
+
+
+
+```
+
+Make lists of the variables for each sex:
+
+```{r make.variable.lists.by.sex}
+
+
+
+```
+
+Make a matrix of differences:
+
+```{r calculate.diffs}
+
+
+
+```
+
+Make a list of names for the diffs:
+
+```{r names.of.diffs}
+
+
+
+```
+
+And then assign the names of the columns to diffs:
+
+```{r rename.columns.diffs}
+
+
+
+```
+
+Make histograms of the diffs:
+
+```{r hists.of.diffs, results='hide'}
+
+
+
+```
+
+#### Question: based on the histograms would we meet the (multivariate) normality assumption? How can you tell?
+
+> 
+
+Calculate the log of the ratios of male to female sizes:
+
+```{r bird.log.ratios}
+
+
+
+```
+
+Make a list of names for the log ratios:
+
+```{r names.of.lr}
+
+
+
+```
+
+Rename the columns in bird.log.ratios:
+
+```{r rename.lr.columns}
+
+
+
+```
+
+Plot the histograms of bird.log.ratios:
+
+```{r bird.log.ratios.histograms, results='hide'}
+
+
+
+```
+
+#### Question: are the distributions of log ratios more bell-shaped than the distribution of differences?
+
+> 
+
+#### Question: why couldn't we just use the log of the differences to fix the right-skew?
+
+> 
+
+#### Question: are males always bigger in birds, according to these histograms? How do you know?
+
+> 
+
+Conduct the paired analysis as an intercept-only model - this will test the means of the log-ratios against 0, which will give us the multivariate paired analysis we are looking for:
+
+```{r paired.manova}
+
+
+
+```
+
+Get the paired analysis test output:
+
+```{r paired.manova.test}
+
+
+
+```
+
+#### Question: are the sexes the same size on average? How do you know?
+
+> 
+
+Back-transform the mean differences:
+
+```{r back-transform.mean.diffs}
+
+
+
+```
+
+#### Question: which sex is generally bigger? How do you know?
+
+> 

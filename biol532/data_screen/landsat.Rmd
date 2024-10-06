@@ -1,0 +1,163 @@
+---
+title: "Landsat demo"
+author: "Bill Kristan"
+date: "`r date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## LandSat
+
+Import the data:
+
+```{r import.landSat}
+
+library("readxl")
+data.frame(read_excel("multivariate_data_f22.xlsx","landsat")) -> landsat
+
+```
+
+
+Get a list of names of the variables:
+
+```{r landsat.var.names}
+
+landsat.vars <- c("band1","band2","band3","band4","band5","band6","band7")
+
+```
+
+
+Plot boxplots - use cover.type as the grouping variable for the boxplots:
+
+```{r boxplots.landsat}
+
+par(mfrow = c(2,4))
+lapply(landsat.vars, FUN = function(x) boxplot(landsat[,x] ~ cover.type, data = landsat, main = x, ylab = "Reflectance"))
+
+```
+
+Plot normal probability plots - get residuals first:
+
+```{r landsat.residuals.from.manova}
+
+residuals(manova(as.matrix(landsat[landsat.vars]) ~ cover.type, data = landsat)) -> landsat.residuals
+          
+```
+
+Now use the residuals to make a qqPlot for each variable:
+
+```{r qqplot.landsat.residuals}
+
+library(car)
+par(mfrow = c(2,4))
+lapply(landsat.vars, FUN = function(x) qqPlot(landsat.residuals[,x], dist = "norm", main = x, ylab = x))
+
+```
+
+Make histograms of the residuals:
+
+```{r histogram.landsat.residuals}
+
+par(mfrow = c(2,4))
+lapply(landsat.varnames, FUN = function(x) hist(landsat.residuals[,x], main = x, xlab = x))
+
+```
+
+Scatterplot matrix (color by cover.type):
+
+```{r pairs.plot.landSat}
+
+with(landsat, pairs(landsat[landsat.vars], col = factor(cover.type), upper.panel=panel.cor))
+
+```
+
+
+**Question: are there right-skewed variables? Which ones?**
+
+> Most of the variables are right skewed, only band4 and band6 look bell-shaped.
+
+If there are any right-skewed variables log-transform them (really, only band6 looked bell-shaped, right?):
+
+```{r log.transform.landSat}
+
+log(landsat[landsat.vars]) -> log.bands
+colnames(log.bands) <- paste("log",landsat.vars, sep=".")
+log.bands$cover.type <- landsat$cover.type
+
+```
+
+Re-do the boxplots using the variables you log-transformed in place of their un-transformed versions:
+
+```{r boxplots.log.landSat}
+
+landsat.varnames.transformed <- c("log.band1","log.band2","log.band3","log.band4","log.band5","log.band6","log.band7") 
+
+par(mfrow = c(2,4))
+lapply(landsat.varnames.transformed, FUN = function(x) boxplot(log.bands[,x] ~ cover.type, data = log.bands, main = x, ylab = x))
+
+```
+
+Re-do the normal probability plots (don't forget to get residuals first! Include both the variables you transformed and the ones that didn't need to be, it will help later when you do the Mahalanobis distances):
+
+```{r normal.probability.plots.log.landsat}
+
+landsat.varnames.final <- c("log.band1","log.band2","log.band3","log.band4","log.band5","band6","log.band7")
+
+log.bands$band6 <- landsat$band6
+
+landsat.log.residuals <- residuals(manova(as.matrix(log.bands[,landsat.varnames.transformed]) ~ cover.type, data = log.bands))
+
+par(mfrow = c(2,4))
+lapply(landsat.varnames.transformed, FUN = function(x) qqPlot(landsat.log.residuals[,x], dist = "norm", main = x, ylab = x))
+
+```
+
+Histograms:
+
+```{r histogram.plots.log.landsat}
+
+par(mfrow = c(2,4))
+lapply(landsat.varnames.transformed, FUN = function(x) hist(landsat.log.residuals[,x], main = x, ylab = "Probability density", xlab = x))
+
+```
+
+Re-do the scatterplot matrix using the log-transformed variables, along with any that didn't need to be transformed:
+
+```{r scatterplot.matrix.log.landSat}
+
+with(log.bands, pairs(log.bands[,landsat.varnames.final], col = factor(cover.type), upper.panel = panel.cor))
+
+```
+
+Calculate Mahalanobis distances - include each variable, either in its log-transformed version or un-transformed if transformation wasn't needed.
+
+Get the means and covariance matrix for the residuals first:
+
+```{r manova.and.residuals.landSat}
+
+colMeans(landsat.log.residuals[,landsat.varnames.final]) -> landsat.means
+var(landsat.log.residuals[,landsat.varnames.final]) -> landsat.covar
+
+```
+
+
+Calculate the Mahalanobis distances and add them as a variable in your landsat data:
+
+```{r mahalanobis.distances.landSat}
+
+log.bands$mahal <- mahalanobis(landsat.log.residuals[,landsat.varnames.final], landsat.means, landsat.covar)
+
+```
+
+Do a qqPlot on the Mahalanobis distances (remember, df is equal to the number of variables):
+
+```{r mahalanobis.quantile.plot.landSat}
+
+qqPlot(log.bands$mahal, df = 7, dist = "chisq", envelope = 0.99, ylab = "Mahalanobis distance")
+
+```
+
