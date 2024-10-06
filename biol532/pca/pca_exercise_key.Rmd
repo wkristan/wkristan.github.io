@@ -1,0 +1,293 @@
+---
+title: "PCA"
+author: "KEY"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 3)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Principal Components Analysis of buffalo teeth
+
+We will use PCA on the buffalo teeth data to help us understand the morphology of these complex structures.
+
+First, import the tooth data:
+
+```{r import.data}
+
+library(readxl)
+data.frame(read_excel("teeth_fixed.xlsx", "teeth_fixed")) -> teeth
+
+```
+
+Assign the tooth ID numbers as row labels so that they will be used to label points in our biplots:
+
+```{r assign.row.labels}
+
+row.names(teeth) <- teeth$tooth.num
+
+```
+
+Make your variable.names object:
+
+```{r make.variable.names}
+
+variable.names <- c("weight","length", "width.crown","width.root","depth","surface.len","thickness")
+
+```
+
+Check that the correlation matrix should be expected to give us a good PCA - there should be several correlations that are above 0.4 for us to be justified in running a PCA.
+
+```{r cor.matrix}
+
+cor(teeth[variable.names])
+
+```
+
+#### Question: are there sufficient correlations between the variables to justify a PCA? Which variables are most highly correlated?
+
+> Yes, inside.surface.len and right.len are correlated at 0.822, and length and inside.surface.len are correlated at 0.792. These are large enough to justify PCA, even with a small sample size.
+
+### Run the PCA, initial assessment of effectiveness
+
+Run the principal components analysis:
+
+```{r run.pca}
+
+princomp(teeth[variable.names], cor = T) -> teeth.pca
+teeth.pca
+
+```
+
+#### Question: based on the standard deviations, if we were using the Kaiser-Guttman rule for the number of components to retain and interpret, which componenents should we retain?
+
+> We would retain the first three components, since K-G tells us to retain compenents with variances greater than 1.
+
+#### Question: Comp.1 has the largest standard deviation, is this a coincidence? Or will the first component always explain the most variation?
+
+> It is not a coincidence, Component 1 is selected specifically to have the largest explained variance (and thus, the largest standard deviation as well).
+
+Plot a scree plot of the results:
+
+```{r scree.plot}
+
+plot(teeth.pca)
+
+```
+
+#### Question: is there a large natural break in the sizes of the components, according to the scree plot? Between which two components does it occur?
+
+> There is a large break between the first and second component.
+
+We can get some additional information about how well the PCA represents the teeth data by getting a summary of the pca object:
+
+```{r summary.of.pca}
+
+summary(teeth.pca)
+
+```
+
+#### Question: how much variation in tooth morphology would we explain if we only retained the first component?
+
+> We would explain 50.3% of the variation in the tooth data if we only retained the first component.
+
+#### Question: how many components would we need to retain to explain 80% or more of the variation in tooth morphology?
+
+> We would need to retain the first three compenents to explain over 80%.
+
+### Interpreting and naming axes - PCA axes as latent variables
+
+Calculate loadings by correlating PCA scores with the raw variables:
+
+```{r calculate.loadings.with.cor}
+
+cor(teeth[variable.names], teeth.pca$scores) -> teeth.loadings
+teeth.loadings
+
+```
+
+#### Question: which variables are most strongly correlated with Comp.1?
+
+> The greatest loadings are for suface length (0.958), length (0.947), and weight (0.926).
+
+#### Question: if we were to only retain Comp.1 for further analysis, which two variables would be least well represented?
+
+> Component 1 is least correlated with width of the root and thickness.
+
+#### Question: what should we name the latent variable represented by the first component? What about the second component? Why?
+
+> The first component is positively correlated with every variable, so it indicates size of the tooth. The second component is positively related to thickness and negatively related to depth, so it is measuring shallowness of the tooth.
+
+Add the scores as columns in the teeth data set:
+
+```{r add.comp.scores.to.teeth}
+
+data.frame(teeth, teeth.pca$scores) -> teeth
+
+```
+
+#### Question: based no the sorted Comp.1 variable, which tooth is smallest? Which is biggest?
+
+> Tooth number 18 is smallest, and 63 is the largest.
+
+Now import the new teeth:
+
+```{r import.new.teeth}
+
+data.frame(read_excel("teeth_fixed.xlsx","new_teeth")) -> new.teeth
+
+```
+
+If we have the fitted PCA object we can use it to score the new teeth using predict():
+
+```{r score.new.teeth.predict}
+
+predict(teeth.pca, new.teeth)
+
+```
+
+To score the new teeth onto our PCA axes without using predict() we need the means and standard deviations for the original data set - make a vector for each:
+
+```{r original.teeth.mean.sd}
+
+orig.teeth.means <- c(8.11,54.10,18.09,6.08,1.51, 58.89, 10.50)
+
+orig.teeth.sds <- c(1.550,4.436,2.132,1.518,1.325,5.388,0.637)
+
+```
+
+Scale the new teeth using the means and standard deviations from the original teeth:
+
+```{r new.teeth.scaled}
+
+scale(new.teeth[variable.names], center = orig.teeth.means, scale = orig.teeth.sds) -> new.teeth.scaled
+
+new.teeth.scaled
+
+```
+
+Enter the PCA coefficients into a matrix:
+
+```{r pca.coefficients}
+
+comp1.coef <- c(0.4931,0.5044,0.3015,0.0664,0.3159,0.5102,0.2169)
+
+comp2.coef <- c(0.1092,-0.0491,0.3112,-0.3708,-0.5813,-0.1026,0.6348)
+
+coeff <- cbind(comp1.coef, comp2.coef)
+
+coeff
+
+```
+
+Now score the new teeth using the coefficients for the PCA:
+
+```{r score.new.teeth}
+
+data.frame(new.teeth.scaled %*% coeff) -> new.teeth.scores
+new.teeth.scores
+
+
+```
+#### Question: which tooth is the biggest according to Comp.1? Which is the smallest?
+
+>
+
+#### Question: which tooth is the deepest, according to Comp.2? Which is shallowest?
+
+>
+
+
+### Understanding the structure in our tooth data
+
+Make a biplot of the PCA:
+
+```{r biplot,fig.width=7.5,fig.height=7.5}
+
+biplot(teeth.pca, pc.biplot = T)
+points(new.teeth.scores, pch = 21, bg = "red")
+
+```
+
+#### Question: based on the biplot, where on the graph would you find the largest teeth? Which tooth seems to be the largest?
+
+> The largest teeth would be on the right side of the graph, and tooth 63 appears to be the largest.
+
+Assign the scores for Comp.1 and Comp.2 to the teeth data, so that you can open the data set and sort on each.
+
+```{r scores.to.teeth}
+
+data.frame(teeth, teeth.pca$scores[,1:2]) -> teeth
+
+```
+
+#### Question: describe what tooth 84 should look like, based on the biplot. Should it be large, medium, or small? Should it be thick or thin? Should it be strongly curved (big depth) or shallow? Should it have a wide root or a narrow one? Then look at tooth 84 in the data set and see if it has the measurements you expected.
+
+> Tooth 84 is medium sized, but it should be thin, strongly curved and have a wide root. 
+
+#### Question: what multi-way pattern of correlation is Comp.1 illustrating? That is, which variables are all inter-correlated, according to Comp.1?
+
+>
+
+#### Question: same question for Comp.2 - which pattern of inter-correlation does Comp.2 illustrate?
+
+>
+
+### The implication of reducing dimensionality
+
+Calculate the explained variance for each variable by squaring the loadings:
+
+```{r explained.variation}
+
+teeth.loadings^2 -> teeth.var.explained
+teeth.var.explained
+
+```
+
+#### Question: which variable is best explained by Comp.1? How much of its variation is explained by Comp.1?
+
+> Since these are squared correlations, the same variables that had high loadings are best explained. The highest is length, with 86.1% of its variance explained by Comp.1
+
+Calculate the communalities (i.e. running sums of variance explained across the PC axes). First make the ones matrix, and then multiply the explained variation values by it to get communalities:
+
+```{r communalities}
+
+round(upper.tri(matrix(0,7,7), diag = T)) -> ones.matrix
+
+teeth.var.explained %*% ones.matrix -> teeth.communalities
+
+colnames(teeth.communalities) <- paste("First", seq(1,7), sep = ".")
+
+teeth.communalities
+
+```
+
+#### Question: how many components need to be retained to encompass 80% of the variation in length? How many are needed to encompass 80% or more of the variation in width.root?
+
+> Component 1 explains more than 80% of the variation in length by itself. Root width would require three components to represent more than 80% of its variation.
+
+### Design considerations
+
+#### Question: did we have enough data to conduct this PCA? Refer to the sample size guidelines from the book (by way of lecture).
+
+> We did, because we have several loadings that were over 0.6.
+
+Check that the PC axes are independent by calculating the correlations between their scores:
+
+```{r check.pca.independent}
+
+cor(teeth.pca$scores)
+
+```
+
+Be sure to look at the large printout of the biplot, with teeth placed along PC 1 and PC 2, so that you can see what each axis is telling you about the patterns of variation in the teeth.
+
+#### Question: after looking at how the teeth are distributed across the PCA axes, do you see any characteristics of the teeth that we didn't represent well with our variables? Name one or two additional measurements we could have made to account for anything you think our PCA missed.
+
+>

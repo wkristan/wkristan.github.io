@@ -1,0 +1,58 @@
+---
+title: "PCA"
+author: "Your Name"
+date: "`r date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+    
+```
+
+Checking that the fixed teeth data are ready to run.
+
+Import:
+
+```{r import.teeth}
+
+library(readxl)
+
+data.frame(read_excel("teeth_fixed.xlsx")) -> teeth
+
+```
+
+Check the distributions - histograms and qqplots:
+
+```{r histo.qqplot}
+
+teeth.vars <- c("weight","length","width.crown","width.root","depth","surface.len","thickness")
+
+par(mfrow=c(2,4))
+lapply(teeth.vars, FUN = function(x) hist(teeth[,x], main = x, xlab = x))
+
+library(car)
+
+lapply(teeth.vars, FUN = function(x) qqPlot(teeth[,x], ylab = x, id=list(n =20)))
+
+qqPlot(teeth$depth, id = list(n = 20))
+
+```
+
+Scatterplot matrix:
+
+```{r pairs}
+
+pairs(teeth[teeth.vars])
+
+```
+
+Mahalanobis distances:
+
+```{r mahal}
+
+mahalanobis(teeth[teeth.vars], colMeans(teeth[teeth.vars]), var(teeth[teeth.vars])) -> teeth.mahal
+qqPlot(teeth.mahal, dist = "chisq", df = 6, id = list(n = 30), envelope = 0.99)
+
+```

@@ -1,0 +1,262 @@
+---
+title: "PCA"
+author: "Your Name"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 3)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Principal Components Analysis of buffalo teeth
+
+We will use PCA on the buffalo teeth data to help us understand the morphology of these complex structures.
+
+First, import the tooth data:
+
+```{r import.data}
+
+
+
+```
+
+Assign the tooth ID numbers as row labels so that they will be used to label points in our biplots:
+
+```{r assign.row.labels}
+
+
+
+```
+
+Make your variable.names object:
+
+```{r make.variable.names}
+
+
+
+```
+
+Check that the correlation matrix should be expected to give us a good PCA - there should be several correlations that are above 0.4 for us to be justified in running a PCA.
+
+```{r cor.matrix}
+
+
+
+```
+
+#### Question: are there sufficient correlations between the variables to justify a PCA? Which variables are most highly correlated?
+
+> 
+
+### Run the PCA, initial assessment of effectiveness
+
+Run the principal components analysis:
+
+```{r run.pca}
+
+
+
+```
+
+#### Question: based on the standard deviations, if we were using the Kaiser-Guttman rule for the number of components to retain and interpret, which componenents should we retain?
+
+> 
+
+#### Question: Comp.1 has the largest standard deviation, is this a coincidence? Or will the first component always explain the most variation?
+
+> 
+
+Plot a scree plot of the results:
+
+```{r scree.plot}
+
+
+
+```
+
+#### Question: is there a large natural break in the sizes of the components, according to the scree plot? Between which two components does it occur?
+
+> 
+
+We can get some additional information about how well the PCA represents the teeth data by getting a summary of the pca object:
+
+```{r summary.of.pca}
+
+
+
+```
+
+#### Question: how much variation in tooth morphology would we explain if we only retained the first component?
+
+> 
+
+#### Question: how many components would we need to retain to explain 80% or more of the variation in tooth morphology?
+
+> 
+
+### Interpreting and naming axes - PCA axes as latent variables
+
+Calculate loadings by correlating PCA scores with the raw variables:
+
+```{r calculate.loadings.with.cor}
+
+
+
+```
+
+#### Question: which variables are most strongly correlated with Comp.1?
+
+> 
+
+#### Question: if we were to only retain Comp.1 for further analysis, which two variables would be least well represented?
+
+> 
+
+#### Question: what should we name the latent variable represented by the first component? What about the second component? Why?
+
+>
+
+Add the scores as columns in the teeth data set:
+
+```{r add.comp.scores.to.teeth}
+
+
+
+```
+
+#### Question: based no the sorted Comp.1 variable, which tooth is smallest? Which is biggest?
+
+> 
+
+Now import the data from the new teeth so that we can interpret their sizes and shapes using Comp.1 and Comp.2 as latent variables:
+
+```{r import.new.teeth}
+
+
+
+```
+
+Since we have the fitted PCA object we can use it to score the new teeth using predict():
+
+```{r score.new.teeth.predict}
+
+
+
+```
+
+To score the new teeth onto our PCA axes without using predict() we need the means and standard deviations for the original data set - make a vector for each:
+
+```{r original.teeth.mean.sd}
+
+
+
+```
+
+Scale the new teeth using the means and standard deviations from the original teeth:
+
+```{r new.teeth.scaled}
+
+
+
+```
+
+Enter the PCA coefficients into a matrix:
+
+```{r pca.coefficients}
+
+
+
+```
+
+Now score the new teeth using the coefficients for the PCA:
+
+```{r score.new.teeth}
+
+
+
+```
+
+#### Question: which tooth is the biggest according to Comp.1? Which is the smallest?
+
+>
+
+#### Question: which tooth is the deepest, according to Comp.2? Which is shallowest?
+
+>
+
+### Understanding the structure in our tooth data
+
+Make a biplot of the PCA:
+
+```{r biplot,fig.width=7.5,fig.height=7.5}
+
+
+
+```
+
+#### Question: based on the biplot, where on the graph would you find the largest teeth? Which tooth seems to be the largest?
+
+>
+
+#### Question: describe what tooth 84 should look like, based on the biplot. Should it be large, medium, or small? Should it be thick or thin? Should it be strongly curved (big depth) or shallow? Should it have a wide root or a narrow one? Then look at tooth 84 in the data set and see if it has the measurements you expected.
+
+> 
+
+#### Question: what multi-way pattern of correlation is Comp.1 illustrating? That is, which variables are all inter-correlated, according to Comp.1?
+
+>
+
+#### Question: same question for Comp.2 - which pattern of inter-correlation does Comp.2 illustrate?
+
+>
+
+### The implication of reducing dimensionality
+
+Calculate the explained variance for each variable by squaring the loadings:
+
+```{r explained.variation}
+
+
+
+```
+
+#### Question: which variable is best explained by Comp.1? How much of its variation is explained by Comp.1?
+
+> 
+
+Calculate the communalities (i.e. running sums of variance explained across the PC axes). First make the ones matrix, and then multiply the explained variation values by it to get communalities:
+
+```{r communalities}
+
+
+
+```
+
+#### Question: how many components need to be retained to encompass 80% of the variation in length? How many are needed to encompass 80% or more of the variation in width.root?
+
+> 
+
+### Design considerations
+
+#### Question: did we have enough data to conduct this PCA? Refer to the sample size guidelines from the lecture.
+
+> 
+
+Check that the PC axes are independent by calculating the correlations between their scores:
+
+```{r check.pca.independent}
+
+
+
+```
+
+Be sure to look at the large printout of the biplot, with teeth placed along PC 1 and PC 2, so that you can see what each axis is telling you about the patterns of variation in the teeth.
+
+#### Question: after looking at how the teeth are distributed across the PCA axes, do you see any characteristics of the teeth that we didn't represent well with our variables? Name one or two additional measurements we could have made to account for anything you think our PCA missed.
+
+>

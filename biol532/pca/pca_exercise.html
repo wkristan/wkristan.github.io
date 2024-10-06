@@ -1,0 +1,1435 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html dir="ltr">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>PCA of class data</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  </head>
+  <body onload="drawPlot()">
+    <h1>Principal components analysis</h1>
+    <p>Today we are going to learn to conduct a principal components analysis on
+      the buffalo tooth measurements we made a few weeks ago. PCA is a method
+      used with un-grouped multivariate data made up of numeric variables, which
+      is what our buffalo tooth measurements are. You would do a principal
+      components analysis if you wanted to accomplish one or more of the
+      following:</p>
+    <ul>
+      <li>
+        <p>Understanding the <strong>structure</strong> of a data set.
+          Structure refers to any explainable variation in the data, and in this
+          case the structure of interest is inter-correlations between
+          variables. The familiar correlation coefficient, r, measures
+          relationships between two quantitative variables at a time, but when
+          there are three or more variables we need methods like PCA to
+          understand how they are inter-related.</p>
+      </li>
+      <li>
+        <p>Constructing <strong>latent variables</strong>. Latent variables are
+          those that exist conceptually but can't be measured directly with a
+          single measurement, such as size and shape. Each principal component
+          has the potential to be used as a latent variable, although typically
+          we get more components than there are interpretable latent variables.</p>
+      </li>
+      <li>
+        <p>Reducing the <strong>dimensionality</strong> of a data set.
+          Multivariate data challenges our poor 3D brain's ability to
+          comprehend, and methods like PCA help us interpret complex data sets
+          by expressing patterns within the data on fewer axes that are easier
+          to visualize and understand.</p>
+      </li>
+    </ul>
+    <p> </p>
+    <p>The basic questions we need to address when we conduct a PCA are:</p>
+    <ul>
+      <li>
+        <p>Is it a good PCA? A good PCA expresses patterns of inter-correlation
+          between multiple variables, such that a small set of PCA axes can
+          stand in for a larger number of variables. If this is the case, then
+          there will be at least one axis that explains a substantial fraction
+          of the variation in the original data, and no more than a few that
+          explain enough to be worth retaining for interpretation.</p>
+      </li>
+      <li>
+        <p>What does each component tell us about inter-correlations between the
+          variables (structure), and given that how should we interpret the
+          components (latent variables)?</p>
+      </li>
+      <li>
+        <p>Which variables are being well represented by the PCA axes we retain
+          for interpretation, and which are not? Since our purpose is to retain
+          some of the PCA axes but not all of them, it is possible for some
+          variables to be very well represented on the axes we keep and other to
+          be poorly represented. In addition to more fully understand what the
+          retained PCA axes are telling us we should be aware of what they are
+          failing to capture in the original data.</p>
+      </li>
+    </ul>
+    <p>If you recall from the data screening exercise, the tooth data had
+      several outliers, and I fixed them by re-measuring the problem teeth. If
+      you look at the scatterplot matrix of the fixed data <span class="tooltip">here<span
+          class="tooltiptext" style="width:400px"><img src="scatterplot_matrix.png"
+            style="width: 400px"></span></span> you will see that the
+      relationships all look linear, and the issues with measuring depth is
+      resolved - I re-measured all of the depths using a depth gauge (like <span
+        class="tooltip">this one<span class="tooltiptext"><img src="depth_gauge.jpg"
+            style="width: 100px"></span></span>), and that helped a lot; the
+      depth measurement was very hard to do with calipers. To make the depth
+      measurements more consistent I positioned the depth gauge in the middle of
+      the tooth from top to bottom and measured the depth at the middle, which
+      for some teeth was on a bump that projected above the plane from the crown
+      to the root - this resulted in some negative measurements (that is, those
+      depths are actually heights of the bump). I also re-measured various teeth
+      that had univariate outliers, or apparent entry errors (things like
+      surface lengths that were longer than lengths, which isn't possible given
+      how we measured).</p>
+    <p>I made a quantile comparison plot of Mahalanobis' distances against the
+      Chi-square distribution to spot multivariate outliers and re-measured
+      those teeth as well. After all the re-measuring the data set met the
+      multivariate assumptions - <span class="tooltip">here<span class="tooltiptext"
+          style="width:200px"><img src="qqplot_teeth.png" style="width:200px"></span></span>
+      is the final quantile comparison plot, and you'll see it looks fine.</p>
+    <blockquote>
+      <h3> Measurement and data entry is really important </h3>
+      <p>Time for a quick public service announcement:</p>
+      <p>Re-measuring teeth took care of all of the outliers in this case, but
+        bear in mind that re-measuring is a luxury you can't always count on. If
+        you're working with wild populations of animals and you mis-measure
+        something on an animal that you've captured, and don't realize this
+        until you're screening your data later, you can't easily measure them
+        again after they've been released. Or, if you are measuring wet weight
+        and dry weight of organs in a mouse you can't re-hydrate them to weigh
+        them again after they are dried. A single missing measurement for one
+        variable requires us to drop the variable or the case, neither of which
+        are good things (and the more time intensive or expensive each case is
+        to measure the less pleasant it is). Careful data collection is crucial.</p>
+      <p>Similarly, data entry errors can sometimes be fixed and sometimes not.
+        If you accidentally entered lengths and depths in the wrong columns the
+        numbers are different enough to detect the problem, but if you
+        accidentally swapped depth and width of root the measurements are
+        similar enough that they aren't obviously wrong. We entered our data
+        straight into the computer, which is a time saver, but it means that the
+        only place the values ever appeared was in the spreadsheet. Researchers
+        will often either enter data into their notebooks first and then enter
+        the data from their notebooks into the computer later, or they may go so
+        far as to make up data sheets printed on paper to use to collect the
+        data (like <a href="field_form-rapidassess_desert.pdf">this one</a>).
+        This redundancy gives you a way of checking for possible entry errors -
+        if you see a number that doesn't look right in the computer you can
+        check to see if it's the same as on the original data sheet. Paper is
+        also pretty durable stuff, and provides a way of recovering from
+        accidental deletion of files on the computer, or other forms of data
+        loss (have you ever sorted a data set in Excel, not realizing that only
+        part of the data set was being sorted? I have! Good way to scramble your
+        data - better hope you have backups!). I've even heard of projects where
+        they enter their data twice using two different technicians, and
+        differences between them are used to detect errors.</p>
+      <p>Of course data sheets don't help if you write down the data
+        incorrectly, or do the measurement wrong. Reliable results start with
+        careful data collection.</p>
+    </blockquote>
+    <p> Let's move on to the analysis. </p>
+    <h2>Visualize the analysis</h2>
+    <p>PCA finds axes that best explain patterns of shared variation across
+      multiple variables. A PCA on a correlation matrix finds the strongest
+      patterns of inter-correlation between the variables - the correlation
+      matrix is made up of bivariate correlation coefficients, but PCA axes uses
+      these to find inter-correlations among all of the variables. A 3D scatter
+      plot, in which we can graph three variables on coordinate axes, and two
+      additional ones via color and size variation, allows you to look at the
+      patterns in the data in up to five variables at a time, out of the seven
+      we measured.</p>
+    <div id="3d_wrapper" style="float: left; border-right: 20px; width: 1100px; height: 610px">
+      <div id="scatter3d_div" style="border: 2px solid black; width: 800px; height: 600px; float:left; margin-right: 10px">
+      </div>
+      <div id="controls_div" style="float:left"> <label name="xvar">X variable</label>
+        <select name="xvar" id="xvar" onchange="drawPlot()">
+          <option value="weight" selected="selected">Weight</option>
+          <option value="length">Length</option>
+          <option value="width_crown">Width of crown</option>
+          <option value="width_root">Width of root</option>
+          <option value="depth">Depth of curve</option>
+          <option value="surface_len">Surface length</option>
+          <option value="thickness">Thickness</option>
+        </select>
+        <br>
+        <label name="yvar">Y variable</label>
+        <select name="yvar" id="yvar" onchange="drawPlot()">
+          <option value="weight">Weight</option>
+          <option value="length" selected="selected">Length</option>
+          <option value="width_crown">Width of crown</option>
+          <option value="width_root">Width of root</option>
+          <option value="depth">Depth of curve</option>
+          <option value="surface_len">Surface length</option>
+          <option value="thickness">Thickness</option>
+        </select>
+        <br>
+        <label name="zvar">Z variable</label>
+        <select name="zvar" id="zvar" onchange="drawPlot()">
+          <option value="weight" selected="selected">Weight</option>
+          <option value="length">Length</option>
+          <option value="width_crown" selected="selected">Width of crown</option>
+          <option value="width_root">Width of root</option>
+          <option value="depth">Depth of curve</option>
+          <option value="surface_len">Surface length</option>
+          <option value="thickness">Thickness</option>
+        </select>
+        <br>
+        <label name="color_var">Color variable</label>
+        <select name="color_var" id="color_var" onchange="drawPlot()">
+          <option value="weight">Weight</option>
+          <option value="length">Length</option>
+          <option value="width_crown">Width of crown</option>
+          <option value="width_root" selected="selected">Width of root</option>
+          <option value="depth">Depth of curve</option>
+          <option value="surface_len">Surface length</option>
+          <option value="thickness">Thickness</option>
+        </select>
+        <br>
+        <label name="size_var">Size variable</label>
+        <select name="size_var" id="size_var" onchange="drawPlot()">
+          <option value="weight">Weight</option>
+          <option value="length">Length</option>
+          <option value="width_crown">Width of crown</option>
+          <option value="width_root">Width of root</option>
+          <option value="depth" selected="selected">Depth of curve</option>
+          <option value="surface_len">Surface length</option>
+          <option value="thickness">Thickness</option>
+        </select>
+      </div>
+    </div>
+    <p> Try out different sets of variables on the axes, and as color and shape
+      choices - the color scale uses red for small values of the color variable,
+      grading into green for large values. Sets of variables that result in the
+      strongest patterns of correlation (i.e. tight ellipsoids that tilt along
+      the axes, with color and size change from one end to the other) represent
+      five variables that are strongly inter-correlated.</p>
+    <p>With seven variables we can't fully visualize how PCA will work, since
+      we're only able&nbsp; to look at five at a time (and admittedly it's
+      harder to see the patterns represented by color and symbol size). If you
+      focus on just the three variables on the x, y, and z axes then you can
+      rotate the axes until the points are covering as much of the left to right
+      space as possible, and are parallel with the bottom of the screen - if you
+      drew a line horizontally through the points you would have the first PCA
+      axis. Rotating the points like a rolling pin around that first line until
+      the data take up as much space vertically as possible, and then drawing a
+      vertical line down the middle would give you PCA 2. The third axis would
+      be perpendicular to the first two. Withe seven axes we would continue this
+      process through 7D space, if we could comprehend it. Fortunately for us,
+      PCA can handle 7D space just fine.</p>
+    <h2 style="clear:both">Conducting PCA in R</h2>
+    <p>There are several ways to get a PCA in R, but we will stick with the
+      commands available in the base package, rather than relying on extension
+      libraries.<br>
+    </p>
+    <p>1. <strong>Preliminaries - new project, data and Rmd files</strong>.
+      Start a new project and download <a href="pca_exercise.Rmd">this Rmd file</a>
+      into it. </p>
+    <p>Import the data from <a href="teeth_fixed.xlsx">this</a> file - the
+      worksheet is called teeth_fixed, and you can import it into a dataset
+      called teeth. Import the data set as a data frame (use
+      data.frame(read_excel()) to convert it as you import it). Put this command
+      in the code chunk labeled "import.data".</p>
+    <p>The only variable that isn't a measured variable is tooth.num. We can
+      assign the tooth numbers as row labels, which will be useful later when we
+      plot our PCA. Use the command (in the "assign.row.labels" code chunk):</p>
+    <p class="rmd">row.names(teeth) &lt;- teeth$tooth.num</p>
+    <p>The row numbers and tooth ID numbers are the same, so this step isn't
+      critical for this analysis, but R will use the row names in the biplots we
+      produce below - assigning an identifier to the row names helps us link the
+      graphs back to the measured objects, which helps us interpret the results.</p>
+    <p>We will be producing some matrices of output that do not display well
+      when we allow R to use huge numbers of decimal places. We can set the
+      default to 3 decimal places by adding the command into the setup block at
+      the top of your Rmd file (the first code chunk, labeled "setup") - make a
+      blank line within the setup block and enter:</p>
+    <p class="rmd">options(digits = 3)</p>
+    <p>This will make the output easier to read.</p>
+    <p>2. <strong>Inspect the<span style="font-weight: bold;"> correlation
+          matrix</span></strong>. We don't really want to do a PCA unless we
+      have at least a few correlations in the 0.4-0.6 range or bigger (positive
+      or negative). We will make a correlation matrix of all of the variables in
+      teeth, excluding the tooth.num column (which is not a measured variable).</p>
+    <p>Make your list of variable names (in code chunk make.variable.names): </p>
+    <p class="rmd">variable.names &lt;-
+c("weight","length","width.crown","width.root","depth","surface.len","thickness")</p>
+    <p>To get the correlation matrix, use the command (code chunk cor.matrix):</p>
+    <p class="rmd">cor(teeth[variable.names])</p>
+    <p>The command that makes the correlation matrix is cor(), and we apply it
+      to the list of variables in variable.names, from the teeth data set. Note
+      that we didn't assign the output to an object, so this just reports the
+      correlation matrix to the screen.</p>
+    <p>Look at the correlation matrix, and note variables that are highly
+      correlated with one another - these will end up being well represented by
+      one of the first few components. Also see whether there are any variables
+      that are not strongly correlated with anything else - these will probably
+      not be well represented by the first few components of the PCA, but may
+      end up being well represented by a single axis all by themselves.</p>
+    <p>Bear in mind that correlations are between pairs of variables, but PCA
+      axes are placed through the entire data set. It's possible to have strong
+      relationships among groups of variables that do not show up well two
+      variables at a time, so we could still get a good PCA from a correlation
+      matrix with nothing but moderate-sized bivariate correlations. However, if
+      there are several big bivariate correlations a good PCA result is nearly
+      certain.</p>
+    <p>3. <strong>Conduct the PCA.</strong> We will use the princomp() function
+      to conduct our PCA. The command is (chunk run.pca):</p>
+    <p class="rmd">princomp(teeth[variable.names], cor = T) -&gt; teeth.pca</p>
+    <p class="rmd">teeth.pca</p>
+    <p>The princomp() command takes the variables to use as its first argument,
+      and the second argument, cor = T, causes princomp() to use the correlation
+      matrix instead of the covariance matrix for the analysis. We assigned the
+      output to teeth.pca, then entered the name teeth.pca so that we could see
+      the result on the screen.</p>
+    <p>What you see on the screen is not much:</p>
+    <p class="rout">Call:<br>
+      princomp(x = teeth[variable.names], cor = T)<br>
+      <br>
+      Standard deviations:<br>
+      Comp.1 Comp.2 Comp.3 Comp.4 Comp.5 Comp.6 Comp.7 <br>
+      &nbsp;1.877&nbsp; 1.114&nbsp; 1.007&nbsp; 0.868&nbsp; 0.558&nbsp;
+      0.342&nbsp; 0.204 <br>
+      <br>
+      &nbsp;7&nbsp; variables and&nbsp; 100 observations.</p>
+    <p>The "Call" just reports back to you what you asked for in the princomp()
+      command. The "Standard deviations" are the square roots of the eigenvalues
+      for each component. Since variances are the square of standard deviations,
+      you can see that only the first three components have variances over 1,
+      and would be retained for interpretation under the Kaiser-Guttman rule.</p>
+    <p>One minor annoyance with princomp() is that it presents standard
+      deviations for the components, but doesn't present variances. We can get
+      variances using (in the Console):</p>
+    <p class="rcmd">teeth.pca$sdev^2</p>
+    <p>which will give you:</p>
+    <p class="rout">Comp.1 Comp.2 Comp.3 Comp.4 Comp.5 Comp.6 Comp.7 <br>
+      3.5224 1.2400 1.0140 0.7543 0.3110 0.1167 0.0416 </p>
+    <p>Comp.1 is accounting for about 3.5 variables-worth of variance. These are
+      the eigenvalues for the PCA, and are the values that will be plotted in
+      the scree plot. We can get a scree plot with the command (scree.plot code
+      chunk):</p>
+    <p class="rmd">plot(teeth.pca)</p>
+    <p>Scree plots are useful for detecting big natural breaks in explained
+      variance for the PCA axes - there is a big drop between the first and
+      second component, and then another fairly big drop between the fourth and
+      fifth. Based on the scree plot we might retain only the first component
+      for interpretation, or we might retain between two and four, depending on
+      the interpretability of the axes as latent variables.</p>
+    <p>We can get some additional output to help us decide how well the PCA is
+      summarizing patterns in the data by using the command (in chunk
+      summary.of.pca):</p>
+    <p class="rmd">summary(teeth.pca)</p>
+    <p>which gives you:</p>
+    <p class="rout">Importance of components:<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Comp.1 Comp.2 Comp.3 Comp.4 Comp.5 Comp.6&nbsp; Comp.7<br>
+      Standard deviation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.877&nbsp; 1.114&nbsp;
+      1.007&nbsp; 0.868 0.5577 0.3416 0.20407<br>
+      Proportion of Variance&nbsp; 0.503&nbsp; 0.177&nbsp; 0.145&nbsp; 0.108
+      0.0444 0.0167 0.00595<br>
+      Cumulative Proportion&nbsp;&nbsp; 0.503&nbsp; 0.680&nbsp; 0.825&nbsp;
+      0.933 0.9774 0.9941 1.00000</p>
+    <p>You will see that in addition to the standard deviation there is now a
+      row of output showing the proportion of <em>variance</em> explained by
+      each component, and a running total (cumulative proportion) - yes, they
+      report standard deviations and then give proportions of variance
+      explained, I don't know why. The first component explains 0.503 (50.3%) of
+      the variation in the entire data set, and the second component explains an
+      additional 17.7%, for a cumulative proportion of 68%. If we retained only
+      these two components for interpretation we would be focusing on 68% of the
+      variation in the data, and discarding 32%. Going to the third component
+      accounts for a total of 82.5% of the variation, going to the fourth gives
+      us 93.3%, and so on.</p>
+    <p><strong>4. Interpreting the components as latent variables.</strong>
+      Interpreting what the PCA axes mean is best done by looking at how they
+      correlate with the measured variables - specifically, the correlation
+      between the variables and the PCA scores.</p>
+    <p>The teeth.pca object contains several named elements - we can see what
+      they are with (in the Console): </p>
+    <p class="rcmd">names(teeth.pca)</p>
+    <p>which shows us:</p>
+    <p class="rout">[1] "sdev"&nbsp;&nbsp;&nbsp;&nbsp; "loadings"
+      "center"&nbsp;&nbsp; "scale"&nbsp;&nbsp;&nbsp; "n.obs"&nbsp;&nbsp;&nbsp;
+      "scores"&nbsp;&nbsp; "call" </p>
+    <p>Here we run into a terminology problem...</p>
+    <p>What the princomp() command has labeled <strong>loadings</strong> are
+      the eigenvectors that relate raw variables to components - these are the
+      equivalents to slope coefficients that are used to position the axes, and
+      to calculate scores. In lecture, and in your textbook, loadings are the
+      correlations between variables and components that we use to interpret the
+      axes, but <strong></strong>R calls these <strong>structure coefficients</strong>.
+      We will stick with the book's naming convention, and continue to use
+      loadings to refer to correlations between data and scores, but that means
+      that the loadings in teeth.pca are not actually what we're looking for.</p>
+    <p>Instead, what we need is to correlate the <strong>scores</strong> from
+      teeth.pca with the raw tooth variables (calculate.loadings.with.cor
+      chunk):</p>
+    <p class="rmd">cor(teeth[variable.names], teeth.pca$scores) -&gt;
+      teeth.loadings</p>
+    <p class="rmd">teeth.loadings</p>
+    <p>which produces the output:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Comp.1&nbsp; Comp.2&nbsp; Comp.3&nbsp; Comp.4&nbsp; Comp.5&nbsp;
+      Comp.6&nbsp;&nbsp; Comp.7<br>
+      weight&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.926&nbsp; 0.1216&nbsp;
+      0.2035&nbsp; 0.0426&nbsp; 0.0757&nbsp; 0.2823&nbsp; 0.00512<br>
+      length&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.947 -0.0547 -0.0876&nbsp;
+      0.0186&nbsp; 0.2504 -0.1122 -0.13316<br>
+      width.crown&nbsp; 0.566&nbsp; 0.3465 -0.2267 -0.6806 -0.2116 -0.0193
+      -0.00379<br>
+      width.root&nbsp;&nbsp; 0.125 -0.4129&nbsp; 0.8530 -0.2869 -0.0260
+      -0.0584&nbsp; 0.00191<br>
+      depth&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.593 -0.6473
+      -0.2042&nbsp; 0.2317 -0.3649&nbsp; 0.0116 -0.02932<br>
+      surface.len&nbsp; 0.958 -0.1142 -0.1146&nbsp; 0.0733&nbsp; 0.1267
+      -0.1121&nbsp; 0.15133<br>
+      thickness&nbsp;&nbsp;&nbsp; 0.407&nbsp; 0.7069&nbsp; 0.3622&nbsp; 0.3841
+      -0.2188 -0.0893 -0.01060<br>
+    </p>
+    <p>This is the same cor() command as we used to make a correlation matrix,
+      but this time we are correlating one data set (the raw data in teeth) with
+      another (the scores for each tooth on each component). Instead of a
+      symmetrical correlation matrix we get correlations between variable in the
+      rows with each PCA axis in the columns.</p>
+    <p>We can use these to help us interpret the PCA axes as latent variables.
+      We'll start with PCA axis 1 (called Comp.1 by R):</p>
+    <ul>
+      <li>Note that every correlation has the same sign (positive) - this means
+        that large positive scores indicate larger measurements on every tooth,
+        whereas large negative scores indicate small measurements on every
+        tooth. Comp.1 is a good representation of the overall size of the tooth.</li>
+      <li>Note too that the size of the correlation differs - weight, length,
+        and surface.len all have loadings over 0.9, while width.root has a small
+        loading of 0.125. Comp.1 primarily representing the variation in the
+        strongly correlated variables weight, length, and surface length, but
+        variation in width.root is only weakly related to the other variables
+        and is poorly represented on Comp.1 as a result.</li>
+    </ul>
+    <p>Next consider Comp.2 - this is the second largest pattern in the data,
+      and is independent of size (as indicated by Comp.1):</p>
+    <ul>
+      <li>This component has loadings with a mix of positive and negative signs
+        - it does not indicate an overall tendency for teeth to be large or
+        small on all of the variables, but rather it has large measurements of
+        some variables at one end of the axis and large measurements of others
+        at the other end.</li>
+      <li>The variables that have the strongest correlation with Comp.2 are
+        depth and thickness, which have different signs. Comp.2 is primarily
+        measuring the trade-off between depth and thickness of a tooth - that
+        is, teeth that are deep also tend to have small thicknesses, while teeth
+        that are shallow are thick. We could call this the <strong>shallowness</strong>
+        of the tooth.</li>
+    </ul>
+    <p>We could choose to interpret Comp.3 as well:</p>
+    <ul>
+      <li>This component has a mix of signs on the loadings, so it also
+        represents a size-independent measure of shape variation.</li>
+      <li>There is really only one variable that has a high loading on Comp.3,
+        which is width.root. This is not strongly a multivariate pattern, since
+        it primarily represents the contribution of a single variable, so we
+        might just call it <strong>root width</strong>.</li>
+    </ul>
+    <p> </p>
+    <p>By the time we've gotten to the third component we're interpreting axes
+      that explain a fairly small fraction of the variance in the data (14% for
+      Comp.3). We saw that there was a large drop in size of eigenvalue between
+      Comp.4 and Comp.5, so we might choose to interpret Comp.4 as well - doing
+      so will get us to 93% of the variation in the data. Based on the loadings
+      for Comp.4:</p>
+    <ul>
+      <li>Again, the loadings have different signs, indicating a shape variable.</li>
+      <li>The largest loading (which is not very large, only -0.68) is for
+        width.crown, and the rest are substantially smaller, so we might call
+        this axis <strong>crown width</strong>.</li>
+    </ul>
+    <p>Latent variables that only represent one actual measured variable are
+      pretty undesirable - if we were going to interpret variation in one
+      variable at a time there would be no reason to do PCA, and we could just
+      stick with the simpler approach of analyzing the measured variables. Of
+      the four, the first two components have done the best job of representing
+      an aspect of the morphology of the teeth that is not measured directly,
+      but is constructed from two or more measured variables. Comp.1 and Comp.2
+      are our best latent variables, therefore.</p>
+    <p>Now that we have defined Comp.1 as a size variable, and Comp.2 as a
+      shallowness variable, we can look at the scores to see which individual
+      teeth are high or low on each axis. A simple way to do this is to add the
+      scores as columns in the teeth data set so that we can look at them next
+      to the measured variables. In chunk add.comp.scores.to.teeth enter:</p>
+    <p class="rmd">data.frame(teeth, teeth.pca$scores) -&gt; teeth</p>
+    <p>This command makes a new data frame starting with the existing one
+      (teeth) and adding additional columns using the scores from teeth.pca. By
+      writing the result back into teeth we replace the old version with the new
+      version that has the additional columns of component scores.</p>
+    <p>If you click on teeth in your Environment it will open up a viewer that
+      has sortable columns - scroll over to the right until you see the Comp.1
+      variable, and click on the header to sort on it. This will put teeth with
+      large negative values at the top, which are the smallest teeth, and those
+      with large positive values at the bottom, which are the biggest teeth
+      (clicking again sorts in reverse, if you want to look at the big teeth
+      more easily). If you compare the data values it should be clear that small
+      teeth tend to be small on weight, length, and surface length primarily,
+      but all of the variables to an extent, while large teeth are large
+      consistently on weight, length, and surface length, but across all of the
+      variables to a degree.</p>
+    <p>5. <strong>Using PCA axes as latent variables</strong>. Since we have
+      components that represent size and shallowness of water buffalo teeth we
+      might want to use these variables as a way of measuring size and
+      shallowness in other teeth that weren't included in the original analysis.
+      To use the components in this way we just need to score new teeth onto the
+      components and then interpret their scores as measures of size and
+      shallowness. </p>
+    <p>The sheet new_teeth in your Excel file has measurements on five teeth
+      that were not used to conduct the PCA, but that we can score onto our PCA
+      axes. Import the data from the new_teeth sheet into a data set called
+      new.teeth (in chunk import.new.teeth).</p>
+    <p>The simplest way to get the new teeth scored onto our principle
+      components axes is to use the predict() function on teeth.pca, using
+      new.teeth as the data to get predicted values for - in chunk&nbsp;
+      score.new.teeth.predict enter:</p>
+    <p class="rmd">predict(teeth.pca, new.teeth)</p>
+    <p>which will give you the component scores for these five new teeth, like
+      so:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Comp.1 Comp.2 Comp.3&nbsp;
+      Comp.4&nbsp;&nbsp; Comp.5&nbsp; Comp.6&nbsp; Comp.7<br>
+      [1,] -1.3415&nbsp; 0.350&nbsp; 0.613&nbsp; 0.9646 -0.20492&nbsp; 0.3801
+      -0.2949<br>
+      [2,] -0.0108&nbsp; 0.436 -1.448 -1.2315&nbsp; 0.45090&nbsp; 0.3117&nbsp;
+      0.0130<br>
+      [3,]&nbsp; 0.1611 -0.307 -0.171&nbsp; 0.6132 -0.00186&nbsp; 0.0372&nbsp;
+      0.0470<br>
+      [4,]&nbsp; 1.0558&nbsp; 0.951 -0.859&nbsp; 0.0717&nbsp; 0.15920 -0.2331
+      -0.1045<br>
+      [5,]&nbsp; 0.3996&nbsp; 0.165&nbsp; 0.851 -0.8681 -0.24040&nbsp; 0.2391
+      -0.0672</p>
+    <p>From this output we can see that the first tooth is small (-1.3415 on
+      Comp.1) while the fourth is large (1.0558 on Comp.1). The shallowest tooth
+      is number 3 (-0.307 on Comp.2), and the deepest is tooth 4 (0.951 on
+      Comp.2).</p>
+    <p>Using predict() is the easiest way to score new observations if you have
+      access to the original princomp() object. But, if you don't you can still
+      score new observations if you have the means and standard deviations of
+      the original variables, and have the coefficients from the principal
+      components analysis.</p>
+    <p>For example, if we were reading a paper that used PCA to come up with
+      latent variables representing size and shallowness of water buffalo teeth,
+      the paper might have a table like this one:</p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th>Variable</th>
+          <th>Mean</th>
+          <th>Std. Dev.</th>
+        </tr>
+        <tr>
+          <td>Weight</td>
+          <td>8.11</td>
+          <td>1.550</td>
+        </tr>
+        <tr>
+          <td>Length</td>
+          <td>54.10</td>
+          <td>4.436</td>
+        </tr>
+        <tr>
+          <td>Width of crown</td>
+          <td>18.09</td>
+          <td>2.132</td>
+        </tr>
+        <tr>
+          <td>Width of root</td>
+          <td>6.08</td>
+          <td>1.518</td>
+        </tr>
+        <tr>
+          <td>Depth</td>
+          <td>1.51</td>
+          <td>1.325</td>
+        </tr>
+        <tr>
+          <td>Surface length</td>
+          <td>58.89</td>
+          <td>5.388</td>
+        </tr>
+        <tr>
+          <td>Thickness</td>
+          <td>10.50</td>
+          <td>0.637</td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <p>We can use these to scale the new teeth relative to the original data
+      set's means and standard deviations. To use them we just need to put them
+      into vectors - in chunk original.teeth.means.sd enter:</p>
+    <p class="rmd">orig.teeth.means &lt;- c(8.11,54.10,18.09,6.08,1.51, 58.89,
+      10.50)<br>
+      <br>
+      orig.teeth.sds &lt;- c(1.550,4.436,2.132,1.518,1.325,5.388,0.637)</p>
+    <p></p>
+    <p>Now we need to subtract the means and divide by the standard deviations
+      to scale the new teeth. R has a command for doing this called scale() - in
+      chunk new.teeth.scaled enter:</p>
+    <p class="rmd">scale(new.teeth[teeth.vars], center = orig.teeth.means, scale
+      = orig.teeth.sds) -&gt; new.teeth.scaled<br>
+      <br>
+      new.teeth.scaled</p>
+    <p>You'll see the new teeth data are now expressed as standard deviations:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; weight&nbsp; length
+      width.crown width.root&nbsp; depth surface.len thickness<br>
+      [1,] -0.17419 -0.7462&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      -1.121&nbsp;&nbsp;&nbsp; -0.0791 -0.302&nbsp;&nbsp;&nbsp;&nbsp;
+      -1.0932&nbsp;&nbsp;&nbsp; 0.5651<br>
+      [2,]&nbsp; 0.00645&nbsp; 0.1646&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      1.229&nbsp;&nbsp;&nbsp; -1.0540 -0.574&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      0.0204&nbsp;&nbsp; -1.0518<br>
+      [3,]&nbsp; 0.07097&nbsp; 0.0812&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      -0.488&nbsp;&nbsp;&nbsp; -0.2306&nbsp; 0.423&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      0.2060&nbsp;&nbsp;&nbsp; 0.0314<br>
+      [4,]&nbsp; 0.27742&nbsp; 0.7755&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      0.704&nbsp;&nbsp;&nbsp; -1.0013 -0.121&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      0.5772&nbsp;&nbsp;&nbsp; 0.5495<br>
+      [5,]&nbsp; 0.50323 -0.0406&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      0.736&nbsp;&nbsp;&nbsp;&nbsp; 0.9354 -0.196&nbsp;&nbsp;&nbsp;&nbsp;
+      -0.1652&nbsp;&nbsp;&nbsp; 0.1413<br>
+      attr(,"scaled:center")<br>
+      [1]&nbsp; 8.11 54.10 18.09&nbsp; 6.08&nbsp; 1.51 58.89 10.50<br>
+      attr(,"scaled:scale")<br>
+      [1] 1.550 4.436 2.132 1.518 1.325 5.388 0.637</p>
+    <p>Note that this was necessary because we did the PCA on a correlation
+      matrix, which also works with scaled variables. If we had done the PCA on
+      the covariance matrix we could have skipped this step.</p>
+    <p>Below the scaled values are two blocks labeled "attr" - these are
+      attributes of the data, which are like little notes attached to the
+      object. One gives the means that were used for scaling
+      (attr(,"scaled:center")), and the other gives the standard deviations used
+      (attr(,"scaled:scale")). You can ignore these, they won't get used when we
+      score the teeth, they are just annotations attached to the
+      new.teeth.scaled object.</p>
+    <p>We also need the coefficients from the original PCA - our imaginary
+      published report would also have provided those, in a table like this:</p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th>Variable</th>
+          <th>Comp.1</th>
+          <th>Comp.2</th>
+        </tr>
+        <tr>
+          <td>Weight</td>
+          <td>0.4931</td>
+          <td>0.1092</td>
+        </tr>
+        <tr>
+          <td>Length</td>
+          <td>0.5044</td>
+          <td>-0.0491</td>
+        </tr>
+        <tr>
+          <td>Width of crown</td>
+          <td>0.3015</td>
+          <td>0.3112</td>
+        </tr>
+        <tr>
+          <td>Width of root</td>
+          <td>0.0664</td>
+          <td>-0.3708</td>
+        </tr>
+        <tr>
+          <td>Depth</td>
+          <td>0.3159</td>
+          <td>-0.5813</td>
+        </tr>
+        <tr>
+          <td>Surface length</td>
+          <td>0.5102</td>
+          <td>-0.1026</td>
+        </tr>
+        <tr>
+          <td>Thickness</td>
+          <td>0.2169</td>
+          <td>0.6348</td>
+        </tr>
+      </tbody>
+    </table>
+    <p></p>
+    <p>These are the eigenvectors that define the relationship between the
+      original variables and the axes, and they're found in teeth.pca$loadings.
+    </p>
+    <p>We need to make a matrix of these in R - put the following command in
+      chunk pca.coefficients:</p>
+    <p class="rmd">comp1.coef &lt;-
+      c(0.4931,0.5044,0.3015,0.0664,0.3159,0.5102,0.2169)</p>
+    <p class="rmd">comp2.coef &lt;-
+      c(0.1092,-0.0491,0.3112,-0.3708,-0.5813,-0.1026,0.6348)</p>
+    <p class="rmd">cbind(comp1.coef, comp2.coef) -&gt; coeff</p>
+    <p class="rmd">coeff</p>
+    <p>Your matrix of coefficients should match this one:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp; comp1.coef comp2.coef<br>
+      [1,]&nbsp;&nbsp;&nbsp;&nbsp; 0.4931&nbsp;&nbsp;&nbsp;&nbsp; 0.1092<br>
+      [2,]&nbsp;&nbsp;&nbsp;&nbsp; 0.5044&nbsp;&nbsp;&nbsp; -0.0491<br>
+      [3,]&nbsp;&nbsp;&nbsp;&nbsp; 0.3015&nbsp;&nbsp;&nbsp;&nbsp; 0.3112<br>
+      [4,]&nbsp;&nbsp;&nbsp;&nbsp; 0.0664&nbsp;&nbsp;&nbsp; -0.3708<br>
+      [5,]&nbsp;&nbsp;&nbsp;&nbsp; 0.3159&nbsp;&nbsp;&nbsp; -0.5813<br>
+      [6,]&nbsp;&nbsp;&nbsp;&nbsp; 0.5102&nbsp;&nbsp;&nbsp; -0.1026<br>
+      [7,]&nbsp;&nbsp;&nbsp;&nbsp; 0.2169&nbsp;&nbsp;&nbsp;&nbsp; 0.6348</p>
+    <p>Now we have what we need to score the new teeth (in score.new.teeth
+      chunk):</p>
+    <p class="rmd">new.teeth.scaled %*% coeff -&gt; new.teeth.scores</p>
+    <p class="rmd">new.teeth.scores</p>
+    <p>You'll see the teeth scored onto the first two PCA components like so:</p>
+    <p class="rout">&nbsp; comp1.coef comp2.coef<br>
+      1&nbsp;&nbsp;&nbsp; -1.3360&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.344<br>
+      2&nbsp;&nbsp;&nbsp; -0.0122&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.430<br>
+      3&nbsp;&nbsp;&nbsp;&nbsp; 0.1590&nbsp;&nbsp;&nbsp;&nbsp; -0.309<br>
+      4&nbsp;&nbsp;&nbsp;&nbsp; 1.0491&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.942<br>
+      5&nbsp;&nbsp;&nbsp;&nbsp; 0.3962&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.160</p>
+    <p>The column labels are taken from our vectors of coefficients, but the first column has scores for Comp.1 and the second has scores for Comp.2. These
+      numbers are not quite the same as the ones we got with predict(), but the
+      differences are only due to rounding error (R has 15 digits of precision,
+      but we only used two for the means). Aside from the slight differences in
+      numeric value, the general pattern is the same - the first tooth is the
+      smallest, the fourth is the largest, and tooth 3 is shallow while teeth 4
+      is deep.</p>
+    <blockquote>
+      <h3>PCA axes as solutions to multicollinearity</h3>
+      <p>Here's a little something for the folks who took Biol 531 from me (or
+        something to look forward to if you haven't yet)...</p>
+      <p>If you recall, we worried a lot about the lack of independence between
+        predictor variables in our multiple regression models. Lack of
+        independence between predictors is called <strong>multicollinearity</strong>,
+        and when your predictor variables are all numeric you can measure it as
+        correlation between the predictors. A classic paper by <a href="graham_confronting_multicollinearity.pdf">Graham
+          (2003)</a> illustrated the problem with data on the sizes of kelp
+        beds, which he tried to explain using measures of wave orbital
+        displacement (OD), wave breaking depth (BD), wind velocity (W), and
+        tidal height (LTD). These predictors are, not surprisingly, correlated
+        with one another:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        OD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        BD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        LTD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; W<br>
+        OD&nbsp;&nbsp; 1.0000000&nbsp; 0.7283401 -0.2809058&nbsp; 0.6814375<br>
+        BD&nbsp;&nbsp; 0.7283401&nbsp; 1.0000000 -0.3385944&nbsp; 0.6337279<br>
+        LTD -0.2809058 -0.3385944&nbsp; 1.0000000 -0.3565089<br>
+        W&nbsp;&nbsp;&nbsp; 0.6814375&nbsp; 0.6337279 -0.3565089&nbsp; 1.0000000</p>
+      <p>Because of this, when you try to use them all in the same regression
+        model there is some amount of the size of the kelp beds that can be
+        explained by any of the variables, but not by a single variable
+        uniquely. Because of this you can get a different result in your
+        multiple regression depending on the order that you enter the predictors
+        - for example, if OD is entered as the first predictor it is the only
+        one that is significant:</p>
+      <p class="rout">Response: Response<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Sum Sq
+        Mean Sq F value&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+        OD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.92599 0.92599
+        45.2454 1.156e-07 ***<br>
+        BD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.00366
+        0.00366&nbsp; 0.1790&nbsp;&nbsp; 0.67494&nbsp;&nbsp;&nbsp; <br>
+        LTD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.01282 0.01282&nbsp;
+        0.6264&nbsp;&nbsp; 0.43434&nbsp;&nbsp;&nbsp; <br>
+        W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.07305
+        0.07305&nbsp; 3.5695&nbsp;&nbsp; 0.06766 .&nbsp; <br>
+        Residuals 33 0.67538 0.02047 </p>
+      <p>But if instead it is entered last then everything but LTD is
+        significant:</p>
+      <p class="rout">Response: Response<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Sum Sq
+        Mean Sq F value&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+        BD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.55108 0.55108
+        26.9267 1.056e-05 ***<br>
+        LTD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.02125 0.02125&nbsp;
+        1.0385&nbsp; 0.315580&nbsp;&nbsp;&nbsp; <br>
+        W&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.24740
+        0.24740 12.0881&nbsp; 0.001444 ** <br>
+        OD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.19580
+        0.19580&nbsp; 9.5669&nbsp; 0.004015 ** <br>
+        Residuals 33 0.67538 0.02047 </p>
+      <p>The fact that OD is correlated strongly with BD and W means that we'll
+        get a different impression of which variables affect kelp bed size
+        depending on which predictor variable we attribute the shared variation
+        to. In general, we don't like analytical procedures that give completely
+        different results depending on seemingly unimportant analytical
+        decisions.</p>
+      <p>One of Graham's suggested solutions is to conduct a PCA on your
+        predictors, and then use PCA scores as predictors instead of the
+        measured variables. Since PCA axes are independent of one another this
+        means that the order that we enter the axes doesn't affect the results -
+        that is, this model:</p>
+      <p class="rout">Response: Response<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Sum Sq
+        Mean Sq F value&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+        PC1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.91279 0.91279 44.5999
+        1.329e-07 ***<br>
+        PC2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.02631 0.02631&nbsp;
+        1.2853&nbsp;&nbsp;&nbsp; 0.2651&nbsp;&nbsp;&nbsp; <br>
+        PC3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.01790 0.01790&nbsp;
+        0.8748&nbsp;&nbsp;&nbsp; 0.3564&nbsp;&nbsp;&nbsp; <br>
+        PC4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.05853 0.05853&nbsp;
+        2.8596&nbsp;&nbsp;&nbsp; 0.1003&nbsp;&nbsp;&nbsp; <br>
+        Residuals 33 0.67538 0.02047</p>
+      <p>is identical to this one:</p>
+      <p class="rout">Response: Response<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Sum Sq
+        Mean Sq F value&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+        PC4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.05853 0.05853&nbsp;
+        2.8596&nbsp;&nbsp;&nbsp; 0.1003&nbsp;&nbsp;&nbsp; <br>
+        PC2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.02630 0.02630&nbsp;
+        1.2852&nbsp;&nbsp;&nbsp; 0.2651&nbsp;&nbsp;&nbsp; <br>
+        PC3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.01790 0.01790&nbsp;
+        0.8747&nbsp;&nbsp;&nbsp; 0.3565&nbsp;&nbsp;&nbsp; <br>
+        PC1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.91279 0.91279 44.6001
+        1.329e-07 ***<br>
+        Residuals 33 0.67538 0.02047 </p>
+      <p>This fixes the multicollinearity problem, but it does make the result
+        harder to interpret - we know now that PC1 explains variation in kelp
+        bed size, while the other PC's do not, but we now have to figure out
+        what PC1 means. If we look at the loadings we find:</p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        PC1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        PC2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        PC3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PC4<br>
+        BD&nbsp;&nbsp; 0.8734721 0.16097806 -0.35372367&nbsp; 0.29328098<br>
+        OD&nbsp;&nbsp; 0.8777079 0.26036660 -0.09690756 -0.39043878<br>
+        LTD -0.5421128 0.83786242&nbsp; 0.04083502&nbsp; 0.04939739<br>
+        W&nbsp;&nbsp;&nbsp; 0.8591610 0.09900154&nbsp; 0.48440036&nbsp;
+        0.13188246</p>
+      <p>PC1 represents high breaking depth, high orbital displacement, high
+        wind speed, and to a lesser extent lower tide height. Graham was able to
+        interpret PC1 as indicating areas that had experienced storms at low
+        tide. Taking this approach lets us see that W, BD, and OD are
+        collectively associated with variation in kelp bed size, rather than
+        attributing all of the effect to OD alone.</p>
+      <p>So, the take-home message is: you can address multicollinearity by
+        using principal components as a set of uncorrelated predictors. The cost
+        is that the interpretation is less straightforward than if you used the
+        raw variables - but, if the components make sense as latent variables it
+        can be a very effective approach.</p>
+    </blockquote>
+    <p><strong>6. Interpreting structure - loadings and biplots.</strong>
+      Loadings are also useful for understanding the structure in the data set,
+      but rather than using the variable loadings to uncover what latent
+      variable is represented by each axis, we focus instead on the variables
+      themselves. The multi-way interrelationships between the variables are
+      interpretable by noting which variables have high positive or negative
+      loadings. For example, Comp.1 is showing us that the strongest pattern in
+      the data is intercorrelation between weight, length, and surface.len. </p>
+    <p>Another excellent method for understanding structure is the <strong>biplot</strong>.
+      Biplots use the PCA axes as the x and y axis of the graph, and plot the
+      cases based on their scores on the PCA axes. They then use the loadings to
+      plot the variables as vectors (that is, arrows pointing outward from the
+      origin) to indicate the variables. To get a biplot of the PCA, type
+      (biplot chunk): </p>
+    <p class="rmd">biplot(teeth.pca, pc.biplot = T)</p>
+    <p>The numbers in the graph are row names, which we set to be tooth numbers.
+      Teeth that are close together in the graph will have a similar morphology
+      (similar shape and size), and teeth that are far apart will have a
+      different shape or size.</p>
+    <p>Using pc.biplot = T uses the x and y axes for the scores, and the right
+      and top axis scales for the loadings.</p>
+    <p>Note that I added fig.width=7.5,fig.height=7.5 to the {} section for this
+      code chunk - this makes the graph 7.5 inches tall and wide in the knitted
+      output, and in your Rmd file it helps with readability by scaling the
+      fonts to an image of that size.&nbsp; </p>
+    <p>The primary purpose of a biplot is to help you interpret components.
+      Components should be interpreted one at a time - the vectors whose
+      arrowheads are furthest out along the x-axis have the highest loadings on
+      the first component, and are thus the ones that the first component
+      represents best. The vectors point in the direction of increasing data
+      values for that variable, so if the arrows point to the right that means
+      that bigger data values are receiving positive scores on the first
+      component.</p>
+    <p>Arrows that lie nearly on top of an axis have high loadings on that axis,
+      but low loadings on the other.</p>
+    <p>You can change which component scores are plotted by adding the argument
+      (in the <strong>Console</strong>):</p>
+    <p class="rcmd">biplot(teeth.pca, choices = c(1,3), pc.biplot = T)</p>
+    <p>which causes component 1 to be plotted on the x-axis, and component 3 to
+      be plotted on the y-axis. Component 1 is the same as in the previous
+      biplot, so we still see the same size variation from left to right, but
+      since width.root is the primary determinant of component 3 the vertical
+      position on this graph primarily tells us whether the tooth had a wide
+      root (high) or a narrow root (low).</p>
+    <p><strong>7. Consequences of reducing dimensionality - calculate
+        communalities</strong>. Note that if we only interpret PCA axis 1 and 2
+      then we are basing our interpretation of the data on the two strongest
+      patterns of variation, and would have managed to reduce the dimensionality
+      from 7 variables to 2. But, we are only interpreting a total of 68% of the
+      variation in the data if we stop with the second axis. That 68% variation
+      accounted for simultaneously tells us that 32% of the variation in the
+      data is not being interpreted at all, and that discarded 32% is going to
+      be primarily due to variables with low loadings on the first two
+      components.</p>
+    <p>To understand at the level of individual variables how much we are
+      retaining or discarding when we interpret only the first n components we
+      calculate <strong>communalities</strong>. Communalities are calculated
+      from squared loadings, and they measure the proportion of variance
+      explained by a PCA axis for a variable. </p>
+    <p>The loadings we calculated in step 4 are in teeth.loadings, so now we
+      need to square the loadings and assign them to another object
+      (explained.variation chunk):</p>
+    <p class="rmd">teeth.loadings^2 -&gt; teeth.var.explained</p>
+    <p class="rmd">teeth.var.explained<br>
+    </p>
+    <p>You'll see:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Comp.1&nbsp; Comp.2&nbsp; Comp.3&nbsp;&nbsp; Comp.4&nbsp;&nbsp;
+      Comp.5&nbsp;&nbsp; Comp.6&nbsp;&nbsp; Comp.7<br>
+      weight&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.8566 0.01478 0.04140 0.001815
+      0.005724 0.079669 2.63e-05<br>
+      length&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.8960 0.00299 0.00767 0.000344
+      0.062689 0.012590 1.77e-02<br>
+      width.crown 0.3202 0.12006 0.05140 0.463160 0.044769 0.000374 1.44e-05<br>
+      width.root&nbsp; 0.0155 0.17050 0.72757 0.082335 0.000675 0.003405
+      3.65e-06<br>
+      depth&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.3515 0.41900 0.04168 0.053685
+      0.133175 0.000134 8.60e-04<br>
+      surface.len 0.9169 0.01305 0.01314 0.005367 0.016063 0.012556 2.29e-02<br>
+      thickness&nbsp;&nbsp; 0.1657 0.49964 0.13116 0.147549 0.047883 0.007982
+      1.12e-04</p>
+    <p>The carat is used to indicate an exponent, so "^2" means to square all
+      the correlations in "teeth.loadings". You'll see that Comp.1 is explaining
+      over 91% of the variation in surface.len, but only about 1.6% of
+      width.root. If we only interpreted the first component we would be nearly
+      ignoring the information in width.root.</p>
+    <p>By the way, if you sum these for each component you'll see they equal the
+      eigenvalues for each axis (in the Console): </p>
+    <p class="rcmd">colSums(teeth.var.explained)</p>
+    <p>gives you:</p>
+    <p class="rout">Comp.1 Comp.2 Comp.3 Comp.4 Comp.5 Comp.6 Comp.7 <br>
+      3.5224 1.2400 1.0140 0.7543 0.3110 0.1167 0.0416 </p>
+    <p>which are the same values that we got when we squared the standard
+      deviations of the components to get the eigenvalues, above.</p>
+    <p>To know how much variation we would retain across the first 2, or first
+      3, or first 4 components we just need to sum the variance explained for
+      each variable across the components - the components are independent,
+      which means that the variance explained by each component is
+      non-overlapping with all the others, and summing across all seven
+      components will thus explain 100% of the variation in every variable.</p>
+    <p>To get communalities from the squared loadings, we are going to do
+      something clever with a matrix multiplication. First, we want to make a
+      matrix that looks like this:</p>
+    <table style="text-align: left; width: 100px;" cellspacing="2" cellpadding="2"
+      border="1">
+      <tbody>
+        <tr>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td>1</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">0<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td>1</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">0<br>
+          </td>
+          <td style="vertical-align: top;">0<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td>1</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">0<br>
+          </td>
+          <td style="vertical-align: top;">0<br>
+          </td>
+          <td style="vertical-align: top;">0<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td>1</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">0<br>
+          </td>
+          <td style="vertical-align: top;">0<br>
+          </td>
+          <td style="vertical-align: top;">0<br>
+          </td>
+          <td style="vertical-align: top;">0<br>
+          </td>
+          <td style="vertical-align: top;">1<br>
+          </td>
+          <td>1</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>1</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>1</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>That is, a matrix with the same number of rows and columns as we have
+      variables and components (so, seven rows by seven columns) with 1's on the
+      main diagonal and in all the upper-triangle elements and zeros as
+      lower-triangle elements. To make this matrix, we'll use the command (in
+      the communalities chunk):</p>
+    <p class="rmd">round(upper.tri(matrix(0, nrow = 7, ncol = 7, diag = T)))
+      -&gt; ones.matrix</p>
+    <p>If you click on ones.matrix in your Environment it will open up for you
+      to view, and you'll see you have the matrix you need, with 1's in the
+      upper triangle and main diagonal, and zeros elsewhere.</p>
+    <p>This command works first by making an 7x7 matrix of 0s, and then
+      converting it to the upper triangular matrix we need. The commands work
+      like so (in the Console):</p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th>Step</th>
+          <th>Command</th>
+          <th>Result</th>
+        </tr>
+        <tr>
+          <td>
+            <p>First, we make an 7 x 7 matrix of anything (we're using 0's here,
+              but anything would work).</p>
+          </td>
+          <td>
+            <p class="rconsole">matrix(0,7,7)</p>
+          </td>
+          <td>
+            <table style="text-align: left; width: 100px;" cellspacing="2" cellpadding="2"
+              border="1">
+              <tbody>
+                <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+                <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Test whether each cell is in the "upper triangle", including the
+              main diagonal - this function is a logical test, and it returns
+              either TRUE or FALSE. You'll see that the TRUE values are where we
+              want the 1's to be, and the FALSE values are where we want the 0's
+              to be.</p>
+          </td>
+          <td class="rconsole">upper.tri(matrix(0,7,7), diag = T)</td>
+          <td>
+            <table style="text-align: left; width: 100px;" cellspacing="2" cellpadding="2"
+              border="1">
+              <tbody>
+                <tr>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td>TRUE</td>
+                  <td>TRUE</td>
+                </tr>
+                <tr>
+                  <td style="vertical-align: top;">FALSE<br>
+                  </td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td>TRUE</td>
+                  <td>TRUE</td>
+                </tr>
+                <tr>
+                  <td style="vertical-align: top;">FALSE</td>
+                  <td style="vertical-align: top;">FALSE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td>TRUE</td>
+                  <td>TRUE</td>
+                </tr>
+                <tr>
+                  <td style="vertical-align: top;">FALSE</td>
+                  <td style="vertical-align: top;">FALSE</td>
+                  <td style="vertical-align: top;">FALSE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td>TRUE</td>
+                  <td>TRUE</td>
+                </tr>
+                <tr>
+                  <td style="vertical-align: top;">FALSE</td>
+                  <td style="vertical-align: top;">FALSE</td>
+                  <td style="vertical-align: top;">FALSE</td>
+                  <td style="vertical-align: top;">FALSE</td>
+                  <td style="vertical-align: top;">TRUE</td>
+                  <td>TRUE</td>
+                  <td>TRUE</td>
+                </tr>
+                <tr>
+                  <td>FALSE</td>
+                  <td>FALSE</td>
+                  <td>FALSE<br>
+                  </td>
+                  <td>FALSE</td>
+                  <td>FALSE</td>
+                  <td>TRUE</td>
+                  <td>TRUE</td>
+                </tr>
+                <tr>
+                  <td>FALSE</td>
+                  <td>FALSE</td>
+                  <td>FALSE</td>
+                  <td>FALSE</td>
+                  <td>FALSE</td>
+                  <td>FALSE</td>
+                  <td>TRUE</td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>To convert the TRUE and FALSE into 1 and 0 we just need an
+              operation that converts boolean variables to numeric values. The
+              round() function does this, and the output becomes a matrix of 1's
+              on the main diagonal and above, and 0's below the main diagonal.</p>
+          </td>
+          <td class="rconsole">round(upper.tri(matrix(0,7,7), diag = T))</td>
+          <td>
+            <table style="text-align: left; width: 100px;" cellspacing="2" cellpadding="2"
+              border="1">
+              <tbody>
+                <tr>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td>1</td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td style="vertical-align: top;">0<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td>1</td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td style="vertical-align: top;">0<br>
+                  </td>
+                  <td style="vertical-align: top;">0<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td>1</td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td style="vertical-align: top;">0<br>
+                  </td>
+                  <td style="vertical-align: top;">0<br>
+                  </td>
+                  <td style="vertical-align: top;">0<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td>1</td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td style="vertical-align: top;">0<br>
+                  </td>
+                  <td style="vertical-align: top;">0<br>
+                  </td>
+                  <td style="vertical-align: top;">0<br>
+                  </td>
+                  <td style="vertical-align: top;">0<br>
+                  </td>
+                  <td style="vertical-align: top;">1<br>
+                  </td>
+                  <td>1</td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>1</td>
+                  <td>1</td>
+                </tr>
+                <tr>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>1</td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Okay, if we now matrix multiply our squared loadings by this ones.matrix
+      we'll get running sums of explained variation (in chunk communalities,
+      next line):</p>
+    <p class="rmd">teeth.var.explained %*% ones.matrix -&gt; teeth.communalities
+    </p>
+    <p>Finally, to make the result easier to read, we are going to add column
+      names to the matrix of communalities. The first column has the variance
+      explained for each variable by the first PCA axis, the second column has
+      the variance explained by the first two PCA axes, and so on. To make the
+      labels "First.1" through "First.8" we can use the paste() function, which
+      combines arguments into a text label, along with the seq() function, which
+      makes sequences of numbers. In the <strong>Console</strong> enter:</p>
+    <p class="rconsole">paste("First", seq(1,7), sep = ".")</p>
+    <p>and you should see:</p>
+    <p class="rout">[1] "First.1" "First.2" "First.3" "First.4" "First.5"
+      "First.6" "First.7"</p>
+    <p>We will use these as our column labels - enter the command (in chunk
+      communalities, after the command that made teeth.communalities):</p>
+    <p class="rmd">colnames(teeth.communalities) &lt;- paste("First", seq(1,7),
+      sep = ".")</p>
+    <p class="rmd">teeth.communalities</p>
+    <p>This sets the names on the columns of teeth.communalities, so that when
+      they display it's easier to keep track of what each column is telling you.
+      You should see:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      First.1 First.2 First.3 First.4 First.5 First.6 First.7<br>
+      weight&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.8566&nbsp;&nbsp;
+      0.871&nbsp;&nbsp; 0.913&nbsp;&nbsp; 0.915&nbsp;&nbsp; 0.920&nbsp;&nbsp;
+      1.000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1<br>
+      length&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.8960&nbsp;&nbsp;
+      0.899&nbsp;&nbsp; 0.907&nbsp;&nbsp; 0.907&nbsp;&nbsp; 0.970&nbsp;&nbsp;
+      0.982&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1<br>
+      width.crown&nbsp; 0.3202&nbsp;&nbsp; 0.440&nbsp;&nbsp; 0.492&nbsp;&nbsp;
+      0.955&nbsp;&nbsp; 1.000&nbsp;&nbsp;
+      1.000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1<br>
+      width.root&nbsp;&nbsp; 0.0155&nbsp;&nbsp; 0.186&nbsp;&nbsp;
+      0.914&nbsp;&nbsp; 0.996&nbsp;&nbsp; 0.997&nbsp;&nbsp;
+      1.000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1<br>
+      depth&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 0.3515&nbsp;&nbsp;
+      0.770&nbsp;&nbsp; 0.812&nbsp;&nbsp; 0.866&nbsp;&nbsp; 0.999&nbsp;&nbsp;
+      0.999&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1<br>
+      surface.len&nbsp; 0.9169&nbsp;&nbsp; 0.930&nbsp;&nbsp; 0.943&nbsp;&nbsp;
+      0.948&nbsp;&nbsp; 0.965&nbsp;&nbsp;
+      0.977&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1<br>
+      thickness&nbsp;&nbsp;&nbsp; 0.1657&nbsp;&nbsp; 0.665&nbsp;&nbsp;
+      0.796&nbsp;&nbsp; 0.944&nbsp;&nbsp; 0.992&nbsp;&nbsp;
+      1.000&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1</p>
+    <p>Why did this work? Remember, matrix multiplication is done across the
+      left matrix and down the right...</p>
+    <img src="first1.png" alt="First one" onclick="var images=['first1.png','first2.png', 'first3.png', 'first4.png', 'first5.png', 'first6.png','first7.png','all7.png']; changeImage(this, images)">
+    <ul>
+      <li>To get the first row of the "First.1" column (i.e. the variance
+        explained by Comp.1 for weight) we multiply the first row of
+        teeth.var.explained the first column of the ones matrix (in red) - this
+        multiplies the squared correlation for weight by 1, then multiplies the
+        squared correlation of weight with each of the other components by 0, so
+        the first row of the first column is just the squared correlation for
+        weight. The second row of the teeth.var.explained is length, and so the
+        second row of the first column of the output is just the squared
+        correlation for length. This is repeated until we have the squared
+        correlation for every variable in the first column (First.1). You'll see
+        the results of these calculations match the values we got for First.1 in
+        our matrix multiplication (aside from different levels of rounding).</li>
+      <li>Click the image to see the calculation of the First.2 column - to get
+        the second column of the output we multiply the first row of
+        teeth.var.explained by the second column of ones.matrix (in red), which
+        multiplies the squared correlation for weight on Comp.1 by 1, then the
+        squared correlation for weight on Comp.2 by one, and the rest by 0. If
+        you look at the calculations in the First.2 column this puts a 1 next to
+        both the first and second squared loadings, and a 0 next to the rest.
+        When these products are summed this gives you the sum of the first two
+        components.</li>
+      <li>This continues until we get through the seventh output column - if you
+        keep clicking you'll see each step until all seven are done (each column
+        turns red, and a 1 is placed next to those squared loadings in the
+        calculation). Since we have as many components as variables the full set
+        of seven components accounts for all of the variation in all of the
+        variables, and they all have a 1 in the First.7 column.</li>
+    </ul>
+    <p>Okay, now that we have them we can use these running totals to tell us
+      how much variation in each variable would be included if we only retained
+      up to that number of component axes. We already saw that if we retained
+      only the first component we would retain a lot of the size-related
+      variables but not much of variables like width.root, thickness,
+      width.crown, and depth. If we retain the first two axes we capture more of
+      the variation in the variables that were poorly represented by the first
+      component alone, except for width.root, which isn't well represented until
+      the third axis is retained. </p>
+    <p>Based on the Kaiser-Guttman rule, we would only retain the first three
+      variables for interpretation, so look at the communalities to see what
+      effect this would have. We would not be basing our interpretation of the
+      data on 100% of any of the variables if we retained the first three
+      components, and for some variables we would discarding over 50% of their
+      variation in our analysis. </p>
+    <p>This is the choice you make when you use multivariate methods to reduce
+      the dimensionality of the data - you choose to focus on the major, most
+      interpretable, multivariate patterns in the data, but you treat the
+      variation that is not explained by the retained components as unimportant.
+      Ultimately, whether this is a good thing or a bad thing depends on the
+      question being addressed - if we were interested in generating a size
+      index that makes use of multiple measured indicator variables but doesn't
+      rely on any single measure alone, then the fact that a lot of the
+      variation in the data is size-independent doesn't matter; we got our size
+      index, and we'd be happy with that. If we were trying to understand the
+      inter-relationships of all the variables we measured, and all of the
+      variables we measured are important to us, then stopping at 3 axes would
+      mean poorly understanding width.crown, and we might want to interpret the
+      first four axes so that we can base our interpretation on at least 86.6%
+      of the variation for every variable. </p>
+    <p><strong>8. Confirm that the PC axes are independent of one another</strong>.
+      An important feature of PCA axes is that they are forced to be independent
+      of each other. This means that once we know how to interpret the first PC
+      axis we can interpret it independently of the others - we can interpret
+      size variation independent of shape variation, and shape variation
+      independent of size variation.</p>
+    <p>When two continuous numeric variables are independent of one another
+      their correlations should be 0 - you can check this with (in the
+      check.pca.independent chunk):</p>
+    <p class="rmd">cor(teeth.pca$scores)</p>
+    <p>You should see that they are very close to zero, with values with
+      negative exponents of -15 to -17. Mathematically they should be exactly 0,
+      but rounding error results in these small non-zero values. Since the
+      correlations are (nearly) zero the PC axes are (nearly perfectly)
+      independent patterns of variation in the tooth data. </p>
+    <p><strong>9. Look at the teeth placed on the big PCA plot. </strong>It is
+      very helpful when you are learning a new technique like this to relate
+      what the numbers tell you to what the actual objects look like. I have
+      brought a large printout of the PCA, and you can place teeth on the plot
+      according to their numbers. Place teeth that fall as close the the x-axis
+      (PC1) and the y-axis (PC2) as possible, and see how they vary. The teeth
+      along the x-axis should have similar shapes, but differ in size. Teeth
+      along the y-axis should be similar in size, but differ in shape.</p>
+    <p>Also pay attention to what we are not capturing with our PCA - you may
+      notice that teeth that are really close to one another on the graph are
+      not identical to one another in appearance, which would be a good
+      indication that there are some characteristics that our variables didn't
+      measure.</p>
+    <h2>Assignment </h2>
+    <p>Complete the questions in your Rmd file, knit, and upload the Word file
+      to complete the assignment.</p>
+    <script type="text/javascript" src="teeth_data.js"></script>
+    <script type="text/javascript" src="scatter3d_teeth.js"></script>
+  </body>
+</html>
