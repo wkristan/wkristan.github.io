@@ -1,0 +1,280 @@
+---
+title: "Canonical Correspondence Analysis"
+author: "KEY"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Variation of bird species composition at the San Dieguito River Park estuary
+
+This data set is interesting both because it is from a local source, and because we can learn a method for the proper way to incorporate circular variables, such as month, into your analysis.
+
+To begin, import the data:
+
+
+```{r import.data}
+
+library(readxl)
+data.frame(read_excel("sdrp_waterbirds.xlsx")) -> birds
+
+```
+
+Make a list of the species (all columns are species except the first four):
+
+```{r make.species.list}
+
+species <- colnames(birds)[-c(1:2)]
+
+```
+
+Load the vegan library:
+
+```{r load.vegan}
+
+library(vegan)
+
+```
+
+Run a correspondence analysis using the cca() function with only the bird data (no "environmental" matrix yet):
+
+```{r birds.ca}
+
+cca(birds[species]) -> birds.ca
+birds.ca
+
+```
+
+Get a report of variation associated with each axis, and the running total across axes:
+
+```{r summary.birds.ca}
+
+summary(birds.ca)$cont$importance[,1:8]
+
+```
+
+#### Question: what proportion of variance is explained by the first two CA axes?
+
+> 22.2% for CA1, 18.2% for CA2, for a total of 40.5%
+
+Get a screeplot of the eigenvalues:
+
+```{r screeplot.ca}
+
+screeplot(birds.ca)
+
+```
+
+#### Question: is there a noticeable dropoff in the size of the eigenvalues across these first eight CC axes? Between which axes?
+
+> Yes, after the third one it drops off.
+
+Construct the biplot:
+
+```{r biplot.of.ca}
+
+plot(birds.ca, type = "n")
+points(birds.ca, display = "sites", cex = 0.8, pch = 21, col = "gray", bg = "lightblue")
+orditorp(birds.ca, display = "spec", cex = 0.5, col = "red")
+
+```
+
+#### Question: according to the biplot, which species are most strongly associated with CA1? Which species would you expect to see in large numbers in the points at CA1 values of 2 or more?
+
+> BVSH and BRAC. BRAC would be common.
+
+#### Question: which species are most strongly associated with CA2? Which species would you expect to see in large numbers in points with CA2 scores of -3 or less?
+
+> BRAC and YBCH are strongly associated with CA2. Low values of CA2 are associated with BRAC. 
+
+
+Calculate the CA 1 scores:
+
+```{r ca1.scores}
+
+scores(birds.ca, display = "sites", choices = c(1)) -> birds.ca1
+
+```
+
+Correlate the bird counts with these CA 1 scores:
+
+```{r correlate.counts.ca1}
+
+cor(birds[species], birds.ca1) -> birds.ca1.cor
+
+```
+
+Plot buffleheads, black-vented shearwaters, and brown pelicans as examples of a strong positive, strong negative, and nearly zero correlation:
+
+```{r plot.sp.ca1}
+
+par(mfrow = c(1,3))
+plot(birds$BUFF ~ birds.ca1, xlab = "CA 1", ylab = "Count", main = "BUFF, r = 0.38")
+plot(birds$BVSH ~ birds.ca1, xlab = "CA 1", ylab = "Count", main = "BVSH, r = -0.89")
+plot(birds$BRPE ~ birds.ca1, xlab = "CA 1", ylab = "Count", main = "BRPE, r = -0.04")
+
+```
+
+#### Question: Is the relationship between BUFF and CA1 linear? Does the correlation coefficient accurately represent the relationship between BUFF counts and CA1 scores?
+
+> No, it's curved, so the correlation coefficient is under-estimating the strength of the relationship.
+
+#### Question: can you see why there is a negative correlation between BVSH and CA1? Is the relationship linear?
+
+> The negative relationship is due to one really large count at the left side of the graph. The relationship is not really linear, there are lots of points with low counts clustered at 0 and a few scattered points away from 0.
+
+#### Question: there are two reasons why you might get a low correlation between counts for a species and an axis: species that are restricted to a narrow range in the middle of the axis, or species that are found in roughly equal numbers along the entire axis. Which is true here for brown pelicans?
+
+> The species is pretty randomly distributed - there are both high and low counts all along CA1.
+
+## Canonical correspondence analysis
+
+We will use month and year as our "environmental matrix", but we want month to be represented by springness and winterness to avoid having December and January at opposite ends of the scale.
+
+First, we need an ordered factor for month:
+
+```{r make.month.ordered}
+
+birds$month <- ordered(birds$month, levels = c("jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"))
+
+```
+
+Convert the months to radians on a circle:
+
+```{r months.as.radians}
+
+2 * pi * as.numeric(birds$month)/12 -> months.rad
+
+```
+
+Calculate springness and add it to the birds data set:
+
+```{r calculate.springness}
+
+birds$springness <- sin(months.rad)
+
+```
+
+Calculate winterness and add it to the birds data set:
+
+```{r calculate.winterness}
+
+birds$winterness <- cos(months.rad)
+
+```
+
+Now run the CCA, relating the birds to year, springness, and winterness:
+
+```{r run.cca}
+
+cca(birds[species] ~ springness + winterness + year, data = birds) -> birds.cca
+
+birds.cca
+
+```
+#### Question: what proportion of variation in the bird data is explained by the predictors?
+
+> This is the proportion for the constrained axes, which is 0.2158.
+
+
+Make a triplot, with site scores, species scores, and vectors indicating the predictors:
+
+```{r make.triplot}
+
+plot(birds.cca, type = "n")
+
+points(birds.cca, display = "sites", cex = 0.8, pch = 21, col = "gray", bg = "lightblue")
+
+points(birds.cca, display = "bp", arrow.mul = 1.5)
+
+text(birds.cca, display = "bp", arrow.mul = 1.5)
+
+ordispider(birds.cca, birds$month, col = "green", lwd = 1)
+
+orditorp(birds.cca, display = "spec", cex = 0.75, col = "red", scaling = 1)
+
+```
+#### Question: which season has the least variation from year to year in species composition? Hint: look for the spiders with the shortest legs, and see wheich quadrant of the graph they're in.
+
+> Spring has the least variation in species composition, because the spiders have the shortest legs in the spring.
+
+#### Question: which species have the highest relative frequencies in each season?
+
+> In spring the highest relative frequencies are for species like NSHO and RTLO. For fall (opposite direction of the springness arrow) it's BVSH. In winter it is BRAC and CANG. In summer (opposite direction of winterness) it is YBCH.
+
+Get a randomization test for the CCA to see if the amount of variation in bird community composition that is explained by season and time is statistically significant:
+
+```{r cca.anova}
+
+anova(birds.cca, by = "term")
+
+```
+
+#### Question: which of the predictors are statistically significant predictors of species composition?
+
+> All three of the predictors are statistically significant.
+
+
+To calculate loadings, first extract the site scores:
+
+```{r cca.scores}
+
+scores(birds.cca, choices = c(1,2,3), display = "sites") -> birds.cca.scores
+
+```
+
+Then correlate the bird counts by the site scores:
+
+```{r cca.loadings}
+
+ cor(birds[species],birds.cca.scores) -> birds.loadings
+
+```
+
+#### Question: which species are most strongly positively correlated with CCA1? Which are strongly negatively correlated with CCA1?
+
+> Strong positive correlations from BUFF and EAGR, strong negative correlations from GRHE and GREG.
+
+Correlate the site scores with the predictor variables:
+
+```{r cca.correlated.predictors.with.scores}
+
+cor(birds[,c("springness","winterness","year")],birds.cca.scores)
+
+```
+
+#### Question: which axis is most strongly associated with change over time in species composition (year)?
+
+> The third CCA axis has a correlation of -0.63 with year.
+
+To better understand the change over time, correlate the species that have the highest loadings on CCA3 with year:
+
+```{r correlate.counts.with.year}
+
+cor(birds[,c("BEVI","MAGO","WISN","BWTE","WIPH","BEKI")], birds$year)
+
+```
+
+#### Question: based on these correlations, how are the four species changing over time (which are increasing, which are decreasing)?
+
+> BEVI and MAGO are increasign, WISN and BWTE are decreasing, while WIPH and BEKI are not changing very consistently over time.
+
+To make sure that we're justified in using year as a linear predictor in the model, fit a cca with year as a linear predictor, followed by year as a factor:
+
+```{r cca.test.for.nonlinear.year}
+
+cca(birds[species] ~ year + as.factor(year) + winterness + springness, data = birds) -> birds.yr.fact.cca
+
+anova(birds.yr.fact.cca, by = "terms")
+
+```
+
+#### Question: is year as a factor significant, after the linear change over time is accounted for? What does this mean - is there variation from year to year that isn't a directional trend over time?
+
+> Yes, year as a facotr is significant, so there is additional variation from year to year that isn't accounted for by the linear trend modeled by year.

@@ -1,0 +1,189 @@
+---
+title: "Canonical Correspondence Analysis"
+author: "Your Name"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Variation of bird species composition at the San Dieguito River Park estuary
+
+This data set is interesting both because it is from a local source, and because we can learn a method for the proper way to incorporate circular variables, such as month, into your analysis.
+
+To begin, import the data:
+
+
+```{r import.data}
+
+library(readxl)
+data.frame(read_excel("sdrp_waterbirds.xlsx")) -> birds
+
+```
+
+Make a list of the species (all columns are species except the first two):
+
+```{r make.species.list}
+
+species <- colnames(birds)[-c(1:2)]
+
+```
+
+Load the vegan library:
+
+```{r load.vegan}
+
+library(vegan)
+
+```
+
+We will use month and year as our "environmental matrix" in our CCA, but we want month to be represented by springness and winterness to avoid having December and January at opposite ends of the scale.
+
+First, we need an ordered factor for month:
+
+```{r make.month.ordered}
+
+birds$month <- factor(birds$month, levels = tolower(month.abb))
+
+```
+
+Convert the months to radians on a circle:
+
+```{r months.as.radians}
+
+2 * pi * as.numeric(birds$month)/12 -> months.rad
+
+```
+
+Calculate springness and add it to the birds data set:
+
+```{r calculate.springness}
+
+birds$springness <- sin(months.rad)
+
+```
+
+Calculate winterness and add it to the birds data set:
+
+```{r calculate.winterness}
+
+birds$winterness <- cos(months.rad)
+
+```
+
+Now run the CCA, relating the birds to year, springness, and winterness:
+
+```{r run.cca}
+
+cca(birds[species] ~ springness + winterness + year, data = birds) -> birds.cca
+
+birds.cca
+
+```
+
+#### Question: what proportion of variation in the bird data is explained by the predictors?
+
+> 
+
+Get a randomization test for the CCA to see if the amount of variation in bird community composition that is explained by season and time is statistically significant:
+
+```{r cca.anova}
+
+anova(birds.cca, by = "term")
+
+```
+
+#### Question: which of the predictors are statistically significant predictors of species composition?
+
+> 
+
+
+Make a triplot, with site scores, species scores, and vectors indicating the predictors:
+
+```{r make.triplot}
+
+plot(birds.cca, type = "n")
+
+points(birds.cca, display = "sites", cex = 0.8, pch = 21, col = "gray", bg = "lightblue")
+
+points(birds.cca, display = "bp", arrow.mul = 1.5)
+
+text(birds.cca, display = "bp", arrow.mul = 1.5)
+
+ordispider(birds.cca, birds$month, col = "green", lwd = 1)
+
+orditorp(birds.cca, display = "spec", cex = 0.75, col = "red", scaling = 1)
+
+```
+
+#### Question: which season has the least variation from year to year in species composition? Hint: look for the spiders with the shortest legs, and see wheich quadrant of the graph they're in.
+
+> 
+
+#### Question: which species have the highest relative frequencies in each season?
+
+> 
+
+
+To calculate loadings, first extract the site scores:
+
+```{r cca.scores}
+
+scores(birds.cca, choices = c(1,2,3), display = "sites") -> birds.cca.scores
+
+```
+
+Then correlate the bird counts by the site scores:
+
+```{r cca.loadings}
+
+ cor(birds[species],birds.cca.scores) -> birds.loadings
+
+```
+
+#### Question: which species are most strongly positively correlated with CCA1? Which are strongly negatively correlated with CCA1?
+
+> 
+
+Correlate the site scores with the predictor variables:
+
+```{r cca.correlated.predictors.with.scores}
+
+cor(birds[,c("springness","winterness","year")],birds.cca.scores)
+
+```
+
+#### Question: which axis is most strongly associated with change over time in species composition (year)?
+
+> 
+
+To better understand the change over time, correlate the species that have the highest loadings on CCA3 with year:
+
+```{r correlate.counts.with.year}
+
+cor(birds[,c("BEVI","MAGO","WISN","BWTE","WIPH","BEKI")], birds$year)
+
+```
+
+#### Question: based on these correlations, how are the four species changing over time (which are increasing, which are decreasing)?
+
+> 
+
+To make sure that we're justified in using year as a linear predictor in the model, fit a cca with year as a linear predictor, followed by year as a factor:
+
+```{r cca.test.for.nonlinear.year}
+
+cca(birds[species] ~ year + as.factor(year) + winterness + springness, data = birds) -> birds.yr.fact.cca
+
+anova(birds.yr.fact.cca, by = "terms")
+
+```
+
+#### Question: is year as a factor significant, after the linear change over time is accounted for? What does this mean - is there variation from year to year that isn't a directional trend over time?
+
+> 
