@@ -1,0 +1,274 @@
+---
+title: "Interactions and post-hocs"
+author: "KEY"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## MANOVA interactions
+
+Import the mouse data:
+
+```{r import.mouse.data}
+
+library(readxl)
+data.frame(read_excel("mouse.xlsx","mouse")) -> mouse
+
+```
+
+Make a new column in mouse with combinations of parasite.treatment and caloric.treatment:
+
+```{r make.combinations}
+
+mouse$parasite.caloric <- with(mouse, interaction(parasite.treatment, caloric.treatment))
+
+```
+
+### Fat and RMR as responses - MANOVA
+
+Load the ggplot2 library:
+
+```{r load.ggplot2}
+
+library(ggplot2)
+
+```
+
+Graph the fat and rmr variables as a scatter plot, using color to indicate parasite treatment, and plot symbol to indicate caloric treatment:
+
+```{r fat.rmr.ggplot}
+
+ggplot(mouse, aes(x = fat, y = rmr, color = parasite.caloric, shape = parasite.caloric)) + geom_point(size = 3) + scale_color_manual(values = c("red","black","red","black")) + scale_shape_manual(values = c(16,16,17,17))
+
+```
+
+#### Question: ignore the plot symbol and just compare the colors - does it look like there is separation between control and polygyrus groups with respect to their fat and rmr values? How can you tell?
+
+> Yes, the red points are slightly to the right of the black points.
+
+#### Question: ignore color and focus on the different plot symbols - does it look like there is separation between ad lib and restricted mice? How can you tell?
+
+> Yes, the dots are to the upper right of the triangles.
+
+To make a plot of the centroids we need to calculate them first. We can use the aggregate() function to calculate means for combinations of parasite.treatment and caloric.treatment:
+
+```{r calculate.group.centroids}
+
+aggregate(cbind(fat, rmr, li, si) ~ parasite.treatment + caloric.treatment, data = mouse, FUN = mean) -> mouse.means
+
+```
+
+Add the combinations of parasite and caloric treatments to mouse.means:
+
+```{r combinations.for.means}
+
+mouse.means$parasite.caloric <- with(mouse.means, interaction(parasite.treatment, caloric.treatment))
+
+```
+
+Make the plot of the centroids:
+
+```{r fat.rmr.centroids.plot}
+
+ggplot(mouse.means, aes(x = fat, y = rmr, color = parasite.caloric, shape = parasite.caloric, group = parasite.treatment)) + geom_point(size = 3) + scale_color_manual(values = c("red","black","red","black")) + scale_shape_manual(values = c(16,16,17,17)) + geom_line()
+
+```
+
+#### Question: why would you expect a main effect of parasite.treatment, based on this graph?
+
+> There should be a main effect of parasite.treatment because the red line is different on average from the black line.
+
+#### Question: why would you expect a main effect of caloric.treatment, based on this graph?
+
+> Yes, caloric.treatment should be different because the circles are different on average from the triangles.
+
+#### Question: why does the fact that the lines are about the same length and pointed in the same direction indicate that we should not expect an interaction between parasite.treatment and caloric.treatment? Hint: is the amount of difference between ad lib and restricted mice about the same for both colors, and is the way they change similar?
+
+> There should not be a significant interaction, because the amount of difference between the ad lib and restricted caloric treatments are the same for polygyrus and control parasite treatment groups.
+
+Now run the MANOVA to test for main effects and interaction between parasite.treatment and caloric.treatment:
+
+```{r manova.parasite.and.caloric}
+
+manova(cbind(fat, rmr) ~ parasite.treatment * caloric.treatment, data = mouse) -> fat.rmr.manova
+
+summary(fat.rmr.manova)
+
+```
+
+#### Question: are there significant main effects for the predictors (if so, which)? Is there a significant interaction?
+
+> The main effects are both significant, but there is not a significant interaction.
+
+### Large intestine and small intestine as responses - MANOVA
+
+Now do the graphs again using li and si. Start with the raw data in mouse:
+
+```{r li.si.ggplot}
+
+ggplot(mouse, aes(x = li, y = si, color = parasite.caloric, shape = parasite.caloric)) + geom_point(size = 3) + scale_color_manual(values = c("red","black","red","black")) + scale_shape_manual(values = c(16,16,17,17))
+
+
+```
+
+#### Question: Looking just at color, does it appear that there will be a difference between control and polygyrus treatments in their large and small intestine lengths? How can you tell?
+
+> Yes, parasite.treatment should be significant becasue the red and black do not overlap.
+
+Now looking just at the circles and triangles, does it look like there will be a difference between ad lib and restricted animals? How can you tell?
+
+> There may not be a main effect of caloric treatment, because the circles and triangles overlap a lot.
+
+Now the centroids:
+
+```{r li.si.centroids.plot}
+
+ggplot(mouse.means, aes(x = li, y = si, color = parasite.caloric, shape = parasite.caloric, group = parasite.treatment)) + geom_point(size = 3) + scale_color_manual(values = c("red","black","red","black")) + scale_shape_manual(values = c(16,16,17,17)) + geom_line()
+
+```
+
+#### Question: why would you expect a main effect of parasite.treatment, based on this graph?
+
+> Parasite treatment should be significant because the red line is different from the black line on average.
+
+#### Question: why would you expect a main effect of caloric.treatment, based on this graph?
+
+> The main effect of caloric.treatment should be significant becasue the mean of the triangles is diferent than the mean of the circles.
+
+#### Question: why does the fact that the lines are different lengths and pointed in the different directions indicate that we should expect an interaction between parasite.treatment and caloric.treatment? Hint: is the amount of difference between ad lib and restricted mice about the same for both colors, and is the way they change similar?
+
+> The lines are different lengths and point in different directions, so the difference between caloric treatments is not the same for polygyrus and control groups.
+
+Run your MANOVA using li and si as responses:
+
+```{r manova.parasite.and.caloric.si.li}
+
+manova(cbind(li, si) ~ parasite.treatment * caloric.treatment, data = mouse) -> li.si.manova
+
+summary(li.si.manova)
+
+```
+
+#### Question: is there a significant main effect of parasite.treatment? How do you know?
+
+> The parasite.treatment effect is statistically significant because its p-value is less than 0.05.
+
+#### Question: is there a significant main effect of caloric.treatment? How do you know?
+
+> The caloric.treatment effect is statistically significant because its p-value is also less than 0.05.
+
+#### Question: is there a significant interaction between parasite.treatment and caloric.treatment? How do yo know?
+
+> Yes, the interaction term also has a p-value less than 0.05.
+
+## Post-hoc procedures, with and without interactions
+
+The procedure for following up after a significant MANOVA depends on whether there is a significant interaction or not.
+
+### Post-hoc procedures with a non-significant interaction - rmr and fat
+
+Since the interaction was not significant we can focus on main effects. With only two groups we already know that the groups are different in a multivariate sense, but we still need to test main effects of each predictor on fat, and on rmr separately. With only two groups it isn't necessary to use multiple comparison procedures, and we can just do a univariate factorial ANOVA.
+
+First rmr:
+
+```{r post-hoc.rmr}
+
+summary(aov(rmr ~ parasite.treatment + caloric.treatment, data = mouse))
+
+```
+
+#### Question: is rmr different between parasite treatments? What about between caloric treatments? How can you tell?
+
+> RMR is not different between parasite treatment groups, but is different between caloric treatment groups.
+
+Now fat:
+
+```{r post-hoc.fat}
+
+summary(aov(fat ~ parasite.treatment + caloric.treatment, data = mouse))
+
+```
+
+#### Question: is fat different between parasite treatments? What about between caloric treatments? How can you tell?
+
+> Fat is different between both parasite treatments and caloric treatments.
+
+### Significant interaction - li and si
+
+The first approach is to compare differences between parasite treatments for mice that were given one or the other caloric treatment.
+
+First split the data by caloric treatment:
+
+```{r split.data.by.caloric}
+
+split(mouse, mouse$caloric.treatment) -> mouse.split
+
+```
+
+Then conduct MANOVAs comparing the parasite treatments for each diet:
+
+```{r compare.parasite.within.each.caloric}
+
+lapply(mouse.split, FUN = function(x) summary(manova(cbind(li, si) ~ parasite.treatment, data = x)))
+
+```
+
+#### Question: are there differences in parasite group for both of the caloric groups? How do you know (be specific - what alpha level do you use to decide if the effects are significant)?
+
+>
+
+The second approach is to test all possible comparisons between the combinations of parasite treatment and caloric treatment.
+
+To run the multivariate Hotelling T^2^ comparisons for each pair of groups in parasite.caloric we first need to get all the comparisons we want to make into a list:
+
+```{r mv.posthoc.comparisons}
+
+groups <- levels(factor(mouse$parasite.caloric))
+
+comps <- combn(groups, m = 2, simplify = F)
+
+names(comps) <- sapply(comps, FUN = function(x) paste(x, collapse = " - "))
+
+```
+
+Next we get the p-values for these comparisons:
+
+```{r multivariate.posthoc}
+
+lapply(comps, FUN = function(x) summary(manova(cbind(li,si) ~ parasite.caloric, data = mouse, subset = parasite.caloric %in% x))) -> manovas.ph
+
+data.frame(p = sapply(manovas.ph, FUN = function(x) x$stats[1,6]))
+
+```
+
+#### Question: which groups are significantly different according to these Hotelling T^2^ tests?
+
+> All of them are, except for control.ad lib and control.restricted
+
+Lastly, do Tukey post-hocs on li and si separately:
+
+```{r tukey.posthoc}
+
+TukeyHSD(aov(li ~ parasite.caloric, data = mouse))
+TukeyHSD(aov(si ~ parasite.caloric, data = mouse))
+
+```
+
+#### Question: which groups had different large intestine lengths?
+
+> For large intestine, only polygyrus.ad lib and control.ad lib, and polygyrus.restricted and polygyrus.ad lib are different.
+
+#### Question: which groups had different small intestine lengths?
+
+> For small intestine, all are different except for control.restricted and control.ad lib.
+
+#### Question: were there any groups that were only different when both variables were used? Or, were all of the groups that were different in the Hotelling's T^2^ tests also different in either their li or si measurements?
+
+> No, the only groups that were never different using li and si separately were control.ad lib and control.restricted, and that was the comparison that was not different using Hotelling's T^2^ either.

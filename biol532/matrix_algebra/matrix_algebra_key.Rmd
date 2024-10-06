@@ -1,0 +1,136 @@
+---
+title: "Matrix algebra"
+author: "KEY"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Calculating the correlation matrix using matrix algebra in R
+
+We will calculate a correlation matrix using R's matrix algebra capabilities.
+
+First, import the data:
+
+```{r import.data}
+
+library(readxl)
+read_excel("leaves.xlsx") -> leaves
+
+```
+
+Calculate the means for each measured variable in leaves:
+
+```{r calculate.colMeans}
+
+means <- colMeans(leaves)
+means
+
+```
+
+Make a matrix out of the vector of means you just created, with the means repeated once for every row of data in leaves:
+
+```{r make.matrix.of.means}
+
+mean.mat <- matrix(data = means, nrow = 66, ncol = 7, byrow = T)
+
+```
+
+Calculate the matrix of residuals by subtracting the means from the data values:
+
+```{r calculate.residuals}
+
+as.matrix(leaves) - mean.mat -> resids
+
+```
+
+Calculate the covariance matrix:
+
+```{r covariance.matrix}
+
+t(resids) %*% resids/(66-1) -> covar.mat
+
+```
+
+Make a diagonal matrix of standard deviations:
+
+```{r stdev.diagonal.matrix}
+
+diag(diag(covar.mat)^0.5) -> sd.mat
+
+```
+
+Find the inverse of sd.mat:
+
+```{r invert.sd.mat}
+
+solve(sd.mat) -> sd.inv.mat
+
+```
+
+Calculate the correlation matrix from the inverse of the standard deviations and the covariance matrix:
+
+```{r correl.matrix}
+
+sd.inv.mat %*% covar.mat %*% sd.inv.mat -> correl.mat
+
+correl.mat
+```
+
+## Doing the same thing with R's built-in commands:
+
+Now that we've had our fun, the way you would really do the calculations above would be to use R's built-in commands rather than doing matrix algebra. Reproduce the above calculations using R's built-in commands.
+
+Now that we've had our fun, the way you would really do the calculations above would be to use R's built-in commands rather than doing matrix algebra. We can get a correlation matrix with a single command:
+
+Correlation matrix:
+
+```{r r.correlation.matrix}
+
+cor(leaves)
+
+```
+
+We can use the covariance matrix, though, to get a multivariate measure of variance:
+
+```{r r.var.command}
+
+var(leaves)
+
+```
+
+The determinant is the generalized variance for the entire data set:
+
+```{r r.determinant.of.covariance.matrix}
+
+det(var(leaves))
+
+```
+
+To see how big an effect on the variance that removing the covariances has you can calculate the product of the variances:
+
+```{r r.product.of.variances}
+
+prod(diag(var(leaves)))
+
+```
+
+## Questions
+
+#### Question: why does using matrix algebra to calculate correlations between variables result in calculation of things we already know (i.e. the correlation of variables with themselves is 1), and duplicates of the things we want to know (i.e. what are the correlations between different variables)?
+
+> The calculations use matrix operations that work on entire matrices, and the outputs have these calculations repeated. We can't choose not to calculate the correlations between variables if we use matrix methods.
+
+#### Question: why is it useful to characterize the amount of variation in a multivariate data set using the determinant of the covariance matrix, S? What mistake would we make if we didn't use the determinant of S, and just used the variances for all the variables?
+
+> The determinant subtracts the covariance bewteen variables. If we don't use the determinant, we count the same bits of correlated variation over and over again.
+
+#### Question: changing the order of multiplication doesn't change the result in "scalar" multiplication (the kind we usually do). If you had changed the order of the multiplication of C^-1^SC^-1^ would you have gotten the same result (that is, standard deviations multiplied by covariance matrix multiplied by standard deviations)? For example, would C^-1^C^-1^S be the same as C^-1^SC^-1^?
+
+>  No, matrix multiplication is not commutative, and you don't get the same answer if you change the order of the multiplications.

@@ -1,0 +1,781 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Matrix algebra</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+    <script src="dragdrop.js"></script>
+    <link href="corr_matrix_image_map.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <h1>Matrix algebra</h1>
+    <p> In lecture we learned how matrix algebra can be used to do calculations
+      on multiple variables at once. We will use matrix algebra to calculate a
+      correlation matrix today, like I did for you in lecture, so you can see
+      how it's possible to use matrix methods to analyze multiple variables
+      simultaneously.</p>
+    <h2>Using matrix algebra to calculate correlations between variables</h2>
+    <p> Our first step in calculating correlations between pairs of variables
+      will be to calculate variances (for single variables) and covariances
+      (between pairs of variables). The non-matrix algebra formula for variance
+      is: </p>
+    <p><img src="variance_formula.png" alt="Variance" title="Variance" style="width: 160px; height: 61px;"></p>
+    <p>This formula tells us to subtract the mean of the variable from each of
+      the data values (y<sub>i</sub>), square the differences ((y<sub>i</sub> -
+      ȳ)<sup>2</sup>), sum them all up (Σ), and divide by degrees of freedom
+      (n-1) to calculate variance. The differences between observations and
+      means are <strong>residuals</strong>, so we're calculating a sum of
+      squared residuals, and dividing that by degrees of freedom. </p>
+    <p>The covariance formula is:</p>
+    <p><img src="covariance_formula.png" alt="Covariance" style="width: 353px; height: 71px;"></p>
+    <p>The covariance between y<sub>1</sub> and y<sub>2</sub> is calculated by
+      calculating residuals for each of the two variables, multiplying them
+      together to get the <strong>cross-products</strong>, summing the
+      cross-products, and dividing by degrees of freedom.</p>
+    <p>If we re-express the variance formula as:</p>
+    <img src="variance_as_cov.png" alt="Var as covar">
+    <p>you'll see that it's essentially the same as the covariance formula, but
+      instead of using two different variables measured on the same individuals
+      we're using the same variable twice.</p>
+    <p> </p>
+    <p>We can calculate a correlation coefficient from a covariance by dividing
+      covariance by the product of the standard deviations for the two
+      variables:</p>
+    <p><img src="correlation.png" style="width: 153px; height: 68px;"> </p>
+    <p>This says that to get a correlation coefficient between y<sub>1</sub> and
+      y<sub>2</sub> we divide the covariance between them by the product of
+      their two standard deviations, s<sub>y1</sub> and s<sub>y2</sub>.</p>
+    <p>Since we've just shown that variance is just the covariance of a variable
+      with itself, the correlation coefficient for any variable with itself is
+      going to be:</p>
+    <img src="corr_var_with_self.png" alt="Correlation of variable with itself">
+    <p>Thus the correlation of a variable with itself will always be 1.</p>
+    <p>For a single pair of variables the correlation coefficient is simple to
+      calculate using these nice, conventional formulas. But, if we have
+      multiple variables calculating correlations between every pair of
+      variables one at a time is less convenient, and using matrix algebra so
+      that we can do all of them all at once is a better choice. The matrix
+      operations we will use are as follows (illustrated with a small example
+      data set): </p>
+    <div id="step1_wrapper">
+      <div id="explanation1" style="float: left; width: 200px; margin-right: 20px">
+        <p> Step 1: Calculate the residuals. These are calculated by subtracting
+          a matrix of means from the matrix of data. </p>
+      </div>
+      <div id="data1" style="float:left"> <img src="data.png" style="vertical-align: middle; width: 200px">
+        <span style="font-size: 48"> - </span> <img src="means.png" style="vertical-align: middle; width: 200px">
+        <span style="font-size: 48">=</span> <img src="residuals.png" style="vertical-align: middle; width: 200px">
+      </div>
+    </div>
+    <br style="clear:both">
+    <br>
+    <div id="step2_wrapper">
+      <div id="explanation2" style="float: left; width: 200px; margin-right: 20px">
+        <p> Step 2: Calculate the covariance matrix, <strong>S</strong>. This
+          is done by multiplying the transpose of the residuals by the
+          residuals, and then dividing each element by degrees of freedom </p>
+      </div>
+      <div id="resid_trans2" style="float:left"> <img src="residuals_trans.png"
+          style="vertical-align: middle; width:300px"> <span style="font-size: 48">
+          × </span> <img src="residuals.png" style="vertical-align: middle; width: 200px">
+        <span style="font-size: 24">/(5-1)</span><span style="font-size:48"> =</span>
+        <img src="covariance_matrix.png" style="vertical-align: middle; width: 250px">
+      </div>
+    </div>
+    <div id="step3_wrapper">
+      <div id="explanation3" style="float: left; clear:both">
+        <p> Step 3: Calculate the correlation matrix from the covariance matrix.
+          This is done by placing the standard deviations into a diagonal matrix
+          (i.e. one that has standard deviations on the main diagonal and 0's
+          everywhere else), calculating its inverse, and then both pre- and
+          post-multiplying <strong>S</strong> by the standard deviation inverse
+          matrix to get the correlation matrix. </p>
+      </div>
+      <div id="diag_matrix_from_s3" style="float:left"> <em>Diagonal matrix of
+          std. dev. from the covariance matrix, S</em><br>
+        &nbsp; &nbsp; <span style="font-size:24">diag</span><span style="font-size: 48">(</span><img
+          src="covariance_matrix.png" style="vertical-align: middle; width:200px">
+        <span style="font-size: 48">)<sup>½</sup></span><span style="font-size: 48">=</span>
+        <img src="stdevs.png" style="vertical-align: middle; width: 200px"> </div>
+      <br style="clear:both">
+      <br>
+      <br>
+      <div id="diag_matrix_sd3" style="float:left"> <em>Diagonal matrix of
+          standard deviations, inverted:</em><br>
+        &nbsp; &nbsp; <span style="font-size:48">(</span><img src="stdevs.png"
+          style="vertical-align: middle; width:250px"> <span style="font-size: 48">)<sup>⁻¹</sup></span><span
+          style="font-size: 48">=</span> <img src="stdevs_inv.png" style="vertical-align: middle; width: 250px">
+      </div>
+      <br style="clear:both">
+      <br>
+      <br>
+      <div id="calc_cor3" style="float:left"> <em>Pre- and post-multiply <strong>S</strong>
+          by inverted matrix:</em><br>
+        &nbsp; &nbsp; <img src="stdevs_inv.png" style="vertical-align: middle; width:200px">
+        <span style="font-size: 48">×</span><img src="covariance_matrix.png" style="vertical-align: middle; width: 200px"><span
+          style="font-size: 48">×</span><img src="stdevs_inv.png" style="vertical-align: middle; width:200px"><span
+          style="font-size: 48">=</span><img src="correl.png" style="vertical-align: middle; width: 200px">
+      </div>
+    </div>
+    <br style="clear:both">
+    <p><br>
+    </p>
+    <p>Why and how this works was explained in the lecture, and hopefully will
+      become clearer as you work through the steps and read the explanations
+      below. Let's begin.</p>
+    <h3>Preliminaries</h3>
+    <p> </p>
+    <p>We will do the calculations in R, so start R Studio and create a new
+      project called "matrix_algebra" in a new folder for today's activity
+      (you'll see the matrix_algebra.Rproj file in the new project folder when
+      you're done).</p>
+    <ul>
+    </ul>
+    <div style="width: 100%; overflow: auto"> <img src="leaf_with_petiole_circled.png"
+        style="float:left; margin-right: 10px" alt="Sycamore leaf" title="Sycamore leaf">
+      <p>Next, download <a href="leaves.xlsx">this file</a>, called
+        leaves.xlsx, to your project folder, which is the data we will use for
+        today. Make sure you save it into the project folder you just created
+        (or move it into the project folder if it goes someplace else
+        automatically).</p>
+      <p>These are measurements from 66 leaves made by a previous Biol 532
+        class. The column names are pretty self-explanatory - if you don't know
+        what a petiole is, it's the short stem that attaches the leaf to the
+        twig it grows on (circled in red on the picture of a sycamore leaf to
+        the left). The seven variables represent various measures of the weight
+        and dimensions of the leaves. Multivariate data are appropriate for
+        measuring these leaves, because, as you can see, they are complex
+        objects whose sizes and shapes are difficult to represent with a single
+        variable.</p>
+      <p>Download the Rmd file for today, called <a href="matrix_algebra.Rmd">matrix_algebra.Rmd</a>,
+        to your project folder and open it in R Studio.</p>
+      <p>Import the leaves data into R using the readxl command (in chunk
+        import.data):</p>
+      <p class="rmd">library(readxl)</p>
+      <p class="rmd">read_excel("leaves.xlsx") -&gt; leaves</p>
+      <p>We didn't need to specify the sheet in this case because the first
+        sheet is read by default, and that's the only sheet with data in it. The
+        worksheet that the leaf data are in is called leaves, so
+        read_excel("leaves.xlsx", sheet = "leaves") would also have worked, but
+        it wasn't necessary.</p>
+    </div>
+    <h3>Step 1: Calculate a matrix of residuals</h3>
+    <p>The first step in this calculation is to subtract a matrix of means (<span
+        style="text-decoration-line: overline; font-weight: bold">Y</span>) from
+      the matrix of data (<strong>Y</strong>) to get a matrix of residuals (<strong>R</strong>).<br>
+    </p>
+    <p>To check that you're understanding how the matrix operations work you
+      will construct the calculation step from the matrices provided below.
+      These matrices are small examples of a data set with three variables (x<sub>1</sub>,
+      x<sub>2</sub>, and x<sub>3</sub>) and five rows (labeled Data) along with
+      all of the matrices you need to complete the calculations for a
+      correlation matrix. Your job is to build each calculation step with them.</p>
+    <p>A template for the calculation is given below the matrices, and you need
+      to drag the correct pieces into their positions in the template to
+      complete the step. For example, to calculate the matrix of residuals you
+      need to start with the data and subtract a matrix of means for each
+      variable - so, you would drag the data piece into the first position, the
+      means into the second position, and the matrix of residuals into the
+      third. </p>
+    <p>Once you've dragged the matrices into place the code you need to do the
+      calculations in R will appear below, which you can enter into your Rmd
+      file.</p>
+    <p><em><strong>Matrices</strong></em></p>
+    <table style="width: 900px" border="1">
+      <tbody>
+        <tr height="150px">
+          <td><img id="means" src="means.png" alt="Means" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="residuals_trans" src="residuals_trans.png" alt="Residuals transposed"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="data" src="data.png" alt="Data" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 100%"></td>
+          <td><img id="correl" src="correl.png" alt="Correlation matrix" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"></td>
+        </tr>
+        <tr height="150px">
+          <td><img id="covariance_matrix" src="covariance_matrix.png" alt="Covariance matrix"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="stdevs" src="stdevs.png" alt="Standard deviations diagonal"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="residuals" src="residuals.png" alt="Residuals" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="stdevs_inv" src="stdevs_inv.png" alt="Inverse standard deivations diagonal"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h4>Formula template - subtract the means from the data to get a matrix of
+      residuals</h4>
+    <table id="formula1" class="answer" border="0" width="600px">
+      <tbody>
+        <tr>
+          <td id="data_t" data-correct-image="data" class="with_image"><img id="blank1"
+              src="blank.png" draggable="true" ondragstart="drag(event)" ondrop="drop(event)"
+              ondragover="allowDrop(event)" style="display:block; width: 150px"></td>
+          <td>
+            <p style="font-size: 48">-</p>
+          </td>
+          <td id="means_t" data-correct-image="means" class="with_image"><img id="blank2"
+              src="blank.png" draggable="true" ondragstart="drag(event)" ondrop="drop(event)"
+              ondragover="allowDrop(event)" style="display:block; width: 150px"></td>
+          <td>
+            <p style="font-size: 48">=</p>
+          </td>
+          <td id="residuals_t" data-correct-image="residuals" class="with_image"><img
+              id="blank3" src="blank.png" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 150px"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div id="formula1_r" style="float: left; border: 2px solid green; padding: 10px; margin: 10px; display: none; background-color: #F3FFFE">
+      <p> Great, first one assembled correctly! </p>
+      <p>To do this calculation in R we first need to make a matrix of means.
+        We'll start by calculating the mean for each column - in chunk
+        calculate.colMeans write:</p>
+      <p class="rmd">means &lt;- colMeans(leaves)</p>
+      <p>The command colMeans(leaves) calculated means for each column in
+        leaves, which are then assigned to a vector object called "means" using
+        the &lt;- assignment operator. You can see the object in your
+        environment in a new "Values" section, and the first several means
+        should be displayed to the right of the object name. To see what is in
+        an object in R you just need to type its name, so if you enter the name
+        "means" under your means &lt;- colMeans(leaves) command it will display
+        below the code chunk when it's executed.</p>
+      <p>Now we want to repeat these seven means once for every leaf in the data
+        set. In chunk make.matrix.of.means enter:</p>
+      <p class="rmd">mean.mat &lt;- matrix(data = means, nrow = 66, ncol = 7,
+        byrow = T)</p>
+      <p>The matrix() command took the means (data = means) and repeated them 66
+        times to make a matrix with 66 rows and 7 columns, which matches the
+        dimensions of the leaves data set. The byrow=T option told the command
+        to use the data to build the matrix by filling in rows with the means -
+        this caused the command to treat the means object as a row in the
+        matrix, and repeated it 66 times. You should see the mean.mat object in
+        your environment tab, check to make sure you got seven columns, each
+        named for a variable, and with 66 identical rows of column means. </p>
+      <p>We now have a matrix of data, and a matching matrix of means, so we can
+        make the matrix of residuals that we need. The R code to do this step is
+        (chunk calculate.residuals):</p>
+      <p class="rmd">as.matrix(leaves) - mean.mat -&gt; resids </p>
+      <p>A new object called resids is now in your Environment, and if you click
+        on it a window will open that displays its contents - you'll resids
+        contains the differences between data values and means of the variables.</p>
+      <p>Even though the leaves data looks like a matrix it actually isn't as
+        far as R is concerned - the format that read_excel() produces is the <strong>tibble</strong>,
+        which is one of the formats R uses for data sets (the other one is
+        called a <strong>data frame</strong>). To do matrix operations on the
+        leaves data we needed to convert leaves to a matrix format using
+        as.matrix(leaves).</p>
+      <blockquote>
+        <p>There's another way to make the matrix of means that uses matrix
+          algebra instead of the matrix() command, by the way - if we make a
+          vector of 66 1's like so (in the console): </p>
+        <p class="rcmd">ones &lt;- rep(1,66)</p>
+        <p>we can then multiply the transposed vector of means by this ones
+          vector:</p>
+        <p class="rcmd">ones %*% t(means)</p>
+        <p>and we get the same means matrix we got using the matrix() command.
+          The %*% operator is what R uses for matrix multiplication. How did
+          this work?</p>
+        <p>Remember that the output of a matrix multiplication will have as many
+          rows as the left side of the multiplication and as many columns as the
+          right side - since R considers vectors to be column vectors by default
+          (even though it displays them in a row...go figure) when we transpose
+          the means vector we change it from a column vector to a row vector.
+          The multiplication is thus a column vector with 66 rows by a row
+          vector with seven columns, which gives us a matrix with 66 rows and 7
+          columns. Each output element is just a 1 multiplied by the mean in
+          that variable's column, repeated for all 66 rows of the matrix,
+          resulting in a matrix of the same row of means of seven variables
+          repeated 66 times.</p>
+      </blockquote>
+    </div>
+    <br>
+    <h3>Step 2: calculate the covariance matrix, <strong>S</strong> </h3>
+    <p> The next step is to calculate the covariance matrix from the residuals.
+      The formula is:</p>
+    <p> <strong>R</strong>'<strong>R/(66-1)</strong> = <strong>S</strong> </p>
+    <p>The transposed residuals, <strong>R</strong>', are multiplied by the
+      residuals, <strong>R</strong>, and the results are then divided by the
+      sample size minus 1, or 66-1 = 65, to calculate the covariance matrix, <strong>S</strong>.
+      The covariance matrix, <strong>S</strong>, is a matrix of variances on
+      the main diagonal, and covariances in all the other positions.</p>
+    <p><em><strong>Matrices</strong></em></p>
+    <table style="width: 900px" border="1">
+      <tbody>
+        <tr height="150px">
+          <td><img id="means2" src="means.png" alt="Means" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="residuals2" src="residuals.png" alt="Residuals" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="stdevs2" src="stdevs.png" alt="Standard deviations diagonal"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="residuals_trans2" src="residuals_trans.png" alt="Residuals transposed"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+        </tr>
+        <tr height="150px">
+          <td><img id="correl2" src="correl.png" alt="Correlation matrix" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"></td>
+          <td><img id="covariance_matrix2" src="covariance_matrix.png" alt="Covariance matrix"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="stdevs_inv2" src="stdevs_inv.png" alt="Inverse standard deivations diagonal"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="data2" src="data.png" alt="Data" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 100%"></td>
+        </tr>
+      </tbody>
+    </table>
+    <h4>Formula template - multiply the transposed residuals by the residuals,
+      then divide by n-1 to get the covariance matrix</h4>
+    <table id="formula2" class="answer" border="0" width="700px">
+      <tbody>
+        <tr>
+          <td id="residuals2_t" data-correct-image="residuals_trans2" class="with_image"><img
+              id="blank1" src="blank.png" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 150px"></td>
+          <td>
+            <p style="font-size: 32">×</p>
+          </td>
+          <td id="residuals_trans2_t" data-correct-image="residuals2" class="with_image"><img
+              id="blank2" src="blank.png" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 150px"></td>
+          <td style="width: 155px">
+            <p style="font-size: 32">/(66 - 1) =</p>
+          </td>
+          <td id="covariance_matrix2_t" data-correct-image="covariance_matrix2"
+            class="with_image"><img id="blank3" src="blank.png" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 150px"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div id="formula2_r" style="float: left; border: 2px solid green; padding: 10px; margin: 10px; display: none; background-color: #F3FFFE">
+      <p> Another win! Good work. </p>
+      <p> The R code to do this step (in chunk covariance.matrix) is:</p>
+      <p class="rmd">(t(resids) %*% resids)/(66-1) -&gt; covar.mat</p>
+      <p> This function transposes the residuals, with t(resid), and then
+        matrix-multiplies the transpose of resid by resid. The operator %*%
+        indicates a matrix multiplication. If we had just used * then R would
+        have tried to multiply matching elements between the two matrices, and
+        would have run into an error when R discovered that the two matrices
+        don't have matching numbers of rows and columns. </p>
+      <p> Remember that we do need the two matrices to have compatible row and
+        column dimensions for matrix multiplication to work, but "compatible"
+        means that we need the number of columns from the left matrix to equal
+        the number of rows in the right matrix - since we're multiplying the
+        transpose of a matrix by itself they have to match. Since the number of
+        rows on the left and colunns on the right are both set by the number of
+        variables we're working with, our output matrix will be square (same
+        number of rows and columns), with the dimensions equal to the number of
+        variables in the leaves data. </p>
+    </div>
+    <br style="clear:both">
+    <h3>Step 3 - convert the covariance matrix into a correlation matrix<br>
+    </h3>
+    <p>To convert those covariances into correlations we need to get standard
+      deviations into a diagonal matrix (that is, standard deviations on the
+      diagonal and 0's elsewhere, <strong>C</strong>), and then invert it. Once
+      we have the inverse of the standard deviation matrix we can use it to
+      convert the covariance matrix into a correlation matrix.</p>
+    <p> We'll get the standard deviation diagonal matrix first. For this
+      calculation we will extract the diagonal of the covariance matrix and
+      convert the variances to standard deviations by taking their square roots
+      - this will produce the standard deviation diagonal matrix.</p>
+    <p><em><strong>Matrices</strong></em></p>
+    <table style="width: 900px" border="1">
+      <tbody>
+        <tr height="150px">
+          <td> <img id="residuals3" src="residuals.png" alt="Residuals" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+          <td> <img id="residuals_trans3" src="residuals_trans.png" alt="Residuals transposed"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+          <td> <img id="data3" src="data.png" alt="Data" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 100%">
+          </td>
+          <td> <img id="stdevs_inv3" src="stdevs_inv.png" alt="Inverse standard deivations diagonal"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+        </tr>
+        <tr height="150px">
+          <td> <img id="means3" src="means.png" alt="Means" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 100%">
+          </td>
+          <td> <img id="correl3" src="correl.png" alt="Correlation matrix" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+          <td> <img id="covariance_matrix3" src="covariance_matrix.png" alt="Covariance matrix"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+          <td> <img id="stdevs3" src="stdevs.png" alt="Standard deviations diagonal"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+        </tr>
+      </tbody>
+    </table>
+    <h4>Formula template - make a diagonal matrix of standard deviations from
+      the covariance matrix</h4>
+    <table id="formula3" class="answer" border="0" width="600px">
+      <tbody>
+        <tr>
+          <td>
+            <p style="font-size: 32"> diag( </p>
+          </td>
+          <td id="covariance_matrix3_t" data-correct-image="covariance_matrix3"
+            class="with_image"><img id="blank1" src="blank.png" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 150px"></td>
+          <td>
+            <p style="font-size: 32">)</p>
+          </td>
+          <td style="vertical-align: top">
+            <p style="font-size: 32"> ½ </p>
+          </td>
+          <td>
+            <p style="font-size: 32"> = </p>
+          </td>
+          <td id="stdevs3_t" data-correct-image="stdevs3" class="with_image"><img
+              id="blank2" src="blank.png" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 150px"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div id="formula3_r" style="float: left; border: 2px solid green; padding: 10px; margin: 10px; display: none; background-color: #F3FFFE">
+      <p> That's it! </p>
+      <p> The R code to get the standard deviations matrix from the covariance
+        matrix is (in chunk stdev.diagonal.matrix):</p>
+      <p class="rmd">diag(diag(covar.mat)^0.5) -&gt; sd.mat</p>
+      <p> The reason this works is because the diag() command does different
+        things depending on whether the argument is a matrix or a vector. </p>
+      <ul>
+        <li>If the argument is a matrix, diag() extracts the diagonal of the
+          matrix and puts it into a vector.</li>
+        <li>If the argument is a vector, diag() makes a diagonal matrix with it,
+          which means that it puts the vector on the diagonal and puts 0's
+          everywhere else.</li>
+      </ul>
+      <p> So, the inner diag() extracts the variances into a vector (which we
+        then convert to standard deviations by taking square roots), and then
+        the outer diag() takes the vector of standard deviations made by the
+        inner diag() and makes the diagonal matrix out of it. </p>
+    </div>
+    <br style="clear:both">
+    <p> Next we just need to start with the standard deviation diagonal matrix
+      we just made, and invert it. </p>
+    <p><em><strong>Matrices</strong></em></p>
+    <table style="width: 900px" border="1">
+      <tbody>
+        <tr height="150px">
+          <td> <img id="stdevs4" src="stdevs.png" alt="Standard deviations diagonal"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+          <td> <img id="residuals_trans4" src="residuals_trans.png" alt="Residuals transposed"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+          <td> <img id="data4" src="data.png" alt="Data" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 100%">
+          </td>
+          <td> <img id="stdevs_inv4" src="stdevs_inv.png" alt="Inverse standard deivations diagonal"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+        </tr>
+        <tr height="150px">
+          <td> <img id="means4" src="means.png" alt="Means" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 100%">
+          </td>
+          <td> <img id="correl4" src="correl.png" alt="Correlation matrix" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+          <td> <img id="residuals4" src="residuals.png" alt="Residuals" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+          <td> <img id="covariance_matrix4" src="covariance_matrix.png" alt="Covariance matrix"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"> </td>
+        </tr>
+      </tbody>
+    </table>
+    <h4>Formula template - invert the standard deviations matrix</h4>
+    <table id="formula4" class="answer" border="0" width="600px">
+      <tbody>
+        <tr>
+          <td id="stdevs4_t" data-correct-image="stdevs4" class="with_image"><img
+              id="blank1" src="blank.png" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 150px"></td>
+          <td style="vertical-align: top">
+            <p style="font-size: 24">-1</p>
+          </td>
+          <td>
+            <p style="font-size: 32"> = </p>
+          </td>
+          <td id="stdevs_inv4_t" data-correct-image="stdevs_inv4" class="with_image"><img
+              id="blank2" src="blank.png" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 150px"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div id="formula4_r" style="float: left; border: 2px solid green; padding: 10px; margin: 10px; display: none; background-color: #F3FFFE">
+      <p> Great, just right.</p>
+      <p>This step is simple - we just need to invert sd.mat, which we do with
+        (chunk invert.sd.mat): </p>
+      <p class="rmd">solve(sd.mat) -&gt; sd.inv.mat </p>
+      <p> The solve() command inverts square matrices. </p>
+    </div>
+    <br style="clear:both">
+    <p> Now we're ready to do the last set of matrix multiplications that will
+      calculate the correlation matrix. We have a covariance matrix, made up of
+      variances and covariances, and to convert them to correlations we need to
+      divide each by the product of their standard deviations. The formula is <strong>C<sup>-1</sup>SC<sup>-1</sup></strong>
+      - that is, pre-multiply the covariance matrix by the inverse of the
+      standard deviations matrix, and then post-multiply the result by the same
+      inverse of the standard deviations (note that since you'll use the inverse
+      of the standard deviations twice they appear twice in the collection of
+      matrices - you can't use the same one in two places...sorry, haven't
+      figured out how to do that yet).</p>
+    <p><em><strong>Matrices</strong></em></p>
+    <table style="width: 900px" border="1">
+      <tbody>
+        <tr height="150px">
+          <td><img id="residuals5" src="residuals.png" alt="Residuals" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="stdevs_inv5a" src="stdevs_inv.png" alt="Inverse standard deviations diagonal"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="data5" src="data.png" alt="Data" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 100%">
+          </td>
+          <td><img id="stdevs_inv5b" src="stdevs_inv.png" alt="Inverse standard deviations diagonal"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+        </tr>
+        <tr height="150px">
+          <td><img id="means5" src="means.png" alt="Means" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="correl5" src="correl.png" alt="Correlation matrix" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"></td>
+          <td><img id="covariance_matrix5" src="covariance_matrix.png" alt="Covariance matrix"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+          <td><img id="stdevs5" src="stdevs.png" alt="Standard deviations diagonal"
+              draggable="true" ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 100%"><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h4>Formula template - pre- and post-multiply the covariance matrix by the
+      inverse of the standard deviations matrix to get the correlation matrix</h4>
+    <table id="formula5" class="answer" border="0" width="800px">
+      <tbody>
+        <tr>
+          <td id="stdevs_inv5_t" data-correct-image="stdevs_inv5" class="with_image"><img
+              id="blank1" src="blank.png" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 150px"></td>
+          <td>
+            <p style="font-size: 36">×</p>
+          </td>
+          <td id="covariance_matrix5_t" data-correct-image="covariance_matrix5"
+            class="with_image"><img id="blank2" src="blank.png" draggable="true"
+              ondragstart="drag(event)" ondrop="drop(event)" ondragover="allowDrop(event)"
+              style="display:block; width: 150px"></td>
+          <td>
+            <p style="font-size: 36">×</p>
+          </td>
+          <td id="stdevs_inv5_t" data-correct-image="stdevs_inv5" class="with_image"><img
+              id="blank3" src="blank.png" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 150px"></td>
+          <td>
+            <p style="font-size: 36">=</p>
+          </td>
+          <td id="correl5_t" data-correct-image="correl5" class="with_image"><img
+              id="blank4" src="blank.png" draggable="true" ondragstart="drag(event)"
+              ondrop="drop(event)" ondragover="allowDrop(event)" style="display:block; width: 150px"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div id="formula5_r" style="float: left; border: 2px solid green; padding: 10px; margin: 10px; display: none; background-color: #F3FFFE">
+      <p> Great, you have your correlation matrix! </p>
+      <p> This one is pretty simple in R - in chunk correl.matrix enter:</p>
+      <p class="rmd">sd.inv.mat %*% covar.mat %*% sd.inv.mat -&gt; correl.mat </p>
+      <p class="rmd"> correl.mat </p>
+      <p> Entering the name correl.mat causes it to be printed to the screen,
+        and it should look like this: </p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        [,1]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        [,2]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        [,3]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        [,4]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [,5]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        [,6]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [,7]<br>
+        [1,] 1.0000000 0.8246126&nbsp; 0.6720003&nbsp; 0.3240083 0.8739443
+        0.6580258 0.7456732<br>
+        [2,] 0.8246126 1.0000000&nbsp; 0.5394175&nbsp; 0.3048179 0.8409765
+        0.3946571 0.7207102<br>
+        [3,] 0.6720003 0.5394175&nbsp; 1.0000000 -0.1701314 0.4086422 0.4449204
+        0.4615690<br>
+        [4,] 0.3240083 0.3048179 -0.1701314&nbsp; 1.0000000 0.4003111 0.3556578
+        0.4208320<br>
+        [5,] 0.8739443 0.8409765&nbsp; 0.4086422&nbsp; 0.4003111 1.0000000
+        0.5520887 0.7779163<br>
+        [6,] 0.6580258 0.3946571&nbsp; 0.4449204&nbsp; 0.3556578 0.5520887
+        1.0000000 0.6967784<br>
+        [7,] 0.7456732 0.7207102&nbsp; 0.4615690&nbsp; 0.4208320 0.7779163
+        0.6967784 1.0000000</p>
+      <p>The variable names aren't attached, so it's a little hard to interpret,
+        but the variables are in the same order as in the data set. We could
+        label the rows and columns with the column names from the leaves data
+        set, but let's skip that - you'll use the R cor() function below that
+        will put the labels on the matrix, and you'll be able to see the
+        variable names then.</p>
+      <p> Make sure you enter correl.mat so that the matrix is displayed, I need
+        to see it to give you credit for the calculations! </p>
+    </div>
+    <br style="clear:both">
+    <h3>Built-in R functions can do these calculations much more simply</h3>
+    <p> Calculating the correlation matrix with matrix algebra is a nice way to
+      learn how to matrix algebra works, but it isn't necessary - a single R
+      function calculates a correlation matrix for us (in code chunk
+      r.correlation.matrix): </p>
+    <p> </p>
+    <p class="rmd"> cor(leaves)</p>
+    <p> </p>
+    <p>You'll see that this correlation matrix matches the one you did above, so
+      it won't be necessary to calculate a correlation matrix using matrix
+      algebra anymore.</p>
+    <h2>Using matrix algebra to get additional useful information about a
+      multivariate data set</h2>
+    <p>Since R does all of these steps for us with a single function it's a
+      little extravagant to do all the steps by hand, but we did it to
+      demonstrate how matrix operations work in R.</p>
+    <p>But, matrix methods are not just an alternative way of doing calculations
+      more efficiently, they can be used to get additional, useful information
+      from a matrix of values. For example, we can calculate a measure of
+      variance for this multivariate data set that is based only on the
+      variation that is uniquely attributable to each of the seven variables,
+      with the shared variation between them removed.</p>
+    <p>You can calculate the covariance matrix with (chunk r.var.command):</p>
+    <p> </p>
+    <p class="rmd"> var(leaves)</p>
+    <p> </p>
+    <p> Again, a single R command can do several of the steps we did by hand.
+      The determinant of this covariance matrix is a generalized measure of
+      variance (chunk r.determinant.of.covariance.matrix):</p>
+    <p> </p>
+    <p class="rmd"> det(var(leaves))</p>
+    <p> </p>
+    <p>The determinant combines the variances by multiplying them together and
+      removes the double-counting of variation that happens due to the fact that
+      the variables are all inter-correlated with one another. We will see this
+      value show up in some of the multivariate methods we use in a few weeks.
+      If all goes well you should get a value of 191126.1.</p>
+    <p> You can see how much of an effect removing the covariances has on the
+      result if you calculate the product of variances without removing the
+      covariances (chunk r.product.of.variances):</p>
+    <p> </p>
+    <p class="rmd"> prod(diag(var(leaves)))</p>
+    <p> </p>
+    <p>You'll see that simply multiplying the variances together gives you a
+      much bigger number than using the determinant (you should get a product of
+      120437695) - removing the covariances gives us a more accurate
+      understanding of how much variation is in the data, so the determinant is
+      used instead of the product of the variances as our measure of
+      multivariate variance.</p>
+    <h3>Anatomy of a correlation matrix</h3>
+    <p>We're going to be working with correlation matrices a fair amount, so
+      let's take a minute to learn some of the terminology associated with them.</p>
+    <p>First, a correlation matrix is a <strong>square matrix</strong> because
+      it has the same number of rows and columns. It has to be square because
+      the same list of variables appear in both the rows and columns.</p>
+    <p>The image below shows the correlation matrix with some color coding to
+      identify different aspects of the matrix. Hover over various parts of the
+      matrix to see popups that explain what they are.</p>
+    <div id="corrmap"> <a href="#" id="rowvars" class="tooltip"><span>Variables
+          (color coded to match columns)</span></a> <a href="#" id="colvars" class="tooltip"><span>Variables
+          (color coded to match rows)</span></a> <a href="#" id="lowertri1" class="tooltip"><span>Lower
+          triangle (correlations, mirror image of upper triangle)</span></a> <a
+        href="#" id="lowertri2" class="tooltip"><span>Lower triangle
+          (correlations, mirror image of upper triangle)</span></a> <a href="#"
+        id="lowertri3" class="tooltip"><span>Lower triangle (correlations,
+          mirror image of upper triangle)</span></a> <a href="#" id="lowertri4"
+        class="tooltip"><span>Lower triangle (correlations, mirror image of
+          upper triangle)</span></a> <a href="#" id="lowertri5" class="tooltip"><span>Lower
+          triangle (correlations, mirror image of upper triangle)</span></a> <a
+        href="#" id="lowertri6" class="tooltip"><span>Lower triangle
+          (correlations, mirror image of upper triangle)</span></a> <a href="#"
+        id="uppertri1" class="tooltip"><span>Upper triangle (correlations,
+          mirror image of lower triangle)</span></a> <a href="#" id="uppertri2"
+        class="tooltip"><span>Upper triangle (correlations, mirror image of
+          lower triangle)</span></a> <a href="#" id="uppertri3" class="tooltip"><span>Upper
+          triangle (correlations, mirror image of lower triangle)</span></a> <a
+        href="#" id="uppertri4" class="tooltip"><span>Upper triangle
+          (correlations, mirror image of lower triangle)</span></a> <a href="#"
+        id="uppertri5" class="tooltip"><span>Upper triangle (correlations,
+          mirror image of lower triangle)</span></a> <a href="#" id="uppertri6"
+        class="tooltip"><span>Upper triangle (correlations, mirror image of
+          lower triangle)</span></a> <a href="#" id="maindiag1" class="tooltip"><span>Main
+          diagonal (correlations of variables with themselves)</span></a> <a href="#"
+        id="maindiag2" class="tooltip"><span>Main diagonal (correlations of
+          variables with themselves)</span></a> <a href="#" id="maindiag3" class="tooltip"><span>Main
+          diagonal (correlations of variables with themselves)</span></a> <a href="#"
+        id="maindiag4" class="tooltip"><span>Main diagonal (correlations of
+          variables with themselves)</span></a> <a href="#" id="maindiag5" class="tooltip"><span>Main
+          diagonal (correlations of variables with themselves)</span></a> <a href="#"
+        id="maindiag6" class="tooltip"><span>Main diagonal (correlations of
+          variables with themselves)</span></a> <a href="#" id="maindiag7" class="tooltip"><span>Main
+          diagonal (correlations of variables with themselves)</span></a> </div>
+    <br style="clear:both">
+    <p>Note the following:<br>
+    </p>
+    <ul>
+      <li>The column and row labels are the variable names - they are color
+        coded here to show that they each appear in both the rows and columns. </li>
+      <li>The main diagonal is where the row and column names match - these are
+        the correlations of variables with themselves, and will always be 1.</li>
+      <li>The lower triangle (yellow) has one copy of every correlation - the
+        cells of the table that fall below the main diagonal are the lower
+        triangle.</li>
+      <li>The upper triangle (light blue) has another copy of every correlation
+        - the cells of the table that fall above the main diagonal are the upper
+        triangle.</li>
+    </ul>
+    <p>The same terminology can be used for any square matrix - a covariance
+      matrix has a main diagonal, upper triangle, and lower triangle as well.</p>
+    <h2>Complete the assignment</h2>
+    <p>That's it! Knit the R Markdown file, and upload it to the course web
+      site.</p>
+    <p> </p>
+  </body>
+</html>

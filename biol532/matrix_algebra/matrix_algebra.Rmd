@@ -1,0 +1,132 @@
+---
+title: "Matrix algebra"
+author: "Your Name"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Calculating the correlation matrix using matrix algebra in R
+
+We will calculate a correlation matrix using R's matrix algebra capabilities.
+
+First, import the data:
+
+```{r import.data}
+
+
+
+```
+
+Calculate the means for each measured variable in leaves:
+
+```{r calculate.colMeans}
+
+
+
+```
+
+Make a matrix out of the vector of means you just created, with the means repeated once for every row of data in leaves:
+
+```{r make.matrix.of.means}
+
+
+
+```
+
+Calculate the matrix of residuals by subtracting the means from the data values:
+
+```{r calculate.residuals}
+
+
+
+```
+
+Calculate the covariance matrix:
+
+```{r covariance.matrix}
+
+
+
+```
+
+
+Make a diagonal matrix of standard deviations:
+
+```{r stdev.diagonal.matrix}
+
+
+
+```
+
+Find the inverse of sd.mat:
+
+```{r invert.sd.mat}
+
+
+
+```
+
+Calculate the correlation matrix from the inverse of the standard deviations and the covariance matrix:
+
+```{r correl.matrix}
+
+
+
+```
+
+## Doing the same thing with R's built-in commands:
+
+Now that we've had our fun, the way you would really do the calculations above would be to use R's built-in commands rather than doing matrix algebra. We can get a correlation matrix with a single command:
+
+Correlation matrix:
+
+```{r r.correlation.matrix}
+
+
+
+```
+
+We can use the covariance matrix, though, to get a multivariate measure of variance:
+
+```{r r.var.command}
+
+
+
+```
+
+The determinant is the generalized variance for the entire data set:
+
+```{r r.determinant.of.covariance.matrix}
+
+
+
+```
+
+To see how big an effect on the variance that removing the covariances has you can calculate the product of the variances:
+
+```{r r.product.of.variances}
+
+
+
+```
+
+## Questions
+
+#### Question: correlations matrices include things we already know (i.e. the correlation of variables with themselves is 1), and duplicate things we want to know (i.e. the correlations between different variables are duplicated in the upper and lower triangles of the matrix). How did the use of matrix algebra to calculate a correlation matrix explain why correlation matrices do these things?
+
+> 
+
+#### Question: why is it useful to characterize the amount of variation in a multivariate data set using the determinant of the covariance matrix, S? What mistake would we make if we didn't use the determinant of S, and just used the variances for all the variables?
+
+> 
+
+#### Question: changing the order of multiplication doesn't change the result in "scalar" multiplication (the kind we usually do). If you had changed the order of the multiplication of C^-1^SC^-1^ would you have gotten the same result (that is, standard deviations multiplied by covariance matrix multiplied by standard deviations)? For example, would C^-1^C^-1^S be the same as C^-1^SC^-1^?
+
+>  

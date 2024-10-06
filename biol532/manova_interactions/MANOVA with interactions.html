@@ -1,0 +1,565 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+
+
+
+    
+    <title>MANOVA with interactions</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+    <style>
+    /* Tooltip container */
+		.tooltip {
+    	position: relative;
+    	display: inline-block;
+    	border-bottom: 0px;
+		}
+
+		/* Tooltip text */
+		.tooltip .tooltiptext {
+    	visibility: hidden;
+    	width: 450px;
+    	background-color: #555;
+    	color: #fff;
+    	text-align: center;
+    	padding: 5px 0;
+    	border-radius: 6px;
+
+    	/* Position the tooltip text */
+    	position: absolute;
+    	z-index: 1;
+    	bottom: 125%;
+    	left: 50%;
+    	margin-left: -60px;
+
+    	/* Fade in tooltip */
+    	opacity: 0;
+    	transition: opacity 0.3s;
+			}
+
+			/* Tooltip arrow */
+			.tooltip .tooltiptext::after {
+    	content: "";
+    	position: absolute;
+    	top: 100%;
+    	left: 50%;
+    	margin-left: -5px;
+    	border-width: 5px;
+    	border-style: solid;
+    	border-color: #555 transparent transparent transparent;
+			}
+
+			/* Show the tooltip text when you mouse over the tooltip container */
+			.tooltip:hover .tooltiptext {
+    	visibility: visible;
+    	opacity: 1;
+		}
+    </style>
+  </head>
+  <body>
+    <h1>Interactions and post-hocs for MANOVA</h1>
+    <p>Post-hoc analysis refers to the comparisons we make after a statistically significant omnibus test. MANOVA
+      with more than two groups produces an omnibus test that could be significant with as little as one pair of group means that are different on as few as one response variable, or as many as every group means on every response variable - we
+      need post-hoc comparisons to tell us which they are. This is usually done with pairwise comparisons - that is,
+      comparisons between two groups at a time (not to be confused with paired comparisons, which are used on paired data).</p>
+    <p>The post-hoc procedure you are most familiar with, Tukey tests, ensures that the chances of false positives are
+      maintained at the α-level of our choosing (usually α = 0.05). Tukey tests don't work with multivariate analysis,
+      however, so we need to adopt a different pairwise comparison procedure.</p>
+    <p>Following a significant MANOVA, we have two different levels of post-hoc procedures to do:</p>
+    <ul>
+      <li>Multivariate post-hocs: testing pairwise multivariate differences between group means - this step isolates which groups are different
+        from one another using the same type of multivariate analysis used in the MANOVA</li>
+      <li>Univariate post-hocs: testing pairwise univariate differences between group means - this step checks which of the individual
+        variables are responsible for the multivariate difference</li>
+    </ul>
+    <p>The example we use will be the parasitized mouse experiment we saw in lecture (contributed by my lovely and talented wife, Dr. Deborah Kristan, who is the superior Kristan at CSUSM). In this experiment mice were
+      either experimentally infected with <em>Heligmosomoides bakeri</em> (called <em>H. polygyrus</em> when the data
+      were collected, the name has since been changed) or not, and were either given ad libitum access to food, or were calorically restricted. As is typical of these sorts of whole-animal physiological studies, a large      number of anatomical and physiological variables were measured as responses, but we will work with four of them:
+      resting metabolic rate (rmr), fat mass (fat), large intestine weight (li), and small intestine weight (si). </p>
+<p>In a factorial design all combinations of both of the predictors are used, ideally with equal numbers of cases in each combination of treatments. This type of design makes the effects of the predictors independent of one another (that is, they are <strong>orthogonal</strong>), which allows us to measure how they affect the response variables individually and in tandem. Their joint effects are measured by the <strong>interaction</strong> term, and if it is statistically significant we conclude that the effect of one predictor (caloric treatment) depends on the level of the other (parasite treatment). We then need to compare combinations of the two predictors against one another, rather than looking at the <strong>main effects</strong> of each separately from the other.</p>
+<p>We will have four combinations of parasite and caloric treatments to compare, so we will have 6 multivariate
+      pairwise tests, and 6 more per response variable in each analysis (of which there will be two) for another 12. The post-hoc analysis
+      we do will generate a lot of p-values, with lots of opportunities for false positive errors.</p>
+    <p>We will prevent this large number of comparisons from causing excessive false positives by adjusting the α-level
+      we use for each post-hoc comparison - if we make two comparisons, and only consider them to be significant if the
+      p-value is less than 0.05/2 = 0.025, then between the two tests we have no more than a probability of 0.05 of one
+      or both of them being a false positive. This <strong>Bonerroni correction</strong> is a simple method of
+      preventing multiple comparisons from producing excessive Type I errors.</p>
+    <p>We will also learn to fit models with interactions, how to interpret them when they are significant, and how to
+      do post-hoc comparisons on predictors that interact with one another.</p>
+    
+    <h2>Data with and without interactions</h2>
+    <p>As you learned in lecture, an interaction between two <strong>predictor</strong> variables means that response
+      to one predictor variable (like caloric treatment, with levels of ad lib or restricted) depends on another (like
+      parasite treatment, with levels polygyrus or control).</p>
+    <p>Let's start by looking at one variable at a time. If we used RMR as a response variable, both caloric treatment
+      and parasite treatment as predictors we would get this ANOVA table:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Df Sum Sq Mean Sq F value&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+      parasite.treatment&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      1&nbsp;&nbsp; 29.1&nbsp;&nbsp;&nbsp; 29.1&nbsp;&nbsp; 3.628&nbsp;&nbsp; 0.0648 .&nbsp; <br>
+      caloric.treatment&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      1&nbsp; 669.8&nbsp;&nbsp; 669.8&nbsp; 83.554 6.47e-11 ***<br>
+      parasite.treatment:caloric.treatment&nbsp; 1&nbsp;&nbsp;&nbsp; 6.9&nbsp;&nbsp;&nbsp;&nbsp; 6.9&nbsp;&nbsp;
+      0.859&nbsp;&nbsp; 0.3602&nbsp;&nbsp;&nbsp; <br>
+      Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      36&nbsp; 288.6&nbsp;&nbsp;&nbsp;&nbsp; 8.0 </p>
+    <p>The interaction (labeled as parasite.treatment:caloric.treatment) is not significant, so we can interpret the effects of each treatment separately, without worrying about combinations of the two. There is a significant
+      main effect of caloric.treatment and a nearly significant main effect of parasite.treatment. Why is there no interaction, and why is only caloric treatment statistically significant?</p>
+    <div style="width: 100%; height:auto">
+      <div style="float: right; width: 400px; overflow: auto"><img alt="RMR" src="rmr_inter_plot.png" onclick="var images=['rmr_inter_plot.png','rmr_cal_marginal.png', 'rmr_par_marginal.png']; changeImage(this, images)">
+        <img alt="Fat" src="fat_inter_plot.png" onclick="var images=['fat_inter_plot.png','fat_cal_marginal.png', 'fat_par_marginal.png']; changeImage(this, images)"></div>
+      <p>The top graph to the right shows how RMR (y axis) is affected by caloric treatment (x axis), in combination
+        with parasite treatment (color) - the dots are means for each combination of parasite treatment and caloric
+        treatment. This is called an <strong>interaction plot</strong>, because it is used to detect and interpret interactions between variables. You can see that the amount of difference in RMR due to polygyrus infection is about the same
+        regardless of whether the animals are fed ad lib, or are calorically restricted. Because of this, the lines are
+        nearly parallel on the plot. </p>
+      <p>The next plot below shows fat mass on the y-axis, and the lines are nearly parallel for fat as well. </p>
+      <p>We interpret this to mean that response to parasites <em>doesn't depend</em> on caloric restriction. Given
+        that, you can base your interpretations on <strong>main effects</strong> of parasite and caloric treatments,
+        using the <strong>marginal means</strong>. If you click once on either graph it will put the marginal means for
+        the caloric treatments onto the graphs as red diamonds - the marginal means are in between the control and
+        polygyrus means above each of the caloric treatment labels because they are averaging all of the data for each
+        caloric treatment irrespective of parasite treatment. The amount of difference between the two red diamonds is
+        about the same as the amount of difference between the two gold dots or the two black dots because the lines are
+        nearly parallel, and the effect of caloric treatment doesn't depend on parasite treatment.</p>
+      <p>Click once more and you'll see the marginal means for parasite treatment plotted as diamonds that are the same
+        colors as the parasite treatments. This time we're averaging over all of the data in each parasite treatment
+        irrespective of the caloric treatment, so the diamonds are placed on the lines between the dots for the group
+        they belong to. The amount of difference between the black and gold diamonds is about the same as between the
+        black and gold diamonds above the ad lib caloric treatment, and between the black and gold diamonds above the
+        restricted caloric treatment because the lines are nearly parallel - response to parasites doesn't depend on
+        caloric treatment, and we can interpret the parasite effect without needing to consider the caloric treatment used.</p>
+      <p style="clear:both"><br>
+        Compare the example of fat and RMR to what we see when we look at large intestine. The ANOVA table is:
+      </p>
+      <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Df&nbsp;&nbsp;&nbsp; Sum Sq&nbsp;&nbsp; Mean Sq F value&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+        parasite.treatment&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1 0.0000233 0.0000233&nbsp;&nbsp; 0.385 0.538737&nbsp;&nbsp;&nbsp; <br>
+        caloric.treatment&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        1 0.0002804 0.0002804&nbsp;&nbsp; 4.644 0.037926 *&nbsp; <br>
+        parasite.treatment:caloric.treatment&nbsp; 1 0.0009054 0.0009054&nbsp; 14.996 0.000437 ***<br>
+        Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        36 0.0021734 0.0000604 </p>
+      <p>Now the interaction between parasite.treatment and caloric.treatment is significant, which tells us that the
+        response to parasite treatment depends on the caloric treatment. There is still a main effect of caloric
+        treatment, but the presence of an interaction can make main effects misleading.</p>
+      <div style="float:right; width: 400px; overflow:auto"> <img alt="li" src="li_inter_plot.png" onclick="var images=['li_inter_plot.png','li_cal_marginal.png', 'li_par_marginal.png']; changeImage(this, images)">
+        <img alt="si" src="si_inter_plot.png" onclick="var images=['si_inter_plot.png','si_cal_marginal.png', 'si_par_marginal.png']; changeImage(this, images)">
+      </div>
+      <p>We can see why if we plot large intestine (top) or small intestine (bottom) masses, you'll see that the lines
+        are parallel for small intestine but they cross for large intestine. Crossing lines are particularly clear
+        examples of an interaction - control animals have lower large intestine weights than polygyrus animals if they
+        are fed ad lib, but if they are calorically restricted the pattern reverses, such that when we connect the dots
+        for the two parasite treatments the lines cross.</p>
+      <p>With a case like this it's no longer safe to base your interpretation on marginal means - if you click through
+        to see the marginal means you'll see that there is almost no effect of parasite treatment if you ignore caloric
+        treatment, but the combinations of caloric treatment and parasite treatment differ a lot. Now that the response you get to caloric treatment depends on the
+        parasite treatment, we have to make comparisons between the means for combinations of caloric treatment and
+        parasite treatment - that is, we have to compare each dot on the graph, rather than between the diamonds that
+        only look at one of the treatments at a time.</p>
+      <p>In contrast, si doesn't show the same pattern - the lines are nearly parallel and we wouldn't expect a
+        significant interaction for si alone.</p>
+    </div>
+    <p style="clear:both">Interactions in multivariate data have the same interpretation as in univariate data, but with
+      more than one response variable we have trouble visualizing what an interaction would look like using a two
+      dimensional graph. If we look at RMR and fat mass at the same time, we need the y axis for one response variable
+      and the x-axis for the other. We can still use color to indicate parasite treatment, but now we'll indicate
+      caloric treatment using plot symbols instead - circles are mice fed ad lib, and triangles are mice that were calorically restricted.</p>
+    <img alt="No interaction" src="no_interaction.png" style="float:right" onclick="var images=['no_interaction.png','rmr_fat_cal_marginal.png', 'rmr_fat_par_marginal.png']; changeImage(this, images)">
+    <p>The line segments connect the centroids for ad lib and restricted mice. Color indicates parasite treatment (gold
+      = polygyrus, black = control), and symbol indicates caloric treatment (circle = ad lib, triangle = restricted).</p>
+    <p>The lines are about the same length (indicating roughly the same amount of difference between the caloric
+      treatments for each parasite treatment), and are roughly parallel (indicating that the direction of change in fat
+      and rmr is the same for the caloric treatments regardless of the parasite treatment). If you click once the
+      centroids for the caloric groups, ignoring parasite group, appear and you'll see that the distance between them is
+      about the same as between the black circle and black triangle or between the gold circle and gold triangle. Click
+      again and the centroids for the two parasite groups ignoring the caloric treatments are placed on the lines, and
+      the distance between them is about the same as the two circles or between the two triangles. Since the lines are
+      nearly parallel we only expect main effects to be significant, but not the interaction between parasite and
+      caloric treatments.</p>
+    <p style="clear:both"> </p>
+    <img alt="Interaction" src="interaction.png" style="float:right" onclick="var images=['interaction.png','li_si_cal_marginal.png', 'li_si_par_marginal.png']; changeImage(this, images)">
+    <p>In contrast, there is a significant interaction between caloric treatment and parasite treatment on small
+      intestine and large intestine weights. You can see that the lines are different in length, which shows that
+      the amount of difference between caloric treatments differs for polygyrus and control groups. Additionally, the
+      line segments are pointed in very different directions, so the direction of change in response to caloric
+      treatment isn't even the same for the two different parasite treatment groups. If you click once the red diamonds
+      show the centroids for the two different caloric groups ignoring parasite treatment, and the amount of distance
+      between the diamonds is not the same as between the black and gold triangles or between the black and gold
+      circles. Click again and the centroids for the two different parasite groups appear, ignoring caloric treatment,
+      and the distance between the diamonds is not the same as between the two circles or the two triangles. The lines
+      don't cross, but crossing isn't required for an interaction, just lack of parallel.</p>
+    <p> </p>
+    <h2 style="clear:both">Visualizing and testing for interactions</h2>
+    <p>1. Start a new project for today. The Rmd file is <a href="manova_interactions.Rmd">here</a>, download it and
+      put it in your project folder. The data are in worksheet "mouse" of <a href="mouse.xlsx">this</a> file (called
+      mouse.xlsx). Import it into a data frame called mouse (chunk import.mouse.data).</p>
+    <p>If you open the mouse dataset you'll see the columns:</p>
+    <ul>
+      <li>caloric.treatment - whether the animals were fed ad.libitum or were restricted (the first of two experimental
+        treatments)</li>
+      <li>parasite.treatment - whether the animals were infected with H. polygyrus, or were un-infected controls (the
+        second of two experimental treatments)</li>
+      <li>fat - grams of fat extracted from the animal</li>
+      <li>rmr - resting metabolic rate for the animal</li>
+      <li>si - dry mass of small intestine</li>
+      <li>li - dry mass of large intestine</li>
+    </ul>
+    <p>Putting each of the two treatments in separate columns allows us to test their main effects and interactions in
+      our model. If you scan through the rows of data, you'll see that every combination of caloric.treatment and
+      parasite.treatment appears, in equal numbers - there are 10 mice fed ad lib and used as controls, 10 fed ad lib
+      and given H. polygyrus, 10 animals calorically restricted and used as controls, and 10 animals calorically
+      restriced and given H. polygyrus.</p>
+    <p>2. Before we do any analysis, we should graph the data and look at the patterns.</p>
+    <p>We will want to use the combinations of caloric.treatment and parasite.treatment for graphing - there is a
+      command in R for combining the levels of two factors into one, called interaction(). Use the command
+      (make.combinations chunk):</p>
+    <p class="rmd">mouse$parasite.caloric &lt;- with(mouse, interaction(parasite.treatment, caloric.treatment))</p>
+    <p>If you look at the data again you'll see there is now a column called parasite.caloric that has the combinations
+      of the two different experimental treatments, separated with a period.</p>
+    <p>First, we will plot the fat and rmr variables in a scatter plot. Load the ggplot2 library (load.ggplot2 chunk):</p>
+    <p class="rmd">library(ggplot2)</p>
+    <p>We're still pretty new to ggplot2, so let's build up to the final command. First, you need the ggplot() command
+      to identify the data set (mouse), and assign aesthetic mappings for he x-axis variable (fat) and the y-axis
+      variable (rmr). Use the command (in the Console):</p>
+    <p class="rconsole">ggplot(mouse, aes(x = fat, y = rmr))</p>
+    <p>You will see an empty graph with fat on the x-axis and rmr on the y-axis.</p>
+    <p>We would like to see some points on the plot, so edit your command by putting a + after the ggplot() command, and
+      adding a geom_point() statement (in the Console):</p>
+    <p class="rconsole">ggplot(mouse, aes(x = fat, y = rmr)) + geom_point()</p>
+    <p>You should now see a scatterplot of the two variables. This is fine, but we have grouped data, and we would like
+      to be able to tell which points are from which groups. We can color code by the combinations of parasite and
+      caloric treatment (in the Console):</p>
+    <p class="rconsole">ggplot(mouse, aes(x = fat, y = rmr, color = parasite.caloric)) + geom_point()</p>
+    <p>You should now have points that are colored by their parasite.caloric treatment groups.</p>
+    <p>We would also use different plot symbols for the treatments, so we can set the plot symbol based on
+      caloric.treatment (still in the Console):</p>
+    <p class="rconsole">ggplot(mouse, aes(x = fat, y = rmr, color = parasite.caloric, shape = parasite.caloric)) +
+      geom_point()</p>
+    <p>This is okay, except that every different combination of parasite.caloric has a different color and symbol, and
+      we can't really tell that we have two different treatment variables here - it would be nice to color by parasite
+      treatment so that both controls are the same color, and both polygyrus treatments are the same color. If you look
+      at the legend, controls are the first and third entries, and polygyrus are the second and fourth. We can change
+      the colors manually to reflect that the first and third group are control, and the second and fourth are
+      polygyrus, using scale_color_manual():</p>
+    <p class="rconsole">ggplot(mouse, aes(x = fat, y = rmr, color = parasite.caloric, shape = parasite.caloric)) +
+      geom_point() + scale_color_manual(values = c("red","black","red","black"))</p>
+    <p>Control animals are now assigned red, Polygyrus animals are assigned black. We can use the same trick with shape
+      to indicate that the first two are ad-lib groups, and the second two are restricted:</p>
+    <p class="rconsole">ggplot(mouse, aes(x = fat, y = rmr, color = parasite.caloric, shape = parasite.caloric)) +
+      geom_point() + scale_color_manual(values = c("red","black","red","black")) + scale_shape_manual(values =
+      c(16,16,17,17)) </p>
+    <p>This gives you the ability to compare between control and polygyrus by comparing the different colors, or between
+      ad lib and restricted by comparing between circle and triangle points.</p>
+    <p>Lastly, the points look a little small. Inside the geom_point() statement you can increase the size of the points
+      - the numbers are relative, with the default equal to 1, so we'll try using a size of 3 (put this last command in
+      chunk fat.rmr.ggplot):</p>
+    <p class="rmd">ggplot(mouse, aes(x = fat, y = rmr, color = parasite.caloric, shape = parasite.caloric)) +
+      geom_point(size = 3) + scale_color_manual(values = c("red","black","red","black")) + scale_shape_manual(values =
+      c(16,16,17,17))</p>
+    <blockquote>
+      <h3>Assigning colors in ggplot</h3>
+      <p>We set the colors in our graph manually using
+        scale_color_manual(), but selecting good colors for graphs is not perfectly straightforward. Color palettes with colors that are easily distinguished are available for use in ggplot2, that may be more to your liking than the default colors we've been seeing. If you're interested in how to use various color palettes in ggplot2 look <a href="http://www.sthda.com/english/wiki/ggplot2-colors-how-to-change-colors-automatically-and-manually">here</a>
+        or <a href="http://www.cookbook-r.com/Graphs/Colors_%28ggplot2%29/">here</a> for a good tutorial (including advice for selecting colorblind-friendly palettes that still produce distinct appearances to people with red-green colorblindness).</p>
+    </blockquote>
+    <p>3. Now that you've seen the raw data, let's make a version that plots the group centroids. We have been using
+      summarySE() to get means for graphing, but it won't work with multivariate data. Instead we can calculate the means for
+      fat, rmr, li, and si grouped by each combination of parasite and caloric treatment, using the aggregate() function (note
+      that we'll use li and si later, so all four of the response variables are included, even though we only need fat
+      and rmr right now) - put this command in chunk calculate.group.centroids:</p>
+    <p class="rmd">aggregate(cbind(fat, rmr, li, si) ~ parasite.treatment + caloric.treatment, data = mouse, FUN = mean)
+      -&gt; mouse.means</p>
+    <p>This function takes a MANOVA-like formula as its first argument - the two response variables are bound together
+      into a matrix with cbind(), and the combinations of treatment levels from parasite.treatment and caloric.treatment
+      are used for grouping. The function used to summarize the data is listed in the FUN = statement. If you look at
+      mouse.means you'll see you now have a mean for each combination of parasite.treatment and caloric.treatment.</p>
+    <p>We can make our combinations of parasite.treatment and caloric.treatment for graphing (combinations.for.means):</p>
+    <p class="rmd">mouse.means$parasite.caloric &lt;- with(mouse.means, interaction(parasite.treatment,
+      caloric.treatment))</p>
+    <p>Now to make the plot of the centroids - the basic plot is just like with the raw data, but using the means
+      instead (in the Console):</p>
+    <p class="rconsole">ggplot(mouse.means, aes(x = fat, y = rmr, color = parasite.caloric, shape = parasite.caloric)) +
+      geom_point(size = 3) + scale_color_manual(values = c("red","black","red","black")) + scale_shape_manual(values =
+      c(16,16,17,17))</p>
+    <p>To add lines that connect centroids for the parasite treatment groups, we need to add a "group =" statement to
+      aes(), and we need to add a geom_line() to draw the lines (fat.rmr.centroids.plot):</p>
+    <p class="rmd">ggplot(mouse.means, aes(x = fat, y = rmr, color = parasite.caloric, shape = parasite.caloric, group =
+      parasite.treatment)) + geom_point(size = 3) + scale_color_manual(values = c("red","black","red","black")) +
+      scale_shape_manual(values = c(16,16,17,17)) + geom_line()</p>
+    <p>Grouping by parasite.treatment (instead of by parasite.caloric) causes the geom_line() statement to draw the
+      lines between the points within each parasite treatment group.</p>
+    <p>You'll see that the lines are roughly the same length, and roughly parallel - we wouldn't expect a significant
+      interaction between parasite.treatment and caloric.treatment for these two response variables.</p>
+    <p>4. We can test for significant main effects of each predictor, and interaction between them
+      (manova.parasite.and.caloric):</p>
+    <p class="rmd">manova(cbind(fat, rmr) ~ parasite.treatment * caloric.treatment, data = mouse) -&gt; fat.rmr.manova</p>
+    <p class="rmd">summary(fat.rmr.manova)</p>
+    <p>The manova() command includes both parasite.treatment and caloric.treatment with an asterisk between them - the
+      asterisk tells R to include an interaction between the two predictor variables. We don't need to specify main
+      effects, because a factorial ANOVA can only include an interaction if the main effects are also included, so parasite.treatment * caloric.treatment is the same as parasite.treatment + caloric.treatment +
+      parasite.treatment*caloric.treatment as far as R is concerned.</p>
+    <p>You'll see that the ANOVA table looks like this:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Pillai approx F num Df den Df&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp; &nbsp;<br>parasite.treatment&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.47566&nbsp;&nbsp; 15.875&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp;&nbsp; 35 1.239e-05 ***<br>caloric.treatment&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.74101&nbsp;&nbsp; 50.069&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp;&nbsp; 35 5.402e-11 ***<br>parasite.treatment:caloric.treatment&nbsp; 1 0.09137&nbsp;&nbsp;&nbsp; 1.760&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp;&nbsp; 35&nbsp;&nbsp;&nbsp;&nbsp; 0.187&nbsp;&nbsp; &nbsp;<br>Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 36 </p>
+    <p>You'll see we now have three lines that test for effects of our predictors. The first line tests the main effect of
+      parasite.treatment, which is significant. The second tests the main effect of caloric.treatment, which is also
+      significant. The third tests for the interaction between parasite and caloric treatments, and it is not
+      significant.</p>
+    <p>5. Now, repeat the two plots using small intestine and large intestine weights (chunks li.si.ggplot, and li.si.centroids.plot). You can modify the plot commands
+      you used for rmr and fat to use li and si instead.</p>
+    <p>You'll see that the lines connecting centroids are now pointed in different directions, and are different lengths - this means that
+      the amount of difference in the large and small intestine lengths between ad lib and restricted mice is not the
+      same for control and polygyrus treatments. It looks like response to caloric treatment depends on the parasite
+      treatment for these two response variables.</p>
+    <p>6. Repeat the steps in 4, this time using li and si as the response variables in your manova(). You will see a
+      table that looks like this:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Pillai approx F num Df den Df&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp; &nbsp;<br>parasite.treatment&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.82449&nbsp;&nbsp; 82.207&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp;&nbsp; 35 5.963e-14 ***<br>caloric.treatment&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1 0.29767&nbsp;&nbsp;&nbsp; 7.417&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp;&nbsp; 35&nbsp; 0.002063 ** <br>parasite.treatment:caloric.treatment&nbsp; 1 0.31083&nbsp;&nbsp;&nbsp; 7.893&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp;&nbsp; 35&nbsp; 0.001482 ** <br>Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 36 </p>
+    <p>For this analysis both the main effects and the interaction are significant.</p>
+    <h2>Post-hoc procedures</h2>
+    <p>Now that we have two different significant MANOVA results, there are two kinds of questions we want answered:</p>
+    <ul>
+      <li>Which groups are different?</li>
+      <li>Which response variables are responsible for the group differences?</li>
+    </ul>
+    <p>How we answer these questions depends on whether we got a significant interaction.</p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <td>
+            <p><em><strong>If the interaction is significant</strong></em></p>
+            <p>If you get a significant interaction, you need to base your interpretation on combinations of the factor
+              levels for the two predictors. For the parasite*caloric interaction, we need to make a new variable that
+              combines the caloric and parasite factor levels.</p>
+            <p>Once we have this, we can do multivariate post-hocs by comparing pairs of group centroids for the
+              combined factor level groups with a Hotelling's T<sup>2</sup>.</p>
+            <p>We can do univariate post-hocs by doing one-way ANOVA's and Tukey comparisons for each of the responses
+              one at a time.</p>
+          </td>
+          <td><img alt="Post-hoc procedure" src="manova_post_hocs.png"></td>
+          <td>
+            <p><em><strong>If the interaction is not significant</strong></em></p>
+            <p>We don't need to worry about combinations of factors when the interaction is not significant, we can just
+              focus on comparing the parasite treatments (ignoring the caloric treatments), and on the caloric
+              treatments (ignoring the parasite treatments).</p>
+            <p>With only two groups in each of the parasite and caloric treatment variables, we don't need to do any
+              multivariate post-hocs...we already know from the main effects of our MANOVA that the groups are
+              different.</p>
+            <p>For the univariate post-hocs, we can do an ANOVA to compare the groups on one variable at a time.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>No interaction - univariate post-hocs for rmr and fat</h2>
+    <p>Let's start with the simple case - we didn't get a significant interaction between caloric.treatment and
+      parasite.treatment using rmr and fat as responses. Furthermore, each of the predictors only had two levels, so we
+      already know by the p-values in the MANOVA table that controls are different from polygyrus, and that ad lib are
+      different from restricted. There are no multivariate post-hocs to do here, so we can move on to univariate
+      comparisons between these groups for rmr and fat separately.</p>
+    <p>We don't need to do any kind of multiple comparison procedure because there are only two groups, so all we need
+      to do is to test each of the response variables for significance individually.&nbsp; The first, for rmr, is
+      (post-hoc.rmr):</p>
+    <p class="rmd">summary(aov(rmr ~ parasite.treatment + caloric.treatment, data = mouse))</p>
+    <p>The main effects from the ANOVA table tell you what you need to know - rmr differed between levels of
+      parasite.treatment, and between levels of caloric.treatment. Repeat this for the fat response variable.</p>
+    <p>If we had three or more treatment groups for parasite.treatment or caloric.treatment we would want to use a Tukey
+      post-hoc procedure to account for the fact that we had more than one pair of means to compare. You will see how
+      this is done in the next section.</p>
+    <p>These ANOVA tables are each testing for differences using the same set of mice, and are not independent of one
+      another. We should account for this by only considering the p-values to be significant if they are less than
+      0.05/2 = 0.025 - that is, we divide our usual alpha level of 0.05 by the number of tests we're conducting, and use
+      that value to decide if p-values are statistically significant. You'll see that all of the p-values are much
+      smaller than 0.025, so they are all statistically significant, even with this adjusted alpha level.</p>
+    <h2>Interaction - multivariate and univariate post-hocs for si and li</h2>
+    <p>When you have a significant interaction in your MANOVA table, you can not reliably draw conclusions from the main
+      effects. Looking at the graph of si and li, it appears likely that control animals that are fed ad lib are similar
+      to control animals that are calorically restricted, so drawing a general conclusion about the effects of caloric
+      restriction may not be accurate - caloric restriction only seems to change intestine lengths in the polygyrus
+      parasite group. A significant interaction tells us that the response to one treatment depends on the level of the
+      other, so if we are to understand how intestines changed in response to these treatments we need to compare groups
+      defined by the combinations of parasite.treatment and caloric.treatment. We already made this variable for our
+      plots, parasite.caloric, so we will repeat the MANOVA using parasite.caloric as a predictor, and then use that
+      fitted model to run our post-hocs.</p>
+    <p>Because this is a multivariate analysis, we need to do both <strong>multivariate post-hocs</strong>, and <strong>univariate
+        post-hocs</strong>. We'll do the multivariate post-hocs first, which will be in the form of Hotelling's T<sup>2</sup>
+      tests for pairs of group centroids. We have to decide which groups to compare first - our choices are: </p>
+    <table class="tableLarge" width="100%">
+      <tbody>
+        <tr>
+          <th><strong>Post-hoc test</strong></th>
+          <th><strong>Advantages</strong></th>
+          <th><strong>Disadvantages</strong></th>
+        </tr>
+        <tr>
+          <td>
+            <div class="tooltip">Test for differences between parasite treatment levels within each caloric treatment.<br>
+              or...<span class="tooltiptext"><img src="parasite_within_caloric.png" style="width: 450px"></span></div>
+          </td>
+          <td colspan="1" rowspan="2">Accounts for the fact that the differences in response due to one predictor
+            depends on the level of another.</td>
+          <td colspan="1" rowspan="2">Some comparisons not tested.</td>
+        </tr>
+        <tr>
+          <td>
+            <div class="tooltip">Test for differences between caloric treatment levels within each parasite treatment.<span class="tooltiptext"><img src="caloric_within_parasite.png" style="width: 450px"></span></div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="tooltip">Test for differences between all possible combinations of parasite and caloric
+              treatment.<span class="tooltiptext"><img src="all_possible.png" style="width: 450px"></span></div>
+          </td>
+          <td>Accounts for the dependency between predictors. Since all means are compared, every conceivably
+            interesting difference is tested.</td>
+          <td>Large number of comparisons done, which reduces the power of each one. If some comparisons are not be of
+            interest, then including them only reduces power for the interesting ones.</td>
+        </tr>
+      </tbody>
+    </table>
+    <h4>Split by one factor, compare levels of the other</h4>
+    <p>The first two options put the emphasis on one of the predictors over the other one. For example, we may want to
+      compare the parasite treatments for animals in the control caloric treatment group, and separately compare the
+      parasite treatments for animals in the restricted caloric treatment group. There would be no comparison between
+      the caloric treatments at all, we would just use caloric group to subset the data.</p>
+    <p>To do this we can split the data (split.data.by.caloric):</p>
+    <p class="rmd">split(mouse, mouse$caloric.treatment) -&gt; mouse.split</p>
+    <p>and then get MANOVA tables for the parasite treatment for each of the caloric treatments
+      (compare.parasite.within.each.caloric):</p>
+    <p class="rmd">lapply(mouse.split, FUN = function(x) summary(manova(cbind(li, si) ~ parasite.treatment, data = x)))</p>
+    <p>You'll see that there are multivariate differences between the parasite groups within each of the diets, but you
+      get the idea - if the only thing you actually want to know is how the parasite treatments differ within each
+      caloric treatment this is the best option.</p>
+    <h4>Compare all combinations of levels of both factors</h4>
+    <p>The weakness of splitting by caloric treatment is that we don't make any comparisons between ad lib and restricted mice. If we need to
+      know how every combination of parasite and caloric treatment compares with every other combination we need to test
+      them all. There are six comparisons that can be made between the four combination of parasite and caloric
+      treatment.</p>
+    <p>There is not a built-in function to do this step. We can do it manually, by&nbsp; subsetting the data to only
+      contain the two groups we want to compare for each of the six pairwise comparisons. For example, to compare the
+      control.ad lib group to the polygyrus.ad lib group we could use (in the Console):</p>
+    <p class="rcmd">summary(manova(cbind(fat, rmr) ~ parasite.caloric, data = mouse, subset = parasite.caloric %in%
+      c("control.ad lib", "polygyrus.ad lib")))&nbsp; </p>
+    <p>which would give us:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Df&nbsp; Pillai approx F num Df den Df&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp; <br>
+      parasite.caloric&nbsp; 1 0.53176&nbsp;&nbsp; 9.6532&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp;&nbsp; 17
+      0.001581 **<br>
+      Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 18 </p>
+    <p>This is a comparison between just two groups (which you can tell by the Df of 1 for parasite.caloric), and the
+      p-value indicates they are different. We could re-run this for the remaining five combinations of parasite and
+      caloric treatment, or we could automate the process, which is what we'll do now.</p>
+    <p>1. Automating these pairwise comparisons of the parasite.caloric groups takes a few steps. </p>
+    <p>First, we need to make a list that has the pairs of groups we want to compare - these will be all possible
+      combinations of the four levels in the parasite.caloric variable (in mv.posthoc.comparisons):</p>
+    <p><span style="font-family: &quot;Open Sans&quot;,sans-serif;" class="rmd">groups &lt;-
+        levels(factor(mouse$parasite.caloric))</span></p>
+    <p><span style="font-family: &quot;Open Sans&quot;,sans-serif;" class="rmd">comps &lt;- combn(groups, m = 2,
+        simplify = F)</span></p>
+    <p><span style="font-family: &quot;Open Sans&quot;,sans-serif;">The first command gets the four groups in
+        parasite.caloric and assigns them to a vector called groups. The second command gets all possible combinations
+        of the groups taken two at a time (m = 2). The simplify = F argument returns the results in a format that works
+        well for the next step. If you type comps in the Console you'll see:</span></p>
+    <p><span style="font-family: &quot;Open Sans&quot;,sans-serif;" class="rout">[[1]]<br>
+        [1] "control.ad lib"&nbsp;&nbsp; "polygyrus.ad lib"<br>
+        <br>
+        [[2]]<br>
+        [1] "control.ad lib"&nbsp;&nbsp;&nbsp;&nbsp; "control.restricted"<br>
+        <br>
+        [[3]]<br>
+        [1] "control.ad lib"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "polygyrus.restricted"<br>
+        <br>
+        [[4]]<br>
+        [1] "polygyrus.ad lib"&nbsp;&nbsp; "control.restricted"<br>
+        <br>
+        [[5]]<br>
+        [1] "polygyrus.ad lib"&nbsp;&nbsp;&nbsp;&nbsp; "polygyrus.restricted"<br>
+        <br>
+        [[6]]<br>
+        [1] "control.restricted"&nbsp;&nbsp; "polygyrus.restricted"<br>
+      </span></p>
+    <p>There are no labels on the comparisons yet, but we can create them with (in the Console):</p>
+<p class="rcmd">sapply(comps, FUN = function(x) paste(x, collapse = " - "))</p>
+<p>which gives us:</p>
+<p class="rout">[1] "control.ad lib - polygyrus.ad lib"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>[2] "control.ad lib - control.restricted"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <br>[3] "control.ad lib - polygyrus.restricted"&nbsp;&nbsp;&nbsp; <br>[4] "polygyrus.ad lib - control.restricted"&nbsp;&nbsp;&nbsp; <br>[5] "polygyrus.ad lib - polygyrus.restricted"&nbsp; <br>[6] "control.restricted - polygyrus.restricted" </p>
+<p>The sapply() command works through the six sets of comparisons in comps and passes a vector with the names of the two groups to be compared to FUN as x. The paste() command takes these two names and collapses them into a single text string, separated by a - sign.</p>
+<p>We can use these labels as names for the comparisons in comps with (same code chunk, below the combn() command):</p>
+    <p class="rmd">names(comps) &lt;- sapply(comps, FUN = function(x) paste(x, collapse = " - "))</p>
+    <p>If you
+      type comps (in the Console) again you'll see:</p>
+    <p class="rout">$`control.ad lib - polygyrus.ad lib`<br>
+      [1] "control.ad lib"&nbsp;&nbsp; "polygyrus.ad lib"<br>
+      <br>
+      $`control.ad lib - control.restricted`<br>
+      [1] "control.ad lib"&nbsp;&nbsp;&nbsp;&nbsp; "control.restricted"<br>
+      <br>
+      $`control.ad lib - polygyrus.restricted`<br>
+      [1] "control.ad lib"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "polygyrus.restricted"<br>
+      <br>
+      $`polygyrus.ad lib - control.restricted`<br>
+      [1] "polygyrus.ad lib"&nbsp;&nbsp; "control.restricted"<br>
+      <br>
+      $`polygyrus.ad lib - polygyrus.restricted`<br>
+      [1] "polygyrus.ad lib"&nbsp;&nbsp;&nbsp;&nbsp; "polygyrus.restricted"<br>
+      <br>
+      $`control.restricted - polygyrus.restricted`<br>
+      [1] "control.restricted"&nbsp;&nbsp; "polygyrus.restricted"</p>
+    <p>These labels will be applied to our output in the last step, which will make it much easier to understand.&nbsp;</p>
+<p>2. We can now do the comparisons between each of these pairs of groups. When we run a manova(), or any type of model in R, we can use the subset argument to use only part of the data set. In comps we have sets of two groups we want to compare, so for example we could compare control.ad lib to polygyrus.ad lib by using (in the Console):</p>
+<p class="rcmd">summary(manova(cbind(li, si) ~ parasite.caloric, data = mouse, subset = parasite.caloric %in% comps$'control.ad lib - polygyrus.ad lib'))</p>
+<p>You'll see that you get a MANOVA table for these two groups:</p>
+<p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp; Pillai approx F num Df den Df&nbsp;&nbsp;&nbsp; Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>parasite.caloric&nbsp; 1 0.84158&nbsp;&nbsp; 45.154&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp;&nbsp; 17 1.579e-07 ***<br>Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 18&nbsp; </p>
+<p>The %in% operator is used to compare each row of parasite.caloric against the vector of two group names in the "control.ad lib - polygyrus.ad" lib element of comps - this selects the rows for just those two groups for use in the analysis.<br> </p>
+<p>To get each of the sets of comparisons we just put our summary(manova()) command inside of an lapply(), like so (chunk multivariate.posthoc):</p>
+    <p class="rmd">lapply(comps, FUN = function(x) summary(manova(cbind(li,si) ~ parasite.caloric, data = mouse, subset = parasite.caloric %in% x))) -&gt; manovas.ph</p>
+    
+    <p>This gives us a MANOVA table for each of the pairs of groups in comps, and puts them into a list called manovas.ph.</p>
+<p>All we really want at this stage is the p-value for the comparison. If you type manovas.ph$ in the Console you'll see a popup with each of the comparisons - select the first one, and then type a $ after it to see what named elements are in it, and select the one called "stats". You should see the MANOVA table for the first comparison - in other words, if you type:</p>
+<p class="rcmd">manovas.ph$`control.ad lib - polygyrus.ad lib`$stats</p>
+<p>in the Console you'll get:</p>
+<p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Df&nbsp;&nbsp;&nbsp; Pillai approx F num Df den Df&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Pr(&gt;F)<br>parasite.caloric&nbsp; 1 0.8415761 45.15351&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2&nbsp;&nbsp;&nbsp;&nbsp; 17 1.579343e-07<br>Residuals&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 18&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NA&nbsp;&nbsp;&nbsp;&nbsp; NA&nbsp;&nbsp;&nbsp;&nbsp; NA&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; NA</p>
+<p>The p-value is in the sixth named column, and is the first row, so we can get the p-value with the command (in the Console):</p>
+<p class="rcmd">manovas.ph$`control.ad lib - polygyrus.ad lib`$stats[1,6]</p>
+<p>You should see the p-value from the MANOVA table in the Console output.</p>
+<p>So, to pull out the p-values we can use an sapply() to extract them (in the Console):</p>
+<p class="rcmd">sapply(manovas.ph, FUN = function(x) x$stats[1,6])</p>
+<p>The sapply() command works just like lapply() but returns vectors instead of lists - you should now see the p-values for all of the tests reported.</p>
+<p>This is what we want, but it's poorly formatted - to get the p-values laid out as a table, with row labels indicating the comparison made, we need one last
+      command (below the lapply() in your multivariate.posthoc chunk):</p>
+    <p class="rmd">data.frame(p = sapply(manovas.ph, FUN = function(x) summary(x)$stats[1,6]))</p>
+    
+    <p>Wrapping the entire sapply() command inside of a data.frame() command, and assigning the p-values to a column
+      called p provides nicely formatted output like this:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      p<br>
+      control.ad lib - polygyrus.ad lib&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.579343e-07<br>
+      control.ad lib - control.restricted&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1.284949e-01<br>
+      control.ad lib - polygyrus.restricted&nbsp;&nbsp;&nbsp;&nbsp; 8.084868e-06<br>
+      polygyrus.ad lib - control.restricted&nbsp;&nbsp;&nbsp;&nbsp; 1.283260e-08<br>
+      polygyrus.ad lib - polygyrus.restricted&nbsp;&nbsp; 1.119129e-03<br>
+      control.restricted - polygyrus.restricted 1.449576e-07</p>
+    <p>With six comparisons of the four combinations of parasite.treatment and caloric.treatment we shouldn't consider
+      them significant unless p is less than 0.05/6 = 0.0083.</p>
+    <p>You will see that all of the groups are different except control.ad lib and control.restricted (the two that are
+      close together on the graph of centroids).</p>
+    <p>That completes the multivariate post-hocs needed for this analysis.</p>
+    <p>3. We now have comparisons of group centroids, but we still don't know if the groups that are different had
+      changes in li, changes in si, or both. We can do univariate post-hocs to find this out, in the form of Tukey
+      tests.</p>
+    <p>To do Tukey tests on li use (in tukey.posthoc):</p>
+    <p class="rmd">TukeyHSD(aov(li ~ parasite.caloric, data = mouse))</p>
+    <p>Repeat this command to get the Tukey comparisons for si. </p>
+<p>Note that the Tukey procedure adjusts for the number of
+      tests, but it has no way of knowing we are testing two variables - so, consider any Tukey p-values less than 0.05/2 =
+      0.025 to be significant.</p>
+    <p> </p>
+    <h2>Assignment</h2>
+    <p>Knit and upload your Word document to complete the assignment.<br>
+    </p>
+    <p> </p>
+  
+
+</body></html>

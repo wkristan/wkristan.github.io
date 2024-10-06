@@ -1,0 +1,261 @@
+---
+title: "Interactions and post-hocs"
+author: "Your Name"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## MANOVA interactions
+
+Import the mouse data:
+
+```{r import.mouse.data}
+
+
+
+```
+
+Make a new column in mouse with combinations of parasite.treatment and caloric.treatment:
+
+```{r make.combinations}
+
+
+
+```
+
+### Fat and RMR as responses - MANOVA
+
+Load the ggplot2 library:
+
+```{r load.ggplot2}
+
+
+
+```
+
+Graph the fat and rmr variables as a scatter plot, using color to indicate parasite treatment, and plot symbol to indicate caloric treatment:
+
+```{r fat.rmr.ggplot}
+
+
+
+```
+
+#### Question: ignore the plot symbol and just compare the colors - does it look like there is separation between control and polygyrus groups with respect to their fat and rmr values? How can you tell?
+
+> 
+
+#### Question: ignore color and focus on the different plot symbols - does it look like there is separation between ad lib and restricted mice? How can you tell?
+
+> 
+
+To make a plot of the centroids we need to calculate them first. We can use the aggregate() function to calculate means for combinations of parasite.treatment and caloric.treatment:
+
+```{r calculate.group.centroids}
+
+
+
+```
+
+Add the combinations of parasite and caloric treatments to mouse.means:
+
+```{r combinations.for.means}
+
+
+
+```
+
+Make the plot of the centroids:
+
+```{r fat.rmr.centroids.plot}
+
+
+
+```
+
+#### Question: why would you expect a main effect of parasite.treatment, based on this graph?
+
+> 
+
+#### Question: why would you expect a main effect of caloric.treatment, based on this graph?
+
+> 
+
+#### Question: why does the fact that the lines are about the same length and pointed in the same direction indicate that we should not expect an interaction between parasite.treatment and caloric.treatment? Hint: is the amount of difference between ad lib and restricted mice about the same for both colors, and is the way they change similar?
+
+> 
+
+Now run the MANOVA to test for main effects and interaction between parasite.treatment and caloric.treatment:
+
+```{r manova.parasite.and.caloric}
+
+
+
+```
+
+#### Question: are there significant main effects for the predictors (if so, which)? Is there a significant interaction?
+
+> 
+
+### Large intestine and small intestine as responses - MANOVA
+
+Now do the graphs again using li and si. Start with the raw data in mouse:
+
+```{r li.si.ggplot}
+
+
+
+```
+
+#### Question: Looking just at color, does it appear that there will be a difference between control and polygyrus treatments in their large and small intestine lengths? How can you tell?
+
+> 
+
+Now looking just at the circles and triangles, does it look like there will be a difference between ad lib and restricted animals? How can you tell?
+
+> 
+
+Now the centroids:
+
+```{r li.si.centroids.plot}
+
+
+
+```
+
+#### Question: why would you expect a main effect of parasite.treatment, based on this graph?
+
+> 
+
+#### Question: why would you expect a main effect of caloric.treatment, based on this graph?
+
+> 
+
+#### Question: why does the fact that the lines are different lengths and pointed in the different directions indicate that we should expect an interaction between parasite.treatment and caloric.treatment? Hint: is the amount of difference between ad lib and restricted mice about the same for both colors, and is the way they change similar?
+
+> 
+
+Run your MANOVA using li and si as responses:
+
+```{r manova.parasite.and.caloric.si.li}
+
+
+
+```
+
+#### Question: is there a significant main effect of parasite.treatment? How do you know?
+
+> 
+
+#### Question: is there a significant main effect of caloric.treatment? How do you know?
+
+> 
+
+#### Question: is there a significant interaction between parasite.treatment and caloric.treatment? How do yo know?
+
+> 
+
+## Post-hoc procedures, with and without interactions
+
+The procedure for following up after a significant MANOVA depends on whether there is a significant interaction or not.
+
+### Post-hoc procedures with a non-significant interaction - rmr and fat
+
+Since the interaction was not significant we can focus on main effects. With only two groups we already know that the groups are different in a multivariate sense, but we still need to test main effects of each predictor on fat, and on rmr separately. With only two groups it isn't necessary to use multiple comparison procedures, and we can just do a univariate factorial ANOVA.
+
+First rmr:
+
+```{r post-hoc.rmr}
+
+
+
+```
+
+#### Question: is rmr different between parasite treatments? What about between caloric treatments? How can you tell?
+
+> 
+
+Now fat:
+
+```{r post-hoc.fat}
+
+
+
+```
+
+#### Question: is fat different between parasite treatments? What about between caloric treatments? How can you tell?
+
+> 
+
+### Significant interaction - li and si
+
+The first approach is to compare differences between parasite treatments for mice that were given one or the other caloric treatment.
+
+First split the data by caloric treatment:
+
+```{r split.data.by.caloric}
+
+
+
+```
+
+Then conduct MANOVAs comparing the parasite treatments for each diet:
+
+```{r compare.parasite.within.each.caloric}
+
+
+
+```
+
+#### Question: are there differences in parasite group for both of the caloric groups? How do you know (be specific - what alpha level do you use to decide if the effects are significant)?
+
+>
+
+The second approach is to test all possible comparisons between the combinations of parasite treatment and caloric treatment.
+
+To run the multivariate Hotelling T^2^ comparisons for each pair of groups in parasite.caloric we first need to get all the comparisons we want to make into a list:
+
+```{r mv.posthoc.comparisons}
+
+
+
+```
+
+Next we get the p-values for these comparisons:
+
+```{r multivariate.posthoc}
+
+
+
+```
+
+#### Question: which groups are significantly different according to these Hotelling T^2^ tests?
+
+> 
+
+Lastly, do Tukey post-hocs on li and si separately:
+
+```{r tukey.posthoc}
+
+
+
+```
+
+#### Question: which groups had different large intestine lengths?
+
+> 
+
+#### Question: which groups had different small intestine lengths?
+
+> 
+
+#### Question: were there any groups that were only different when both variables were used? Or, were all of the groups that were different in the Hotelling's T^2^ tests also different in either their li or si measurements?
+
+> 
