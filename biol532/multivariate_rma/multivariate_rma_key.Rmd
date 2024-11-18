@@ -1,0 +1,253 @@
+---
+title: "Multivariate RMA - profile analysis"
+author: "KEY"
+date: "`r date()`"
+output: 
+    word_document: 
+        reference_docx: "template.docx"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Profile analysis - the multivariate approach to repeated measures analysis
+
+### Import the data
+
+Import the data:
+
+```{r import.leech.data}
+
+library(readxl)
+data.frame(read_excel("leech_weights.xlsx","leech_weights")) -> weights
+
+```
+
+Load the car library:
+
+```{r library.car}
+
+library(car)
+
+```
+
+Make a variables list of the days (which are the response variables in our analysis):
+
+```{r make.variables.list}
+
+days <- c("d0","d1","d2","d3","d4","d5","d6","d8")
+
+```
+
+We need to describe the within-subjects design - we will do this by making an R factor out of the list of days:
+
+```{r time.factor}
+
+time.factor <- factor(days, levels = days)
+
+```
+
+Then we make a data frame out of the time.factor object:
+
+```{r time.frame}
+
+time.frame <- data.frame(time.factor)
+
+```
+
+Fit a MANOVA model using the weights as the responses, and food as the predictor:
+
+```{r manova.model}
+
+
+lm(as.matrix(weights[days]) ~ food, data = weights) -> weights.mlm
+
+```
+
+Now we have what we need to run the RMA using:
+
+```{r run.rma}
+
+Anova(weights.mlm, idata = time.frame, idesign = ~time.factor) -> weights.rma
+
+```
+
+Get the multivariate tests:
+
+```{r multivariate.table}
+
+print(weights.rma)
+
+```
+
+#### Question: which effects are signficant? How do you know?
+
+> Yes, the p-value is less than 0.05.
+
+#### Question: which effect is the test of flatness?
+
+> time.factor tests for flatness.
+
+#### Question: which effect is the test of parallelism?
+
+> food:time.factor interaction tests parallelism.
+
+## Post-hoc procedures
+
+Now that we know we have an interaction between food and time, we need to find out a) on which days the foods differ, b) within a food type, which successive days differ, and c) on which days do the groups have different amounts of change (i.e. on which days are the changes not parallel)?
+
+### A. On what days do the weights differ between food types?
+
+If we look at one day at a time, we can test on which days the food types differ:
+
+```{r differences.in.weight.each.day}
+
+summary(aov(weights.mlm))
+
+```
+
+#### Question: what alpha level should you use for determining if these are statistically significant differences at each of the eight days?
+
+> With eight different analyses we should use 0.05/8 = 0.00625
+
+#### Question: which of these differences are statistically significant, using the adjusted alpha level you identified?
+
+> All but the first day are significantly different.
+
+### B. how is weight changing over time within each food type?
+
+We could also be interested in how the weights change over time within each food type. We need paired t-tests for these comparisons because the same leeches are being measured repeatedly. To make this simpler to calculate for every pair of days, we can calculate the differences by hand, and then do a one-sample t-test of the differences against 0. First, we need to calculate the sequential differences:
+
+```{r calculate.sequential.diffs}
+
+weights[days[-8]] - weights[days[-1]] -> diffs
+
+colnames(diffs) <- paste(days[-1], days[-8], sep = " - ")
+
+```
+
+We want to know if there are differences between sequential time points within each of the food types, so we should split the data by food type:
+
+```{r split.the.diffs.by.food.type}
+
+split(diffs, weights$food) -> diffs.split
+
+```
+
+Conduct all 14 of the paired t-tests (that is, the one-sample t-tests of the differences against 0) using lapply():
+
+```{r paired.t.tests}
+
+lapply(diffs.split, FUN = function(x) apply(x, MARGIN = 2, FUN = t.test)) -> diffs.split.ts
+
+```
+
+Get the p-values for the long list of t-tests in diffs.split.ts:
+
+```{r sapply.command.for.p.values}
+
+sapply(diffs.split.ts, FUN = function(x) sapply(x, function(y) y$p.value))
+
+```
+
+#### Question: what alpha level should you use to decide which of these p-values are statistically significant?
+
+> There are 14 p-values here (including the NaN which is due to the fact that there were no differences between d2 and d3 for the blood-fed leeches), so the alpha level should be 0.05/14= 0.0036.
+
+#### Question: which of the sequential differences are statistically significant?
+
+> For both groups, d1-d0, d2-d1, d3-d2, and d4-d3 are significant.
+
+#### Question: why did we need to use paired t-tests for these tests, but could use an un-paired post-hoc comparisons to test the effects of food?
+
+> The same leeches were measured each day, so the data are paired when we compare between days.
+
+#### Question: why is the comparison between day 2 and day 3 for blood-fed leeches reported as "NaN"?
+
+> This is because there was no change in weight between day 2 and day 3 for any of the blood-fed leeches. Since every data value was 0 the standard deviation is 0, the standard error is 0, and dividing the difference by a standard error of 0 to get the t-value is undefined.
+
+We may instead be more interested in when the weights start to differ from the first day (initial conditions). The analysis is exactly the same, but we would calculate differences of each day from 1 to 8 from the first day, 0.
+
+```{r diffs.from.initial}
+
+weights[days[-1]] - c(weights[days[1]]) -> diffs.initial
+
+colnames(diffs.initial) <- paste("d0",days[-1], sep = " - ")
+
+```
+
+Split the differences from initial weights by food type:
+
+```{r split.diffs.from.initial}
+
+split(diffs.initial, weights$food) -> diffs.initial.split
+
+```
+
+Run the paired t-tests:
+
+```{r paired.t.diffs.from.initial}
+
+lapply(diffs.initial.split, FUN = function(x) apply(x, MARGIN = 2, FUN = t.test)) -> diffs.initial.split.ts
+
+```
+
+Get the p-values for the paired t-tests:
+
+```{r sapply.for.diffs.from.initial.pvals}
+
+sapply(diffs.initial.split.ts, FUN = function(x) sapply(x, FUN = function(y) y$p.value))
+
+```
+
+#### Question: which days differ from initial conditions for arg-fed leeches? What about for blood-fed leeches?
+
+> All of the days are significantly different from the first day for both of the food types.
+
+### C - at what days are the sequential differences different between food types?
+
+To see if every pair of sequential differences is different between groups or not, first make a MANOVA of sequential differences compared between food groups:
+
+```{r diffs.by.group}
+
+lm(as.matrix(diffs) ~ food, data = weights) -> parallel.mlm
+
+```
+
+Compare the differences between food types each day:
+
+```{r compare.diffs.each.day}
+
+summary(aov(parallel.mlm))
+
+```
+
+#### Question: what alpha level should you use for these comparisons?
+
+> With seven comparisons, the alpha level should be 0.05/7 = 0.007
+
+#### Question: are the changes over time different between the groups between every day of measurement, or were the changes the same for both blood and arginine-fed leeches on some days? Be sure to refer to the p-values to support your answer.
+
+> Some days the amount of change is the same between the food groups - only for d1, d2, and d6 the rates of change are different.
+
+Now test when the animals returned to their pre-feeding weight. Split the data by food type:
+
+```{r split.weight.by.food}
+
+split(weights[days], weights$food) -> weights.split
+
+```
+
+Conduct one-sample t-tests against a null value of 1:
+
+```{r weights.return.to.prefeeding}
+
+sapply(weights.split, FUN = function(x) apply(x, MARGIN = 2, FUN = function(y) t.test(y, mu = 1)$p.value))
+
+```
+
+#### Question: by what day do the arginine-fed animals return to pre-feeding weight? Do the blood-fed animals return to their pre-feeding weights?
+
+> Arginine-fed animals do return to pre-feeding at day 8, using an alpha level of 0.05/16 = 0.003125. Blood-fed animals never get back to pre-feeding weight during the experiment.

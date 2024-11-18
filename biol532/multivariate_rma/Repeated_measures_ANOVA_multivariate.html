@@ -1,0 +1,638 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Multivariate approach to repeated measures</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+    <style>
+    /* Tooltip container */
+		.tooltip {
+    	position: relative;
+    	display: inline-block;
+    	border-bottom: 0px;
+		}
+
+		/* Tooltip text */
+		.tooltip .tooltiptext {
+    	visibility: hidden;
+    	width: 450px;
+    	background-color: #555;
+    	color: #fff;
+    	text-align: center;
+    	padding: 5px 0;
+    	border-radius: 6px;
+
+    	/* Position the tooltip text */
+    	position: absolute;
+    	z-index: 1;
+    	bottom: 125%;
+    	left: 50%;
+    	margin-left: -60px;
+
+    	/* Fade in tooltip */
+    	opacity: 0;
+    	transition: opacity 0.3s;
+			}
+
+			/* Tooltip arrow */
+			.tooltip .tooltiptext::after {
+    	content: "";
+    	position: absolute;
+    	top: 100%;
+    	left: 50%;
+    	margin-left: -5px;
+    	border-width: 5px;
+    	border-style: solid;
+    	border-color: #555 transparent transparent transparent;
+			}
+
+			/* Show the tooltip text when you mouse over the tooltip container */
+			.tooltip:hover .tooltiptext {
+    	visibility: visible;
+    	opacity: 1;
+		}
+    </style>
+  </head>
+  <body>
+    <h1>Repeated measures ANOVA using multivariate tests</h1>
+    <p>We're a little short on time this semester, so we're skipping over the
+      exercise on univariate repeated measures analysis (RMA) that I usually
+      have students do. If we had done the univariate approach we would have
+      found that it was not appropriate for the data set we're using, and would
+      want to use the multivariate approach instead. I'll briefly explain here
+      why this is the case.</p>
+    <p>Repeated measurements of the same subjects are not independent, and
+      analyzing the data with a method that assumes the data are independent can
+      be very inaccurate. There is a univariate ANOVA model that is able to
+      account for the lack of independence between repeated measurements of
+      individuals, called <strong>repeated measures ANOVA</strong>, and that is
+      the univariate method we are skipping over. Repeated measures ANOVA makes
+      a distinction between the treatments applied to subjects (called the
+      between-subjects effects) and the change over time in response by each of
+      the subjects (called the within-subjects effects), and tests for main
+      effects and interactions between them. It works well, and gives high
+      statistical power, when its assumptions are met.</p>
+    <p>However, repeated measures ANOVA has an additional assumption, called <strong>sphericity</strong>,
+      that can be difficult to meet. Sphericity is the assumption that the
+      variances of differences between successive time points are the same, and
+      it is tested with the Mauchly test. The data we are about to analyze
+      failed the Mauchly test, so shouldn't be analyzed using univariate RMA.</p>
+    <p>We can use MANOVA to reproduce tests of the same effects we would have
+      tested with univariate RMA, and this approach is called <strong>profile
+        analysis</strong>. The questions we will address are the same as with
+      univariate RMA, but because MANOVA does not assume anything about the
+      variances of the response variables being the same as one another we can
+      use it when we violate the sphericity assumption. Profile analysis is a
+      little less statistically powerful that univariate RMA when the sphericity
+      assumption is met, but it is preferable to univariate RMA when sphericity
+      is violated.</p>
+    <h2>The RMA data</h2>
+    <img src="r138958_475480.jpg" alt="Leech" style="float: right; margin-left: 20px; width: 128px; height: 95px;">
+    <p>Our data set for today comes from a study of medicinal leeches (like the
+      one pictured to the right), which are aquatic annelids that eat blood.
+      They eat infrequently, but when they are able to get a meal they gorge
+      themselves, such that their body weight increases approximately ten fold
+      after a feeding. Blood is very watery, and they expel the water relatively
+      quickly until only the solid components of the blood with all the
+      nutrients are left, which they can then digest more slowly. Leeches can be
+      fooled into feeding on a solution of the amino acid arginine, but it is
+      not their normal food and is much less nutritional for them. </p>
+    <p>Characterizing the differences in weights of leeches that feed on blood
+      and arginine was the purpose of the experiment - the researchers did the
+      following: </p>
+    <ul>
+      <li>Two groups of 10 leeches were selected and assigned to be fed on one
+        of two different diets</li>
+      <ul>
+        <li>Blood fed - fed on cow's blood (their usual diet)</li>
+        <li>Arginine fed - fed on an Arginine solution (which has little
+          nutritive value)</li>
+      </ul>
+      <li>Before feeding each animal was weighed to obtain a pre-feeding weight.</li>
+      <li>Leeches were then fed on their assigned diet, and were weighed
+        immediately after feeding (Day 0)</li>
+      <li>The leeches were then weighed daily for six days, and once again on
+        the eighth day (Day 1, Day 2, Day 3, Day 4, Day 5, Day 6, and Day 8)</li>
+      <li>The data were expressed as a ratio of the pre-feeding measurement -
+        that is, each day's weight was divided by the pre-feeding weight, such
+        that a value of 10 indicates that a leech was 10 times their pre-feeding
+        weight, and a value of 1 meant their weight was the same as their
+        pre-feeding weight.</li>
+    </ul>
+    <p>Start a new project folder, download <a href="leech_weights.xlsx">this</a>
+      data file and <a href="multivariate_rma.Rmd">this</a> Rmd file into it.
+      Import the data from leech_weights.xlsx, sheet leech_weights, into a data
+      set called weights. These are the same data you used last week.</p>
+    <h2>Profile analysis - using multivariate tests for repeated measures
+      analysis</h2>
+    <p> The Anova() function from the car library will produce both univariate
+      and multivariate tests - we will focus on the multivariate tests today.</p>
+    <p>Bear in mind as you are interpreting the results that the data we are
+      using actually only has one response variable, weight, and we are using
+      multivariate analysis in an unusual way to conduct a univariate repeated
+      measures analysis. We will only need to interpret the results as though
+      they were univariate - there will be no multivariate interpretation using
+      scores, loadings, or communalities this time, and there are no
+      multivariate post-hocs needed, only univariate ones.</p>
+    <p>To use multivariate methods to get tests of food, day, and the food x day
+      interaction it is necessary to run three separate analyses, like so:</p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th>Question</th>
+          <th>Effect</th>
+          <th>Multivariate test (hover to see graph)</th>
+        </tr>
+        <tr>
+          <td>Is there a difference in mean weight between food types?</td>
+          <td>Between-subjects main effect</td>
+          <td>
+            <div class="tooltip">One-way ANOVA of means for individual leeches
+              compared between food types<span class="tooltiptext"><img src="food_main.png"
+                  style="width: 450px"></span></div>
+          </td>
+        </tr>
+        <tr>
+          <td>Does weight change over time?</td>
+          <td>Within-subjects main effect</td>
+          <td>
+            <div class="tooltip">Test of flatness (means of sequential
+              differences against 0)<span class="tooltiptext"><img src="day_main.png"
+                  style="width: 450px"></span></div>
+          </td>
+        </tr>
+        <tr>
+          <td>Does the pattern of weight change over time depend on food type?</td>
+          <td>Between x within interaction</td>
+          <td>
+            <div class="tooltip">Test of parallelism (means of sequential
+              differences between food types)<span class="tooltiptext"><img src="foodxday.png"
+                  style="width: 450px"></span></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The Anova() command from the car library will do these three analyses,
+      and assemble the pertinent results into what looks like a single MANOVA
+      table. Anova() is a little non-intuitive to use, with a few pieces that we
+      have to assemble to make it work.</p>
+    <p>1. <strong>Load the library</strong>. First, we will load the library
+      (library.car):</p>
+    <p class="rmd">library(car)</p>
+    <p>2. <strong>Prep for Anova()</strong>. We need to tell Anova() about our
+      design - the within-subjects design is defined first by making a vector of
+      days, converting it to a factor, and then converting the factor to a data
+      frame. Make your list of days (make.variables.list):</p>
+    <p class="rmd">days &lt;- c("d0","d1","d2","d3","d4","d5","d6","d8")</p>
+    <p>and then make an R factor out of it (time.factor):</p>
+    <p class="rmd">time.factor &lt;- factor(days)</p>
+    <p>Now we make a data frame out of our time.factor (time.frame):</p>
+    <p class="rmd">time.frame &lt;- data.frame(time.factor)</p>
+    <p>This is a very simple within-subjects design, and all of this complexity
+      probably seems a little silly, but it's possible to have within-subjects
+      treatments - for example, if we had increased the water temperature after
+      the third day we would have a within-subjects treatment variable that
+      indicates the cold days (days 0 through 3) and warm days (days 4 through
+      8) and tested for an effect of water temperature. So, we have to put up
+      with a little excessive complexity for simple designs like ours so that
+      more complex designs can be analyzed.</p>
+    <p>The between-subjects design is defined by a MANOVA of the daily weight
+      measurements by food type (manova.model):</p>
+    <p class="rmd">manova(as.matrix(weights[days]) ~ food, data = weights) -&gt;
+      weights.mlm</p>
+    <p>3. <strong>Run the RMA</strong>. To run the RMA, use the Anova() command
+      from the car library (run.rma):</p>
+    <p class="rmd">library(car)</p>
+    <p class="rmd">Anova(weights.mlm, idata = time.frame, idesign =
+      ~time.factor) -&gt; weights.rma</p>
+    <span style="font-family: &quot;Open Sans&quot;,sans-serif;"></span>
+    <p>This produces both the univariate and multivariate analyses and assigns
+      them both to weights.rma, but we'll just look at the multivariate analysis
+      today.</p>
+    <p>4. <strong>Multivariate tests</strong>. To get a table with the
+      multivariate RMA results we just use print() on the rma object (chunk
+      multivariate.table):</p>
+    <p class="rmd">print(weights.rma)</p>
+    <p class="rmd"> </p>
+    <p>You'll get the following table:</p>
+    <p class="rout">Type II Repeated Measures MANOVA Tests: Pillai test
+      statistic<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      Df test stat approx F num Df den Df&nbsp;&nbsp;&nbsp;
+      Pr(&gt;F)&nbsp;&nbsp;&nbsp; <br>
+      (Intercept)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+      0.97309&nbsp;&nbsp; 686.94&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      1&nbsp;&nbsp;&nbsp;&nbsp; 19 2.224e-16 ***<br>
+      food&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      1&nbsp;&nbsp; 0.82303&nbsp;&nbsp;&nbsp;
+      88.36&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp;&nbsp; 19 1.412e-08
+      ***<br>
+      time.factor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;
+      0.99093&nbsp;&nbsp; 202.96&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      7&nbsp;&nbsp;&nbsp;&nbsp; 13 3.028e-12 ***<br>
+      food:time.factor&nbsp; 1&nbsp;&nbsp; 0.95594&nbsp;&nbsp;&nbsp;
+      40.29&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 7&nbsp;&nbsp;&nbsp;&nbsp; 13 8.134e-08
+      ***<br>
+      ---<br>
+      Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</p>
+    <p>You'll see that all of the tests are significant, including the
+      food:time.factor interaction - when we do our post-hoc procedures we'll
+      need to account for the combinations of food type and day.</p>
+    <p>Note that the default multivariate test statistic is Pillai's trace,
+      which is a good choice. If we wanted a different one we could have
+      included an argument in Anova() specifying which we wanted to use.
+      Pillai's is good when your data violate multivariate normality, and tends
+      to be identical to the others when assumptions are met, so stick with the
+      default.</p>
+    <p>And that's it! Simple, right? The complexity in an RMA comes from the
+      post-hocs, which we'll deal with now that we know that we have a
+      difference in the pattern of change over time between the food types
+      (that's what the interaction is telling us).</p>
+    <h2>Post-hoc analysis<br>
+    </h2>
+    <p>The post-hoc procedure would be the same regardless of whether we used
+      univariate or multivariate analysis - none of the post-hocs compare more
+      than two sets of repeated measures, so sphericity isn't an assumption for
+      any of them.</p>
+    <p>There are a couple of differences between RMA and a normal factorial
+      ANOVA that we will want to keep in mind:</p>
+    <ul>
+      <li>We don't usually want to compare all possible sets of means, for a
+        couple of reasons. </li>
+      <ul>
+        <li>We often will have several time points recorded, which leads to huge
+          numbers of possible comparisons. In this data set there are 120
+          possible pairs of means for the 16 combinations of food and day, and
+          if we made every possible comparison we would have very low power to
+          detect differences. And, comparing every possible pair of means would
+          be pointless, because...</li>
+        <li>Many of the comparisons we could make aren't interesting. A
+          comparison between arbitrary combinations of food type and day are
+          probably not illuminating - for example, what do we care if blood-fed
+          animals on day 6 are different from arginine-fed animals on day 2?
+          Differences between food groups on the same day, or between days
+          within a food group, are probably more interesting.</li>
+      </ul>
+      <li>The data are paired between any two time points, because the same
+        animals are measured each time. Standard, familiar post-hoc procedures
+        like Tukey tests are not appropriate for paired data, so we'll need to
+        use paired t-tests with a Bonferonni adjusted alpha level for any
+        comparison between days.</li>
+    </ul>
+    <p>Usually, the comparisons of interest in a repeated measures analysis are:</p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th>Questions asked in RMA post-hoc procedures, in general:</th>
+          <th>Applied to our data set:</th>
+        </tr>
+        <tr>
+          <td>A. Which between-subjects factor levels are different at each time
+            point?</td>
+          <td>
+            <div class="tooltip">At which time points are weights different
+              between food groupings?<span class="tooltiptext"><img src="between_foods_by_time.png"
+                  style="width: 450px"></span></div>
+          </td>
+        </tr>
+        <tr>
+          <td rowspan="2" colspan="1">B. Within each level of the
+            between-subjects factor, which time points are different?</td>
+          <td>
+            <div class="tooltip">Within blood-fed leeches, which <em>successive</em>
+              time points have different weights?<br>
+              Within arginine-fed leeches, which <em>successive</em> time
+              points have different weights?<span class="tooltiptext"><img src="between_times_by_food.png"></span></div>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <div class="tooltip"> Within blood-fed leeches, which times are
+              different from initial conditions? <br>
+              Within arginine-fed leeches, which times are different from
+              initial conditions?<span class="tooltiptext"><img src="between_times_initial_by_food.png"></span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>C. Is the lack of parallel between the groups consistent over
+            time?</td>
+          <td>
+            <div class="tooltip"> At which time points are the sequential
+              differences different between the two food groups?<span class="tooltiptext"><img
+                  src="diffs_between_foods_by_time.png"></span></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>We'll work through these questions one at a time.</p>
+    <h3>A. On which days were food types different?</h3>
+    <p>This is a simple comparison between means of two independent samples of
+      leech weights at each time point. We could do these comparisons with
+      either a t-test or ANOVA, but since we already have a multivariate linear
+      model handy (weights.mlm) we can get all of these comparisons done with a
+      single command (differences.in.weights.each.day): </p>
+    <p class="rmd">summary(aov(weights.mlm))</p>
+    <p> </p>
+    <p> Using the aov() command to weights.mlm changes it from a multivariate
+      linear model to a list of separate univariate ANOVAs. The summary()
+      function then returns the eight different ANOVA tables we need, one for
+      each day's weights. With only two groups we don't require Tukey tests, but
+      we could use them if we needed to - for example, we could use (in the
+      Console):</p>
+    <p class="rcmd">apply(weights[days], MARGIN = 2, FUN = function(x)
+      TukeyHSD(aov(x ~ food, data = weights)))</p>
+    <p>This conducts the one-way ANOVA for each column of weights, and then does
+      Tukey tests on them - not necessary here, but this is how you would do it
+      if we had three or more food groups.</p>
+    <p>Since we have eight days, each one of which is generating a p-value, we
+      should test each comparison at an adjusted alpha level of 0.05/8 = 0.0062.
+      You'll see that at the adjusted alpha level of 0.0062, weights are not
+      different between the food groups on the first day, but are on the second
+      and all subsequent days. Since the Tukey tests are already adjusted for
+      multiple comparisons you would use this 0.05/8 level for each set of Tukey
+      tests as well, if we had needed to use them.</p>
+    <h3>B. Within each food type, which days differed sequentially? Or
+      alternatively, which differed from the initial weight?</h3>
+    <p>1. <strong>Calculate sequential differences</strong>. To test for
+      differences in sequential time points within food types we need to do
+      paired comparisons. If you remember from our stat review, a paired t-test
+      takes a set of paired measurements, calculates differences between the
+      pairs, and then tests the differences against a mean of 0. We should
+      calculate sequential differences for this analysis
+      (calculate.sequential.diffs):</p>
+    <p class="rmd">weights[days[-8]] - weights[days[-1]] -&gt; diffs</p>
+    <p>This command selected the columns from weights for every day but the last
+      one (thus, days[-8]) and subtracted the columns from weights for every day
+      but the first one (thus, days[-1]) - that is, the first command selects
+      days d0, d1, d2, d3, d4, d5, and d6, while the second command selects days
+      d1, d2, d3, d4, d5, d6, and d8; subtracting the second set from the first
+      gives us d0-d1, d2-d1, d3-d2, d4-d3, d5-d4, d6-d5, and d8-d6. These
+      differences are then assigned to diffs. This gives us seven differences
+      for the eight columns of data.</p>
+    <p>Right now the column names are a little confusing - diffs retained the
+      column name of the first set of weights (d0 through d6), but they are
+      actually differences between two columns. We can re-name them with (same
+      code chunk, next line):</p>
+    <p class="rmd">colnames(diffs) &lt;- paste(days[-8], days[-1], sep = " - ")</p>
+    <p>This command uses paste() to construct new column names, and then assigns
+      them to be the column names for the diffs object. Paste combines the
+      arguments you provide into a single text label, and separates the
+      arguments with the character you specify with sep =. This paste() function
+      combines the two days that are being compared, separated by a minus sign.</p>
+    <p>2. <strong>Split the differences by food type</strong>. Now that we have
+      the set of sequential differences, we just need to conduct a one-sample
+      t-test on each column of differences, split by food group. This set of
+      comparisons will not compare blood to arg groups at all - we will split
+      the data by group, and then test for differences between sequential time
+      points for each subset of the data.</p>
+    <p>Subsetting the data and then running 7 one-sample t-test could take
+      awhile if we did them all by hand, and would provide us many opportunities
+      to make typos. We can instead use a couple of R functions that allow us to
+      do repetitious work on structured data like this with relative ease.</p>
+    <p>First, let's split diffs by food group (split.the.diffs.by.food.type).</p>
+    <p class="rmd">split(diffs, weights$food) -&gt; diffs.split</p>
+    <p> </p>
+    <p>The object diffs.split is a list, with the first element called "arg"
+      being the differences for the arg group, and the second one called "blood"
+      being the differences for blood-fed leeches. This worked, by the way,
+      because diffs was calculated from the data in weights, and the rows line
+      up between them - if we weren't certain of this we would not want to split
+      one data set based on the information in another, as we could end up
+      scrambling the data between the groups.</p>
+    <p>Now that we have a list with our two groups, we can use a function called
+      apply() to do a one-sample t-test for each column in arg, and then again
+      to do one-sample t-test for each column in blood. For arg, use the
+      function (in the Console):</p>
+    <p class="rconsole">apply(diffs.split$arg, MARGIN&nbsp; = 2, FUN = t.test)</p>
+    <p>The arguments are:</p>
+    <ul>
+      <li>The data set we're using - we're specifying the arg differences from
+        diffs.split with diffs.split$arg</li>
+      <li>The MARGIN command tells apply() whether to apply the function to the
+        columns of the data set (2), or to the rows (1). Our differences are in
+        columns, so MARGIN = 2</li>
+      <li>The FUN command identifies what function we are using. The t.test()
+        function does a one-sample test against 0 by default, so we only have to
+        give the name of the function to get what we want.</li>
+    </ul>
+    <p>This isn't bad - to get the blood group t-tests you would just need to
+      re-issue the command, with diffs.split$blood as the list argument to get
+      the results for blood-fed leeches. But, we can do better.</p>
+    <p> First, we can use lapply() to process the two groups in diffs.split, and
+      use apply() as its FUN - this will get us output for all fourteen of our
+      tests done at once. Like so (paired.t.tests):</p>
+    <p class="rmd">lapply(diffs.split, FUN = function(x) apply(x, MARGIN = 2,
+      FUN = t.test)) -&gt; diffs.split.ts</p>
+    <p>This command runs all 14 of the paired t-tests on sequential time points.
+      The lapply() command takes our list of differences for each food group,
+      and then uses our apply() function to apply a t-test to each column in
+      each data set. The output of lapply() is also a list, so diffs.split is a
+      list with named elements art and blood, each of which is itself a list of
+      t-test outputs, each of which is named for the day column the t-test was
+      applied to. You can see the contents of diffs.split.ts by entering the
+      name into the console:</p>
+    <p class="rcmd">diffs.split.ts</p>
+    <p>and you'll see that there are 14 one-sample t-tests within it.</p>
+    <p>3. <strong>Extract the p-values</strong>. At this point you have the
+      results you need, but not in a very convenient format - scrolling through
+      14 t-tests to find all the p-values is cumbersome. </p>
+    <p>We can use sapply() to go through each of the t-tests and pull out the
+      p-values for us, and present them in a matrix. The functions lapply() and
+      sapply() work the same way, but sapply() returns a matrix as output, and
+      lapply() returns a list.&nbsp;</p>
+    <p>If we used (in the Console):</p>
+    <p class="rcmd">sapply(diffs.split.ts, FUN = function(x) x$p.value)</p>
+    <p>we don't get what we want - we get:</p>
+    <p class="rout">$arg<br>
+      NULL<br>
+      <br>
+      $blood<br>
+      NULL</p>
+    <p>This failed because we have a nested list in diffs.split.ts - the first
+      level is the split between arg and blood, and within each of those food
+      types are the t-tests labeled by the days that are being compared. We can
+      get the p-values just for arg by specifying just the arginine t-tests in
+      our sapply(), like so:</p>
+    <p class="rcmd">sapply(diffs.split.ts$arg, FUN = function(x) x$p.value)</p>
+    <p>which gets us:</p>
+    <p class="rout">&nbsp;&nbsp;&nbsp;&nbsp; d1 -
+      d0&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; d2 - d1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; d3
+      - d2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; d4 - d3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      d5 - d4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; d6 -
+      d5&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; d8 - d6 <br>
+      6.175098e-05 6.642295e-06 7.360390e-05 1.836634e-03 5.594553e-01
+      3.438646e-02 9.448570e-03 </p>
+    <p>This function is working by passing one of the arg t-tests at a time to
+      the function defined by FUN. The function is defined as function(x)
+      x$p.value - the function(x) part states that what comes next is a new
+      function that takes x as an argument. Right after function(x) comes the
+      command that will be executed, and it is extremely simple - it will take x
+      and extract the named element called p.value from it. So, sapply() passes
+      one arg t-test at a time to this function, and its p-value is extracted
+      from it - once every arg t-test has been processed sapply() returns the
+      collection of p-values as a vector.</p>
+    <p>These are indeed the p-values for the comparisons between successive days
+      for the arginine group, but it would be nice to be able to get both blood
+      and arginine together. We can do this by nesting our sapply() command
+      inside of another - the outer sapply() will pull out all of the arg
+      t-tests and pass them to the inner sapply(), which will pull out the arg
+      group's p-values and put them into a vector. The outer sapply() will then
+      pull out all of the blood t-tests and pass them to the inner sapply(). The
+      two vectors of p-values will then be combined into a matrix by the outer
+      sapply(), and displayed.</p>
+    <p>The command to use is (sapply.command.for.p.values):</p>
+    <p class="rmd">sapply(diffs.split.ts, FUN = function(x) sapply(x, FUN =
+      function(y) y$p.value))</p>
+    <p>You'll see you now have a nice matrix with a column for each food group,
+      and a row for day - we should only consider p-values less than 0.05/14 =
+      0.0036 to be significant</p>
+    <p>Note that we had to change the variable from x to y in the inner sapply()
+      - we can't use the same variable for both, but we can use nearly anything
+      we want - for example, we could have written this as:</p>
+    <p class="rcmd">sapply(diffs.split.ts, FUN =
+      function(ttests.for.one.food.group) sapply(ttests.for.one.food.group, FUN
+      = function(one.days.ttest) one.days.ttest$p.value))</p>
+    <p>and the results would be the same.</p>
+    <p>Note that one of your comparisons is reported as NaN, which means "not a
+      number". This happened for the comparison between day 3 and day 2 for the
+      blood group - if you look at the differences for those two days:</p>
+    <p class="rcmd">diffs.split$blood$`d3 - d2`</p>
+    <p>they are all 0 - there were no changes in weight for the blood-fed
+      leeches between day 2 and 3, so the standard deviation of the differences
+      is 0, the standard error is thus 0, and attempting to calculate t as the
+      mean of the differences divided by the standard error gives a calculation
+      error (dividing by 0 is undefined). Which is fine, the data are what they
+      are - even though you don't get a p-value for this one the groups aren't
+      different if their data values are identical (if forced to report a
+      p-value you could report p = 1, since the chances of getting a difference
+      of 0 or larger by chance has to be 1, given that every possible random
+      outcome would have a difference of 0 or larger).</p>
+    <p>4. <strong>Compare to first time point</strong>. That completes our
+      post-hoc comparison of sequential differences, but comparisons of
+      sequential differences aren't the only comparisons we might be interested
+      in. For example, what if we were more interested in finding out which days
+      were different from initial conditions? This is not, by the way, what
+      Anova() tests for - it uses sequential differences, which matches the
+      univariate approach. But, there's no reason we can't ask a different
+      question if the default model isn't addressing what we want to know.</p>
+    <p>To calculate the differences from initial conditions use (chunk
+      diffs.from.initial):</p>
+    <p class="rmd">weights[days[-1]] - replicate(7,weights$d0) -&gt;
+      diffs.initial</p>
+    <p>The syntax is a little different than our calculation of sequential
+      differences because we want to subtract the same set of initial conditions
+      from each of the other days, but subtracting one data frame from another
+      only works in R if they both have the same number of columns. Using
+      replicate makes as many copies of the column as we need of the d0 data so
+      that we can subtract d0 from all seven of the other days of data.</p>
+    <p>Set the column names to indicate which difference each contains (same
+      chunk, next line):</p>
+    <p class="rmd">colnames(diffs.initial) &lt;- paste("d0",days[-1], sep = " -
+      ")</p>
+    <p>Now to conduct our paired t-tests we need to split these diffs.initial by
+      food type (chunk split.diffs.from.initial):</p>
+    <p class="rmd">split(diffs.initial, weights$food) -&gt; diffs.initial.split</p>
+    <p>Conduct the paired t-tests (i.e. one-sample tests of these differences
+      against 0, chunk paired.t.diffs.from.initial):</p>
+    <p class="rmd">lapply(diffs.initial.split, FUN = function(x) apply(x, MARGIN
+      = 2, FUN = t.test)) -&gt; diffs.initial.split.ts</p>
+    <p>And finally, collect the p-values (chunk
+      sapply.for.diffs.from.initial.pvals):</p>
+    <p class="rmd">sapply(diffs.initial.split.ts, FUN = function(x) sapply(x,
+      FUN = function(y) y$p.value))</p>
+    <p>There are 14 comparisons still, so we want to use an alpha level of
+      0.05/14 = 0.0036 again - all of the weights are different from initial
+      conditions by d1 for both food type, and stay different from d0 for the
+      entire experiment.</p>
+    <h3>C. Comparing sequential differences between food types</h3>
+    <p>Finally, our food x day interaction was significant, so we know the
+      change over time was not parallel between the food groups. However, we
+      don't know if the changes were different every day, or if only some days
+      had non-parallel changes. Differences between the food groups in amount of
+      change from day to day could also be compared.</p>
+    <p>To test whether every time point has non-parallel changes, we just need
+      to do a comparison of the sequential differences by food group, one set of
+      differences at a time. We can fit a model of sequential diffs by food
+      group (diffs.by.group):</p>
+    <p class="rmd">lm(as.matrix(diffs) ~ food, data = weights) -&gt;
+      parallel.mlm</p>
+    <p>Since there are only two groups we can use the same trick to get p-values
+      for each comparison that we used above (compare.diffs.each.day):</p>
+    <p class="rmd">summary(aov(parallel.mlm))</p>
+    <p>We have seven tests here, so consider them significant if p is less than
+      0.05/7 = 0.007. You'll see that not all of the time points were
+      significantly non-parallel.</p>
+    <blockquote>
+      <h3>What if the interaction of food x time was not significant?</h3>
+      <p>We had to account for the combinations of food type and day in doing
+        our post-hocs because of the significant interaction between the two. If
+        there had not been a significant interaction between them, though, we
+        could have just based our post-hocs on main effects of food and time,
+        which are a much simpler set of tests to run.</p>
+      <p>We only have two groups in the food variable, so post-hocs wouldn't be
+        needed, but just to show you how it would be done, we would first take
+        means for each leech across the days - since each row of the table is a
+        day we just need to use (in the Console):</p>
+      <p class="rcmd">rowMeans(weights[days]) -&gt; weights$leech.means</p>
+      <p>This adds a column of means to the weights data set called leech.means.</p>
+      <p>To get post-hocs we could just use TukeyHSD() on an fitted ANOVA, using
+        the aov() function, like so (still in the Console):</p>
+      <p class="rcmd">TukeyHSD(aov(leech.means ~ food, data = weights))</p>
+      <p>which should give you:</p>
+      <p class="rout">&nbsp; Tukey multiple comparisons of means<br>
+        &nbsp;&nbsp;&nbsp; 95% family-wise confidence level<br>
+        <br>
+        Fit: aov(formula = leech.means ~ food, data = weights)<br>
+        <br>
+        $food<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        diff&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; lwr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; upr
+        p adj<br>
+        blood-arg 4.255295 3.307823 5.202768&nbsp;&nbsp;&nbsp;&nbsp; 0</p>
+      <p>With only two groups you get a single Tukey comparison - not really
+        necessary unless you have three or more groups, but you can see the
+        method works.</p>
+      <p>Similarly, if we don't have a food x time interaction we can test for
+        sequential differences without having to consider the food groupings -
+        to test each of the sequential differences against 0 use (in the
+        Console):</p>
+      <p class="rcmd">sapply(apply(diffs, MARGIN = 2, FUN = t.test), FUN =
+        function(x) x$p.value)</p>
+      <p>The apply() function does the paired t-tests for each column in diffs,
+        like we did above, but this time we aren't splitting by food group. The
+        sapply() collects the p-values and displays them. We can get the
+        p-values in a nice table by wrapping this command inside a data.frame()
+        command, with the output labeled p, like so (in the Console):</p>
+      <p class="rcmd">data.frame(p = sapply(apply(diffs, MARGIN = 2, FUN =
+        t.test), FUN = function(x) x$p.value))</p>
+      <p>You should get a nice column of p-values, with the days that are being
+        differenced shown in the row labels.</p>
+    </blockquote>
+    <h3>Other questions: when do they return to pre-feeding weight?</h3>
+    <p>What if we were interested in when the animals returned to pre-feeding
+      weight? Since we're working with ratios of weights to their pre-feeding
+      weights this is a question of differences from 1.</p>
+    <p>We can split the weights by food type (chunk split.weight.by.food):</p>
+    <p class="rmd">split(weights[days], weights$food) -&gt; weights.split</p>
+    <p> calculate the differences from 1 with (chunk
+      weights.return.to.prefeeding):</p>
+    <p class="rmd">sapply(weights.split, FUN = function(x) apply(x, MARGIN = 2,
+      FUN = function(y) t.test(y, mu = 1)$p.value))</p>
+    <p>This command is another nested set of applies - the outer one feeds the
+      list with weights for each food group into the inner apply() function,
+      which then takes care of conducting one-sample t-tests of each set of
+      weights. The t-tests use the value of 1 as the null hypothetical value (mu
+      = 1), and we extract the p-values from each test (the $p.value attached to
+      the t.test() function does this). </p>
+    <p>There are 16 different p-values produced, so consider the p-values to be
+      significant if they are less than an alpha level of 0.05/16 = 0.003125.
+      You'll see that at this level the arginine group returns to pre-feeding
+      weight by the last day, but the blood-fed animals do not.</p>
+    <h2>Assignment</h2>
+    <p>Answer the questions in your Rmd file, knit, and upload the Word file to
+      the course web site.</p>
+    <br>
+  </body>
+</html>

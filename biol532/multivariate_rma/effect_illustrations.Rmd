@@ -1,0 +1,70 @@
+---
+title: "illustrations"
+author: "KEY"
+date: "2022-09-09"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Using the data for the multivariate rma, but making illustrations to show what each term is testing, and how the post-hocs are done.
+
+Main effect of food:
+
+```{r food.main}
+
+reshape(weights, varying = days, v.names = "weight", timevar = "day", times = days, direction = "long") -> weights.stacked
+
+summarySE(weights.stacked, "weight", c("day","food")) -> food.means
+
+ggplot(weights.stacked, aes(x = day, y = weight, color = food)) + geom_point() + geom_line(aes(group = Leech)) + geom_point(data = food.means, shape = 3, size = 3, stroke = 3) 
+
+```
+
+Main effect of day:
+
+```{r day.main}
+
+weights[days[-8]] - weights[days[-1]] -> diffs.ph
+
+diff.names <- paste(days[-8], days[-1], sep = " - ")
+colnames(diffs.ph) <- diff.names
+
+diffs.ph$Leech <- weights$Leech
+diffs.ph$food <- weights$food
+
+reshape(diffs.ph, varying = diff.names, v.names = "differences", timevar = "day", times = diff.names, direction = "long") -> diffs.stacked
+
+summarySE(diffs.stacked, "differences", c("day")) -> day.means
+
+ggplot(diffs.stacked, aes(x = day, y = differences)) + geom_point() + geom_line(aes(group = Leech)) + geom_point(data = day.means, shape = 3, size = 3, stroke = 3) + geom_hline(yintercept = 0, color = "red")
+
+```
+
+Food by day interaction:
+
+```{r foodxday}
+
+summarySE(diffs.stacked, "differences", c("day","food")) -> foodxday.means
+
+
+ggplot(diffs.stacked, aes(x = day, y = differences, color = food)) + geom_point() + geom_line(aes(group = Leech)) + geom_point(data = foodxday.means, shape = 3, size = 3, stroke = 3)
+
+```
+
+## Illustrating the post-hoc options
+
+In light of the significant interaction.
+
+Use the food main graph to illustrate comparisons at each day.
+
+Splitting by food:
+
+```{r split.by.food}
+
+ggplot(weights.stacked, aes(x = day, y = weight, color = food)) + geom_point() + geom_line(aes(group = Leech)) + geom_point(data = food.means, shape = 3, size = 3, stroke = 3) + facet_wrap(~food) + theme(legend.position = "none")
+
+```
+
