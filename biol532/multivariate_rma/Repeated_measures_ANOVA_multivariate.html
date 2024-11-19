@@ -58,49 +58,83 @@
     <h1>Repeated measures ANOVA using multivariate tests</h1>
     <p>We're a little short on time this semester, so we're skipping over the
       exercise on univariate repeated measures analysis (RMA) that I usually
-      have students do. If we had done the univariate approach we would have
-      found that it was not appropriate for the data set we're using, and would
-      want to use the multivariate approach instead. I'll briefly explain here
-      why this is the case.</p>
+      have students do. If we <em>had</em> used the univariate approach on
+      these data we would have found that it was not appropriate for the data
+      set we're using, and would want to use the multivariate approach instead.
+      I'll briefly explain here why this is the case.</p>
     <p>Repeated measurements of the same subjects are not independent, and
       analyzing the data with a method that assumes the data are independent can
-      be very inaccurate. There is a univariate ANOVA model that is able to
-      account for the lack of independence between repeated measurements of
-      individuals, called <strong>repeated measures ANOVA</strong>, and that is
-      the univariate method we are skipping over. Repeated measures ANOVA makes
-      a distinction between the treatments applied to subjects (called the
-      between-subjects effects) and the change over time in response by each of
-      the subjects (called the within-subjects effects), and tests for main
-      effects and interactions between them. It works well, and gives high
-      statistical power, when its assumptions are met.</p>
-    <p>However, repeated measures ANOVA has an additional assumption, called <strong>sphericity</strong>,
-      that can be difficult to meet. Sphericity is the assumption that the
-      variances of differences between successive time points are the same, and
-      it is tested with the Mauchly test. The data we are about to analyze
-      failed the Mauchly test, so shouldn't be analyzed using univariate RMA.</p>
+      be very inaccurate. If a single individual is given an experimental
+      treatment and then measured repeatedly for their response we aren't
+      actually measuring independent responses. Applying the treatment at the
+      level of the individual, but then making measurements repeatedly on the
+      same individual, is called <strong>pseudoreplication</strong>, because a
+      true replicate is a single independent measure of response to treatment.
+      Pseudoreplication can lead to significant tests that are not real (false
+      positives) because we use degrees of freedom based on the number of
+      measurements, rather than the number of true, independent replicates,
+      which is smaller than the number of measurements if we're measuring
+      repeatedly.</p>
+    <p>An alternative to measuring the same individuals repeatedly over time
+      would be to have different sets of individuals that are each only measured
+      once, but at different times. In that case the treatment would be one
+      factor, time would be another, and we would analyze the data as a
+      factorial ANOVA, with a treatment x time interaction to tell us how
+      individuals in different groups change over time. This has the
+      disadvantage that using different individuals for each time point doesn't
+      do anything to account for individual variation, and individual
+      differences would become part of the unexplained, random variation in the
+      error term. Measuring the same individuals over time addresses this
+      problem, because we can see whether the changes over time are consistent
+      across individuals, even if their overall measurements are a little higher
+      for some individuals and a little lower for others. Being able to use the
+      same individuals and measure them repeatedly can give us better tests of
+      the treatment and time effects, and prevent us from missing effects that
+      are there because of excessive random variation in the data (false
+      negatives).</p>
+    <p>There is a univariate ANOVA model that is able to account for the lack of
+      independence between repeated measurements of individuals, called <strong>repeated
+        measures ANOVA</strong>, and that is the univariate method we are
+      skipping over. Briefly, repeated measures ANOVA makes a distinction
+      between the treatments applied to subjects (called the between-subjects
+      effects) and the change over time in response by each of the subjects
+      (called the within-subjects effects), and tests for main effects and
+      interactions between them. The effects of individuals are treated as a <strong>random
+        effect</strong>, which is just another source of random variation at a
+      level above the level of the individual daily measurements - the random
+      effect of individual is accounted for in the univariate RMA, which allows
+      for an accurate test of the between-subjects effect. It works well, and
+      gives high statistical power, when its assumptions are met.</p>
+    <p>However, univariate repeated measures ANOVA has an additional assumption,
+      called <strong>sphericity</strong>, that can be difficult to meet.
+      Sphericity is the assumption that the variances of differences between
+      successive time points are the same, and it is tested with the Mauchly
+      test. The data we are about to analyze failed the Mauchly test, so
+      shouldn't be analyzed using univariate RMA.</p>
     <p>We can use MANOVA to reproduce tests of the same effects we would have
-      tested with univariate RMA, and this approach is called <strong>profile
+      tested using univariate RMA, and this approach is called <strong>profile
         analysis</strong>. The questions we will address are the same as with
       univariate RMA, but because MANOVA does not assume anything about the
       variances of the response variables being the same as one another we can
       use it when we violate the sphericity assumption. Profile analysis is a
-      little less statistically powerful that univariate RMA when the sphericity
-      assumption is met, but it is preferable to univariate RMA when sphericity
-      is violated.</p>
+      little less statistically powerful than univariate RMA is when its
+      sphericity assumption is met, but profile analysis is preferable to
+      univariate RMA when sphericity is violated.</p>
     <h2>The RMA data</h2>
-    <img src="r138958_475480.jpg" alt="Leech" style="float: right; margin-left: 20px; width: 128px; height: 95px;">
+    <img src="r138958_475480.jpg" alt="Leech" style="float: left; margin-right: 20px; width: 128px; height: 95px;">
     <p>Our data set for today comes from a study of medicinal leeches (like the
-      one pictured to the right), which are aquatic annelids that eat blood.
-      They eat infrequently, but when they are able to get a meal they gorge
-      themselves, such that their body weight increases approximately ten fold
-      after a feeding. Blood is very watery, and they expel the water relatively
-      quickly until only the solid components of the blood with all the
-      nutrients are left, which they can then digest more slowly. Leeches can be
-      fooled into feeding on a solution of the amino acid arginine, but it is
-      not their normal food and is much less nutritional for them. </p>
-    <p>Characterizing the differences in weights of leeches that feed on blood
-      and arginine was the purpose of the experiment - the researchers did the
-      following: </p>
+      one pictured to the left), which are aquatic annelids that eat blood. They
+      eat infrequently, but when they are able to get a meal they gorge
+      themselves, such that their body weight increases as much as ten fold
+      after a feeding. Blood is very watery but not nutritious, so they expel
+      the water relatively quickly until only the solid components of the blood
+      with all the nutrients are left, which they can then digest more slowly.
+      Leeches can be fooled into feeding on a solution of the amino acid
+      arginine, but it is not their normal food and is a much lower quality food
+      for them compared with blood. </p>
+    <p>Characterizing the changes in weight over time of leeches that feed on
+      blood and arginine was the purpose of the experiment - the researchers did
+      the following: </p>
     <ul>
       <li>Two groups of 10 leeches were selected and assigned to be fed on one
         of two different diets</li>
@@ -110,15 +144,14 @@
           nutritive value)</li>
       </ul>
       <li>Before feeding each animal was weighed to obtain a pre-feeding weight.</li>
-      <li>Leeches were then fed on their assigned diet, and were weighed
-        immediately after feeding (Day 0)</li>
+      <li>Leeches were then fed on their assigned diet, and were weighed (Day 0)</li>
       <li>The leeches were then weighed daily for six days, and once again on
         the eighth day (Day 1, Day 2, Day 3, Day 4, Day 5, Day 6, and Day 8)</li>
       <li>The data were expressed as a ratio of the pre-feeding measurement -
         that is, each day's weight was divided by the pre-feeding weight, such
-        that a value of 10 indicates that a leech was 10 times their pre-feeding
-        weight, and a value of 1 meant their weight was the same as their
-        pre-feeding weight.</li>
+        that a value of 10 indicates that a leech was 10 times heavier after
+        feeding than they were before feeding, and a value of 1 would mean that
+        their weight was the same as their pre-feeding weight.</li>
     </ul>
     <p>Start a new project folder, download <a href="leech_weights.xlsx">this</a>
       data file and <a href="multivariate_rma.Rmd">this</a> Rmd file into it.
@@ -133,7 +166,7 @@
       multivariate analysis in an unusual way to conduct a univariate repeated
       measures analysis. We will only need to interpret the results as though
       they were univariate - there will be no multivariate interpretation using
-      scores, loadings, or communalities this time, and there are no
+      scores, loadings, or communalities this time. There are also no
       multivariate post-hocs needed, only univariate ones.</p>
     <p>To use multivariate methods to get tests of food, day, and the food x day
       interaction it is necessary to run three separate analyses, like so:</p>
@@ -245,10 +278,11 @@
       Pillai's is good when your data violate multivariate normality, and tends
       to be identical to the others when assumptions are met, so stick with the
       default.</p>
-    <p>And that's it! Simple, right? The complexity in an RMA comes from the
-      post-hocs, which we'll deal with now that we know that we have a
-      difference in the pattern of change over time between the food types
-      (that's what the interaction is telling us).</p>
+    <p>And that's it for the multivariate portion of this exercise! Simple,
+      right? The complexity in an RMA comes from the post-hocs, which we'll deal
+      with now that we know that we have a difference in the pattern of change
+      over time between the food types (that's what the interaction is telling
+      us).</p>
     <h2>Post-hoc analysis<br>
     </h2>
     <p>The post-hoc procedure would be the same regardless of whether we used
@@ -267,8 +301,7 @@
           if we made every possible comparison we would have very low power to
           detect differences. And, comparing every possible pair of means would
           be pointless, because...</li>
-        <li>Many of the comparisons we could make aren't interesting. A
-          comparison between arbitrary combinations of food type and day are
+        <li>A comparison between arbitrary combinations of food type and day are
           probably not illuminating - for example, what do we care if blood-fed
           animals on day 6 are different from arginine-fed animals on day 2?
           Differences between food groups on the same day, or between days
@@ -610,7 +643,7 @@
       <p>You should get a nice column of p-values, with the days that are being
         differenced shown in the row labels.</p>
     </blockquote>
-    <h3>Other questions: when do they return to pre-feeding weight?</h3>
+    <h3>Question - do they return to pre-feeding weight?</h3>
     <p>What if we were interested in when the animals returned to pre-feeding
       weight? Since we're working with ratios of weights to their pre-feeding
       weights this is a question of differences from 1.</p>
