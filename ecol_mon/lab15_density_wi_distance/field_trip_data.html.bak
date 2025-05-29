@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="content-type">
+    <title>Field trip data analysis</title>
+  </head>
+  <body>
+    <h1>Analysis of field trip data: density estimation, vegetation sampling</h1>
+    <p>We will spend today analyzing the data we collected in the field last
+      week.</p>
+    <p>We collected data on density of rocks, using 1 m fixed width transects
+      and using distance sampling truncated to 100 m. We can also treat the data
+      as a 100 m fixed width transect. We will calculate density estimates for
+      each, and compare them.</p>
+    <p>We collected vegetation data using relevé's, and using line intercept
+      sampling. We will quantify the shrub cover and patch sizes that we
+      estimated with the relevé's and see how they compare.</p>
+    <h2>Density estimates</h2>
+    <h3>Transect lengths</h3>
+    <p>For all of the density estimates we will need to know how long our
+      transect was. We will get this by plotting our start and end points (which
+      we recorded in the field using a GPS) in ArcMap, and then we will measure
+      the distance along the trail we walked.</p>
+    <p>1. Open Excel, and enter the start and end points. In row 1, use the
+      column headings "Type", "Which", "Easting", "Northing" (for columns A, B,
+      and C). The type will be either burned or unburned. Which will be either
+      start or end. You should have a starting and ending point for each plot
+      type. Enter the easting and northing for each from the class data set
+      (it's in the "Distance sampling start and end UTM's" database). Save the
+      file on your H: drive, in a file called "utms".</p>
+    <p>2. Open ArcMap. Add the World_Imagery.lyr file from the P: drive (in the
+      basemaps folder). Now, add the Excel file you just made - double-click the
+      file name until you get the list of worksheets, and select Sheet1$ to use.</p>
+    <p>Now, right-click on Sheet1$ in the table of contents, and select "Display
+      XY data". Select Easting as the x-field, and Northing as the y-field. For
+      the Coordinate System of Input Coordinates, click "Edit...", and type UTM
+      in the search bar. Under WGS84, Northern Hemisphere, find WGS 1984 UTM
+      Zone 11N, and click OK.</p>
+    <p>Click OK again to make the points.</p>
+    <p>3. Zoom to the points. If you right-click on the "Sheet1$Events" that
+      were created, you can zoom to the layer and see the points marking the
+      start and end points of our sample.</p>
+    <p>4. Use the "Measure" tool (the little ruler with arrows over it) to
+      measure the distance between start and end points along the trail. Set the
+      distance units to meters, and click frequently enough to follow the curve
+      of the trail reasonably well (click more often at curves, less often along
+      straight segments). The Length reported is the cumulative length of the
+      transect. Do this for both the burned and unburned transects.</p>
+    <p>Once you have your transect lengths you're ready to move to the next step
+      in estimating density, BUT...before you close down ArcMap, you might as
+      well measure the sizes of the plots we veg sampled. Use the same tool, but
+      click on the "Measure an area" button, and change the area units to acres.
+      Now, click around the outside of the unburned area we sampled. You don't
+      have to be particularly precise here, all we need to know is whether we
+      were right that the patch is over 5 acres (which is what we recorded on
+      the relevé sheet). Do the same for the patch of burned area (which is
+      adjacent to the unburned patch, across the trail - you can just use the
+      portion that is surrounded by walking trails).</p>
+    <h3>Fixed width transects</h3>
+    <p>Now that you know the lengths of the transects, you can calculate density
+      of rocks of the fixed-width counts.</p>
+    <p>1. Calculate the areas. The area of the 1 m wide transect is 1 m x
+      transect length in m. Treating the distance sampling counts as a
+      fixed-width transect, the area would be 100 m x transect length in m.</p>
+    <p>2. Divide number of rocks by transect area. You can get the number of
+      rocks for the 1 m fixed width counts from the "Fixed width transect"
+      database. Divide this number by the transect area to get rocks per square
+      meter.</p>
+    <p>I will post a class data set for distance sampling, and you can count the
+      number of rocks seen within 100 m of the trail from that. Divide that
+      number by the area of the 100 m transect to get rocks per square meter.</p>
+    <h3>Distance sampling</h3>
+    <p>We will use the R statistical package to get our distance sampling
+      estimates. If you haven't encountered R already, it's an "open source"
+      statistical analysis package. Open source software is typically developed
+      by teams of volunteers, and the "source code" that programmers use to
+      develop the software is made available to anyone who wants to view and
+      modify it. Since the code is available for free, the executable version of
+      open source software is usually distributed free of charge as well. One of
+      the side effects of this development strategy is that users who are also
+      programmers often contribute their own modifications and add-ons for free,
+      in a "share and share alike" manner. The base R package has most of the
+      statistical analysis types you already know about, but contributions from
+      users have vastly increased the types of analyses that R can do.</p>
+    <p>One such contributed "extension" for R is a package called "unmarked"
+      which includes, among other things, distance sampling functions.</p>
+    <p>Unfortunately, when I tried to install this package on the university
+      computers it wouldn't work. Some of the packages that unmarked relies on
+      need to be updated, and I couldn't get it done in time for class. I will
+      do this analysis on my own computer, and give you the output for you to
+      look at.</p>
+    <p>What we can do, though, is look at whether there is a distinct dropoff in
+      numbers of rocks with distance. Download the class data Excel file, and do
+      a pivot table that counts the number of rocks in each distance class for
+      burned and unburned plots. You can then do a bar chart of these counts by
+      distance class to see if the numbers decline with increasing distance.</p>
+    <h2>Vegetation sampling</h2>
+    <p>We used the CNPS field forms to collect Releve's of our burned and
+      unburned areas. The Releve's are quick, and semi-quantitative, but we need
+      to check our eyeballometrically recorded cover classes against the
+      estimates we derive from our line transects. </p>
+    <p>The specific pieces of information we collected that we can check are:</p>
+    <ul>
+      <li>Shrub stage (based on percent dead)</li>
+      <li>Percent vascular veg cover</li>
+      <li>Percent shrub cover</li>
+      <li>Percent cover by shrub species</li>
+      <li>Stand size</li>
+    </ul>
+    <p>The stand size we have already checked with ArcMap.</p>
+    <p>Percent overall shrub cover, vascular veg cover, and cover by shrub
+      species will all come from the line intercept data. The percent living and
+      dead will also come the line intercept data, but in a separate summary
+      table that groups the data by living or dead.</p>
+    <p>1. Download the class Excel worksheet. I will make a dataset that uses
+      consistent species names, and will post it on the class web site.</p>
+    <p>2. Calculate the amount of the transects covered by each species. In the
+      worksheet, you will have data on the amount of the tape covered by each
+      shrub (which will just be the end measurement minus the start
+      measurement). You can make a pivot table that sums these amounts by
+      transect and species (use transect ID as row names, species as column
+      names, and use the amount covered as the data field).</p>
+    <p>Once you have the table, set up a table below with the same row anc
+      column headings. In the body of the table, divide the sums in your pivot
+      table by the length of the transects. This will give you a proportion
+      covered by species for each transect. Some will equal zero, which is fine.</p>
+    <p>3. Calculate the total of vascular plants and of shrubs. In the next
+      column to the right of your proportions (which you just calculated for 2)
+      enter the column name "Vascular", and sum the proportions of all the
+      vascular plants (which I believe will be everything we sampled). In the
+      next column over, enter the column name "Shrubs", and sum the shrub
+      species.</p>
+    <p>4. Calculate means and confidence intervals for burned and unburned. Two
+      rows below the bottom of the table of proportions, label column A
+      "Burned". Skip a row, and in the next five rows write "Mean", "s", "n",
+      "Lower", and "Upper".</p>
+    <p>Next to the Mean label in column A, calculate the average of the burned
+      transects for buckwheat (which should be in column B). In the next row
+      down, next to the s label, calculate the standard deviation for burned
+      transects with the =stdev() function. In the next row, calculate the
+      number of burned transects with the =count() function.</p>
+    <p>You can calculate the lower limit as mean - t x s / sqrt(n). You can get
+      the t-value with =tinv(0.05, n-1), but replace n-1 with the number of
+      transects minus 1. The upper limit is the same formula, but change the
+      subtraction to addition.</p>
+    <p>5. Compare the means and confidence intervals to our Releve values.
+      Ideally, the mean proportions should be inside of the cover classes we
+      recorded, but if not then at least the 95% confidence intervals should
+      overlap with the cover classes.</p>
+    <h2>Assignment.</h2>
+    <p>Upload your Excel sheet with your rock densities and your vegetation
+      cover classes.</p>
+    <p>Then, write a brief report on how the different estimation methods
+      compared. For the rock density estimation, we can expect that distance
+      sampling will give us the best estimates, but discuss any problems we may
+      have had in the field that could have caused problems (did we meet the
+      assumption of 100% detectability at zero distance? What might the fact
+      that we couldn't see beyond the top of the hill in the unburned site have
+      done to our estimates?).</p>
+    <p>For the vegetation data, address how well our quantitative approach
+      matched the Releves. What were the strengths and weaknesses of each? Given
+      that we will generally prefer quantitative methods whenever possible, when
+      might you want to resort to the semi-quantitative rapid assessment
+      approach?</p>
+    <p>You should be able to address these issues in about a page for rocks and
+      a page for vegetation. Upload the Word document along with the
+      spreadsheets.</p>
+  </body>
+</html>

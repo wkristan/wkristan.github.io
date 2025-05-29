@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Lab 10 - Trends in breeding and migrating raptors</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <h1>Trend assessment - breeding birds, and migrating birds</h1>
+    <p>We will be looking at trends in counts of a set of birds of prey, using two different monitoring programs: the
+      Breeding Bird Survey (BBS), and Hawk Mountain's annual migrating hawk counts.</p>
+    <p>Both data sets we will work with are relatively long-term. BBS began in 1966, and focuses on counts of birds
+      during the breeding season. BBS data are collected from throughout North America, but with densities of routes
+      being related to human population density. The Hawk Mountain data records raptors during their Fall migration, and
+      the counts are done from a single location. However, since the Appalachian Flyway, a major travel route for
+      migrating birds along the East Coast, goes right over Hawk Mountain, PA, raptors from all over eastern North
+      America pass by that one location. Counts have been done at HM annually since 1934, every year except for
+      1942-1944, when they took a break to fight World War II. There are thus a total of 74 counts conducted over 76
+      years.</p>
+    <p>Raptors are carnivores, and as such were one of the groups of birds most strongly affected by DDT, an insecticide
+      used from the World War II era through its eventual banning in the US in 1972 (although it was not banned
+      worldwide until 2001). DDT is a persistent, fat-soluble chemical that enters the food chain, and bio-magnifies,
+      meaning that its concentration increases as it moves up to higher trophic levels. Top predators thus would have
+      massively higher concentrations in their tissues than the concentration applied in the environment. DDT was
+      thought to be non-toxic to vertebrates, but it was found that at this very high concentrations it leads to
+      eggshell thinning and reproductive failure in birds. Several species, including the Bald Eagle, ended up listed as
+      Endangered Species primarily due to DDT.</p>
+    <p>BBS data can be downloaded for analysis, but there are statistical issues that need to be accounted for that go
+      beyond what we will be addressing in this class. However, the USGS Patuxent Wildlife Research Center has developed
+      a web-based analysis platform that we can make use of.</p>
+    <p>Our goal for today, then, is to use the BBS web site to analyze trends in a selection of raptors in eastern North
+      America, and then conduct our own analysis of Hawk Mountain data on the same species. We will see whether counts
+      of breeding and migrating birds tend to tell us the same thing, or whether they indicate different trends in these
+      species.</p>
+    <p>The species we will use are <a class="tooltip">Osprey<span class="tooltiptext"><img src="osprey.jpeg" style="width: 300px"></span></a>,
+      <a class="tooltip">Bald eagle<span class="tooltiptext"><img src="bald-eagle_lorie-shaull.png" style="width: 300px"></span></a>,
+      <a class="tooltip">Northern Harrier<span class="tooltiptext"><img src="nohaGL.jpg" style="width: 300px"></span></a>,
+      <a class="tooltip">Red-shouldered Hawk<span class="tooltiptext"><img src="red-shouldered.jpg" style="width: 300px"></span></a>,
+      and <a class="tooltip">Merlin<span class="tooltiptext"><img src="merlin.jpg" style="width: 300px"></span></a>.</p>
+    <h2>BBS instructions</h2>
+    <p>We will keep this section short and sweet - follow <a target="_blank" href="http://www.mbr-pwrc.usgs.gov/bbs/">this
+        link</a> to the Breeding Bird Survey's regional trend analysis page. Scroll down to the "Survey Results"
+      section, and then select "Trend Estimates" that are conducted <em><strong>by species</strong></em>. </p>
+    <p>Download <a href="hawks.xlsx">this</a> file to your S: drive, and open it in Excel. You'll see that it's an
+      Excel spreadsheet with one worksheet called "BBS", followed by a different worksheet for each species with data
+      from the Hawk Mountain counts, and one final one for import into R - we'll get to those next, first switch to the
+      BBS worksheet.</p>
+    <p>Find the first species, Osprey, in the drop-down menu of species (they are listed in a taxonomic order instead of
+      alphabetically, so you may have to search around a little). You'll see that there are two trends listed for each
+      area: one for the entire BBS period (1966 to 2015) and one for the most recent 22 years of data (1993-2015). Find
+      the Eastern BBS Region (near the bottom of the list), and record the trend estimate, the lower limit and upper
+      limit for confidence interval in your worksheet (you don't need to record the RA score, this is a measure of
+      relative abundance of the species relative to other species in the area, which isn't relevant to us).</p>
+    <p></p>
+    <p>For the 1993-2015 estimate, enter whether the trend estimate indicates an increasing population, a decreasing
+      population, or a stable population (column E). The trend estimates are changes in number of birds counted per
+      year, and the confidence interval will tell you whether you can consider the trend to be different from zero; if
+      the confidence interval includes zero, consider the population stable. If the confidence interval does not include
+      zero, and the trend estimate is positive, then it's an increasing population. If the confidence interval does not
+      include zero, and the trend estimate is negative, then it's a decreasing population.</p>
+    <p>Repeat the increase, decrease, or stable designation for the 1993-2015 estimates (in column I).</p>
+    <p>Now, compare the two conclusions in E and I for each species: If the two trend estimates lead to the same
+      conclusion, then enter "no change" in J. If there was a shift either from decrease to stable or increase, or from
+      stable to increase, then things have been improving lately - enter "Accelerating" in column J. If there is a shift
+      from increasing to stable or decreasing, or from stable to decreasing, then things have gotten worse lately -
+      enter "Decelerating" in column J.</p>
+    <p>Repeat this set of steps for the other four species: Bald Eagle, Northern Harrier, Red-shouldered Hawk, and
+      Merlin.<a class="tooltip"><span class="tooltiptext"></span></a></p>
+    <p>Once the BBS numbers are entered in your Excel file you can move on to analyze the Hawk Mountain migrating raptor
+      data set, and see how it compares to what we see in the BBS counts.</p>
+    <h2>Hawk Mountain data</h2>
+    <p>We will be analyzing the changes in number of migrating birds counted at Hawk Mountain next. The data are
+      collected from an observation point at the top of a mountain, and the species is recorded for each bird observed.
+      The data were tallied by day between 1934 and 1965, and by hour thereafter. The number of days and hours were
+      variable, but the number of minutes of observation was recorded for each observation period, so I was able to
+      calculate the number seen per minute, multiply that by 60 to obtain a number seen per hour, and then average these
+      numbers per hour for each year. The data we will work with, then, is the mean number of birds of each species
+      observed per hour of observation for each year.</p>
+    <p>With such a long time series we will have the opportunity to see many trends that are not simple linear
+      relationships. If you think about it, linear relationships can't be common in the long term - species may decline
+      linearly for awhile, but will eventually go extinct if they don't level off. Species may increase linearly for
+      awhile as well, but they will eventually deplete their food source and either stabilize or crash to smaller
+      numbers. We will be using non-linear regression to describe the changes in numbers over time for each of our
+      species.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><img alt="No line" src="rtha_noline.png"></td>
+          <td>
+            <p>Consider the data to the left for the Red Tailed Hawk. We're interested in whether they are stable,
+              increasing, or decreasing over time, and linear regression will give us a slope coefficient that will
+              address that. So let's see what a simple linear regression looks like.</p>
+          </td>
+        </tr>
+        <tr>
+          <td><img alt="Linear" src="rtha_linear.png"></td>
+          <td>
+            <p>Based on this linear regression there does seem to be a decline in RTHA over time, but notice that the
+              line doesn't fit the data very well. There is a marked decline to about 1950, with an increase after about
+              1960, to a peak at about 1975, with a decline after that. A straight line with a single slope is simple
+              and easy to interpret, but if it doesn't describe the data well we shouldn't try to interpret it.</p>
+            <p>Think of a straight line is a first-order polynomial - a slope multiplied by x raised to the power of 1,
+              RTHA = b + m(year<sup>1</sup>). The next highest would be a second-order polynomial, which is also called
+              a quadratic function, so let's try fitting a second-order polynomial to these data.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><img alt="Quadratic" src="rtha_quad.png"><br>
+          </td>
+          <td>
+            <p>Adding a polynomial gives the regression the ability to follow a pattern that is predicted by the
+              polynomial. You'll see in the example on the right of three different parabolas that they can point upward
+              or downward depending on the sign on the coefficient, and small coefficients make them flatter. The linear
+              term has to be kept in the model, but when we add a <strong>quadratic</strong> (i.e. squared, parabolic)
+              term we can describe patterns that have an n or u shape. </p>
+            <p>This graph may look the same as the straight line above, but it's not. The formula for this line is RTHA
+              = b + m<sub>1</sub>(year<sup>1</sup>) + m<sub>2</sub>(year<sup>2</sup>), but the pattern is not at all a
+              parabolic curve, so the coefficient on the year<sup>2</sup> term, m<sub>2</sub>, is nearly zero.</p>
+            <p><br>
+            </p>
+          </td>
+          <td><img alt="Parabolas" src="parabola-rk3.gif"><br>
+          </td>
+        </tr>
+        <tr>
+          <td><img alt="Cubic" src="rtha_cubic.png"><br>
+          </td>
+          <td>
+            <p>Cubic functions are like a sideways s-curve - they can rise, fall, and then rise or if we flip them
+              around the x-axis they can fall, rise, and then fall (click on the graph to flip it around the x-axis). If
+              we just used the middle portion we can have a forward or backward s-curve with a cubic term included
+              (click to see the s-curve created from the middle section). </p>
+            <p>The cubic added to the formula gives us the graph to the left, and the formula is:</p>
+            <p>RTHA = b + m<sub>1</sub>(year<sup>1</sup>) + m<sub>2</sub>(year<sup>2</sup>) + m<sub>3</sub>(year<sup>3</sup>)</p>
+            <p>This is looking better - we've captured the general shape, but are under-shooting the increase in the
+              1970's, and perhaps over-estimating the recent decline.</p>
+          </td>
+          <td><img alt="Cubic" src="Polynomialdeg3.svg.png" onclick="changeImage(this, ['Polynomialdeg3_flipped.png','Polynomialdeg3_s.png','Polynomialdeg3.svg.png'])"><br>
+          </td>
+        </tr>
+        <tr>
+          <td><img alt="Fourth order" src="rtha_fourth.png"><br>
+          </td>
+          <td>
+            <p>A fourth-order polynomial looks like the graph on the right - click to flip it around the x-axis. Fitting
+              a fourth-order polynomial to our data, with the formula:</p>
+            <p>RTHA = b + m<sub>1</sub>(year<sup>1</sup>) + m<sub>2</sub>(year<sup>2</sup>) + m<sub>3</sub>(year<sup>3</sup>)
+              + m<sub>4</sub>(year<sup>4</sup>)</p>
+            <p>gives us the graph to the left. This too is closer to the data, but the uptick at the very end is a
+              little optimistic - we're still under-shooting the increase in the 70's a little as well.</p>
+          </td>
+          <td><img style="width: 231px; height: 166px;" alt="Fourth order" src="fourth_order.png" onclick="changeImage(this, ['fourth_order_flipped.png','fourth_order.png'])"><br>
+          </td>
+        </tr>
+        <tr>
+          <td><img alt="Fifth" src="fifth.png"><br>
+          </td>
+          <td>
+            <p>Finally, a fifth order polynomial looks like the one on the right. Using the formula:</p>
+            <p>RTHA = b + m<sub>1</sub>(year<sup>1</sup>) + m<sub>2</sub>(year<sup>2</sup>) + m<sub>3</sub>(year<sup>3</sup>)
+              + m<sub>4</sub>(year<sup>4</sup>) + m<sub>5</sub>(year<sup>5</sup>)</p>
+            <p>gives us the graph on the left. This is a very good description of the data - still under-shooting a
+              little in the 1970's, but the line is going through the data well in the last couple of decades without an
+              artificial upturn in the last few years.</p>
+          </td>
+          <td><img alt="Fifth order" src="Quintic_polynomial.svg.png" onclick="changeImage(this, ['Quintic_polynomial.svg.png', 'Quintic_polynomial_flipped.png'])"><br>
+          </td>
+        </tr>
+        <tr>
+          <td><img alt="Fit vs. resid" src="fit_vs_resid.png"><br>
+          </td>
+          <td>
+            <p>How do we know this is the right relationship to use? We can look at a couple of things. </p>
+            <p>First, the fact that the line (mostly) goes through the middle of the data is a good sign that this is a
+              good description of the data. We can augment this impression with plots of residuals, like the residual
+              vs. predicted plot on the left, and the histogram of residuals on the right.</p>
+          </td>
+          <td><img style="width: 298px; height: 250px;" alt="Histogram" src="std_resid_hist.png"><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The other thing we can do is to compare the different models against each other to see whether we are doing a
+      better job of characterizing the data by adding higher order terms - this type of comparison is done by comparing
+      the unexplained variation in two models. This type of comparison is only statistically valid if one of the models
+      is a subset of the other. If you look at the formulas for the fifth and fourth-order models, the fourth only has
+      terms that are in the fifth, but the fifth has just one extra. That means the fourth order model is a subset of
+      (or "nested" within) the fifth. If we compare them we would find that we don't have significantly more variation
+      explained by the model with the fifth order term (p = 0.3591).</p>
+    <p>But, look at the graphs above - the fourth-order model has a dramatic up-swing in the last few years of the data,
+      but the data doesn't show such a pattern. The line is the "best fit" fourth order polynomial across the entire
+      data set, but it's not fitting well in the last few years, which (from a management perspective) are very
+      important. This is one of the downsides of using polynomial regression - the function imposes a shape to the line
+      that may not be well supported by the data, so it's important to make sure the line fits the data well. We may
+      choose to stick with the fifth-order model because of its better fit in the last decade or so of the data set.
+      This is a very high-order polynomial to use, by the way - beyond about 4th or 5th order the equations become very
+      complex, but usually high-order polynomials don't dramatically improve the fit of the model to the data. At the
+      extreme, with 74 years of data we could fit a line that hit every single data point perfectly with a 73rd-order
+      polynomial, but it would be useless for understanding the general trend in a mean number of birds over time, with
+      random variation around it.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><img alt="Rates" src="rates.png"><br>
+          </td>
+          <td>
+            <p>Once we have a line that fits the data well, we can use it to address how RTHA have changed over time.
+              With a complex pattern of change like we're seeing for RTHA there isn't a single rate of change that
+              describes the data. We do get coefficients for each of the terms in the model, but they are constants, and
+              don't tell us what is happening at any given year.</p>
+            <p>Instead, the rate of change at any year is a tangent line to the curve at that year. For example, in 1940
+              the tangent line (in red) has a strongly negative slope, but by 1967 (in blue) it's moderately positive.
+              We can calculate the slopes of these tangent lines at any year of interest using the first derivative of
+              the function.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>With polynomials, derivatives are easy to calculate - you drop the constant (b), and multiply the coefficients
+      (m's) by the exponents, and then subtract 1 from the exponents.</p>
+    <p>So, with our fifth-order polynomial, the equation was:</p>
+    <p>RTHA = b + m<sub>1</sub>(year<sup>1</sup>) + m<sub>2</sub>(year<sup>2</sup>) + m<sub>3</sub>(year<sup>3</sup>) +
+      m<sub>4</sub>(year<sup>4</sup>) + m<sub>5</sub>(year<sup>5</sup>)</p>
+    <p>And the first derivative with respect to year, d(RTHA)/d(Year), is: </p>
+    <p>m<sub>1</sub> + 2m<sub>2</sub>(year<sup>1</sup>) + 3m<sub>3</sub>(year<sup>2</sup>) + 4m<sub>4</sub>(year<sup>3</sup>)
+      + 5m<sub>5</sub>(year<sup>4</sup>)</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><img alt="Rates" src="rtha_rates.png"><br>
+          </td>
+          <td>
+            <p>A graph of the first derivative is shown to the left. The horizontal black line at 0 indicates a stable
+              population - neither increasing or decreasing. In years that the first derivative is positive (above 0)
+              Red-Tailed Hawk counts are increasing. When it's negative, the counts are decreasing.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Okay, now with that background, let's analyze some hawk data.</p>
+    <h3>Trends in the Hawk Mountain data</h3>
+    <p>1. <strong>Plot the first species change over time</strong>. Switch to the first sheet of Hawk Mountain data,
+      Osprey. You'll see that Year is expressed in two ways, as the calendar year (from 1934 to 2010) and as the
+      "year.number" from 0 to 76. Year.number is just the number of years since the beginning, and is obtained by
+      subtracting 1934 from each Year. We need to do this to make it possible to estimate the higher-order terms (to
+      work with a fifth-order term you have to raise year to the fifth power, and if we raise 2010 to the fifth power we
+      get numbers that Excel can't handle).</p>
+    <p>Select the data for Year.number and OSPR, including the column headings (B2 through C75), and insert a scatter
+      plot:</p>
+    <video alt="Insert scatter" controls="controls"><source src="insert_scatter.mp4" type="video/mp4"></video>
+    <p>Make sure it's a scatter plot, and not a line plot with just plot symbols - line plots treat the x-axis as
+      categories, even if the x-axis variable is made up of numbers, and we need the x-axis to be numeric or our
+      polynomial regression lines won't be accurate.</p>
+    <p>The axes are not labeled by default, so let's fix that - click on the x-axis labels and you'll see three tools
+      pop up to the right - click on the + tool to add axis labels, like so:</p>
+    <video alt="Axes" controls="controls"><source src="axes.mp4" type="video/mp4"></video>
+    <p>Change the x-axis label to "Year number" and the y-axis label to "Sightings per hour".</p>
+    <p>2. <strong>Add trend lines</strong>. Select the data by clicking once on the dots. Click on the + (Chart
+      Elements) and select "Trendline" → "Linear", which will add a linear regression line to the graph.</p>
+    <p> You'll see it doesn't fit very well, as there seems to be an increase in osprey in the first several decades,
+      but then the numbers level off in the 1980's, around year 45. Because of this the "best fit" line over-shoots in
+      the early and later part of the series, and under-shoots in the middle years.</p>
+    <p>Next, to get the R-squared and regression equation onto the graph, select the trend line, and then in the
+      settings panel on the right side of the spreadsheet, find the boxes for "Display Equation on chart" and "Display
+      R-squared value on chart", and check the boxes next to each of them. You can move the box with the equation and R<sup>2</sup>
+      to a location you can see them, like so: </p>
+    <video alt="R-square equation" controls="controls"><source src="rsq_eqn.mp4" type="video/mp4"></video>
+    <p>Note that I made my line thick, red, and solid to make it easier to see, yours may be blue and dotted instead. R<sup>2</sup>
+      is useful to us because it is the proportion of the total SS that is explained by the line - we'll use this later
+      when we compare the lines against each other in the next steps.</p>
+    <p>We can add a polynomial line next - this time, select the dots on the graph, right-click and add a trendline.
+      This will give you a second line, but it's sitting right on top of the first. In the "Format Trendline" window
+      that opens up you can select a "Polynomial" trend line, and set it to order 2 - this will be a model like the one
+      above for RTHA that has both the linear and quadratic terms. Also have the R-squared reported on the chart, and
+      move them where you can see them - they aren't labeled as "quadratic", but you can see that the equation is
+      -0.0002x<sup>2</sup> + 0.017x + 0.1896, and the fact that there is a squared term in the equation tells you this
+      is for the quadratic trend line.</p>
+    <p>Switch to the "Fill and Line" settings in the "Format Trendline" window, and change the line color to something
+      that's different from the straight line, and easy to see.</p>
+    <p>Now, back to the "Trendline options" where you started - you can try out polynomials of different order by
+      increasing the number on your quadratic fit. Try 3, 4, and 5. You'll see that going to 3 changes the shape a
+      little - it flattens out the early part of the curve and makes it peak more sharply in the late 1990's. After that
+      increasing the order of the polynomial barely changes the shape of the line - this is a pretty good indication
+      that these higher-order terms aren't helping to describe the pattern of change.</p>
+    <p>Next we will learn how to test whether adding a term significantly improves the fit of the line to the data.</p>
+    <p>3. <strong>Test for an increase in fit as you add higher-order terms</strong>. We are going to build a table
+      that tests whether the quadratic fits better than the linear, whether the cubic fits better than the quadratic,
+      whether the fourth order fits better than the cubic, and whether the fifth order polynomial fits better than the
+      fourth order.</p>
+    <p>The basic idea is that we need to know how much <em>additional</em> variation we are able to account for in the
+      count data by adding each higher-order term. If the amount is large enough to be statistically significant, we
+      have justification for including the term. When we get to a point that adding higher-order terms no longer
+      improves the fit, we can stop and interpret the simplest model that fits the data well.</p>
+    <p>Remember from the regression review, we can divide the sums of squares for the bird counts into a portion that
+      can be explained by a line through the data (the model SS), and a portion that is random, unexplained variation
+      (the residual SS). As we go from a straight line to a quadratic model, the quadratic will fit the data better by
+      some degree - we can calculate the difference in the unexplained, random variation as a measure of how much
+      additional variation is explained. We can use this additional explained variation in an F test, in which we divide
+      the MS for the explained variation by the residual MS. This is very much like the F-test we conduced in the ANOVA
+      table we produced for our simple linear regressions, but in this case we're testing for significant increases in
+      fit by making the model more complex.</p>
+    <ul>
+      <li>In cell F1 type "Trend", and in F2 type "Linear", in F3 type "Quad", and in F4 type "Cubic", F5 type "Fourth",
+        and in F6 type "Fifth".</li>
+      <li>Lay out the columns of this table we're building:</li>
+      <ul>
+        <li>In cell G1 type "Total SS". </li>
+        <li>In H1 type "R2" - this will be the R<sup>2</sup> reported by Excel for each line.</li>
+        <li>In I1 type "Residual df". </li>
+        <li>In J1 type "Residual SS".</li>
+        <li>In K1 type "Model df".</li>
+        <li>In L1 type "Residual diff."</li>
+        <li>In M1 type "df diff."</li>
+        <li>In N1 type "F"</li>
+        <li>In O1 type "p"</li>
+      </ul>
+    </ul>
+    <p>Now to calculate the values for the table.</p>
+    <ul>
+      <li> Total sums of squares is just the sum of the differences between the OSPR data and the mean of the OSPR data.
+        Use an array formula to calculate this in cell G2 as =sum((c2:c75-average(c2:c75))^2) - remember to use
+        CTRL+SHIFT+ENTER to make it an array formula! If you did it right you should get 2.316... as your answer.<br>
+        <br>
+        Note that the total SS is determined entirely by the y-data, so it is the same for all five models. Enter =g$2
+        in cell G3, and then copy/paste this to cells G4, G5, and G6.</li>
+      <li>Enter the R<sup>2</sup> from each of the fitted lines. You will have one already for the straight line (which
+        goes in H2), and to get the rest set the order of the polynomial to 2 and record R<sup>2</sup> in the Quad row
+        (G3). Then set the order to 3 and record the R<sup>2</sup> for the Cubic row, and so on to the fifth-order
+        polynomial.</li>
+      <li>Let's skip to the model degrees of freedom first, we'll need them to calculate residual degrees of freedom.
+        Model df is:</li>
+      <ul>
+        <li>1 for the linear regression - enter a 1 in K2. This is true for linear regression in general, one df is
+          assigned to the slope estimate.</li>
+        <li>2 for quadratic regression - enter a 2 in K3. We still have a slope coefficient for the linear term, as well
+          as a coefficient for the quadratic term, so 2 df.</li>
+        <li>3 for cubic regression - enter a 3 in K4 (one df for linear, one for quadratic, one for cubic).</li>
+        <li>4 for fourth order - enter a 4 in K5 (you get the idea... keep adding one for each new term).</li>
+        <li>5 for fifth order - enter a 5 in K6.</li>
+      </ul>
+      <li>Now to enter residual df. Residual df is calculated as: total df - model df. Since total df is sample size -
+        1, we have a total df of 73 for each model (74 counts - 1 = 73).</li>
+      <ul>
+        <li>For residual df for the Linear model, in cell I2, enter the formula =73 - k2.</li>
+        <li>Copy and paste this formula to the rest of the rows (cells I3 to I6). You'll have numbers starting at 72 for
+          linear, declining by 1 each row to 68 for the Fifth order model.</li>
+      </ul>
+      <li>The residual SS is the random, unexplained variation. We don't have an ANOVA table to get this from, but we
+        can calculate it from the total SS and the model R<sup>2</sup>. If you recall, R<sup>2</sup> is Model SS/Total
+        SS, and Total SS is Model SS + Residual SS, so R<sup>2</sup> is Model SS/(Model SS + Error SS). This means that
+        R<sup>2</sup> is a proportion of a total, and 1-R<sup>2</sup> will give us the proportion of Total SS that is
+        not explained, which is Residual SS.<br>
+        <br>
+        For example, an R<sup>2</sup> for 0.3873 for the straight line means that 38.73% of the variation in Osprey
+        counts is explained by the line - the implication is that 1-0.3873 = 0.6127, or 61.27% is not explained. To find
+        61.27% of the Total SS we just need to multiply Total SS by 1-R<sup>2</sup>. <br>
+        <br>
+        To calculate residual SS for the straight line, then, in cell J2 type =g2*(1-h2). Copy and paste this formula to
+        the rest of the cells to get Residual SS for the other four models.</li>
+      <li>Now to calculate how much additional variation the quadratic model explained compared to the linear model we
+        can just subtract their Residual SS. Adding terms <strong>must always reduce</strong> the residual SS, so we
+        need to subtract the residuals for the less-complex model from the more-complex model.<br>
+        <br>
+        Enter the formula: =j2-j3 in cell L3 <br>
+        <br>
+        (we entered this in the Quad row, because we will use it to test whether we improved model fit by adding the
+        quadratic term). Copy and paste this to the rest of the cells to get the reduction in residual SS from adding
+        each term to the model compared to the model just above it in the list.</li>
+      <li>Calculate the difference in df between the models - in cell M3 type =i2-i3, and copy/paste to the rest of the
+        rows (it should be 1 for each row).</li>
+      <li>Now we have the SS for Linear and or Quadratic, and we can calcuate the F test to tell us if the Quadratic
+        model improved fit.</li>
+      <ul>
+        <li>In cell N3 enter the formula =(L3/M3)/(j3/i3). This calculates an MS for the extra variation explained when
+          we added the quad term (L3/M3), and divides it by a residual MS (j3/i3). Copy and paste this cell the rest of
+          the rows to get F ratios for each added term.</li>
+        <li>In cell O3 enter the formula =fdist(n3,m3,i3) - this will give you a p-value for the F ratio in cell N3,
+          given the numerator df in M3, and the denominator df in I3. Copy and paste this to the rest of the rows to get
+          p-values for the rest of the added terms.</li>
+      </ul>
+    </ul>
+    <p>Your table should look like this:</p>
+    <img src="ospr_models_table.png" alt="Osprey models">
+    <p>Based on these calculations, we significantly increased the explained variation when we added the quad term, but
+      not when we added the cubic term, the fourth-order, or fifth-order terms. Consequently, we'll base our
+      interpretations on the quadratic model. </p>
+    <p>Select everything in the Quad line, and hit CTRL+I, then CTRL+B to italicize and bold the characters for the
+      model you will be interpreting.</p>
+    <p>4. <strong>Calculate the coefficients for the first derivative</strong>. Now we want to know what the change in
+      Osprey count per year is, at any given year. We need to calculate the first derivative of the quadratic to do this
+      - it sounds hard, but it's actually not.</p>
+    <ul>
+      <li>First we'll get Excel to give us the model coefficients for the quadratic model. In cell F8 type
+        "Coefficients", and in F9 type "m2". In G9 type "m1", and in H9 type "b". With a quadratic relationship we'll
+        have an intercept (b), a linear coefficient (m1), and a quadratic coefficient (m2), so we need spaces for all
+        three.</li>
+      <li>Select all three cells below your labels, F10 through H10 - you can do this by clicking once in F10, holding
+        the mouse button down, and dragging to H10, or by selecting F10, holding down SHIFT, and then clicking H10. Your
+        selection should look like this: <img src="selected_quad_coef_range.png" alt="Range selected"> </li>
+      <li>We are going to use the linest() function, short for "line estimation", to get the coefficients for that
+        quadratic line in our graph. Without changing the selected cells, type the function:<br>
+        <br>
+        =linest(c2:c75, b2:b75^{1,2},TRUE,FALSE) <br>
+        <br>
+        and then CTRL+SHIFT+ENTER to make it an array formula. <br>
+        <br>
+        This function is estimating the line, using the known y-data (c2:c75), and the known x-data (b2:b75). Raising
+        the x-data to the power of 1 and 2 (in the curly braces) tells linest() to use both the first and second order
+        terms, which gives us a quadratic fit. The last two are options are for whether we want to estimate the
+        intercept (we do, so it's set to TRUE), and whether we want some additional regression statistics (we don't, so
+        it's set to "FALSE"). As an array formula it returns the coefficients into the cells you selected, so we get all
+        three coefficients at once. Note that all three of the output cells are part of the array formula - you can't
+        change F10, G10, or H10 by themselves anymore, you have to select all three and edit the array formula for the
+        entire set.</li>
+      <li>Now that you know the coefficients, you can calculate the first derivative:</li>
+      <ul>
+        <li>In cell F12 type "Derivative"</li>
+        <li>In cell F13 type "m1"</li>
+        <li>In cell G13 type "b"</li>
+        <li>In cell F14 type the formula =2*f10. This is the exponent (2) on the quadratic term multiplied by the
+          coefficient for the quadratic term (f10).</li>
+        <li>In cell G14 use the formula =g10. This is the coefficient for the linear term, which becomes the constant
+          (i.e. the intercept) for the first derivative.</li>
+      </ul>
+    </ul>
+    <p>5. <strong>Calculate the rate of change each year</strong>. You may already know that the first derivative of a
+      parabola is a straight line, and sure enough we now have a constant and a slope to multiply by year for our first
+      derivative, which makes it a straight line.</p>
+    <p>In cell D1 type "Rate of change", and in cell D2 type =g$14+f$14*b2. Copy and paste this to the rest of the
+      years. If you look down the Rate of Change column you'll see that the rate of change was positive until about
+      1990, when Osprey started declining.</p>
+    <p>6. <strong>Plot the rates of change</strong>. Select Year.number and the rates of change, and insert a scatter
+      plot with only connecting lines and no plot symbols. These columns are not sitting right next to each other, but
+      you can select the Year.numbers first (by clicking on B1, holding, and dragging to the bottom of the year numbers
+      in cell B75), and then holding down the CTRL key and clicking, holding, and dragging on the Rate of Change values
+      in column D.</p>
+    <p>To get the scatter plot with lines and no plot symbols, click on the scatterplot icon in the Insert tab again,
+      but this time select the option that shows only straight lines with no symbols, <img src="scatter_just_lines.png"
+        alt="Just lines">.</p>
+    <p>You can add a title, and title it "Rates of change in Osprey counts". The axis labels are still "Year number" for
+      x, and "Change in osprey number" for y.</p>
+    <p>7. <strong>Repeat</strong>. Now you can repeat this for the other four species. Specifically, for each species:</p>
+    <ul>
+      <li>Plot the counts per hour vs. year for each species.</li>
+      <li>Try out polynomials as high as 5. Test whether each added term is significant.</li>
+      <li>Pick the highest order model to interpret.</li>
+      <li>Calculate the coefficients of the model (with linest()).</li>
+      <li>Calculate the coefficients for the first derivative.</li>
+      <li>Calculate the rate of change for each year.</li>
+      <li>Plot the rate of change.</li>
+    </ul>
+    <p>A couple of hints...</p>
+    <ul>
+      <li>As long as you use the same cells in each sheet, the set of tests of each term (Linear, Quad, Cubic, Fourth,
+        and Fifth) is copy and paste-able for all of the species. You can copy the Osprey table from cells F1 to O6 and
+        paste it into cell F1 for each species. The total SS will re-calculate for each new species, and the degrees of
+        freedom are the same for all of them. All you need to do is enter the new R<sup>2</sup> values for the curve
+        fits, and the rest of the table will update for the new species.</li>
+      <li>The linest calculation, and the derivative calculation is the same as long as the order of the polynomial is
+        the same. If the order is not the same, you'll need to adjust a bit. For example, you will need a fourth order
+        polynomial for Bald Eagles. The linest() and derivative calculation steps need to be adapted to having five
+        coefficients in the model, and four in the first derivative:</li>
+      <ul>
+        <li>Estimate coefficients up to m4 when you do linest(). Start with m4 in cell F9, and work your way down to b
+          in cell J9. When you do the linest() command, select all of the cells from f10:j10, and make sure you raise
+          the known x's to the power of {1,2,3,4} in the linest() function.</li>
+        <li>The derivative coefficients will now go up to m3 - enter m3 into cell F15, and work your way down to b. </li>
+        <ul>
+          <li>In cell F14 multiply the coefficient in F10 by 4</li>
+          <li>In cell G14 multiply the coefficient in G10 by 3</li>
+          <li>In cell H14 multiply the coefficient in H10 by 2</li>
+          <li>I16 will just be the coefficient in I10.</li>
+        </ul>
+        <li>When you calculate the rate of change, you will multiply the coefficient in F14 by year raised to the power
+          of 3, the coefficient in G14 by year raised to the power of 2....like so:<br>
+          =F$14*B2^3+G$14*B2^2+H$14*B2+I$14<br>
+          This can then be copied and pasted for the rest of the years.</li>
+      </ul>
+      <li>You can copy and paste the Osprey coefficients, derivatives, and rates of change to any bird with a
+        second-order polynomial fit, and the Bald Eagle coefficients, derivatives, and rates of change to any bird with
+        a fourth-order polynomial fit. All of the species are one or the other (sorry to ruin the suspense!).</li>
+    </ul>
+    <p>When you're done, make sure you can interpret the rates of change graph - which years show increases, which show
+      decreases, and in which were they stable?</p>
+    <p>Also look at how the trends compare for breeding birds and migrating birds - year 32 is 1966, and year 76 is
+      2010, so are the rates of change you're seeing for those time periods in agreement with the BBS trends? Note that
+      the units are different on the BBS data - they are numbers of individual seen per route surveyed. When comparing
+      between BBS and Hawk Mountain trends focus on the sign on the trend, and whether the trends were different for
+      recent counts than overall for each species.</p>
+    <h2>Optional for Biol 420, required for 620 - do the Osprey analysis in R</h2>
+    <p>Download this <a href="hawks.Rmd">Rmd</a> file to the same folder the hawks.xlsx file is in, start R Studio, and
+      make a new project from an existing folder using the folder with the data and Rmd file in it. Open the Rmd file
+      and follow the instructions. For this kind of statistical analysis you'll see R is actually much quicker and
+      easier to use (you have to know a little more about what you're doing to make the graphs work, but comparing the
+      model fits is much easier). Do the Osprey trend analysis, and then feel free to do other species if you want the
+      practice.</p>
+    <p><br>
+    </p>
+  </body>
+</html>

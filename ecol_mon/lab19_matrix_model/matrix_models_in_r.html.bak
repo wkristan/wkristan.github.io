@@ -1,0 +1,236 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Using R to estimate growth rate from a matrix model</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <h1>Using R for matrix algebra</h1>
+    <h1></h1>
+    <p>Welcome! If you're taking the time to do the activity a second time in R
+      you probably already have some interest in R, and already know what it it
+      is, but in case you are new to R we'll start with some background about
+      the software.</p>
+    <p>R is a statistical computing program that I use for all of my own data
+      analysis, and in my advanced statistics classes. Although it is an
+      excellent statistical analysis package, it is more correct to think of it
+      as a statistical programming language that can be used interactively to do
+      statistical data analysis. As a programming language, it uses a command
+      line interface instead of a graphical interface. It is also array
+      oriented, meaning that most of its commands can be used on arrays of data
+      (that is, nearly all of the things we do in Excel by copying and pasting
+      the same formula to a range of cells, or by using a special array formula
+      construction, can be done in R with plain old R commands).</p>
+    <p>Anything that "base" R doesn't do can be added by installing "libraries"
+      developed by other users. Since R is open source software, there is a
+      culture of sharing and cooperation that has built up around it, and there
+      is a truly amazing number of contributed libraries that do anything from
+      basic GIS analysis to genomics. And, of particular importance to us today,
+      it has good matrix algebra support, and can do things like calculating
+      eigenvalues and eigenvectors with single commands.</p>
+    <h3>Population growth rate and stable age distribution</h3>
+    <p>1. You can launch R from the start menu (type R and it will appear), and
+      it will open into a rudimentary graphical interface. Everything you do for
+      this analysis will be accomplished by typing commands in the R console, at
+      the command prompt, &gt;.</p>
+    <p>2. To do anything useful we need to get the urban matrix into R. Switch
+      to Excel and copy the Urban matrix from B2 to E6.</p>
+    <p>Switch to R, and then use the command: </p>
+    <p><span style="font-family: monospace;">read.table("clipboard", sep ="\t",
+        header = T) -&gt; urban.df</span></p>
+    <p>The read.table() command is used to read in data. Like in Excel, R uses
+      functions with parentheses containing arguments. Using "clipboard" as the
+      first argument causes R to use the current contents of the Windows
+      clipboard as the data source. The sep = "\t" argument says to use the tab
+      character as the separator between columns (when you copy data in Excel,
+      it's transferred to the clipboard with tab characters between columns).
+      Lastly, header = T says that the data has a first row that should be used
+      as column names. The result of read.table() is assigned to an object
+      called "urban.df", using a makeshift arrow formed by a dash and a greater
+      than sign, -&gt;. This is the "assignment operator" which tells R to
+      direct the output from read.table() to urban.df.</p>
+    <p>You won't see anything on the screen because the matrix was dumped into
+      urban.df. To see what is in urban.df, type urban.df at the command line,
+      and R will show you what it contains.</p>
+    <p>3. Be default, read.table() makes a "data frame", which is one of R's
+      basic data structures. Data frames can have a mix of different data types
+      in different columns. To make the matrix algebra we are about to do
+      easier, we can convert urban.df from a data frame to a matrix:</p>
+    <p><span style="font-family: monospace;">as.matrix(urban.df[,-1]) -&gt;
+        urban</span></p>
+    <p>This makes a matrix out of columns 2 to 5 of urban.df, and assigns it to
+      urban. R allows you to refer to parts of a data frame with row, column
+      index numbers inside of square brackets. So, urban.df[ , -1] is saying
+      "give me all of the rows (because I left the row index blank), but drop
+      column 1 from urban.df".</p>
+    <p>If you type urban at the command line you'll see you have just the
+      matrix, with column names. You can add row names with:</p>
+    <p><span style="font-family: monospace;">row.names(urban) &lt;- urban.df[,1]</span></p>
+    <p>This takes the labels from the Contrib..to.class. column in urban.df and
+      assigns it to the row names for urban (note that this assignment is from
+      right to left, because the arrow is pointing that direction).</p>
+    <p>Now you're ready to calculate growth rate.</p>
+    <p>4. Calculate the growth rate. This can be done with a single command:</p>
+    <p><span style="font-family: monospace;">eigen(urban) -&gt; urban.eig</span></p>
+    <p>If you type urban.eig at the command prompt and hit ENTER, you'll see a
+      set of $values, which are the eigenvalues, and $vectors, which are the
+      eigenvectors, like so:</p>
+    <p><span style="font-family: monospace;">$values<br>
+        [1]&nbsp; 1.0309566&nbsp; 0.4687745&nbsp; 0.3211074 -0.1608385<br>
+        <br>
+        $vectors<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        [,1]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        [,2]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        [,3]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [,4]<br>
+        [1,] 0.5145410&nbsp; 0.3042205 -0.3220949 -0.28206314<br>
+        [2,] 0.1996363&nbsp; 0.2595879 -0.4012302&nbsp; 0.70148175<br>
+        [3,] 0.4825680 -0.8981290&nbsp; 0.8471639 -0.65190558</span><br>
+      <span style="font-family: monospace;">[4,] 0.6800890&nbsp; 0.1828344
+        -0.1325988&nbsp; 0.05816231</span></p>
+    <p>The first eigenvalue is the largest, real, positive value in the set of
+      four, so it is the population growth rate. The growth rate estimated here
+      matches the value we calculated in Excel using Solver.</p>
+    <p>5. Calculate the stable age distribution. The eigenvectors are matched
+      with the eigenvalues - since the first eigenvalue is our population growth
+      rate, the first eigenvector is the one we can use to calculate the stable
+      age distribution. To calculate the stable age distribution we just need to
+      put the first eigenvector on a proportional scale:</p>
+    <p><span style="font-family: monospace;">urban.eig$vectors[,1]/sum(urban.eig$vectors[,1])</span></p>
+    <p>Let's unpack this command, there's a lot going on...</p>
+    <ul>
+      <li>The urban.eig object you created with the eigen() function is a
+        "list", which is another data structure in R. Lists aren't just
+        row/column tables, they have different named sections that can hold
+        different types of data. The urban.eig list has a section called
+        $values, and a section called $vectors.</li>
+      <li>You can refer to named sections of lists by typing the name of the
+        list followed by the dollar sign, followed by the name of the section -
+        this gives us the urban.eig$vectors notation. </li>
+      <li>The square brackets appended to the end of urban.eig$vectors is a
+        row/column reference. Since the named section we are referring to is a
+        matrix, we can refer to parts of this matrix with row and column index
+        numbers. So, inside the square brackets we have a blank for the row
+        reference (which means "use all of the rows"), and a 1 for the column
+        reference (which means "only use column 1"). The command
+        urban.eig$vectors[,1] thus pulls the first column of eigenvectors from
+        urban.eig. </li>
+      <li>The numerator is a vector of numbers, and the denominator is the sum
+        of the values in that vector. This causes R to divide each of the
+        numbers in the vector by the sum, which gives us proportions.</li>
+    </ul>
+    <p>If you compare these to the stable age distribution you calculated in
+      Excel using Solver, they match.</p>
+    <p> </p>
+    <p>Recall this command (using the up arrow on the keyboard, between the
+      letter keys and the numeric keypad), and assign the output to an object
+      called "stable", like so:</p>
+    <p><span style="font-family: monospace;">urban.eig$vectors[,1]/sum(urban.eig$vectors[,1])
+        -&gt; stable<br>
+      </span></p>
+    <h2>Project the raven population over time</h2>
+    <p>The next thing we will do is to project the population into the future,
+      like we did with Excel.</p>
+    <p>1. Make a vector for the initial population. Use the command:</p>
+    <p><span style="font-family: monospace;">c(27, 11, 26, 36) -&gt; init.vect</span></p>
+    <p>This is the set of initial values at stable age distribution. The c()
+      function makes a vector out of the numbers, which is assigned to
+      init.vect. To see the contents of init.vect, type its name at the command
+      prompt.</p>
+    <p>2. Make a matrix for the projected population at each year. We'll make a
+      matrix with zeros in it for now, and will fill in with the projected
+      values. Use the command:</p>
+    <p><span style="font-family: monospace;">matrix(0, nrow = 4, ncol = 20)
+        -&gt; project.urban; project.urban</span></p>
+    <p>This command makes a matrix with 4 rows and 20 columns for the projected
+      population. The matrix is assigned to the object project.urban, but then
+      the semicolon allows us to add a second command to the line, which is
+      executed after the first one is done. Using the matrix() command followed
+      by the name of the matrix first creates the matrix project.urban and then
+      dumps its contents to the screen for you to see.</p>
+    <p>Now, we can combine the initial population vector to this matrix with:</p>
+    <p><span style="font-family: monospace;">cbind(init.vect, project.urban)
+        -&gt; project.urban; project.urban</span></p>
+    <p>This combines a column (thus, cbind()) to an existing matrix,
+      project.urban, and assigns the combined matrix back into project.urban.</p>
+    <p>3. Project the population. Projection is an iterative process - we
+      multiply the matrix of demographic rates by a population vector to project
+      from time 0 to time 1, then multiply the matrix of demographic rates by
+      the population vector at time 1 to get the population at time 2. We can do
+      this kind of iterative calculation in R with a for() command:</p>
+    <p><span style="font-family: monospace;">for(i in seq(1,20)) urban %*%
+        project.urban[,i] -&gt; project.urban[ , i+1]<br>
+      </span></p>
+    <p>The for() command says "for a sequence of numbers from 1 to 20, assign
+      the first number to i, pass its value to the command that follows, and
+      execute the command - repeat until all 20 numbers have been processed".
+      The command that for() passes a value to is a matrix multiplication of
+      demographic rates (urban) multiplied by column i of the project.urban
+      object. The result of the matrix multiplication is assigned to column i+1
+      of the project.urban matrix. The first time through i is equal to 1, so
+      this matrix multiplies the demographic rates by the initial population
+      vector (column 1 of project.urban) and assigns it to column 2 of
+      project.urban. The second time through i is equal to 2, so it matrix
+      multiplies the demographic rates by the population vector in column 2 of
+      project.urban and assigns the result to column 3 of project.urban. This
+      continues through to the 20th column.</p>
+    <p>To see the result, type project.urban - the numbers should match the
+      calculations you did in Excel.</p>
+    <p></p>
+    <h3>Perturb the starting population</h3>
+    <p>To do the analysis of the effects of a change in numbers, or changes in
+      demographic rates, we just need to change the values in either the
+      population vector, or in the matrix of rates.</p>
+    <p>1. First, make a copy of the project.urban object that we can change
+      without wiping out the work you've done already:</p>
+    <p><span style="font-family: monospace;">project.hy0 &lt;- project.urban</span></p>
+    <p>Now, change the number of hatch year ravens to 0 for the first year -
+      this is row 1 of column 1 of the project.hy0 object:</p>
+    <p><span style="font-family: monospace;">project.hy0[1,1] &lt;- 0</span></p>
+    <p>This assigns a 0 to row 1, column 1 of project.hy0. Now project the
+      population with:</p>
+    <p><span style="font-family: monospace;">for(i in seq(1,20))
+        as.matrix(urban) %*% project.hy0[,i] -&gt; project.hy0[ , i+1]</span></p>
+    <p><span style="font-family: monospace;">project.hy0<br>
+      </span></p>
+    <p>This is the same command as before, but with project.hy0 as the
+      population matrix. The new set of projected values overwrites the old set,
+      so you now have the population projection starting with 0 hatch year
+      birds.</p>
+    <p> </p>
+    <p>2. The breeders are in row 4 of column 1. Make a new projection matrix:</p>
+    <p><span style="font-family: monospace;">project.br0 &lt;- project.urban</span></p>
+    <p>Then change the breeders to 0 with:</p>
+    <p><span style="font-family: monospace;">project.br0[4,1] &lt;- 0</span></p>
+    <p>and project with:</p>
+    <p><span style="font-family: monospace;">for(i in seq(1,20))
+        as.matrix(urban) %*% project.br0[,i] -&gt; project.br0[ , i+1]</span></p>
+    <p> </p>
+    <p> </p>
+    <h3>Changing the demographic rates</h3>
+    <p> </p>
+    <p>To change the demographic rates, we need to change the elements of urban.
+      Make a new version you can alter:</p>
+    <p><span style="font-family: monospace;">urban.brnb &lt;- urban</span></p>
+    <p>To allow 10% of breeders to become non-breeders use:</p>
+    <p><span style="font-family: monospace;">urban.brnb[3,4] &lt;-
+        0.1*urban.brnb[4,4]</span></p>
+    <p>This multiplies the adult survival in row 4 column 4 by 0.1 and assigns
+      it to row 3 column 4, where the transition from breeder to non-breeder is
+      found. Then to set the adult survival to 90% of its current value:</p>
+    <p><span style="font-family: monospace;">urban.brnb[4,4] &lt;-
+        0.9*urban.brnb[4,4]</span></p>
+    <p> </p>
+    <p>If you type urban.brnb you'll see the new values.</p>
+    <p>Make a new population matrix:</p>
+    <p><span style="font-family: monospace;">project.brnb &lt;- project.urban</span></p>
+    <p>and project with:</p>
+    <p><span style="font-family: monospace;">for(i in seq(1,20))
+        as.matrix(urban.brnb) %*% project.brnb[,i] -&gt; project.brnb[ , i+1]</span></p>
+    <p>There you have it - with R's matrix capabilities we can get answers
+      faster, but with a little less transparency about what is actually going
+      on than we get in Excel.</p>
+  </body>
+</html>

@@ -1,0 +1,607 @@
+---
+title: "EcolMon Statistics Review"
+author: "Your name"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+Welcome to R! If you haven't had the pleasure of using R already, it is simultaneously powerful enough to be the only data analysis package you'll ever need, and complex enough that you may never feel like an expert no matter how much you use it (I don't yet consider myself an expert after 21 years of using R in my classes and in my research). But, with a little guidance you can learn to do some pretty useful things with it without too many tears.
+
+This document is formatted in R Markdown. R Studio feeds commands written within "code chunks" to the R program, and reports nicely formatted output below the chunk. I use R Markdown for teaching because the format makes it easy for me to give you instructions and background in text blocks like this one, have you write and execute your code right where the instructions tell you to, and answer questions below the R output. I use R Markdown in my research because it makes annotate my work, and communicating analyses and results with collaborators, much easier.
+
+You'll see as you move through the exercise that some of the text looks different - there are formatting characters that indicate to R Studio when **bold** or _italics_ or **_bold italics_** should be used, and section headings are indicated with pound signs (the "#" characters). There are a few places where I ask you questions, which will be **bold face**, and the place for you to respond is below, next to a greater-than prompt, ">". For example you will see things like:
+
+**Question: is R easier to use with R Studio?**
+
+> 
+
+You will write your answer next to the greater-than symbol, like so:
+
+> Why yes, yes it does.
+
+Some of the formatting doesn't change the appearance of the text much within R Studio, but when you push the "Knit" button at the top of this Rmd file window, R Studio reads the formatting commands, executes all the code chunks, and assembles the output together into a document using the output format of your choice (we are using MS Word format, but pdf and HTML web pages are also available options)- The formatting characters are used to set the format of section headings and text in the output - I have created a template document, called template.docx, which will be downloaded to your computer and used to specify some non-default formatting options, such as setting the answers you write to be red text in the Word file to make your work easier for me to find. 
+
+When you're done with the exercise you can knit this file, and turn in the Word document with your nicely formatted work. Slick.
+
+## Importing the data
+
+R is impressive on its own, but what makes it truly amazing is that it can make use of contributed extensions (which R calls "libraries") that add funcitonality not found in the base R package. For example, the ability to import Excel worksheets is provided by the readxl library. If you are working with R Studio installed on your own computer you will need to install it if it's not already present - switch to the "Packages" tab to the right, and scroll down through the installed packages looking for "readxl". If it's not there, then click on "Install" and then type "readxl" (without the quotes) to find the package - readxl, along with any other packages it needs to run properly, will be installed from the CRAN repositories maintained by the R Project.
+
+Once the library is installed, you still need to load it for use. If you are just using R interactively you can do this by checking the box next to readxl in the packages tab. But, you need to load the library "in code" for it to work when you knit the file, meaning that you need to write a command inside of a code chunk to load the library. I'll give you this first command to get you started - click on the run button (the little green triangle pointing to the right at the top right corner of the grey code chunk below - if you hover over it a tooltip will pop up saying "Run Current Chunk"):
+
+```{r load.readxl}
+
+library(readxl)
+
+```
+
+You'll see a green progress bar flash on the left edge of the command, from top to bottom. It won't seem as though anything happened, but as long as you didn't get a red color next to the command and an error message below the code chunk it worked - you can now use the import_excel() function from the readxl library to import the first data set.
+
+To import the worksheet you need, you will use the read_excel() function from the readxl library. We will give read_excel() takes two arguments: the name of the spreadsheet file (which is stat_review.xlsx), and the name of the worksheet within it that has the data to import (which is IndepSamples). The command is:
+
+read_excel(path = "stat_review.xlsx", sheet = "IndepSamples") -> indep.samples
+
+Type this command into the code chunk below (at line 40). Please resist the temptation to copy and paste this command into the code chunk - it's hard to learn R unless you type code yourself. Be careful, unlike Excel R is case sensitive, so if you use lower case leters for the I or S in IndepSamples you'll get an error message.
+
+```{r import.independent.samples.data}
+
+read_excel(path = "stat_review.xlsx", sheet = "IndepSamples") -> indep.samples
+
+```
+
+In an R function, arguments can be used either by giving them in the default order, or by naming them and putting them in any order you like. Since we named the arguments as path = and sheet = we could have put them out of order and it would have been fine. Since they were in order, we could also have done without them entirely - using the command:
+
+read_excel("stat_review.xlsx", "IndepSamples") -> indep.samples
+
+would have worked the same. As long as we name the arguments we could have changed the order:
+
+read_excel(sheet = "IndepSamples", path = "stat_review.xlsx") -> indep.samples
+
+and that too would have worked. However, without the labels, putting the arguments in the wrong order would have given us an error message - the command:
+
+read_excel("IndepSamples", "stat_review.xlsx") -> indep.samples
+
+would have failed with an error message, because R would assume IndepSamples is the Excel file, and stat_review.xlsx is the worksheet within it, and would have been unable to find a file called IndepSamples.
+
+The last part of the command **assigns** the output of read_excel() to an **object** we call indep.samples. The assignment operator in R is an arrow created by a dash followed by a greater-than symbol, ->, which assigns in the direction the arrow points, from left to right - thus, the -> arrow assigns the output of read_excel() to a data set called indep.samples that is created by this command. 
+
+You can reverse the assignment order by using an arrow pointing left, <-, like so:
+
+indep.samples <- read_excel(path = "stat_review.xlsx", sheet = "IndepSamples")
+
+It is also possible to use the equal sign for assignment, but it only assigns from right to left, like the <- operator does, so, we would need to change the command to:
+
+indep.samples = read_excel(path = "stat_review.xlsx", sheet = "IndepSamples")
+
+Why am I telling you all of the different ways you could accomplish the same thing? Becuase it's one of the things that makes R wonderful to use, but awful to learn - there are many ways to do the same thing, but there are still rules, and at first you're not sure what you're free to change and what absolutely has to be done a specific way. This gets better with practice.
+
+Okay, to get back to the data, you should now see indep.samples in your Environment tab. You can open it by clicking on the name in the Environment tab, which will open it in a tab over this window - you'll see the first column is Year, and the second column is NDVI.
+
+## Linear regression
+
+To begin, we will see whether NDVI is showing a consistent trend on average over time. NDVI is a numeric variable, and we can use Year as one as well. The stright-line relationship between two numeric variables is analyzed using simple linear regression.
+
+In regression we make a distinction between a _predictor_ variable and a _response_variable. The response variable is the one we think is changing (NDVI), and the predictor is the one we suspect is causing the change (Year).
+
+### Visualizing a regression
+
+A good first step in analyzing any data set is to make some graphs. The typical graphical representation of a regression analysis is a **scatter plot**, which plots each data value on x,y axes, with the predictor variable assigned to the x-axis, and the response on the y-axis. The best fitting straight line is plotted through the data.
+
+R has the ability to make graphs without having to install extra libraries, but these so-called "base" R graphs have some limitations. There is a very good graphing package, called ggplot2, that will allow us to make all of our graphs (relatively) simply.
+
+If you're working on your own computer, install ggplot2 now (along with any other packages it depends on, which will be installed automatically with your permission). If you're working through CougarApps it is already installed. To use it, load the library, and then use the qplot() function to produce a quick plot of the data:
+
+library(ggplot2)
+ggplot(indep.samples, aes(x = Year, y = NDVI)) + geom_point() + geom_smooth(method = "lm", se = F)
+
+```{r plot.NDVI.regression}
+
+library(ggplot2)
+ggplot(indep.samples, aes(x = Year, y = NDVI)) + geom_point() + geom_smooth(method = "lm", se = F)
+
+```
+
+ggplot() works a little differently from other R functions - the graph elements are built in steps. The first step is to use the ggplot() command to establish the data set to be plotted (indep.samples) as well as the "aesthetic mappings", which are the roles played by the variables in the data set (the aes() arguments). Once the basics are established with the ggplot() function the geometric elements to be plotted are added, litereally witha + sign. We add points with geom_point(), and add the line with geom_smooth(method = "lm", se = F).
+
+You can see that the line is pretty flat, with a slope near 0. A slope of exactly 0 would represent a complete lack of relationship between NDVI and Year, because a slope of 0 is a perfectly flat line, with the same NDVI predicted no matter what the year is. If knowing the year has no effect on the predicted NDVI, then NDVI is _indepdendent_ of year.
+
+But, a slope that is close to 0 is not a slope of 0, because the slope is both a measure of the relationship between the predictor and the response variable, and it is unit converter - NDVI is a value between -1 and 1, and Year is a value in near 2000, so to convert between year and NDVI a slope will need to be a small number. We can't tell if NDVI is independent of year just by looking at the size of the slope.
+
+On the other hand, we shouldn't assume a pattern is a real relationship between variables just because it looked that way on the graph - if instead of looking flat the line looked like it was positively or negatively sloped we shouldn't jump to conclusions. This is because NDVI can be independent of year at the _population_ level, across all of the pixels within public land in the FPA, but within a _sample_ drawn from the population the slope of the line will be different from zero due to random sampling.
+
+To deal with the sampling problem, we specify a **hypothesis** about the properties of the population that we can test with the data - specifically, we specify a  **_null_ hypothesis**, which in statistics is always the hypothesis of independence (or lack of pattern, or lack of difference, or randomness). In this case, since the line describing the relationship between NDVI and Year would have a slope of 0 if NDVI was independent of year, our null hypothesis is that at the population level the slope is 0. This is symbolized as Ho: $\beta$ = 0 (this symbol will render in your knitted document as the lower-case Greek letter beta).
+
+Remember that the hypothesis is about the population, not the sample - we can know that the sample's slope is not equal to 0 because we can measure it, we don't need to test hypotheses about something we can measure. Another way to think of what we are hypothesizing with the null is that the only reason that $\beta$ is not equal to 0 in our sample of 150 points is due to random chance, not due to an actual change in NDVI over time. The alternative hypothesis, that the slope isn't equal to 0 at the population level, is symbolized Ha: $\beta !=$ 0 (that is, the slope, beta, is not equal to zero), and is the hypothesis that there is a real change in NDVI over time on average.
+
+To understand the null hypothesis, think of each year's NDVI data as being three random samples from the same populaiton of NDVI values, with no change from year to year. The data would look something like this (run the code chunk to get a single example):
+
+```{r ndvi.year.null.oneyear}
+
+NDVI <- rnorm(150, mean = mean(indep.samples$NDVI), sd = sd(indep.samples$NDVI))
+
+Year <- rep(c(1984,1998,2011), each = 50)
+
+data.frame(NDVI, Year) -> rand.ndvi.data
+
+coefficients(lm(NDVI ~ Year, data = rand.ndvi.data))["Year"] -> slope
+
+ggplot(rand.ndvi.data, aes(x = Year, y = NDVI)) + geom_point() + geom_smooth(method = "lm", se = F) + labs(title = paste("Slope = ", slope))
+
+```
+
+These three years of NDVI are random samples of a single population with a mean equal to the mean of the data in our dataset, and a standard deviation equal to the standard deviation of our data set. You can see that the line is pretty flat, but not perfectly so. If you hit the run button repeatedly you'll get a different sample each time, and sometimes the line looks less flat than others, and sometimes it's positive while other times it's negative. But, a perfectly flat line isn't very likely with random sampling.
+
+So, to tell the difference between random sampling and a real change over time, we need to specify the null hypothesis and see how often random sampling produces slopes that are as big or bigger than the one we got with our data. If our data has a big slope compared to what random sampling produces, then we'll reject the null in favor of the alternative hypothesis of a change in NDVI over time. If our slope is typical of the slopes produced by chance we'll retain the null, and conclude that what we are seeing in our data is probably just due to random chance, and is not a real change over time.
+
+### Testing the null hypothesis of slope = 0
+
+Fitting a straight line to data in R is done with the lm() function. If you remember, the equation for a straight line is:
+
+y = mx + b
+
+where y is the y variable, x is the x variable, and m is the slope. The constant, b, is the y-intercept, which means that it is the value of y when x is set to 0. In statistics, the regression line has the equation:
+
+predicted mean of response = m (predictor variable value) + b
+
+When we fit a straight line model in R we use a **model formula**, which tells the lm() function what the response variable is and what the predictor variable is - the slope and intercept are not specified. So, for this example our model formula is:
+
+NDVI ~ Year
+
+The tilde between NDVI and Year is taking the place of an equal sign, because = is used for other things in R (you can use it in place of <- as an assignment operator). We use this in the lm() function like so:
+
+lm(NDVI ~ Year, data = indep.samples)
+
+This lm() function says that NDVI is used as the response (becuase it's on the left side of ~) and Year is used as the predictor (because it's on the right side of ~), and uses data = indep.samples so that the function knows where to find the NDVI and Year variables.
+
+Enter this in the code chunk below:
+
+```{r fit.regression.model}
+
+lm(NDVI ~ Year, data = indep.samples)
+
+```
+
+The output repeats the command you used (as the "Call") and then gives the two coefficients - the intercept (as (Intercept)) and the slope (named for the predictor variable, Year). The slope is the amount of change in the response (NDVI) expected per unit of change in the predictor (Year), so this slope predicts a loss of 0.0003337 NDVI units per year.
+
+To test whether the slope of -0.0003337 represents a real relationship between NDVI and Year we need to get the ANOVA table for this model. The ANOVA table divides the variation in NDVI into two parts: a) a part that is predictable by the straight line relationship between NDVI and Yea, and b) a part that is unpredictable, random variation. The unpredictable, random variation is variability around the line, and the predictable variation is what is left over from the total variability in the data after the unpredictable variation around the line is measured and subtracted away.
+
+We get ANOVA tables in R with two steps - we will fit the model again and assign it to an object, called ndvi.year.lm, and then we use the anova() function on it to obtain the ANOVA table. We will then type the name of the fitted model object, ndvi.year.lm, so that we can see the summary output.
+
+lm(NDVI ~ Year, data = indep.samples) -> ndvi.year.lm
+anova(ndvi.year.lm)
+summary(ndvi.year.lm)
+
+```{r get.regression.anova.table}
+
+lm(NDVI ~ Year, data = indep.samples) -> ndvi.year.lm
+anova(ndvi.year.lm)
+
+summary(ndvi.year.lm)
+
+```
+
+Note that even though you ran the same lm() function here you didn't get any output from it - that's because you assigned it to the ndvi.year.lm object. The slope estimate is shown at the bottom, when we ask for a summary() of ndvi.year.lm - it is equal to -0.0003337 for our data.
+
+Using anova(ndvi.year.lm) gets you the ANOVA table - the Sum Sq. column is the division of variability between what we can explain and what is random and unexplainable. The explained variation is named for the predictor variable, Year, and the unexplained random variation is called the Residuals. You'll see that there is quite a bit more unexplained variation than there is explained variation.
+
+But, the unexplained variation has 148 degrees of freedom, whereas the expained variation has only one - to convert each of these sums of squares into variances, which can be compared directly, we divide the Sum Sq column by the Df column, and get a variance for each, called "Mean Squares" in ANOVA terminology. The Mean Sq. column is still bigger for the unexplained (random) variation than the explained (predicted by Year) variation.
+
+The F-ratio is calculated next as a way of comparing the explained variation to the unexplained variation - dividing the Year Mean Sq by the Residual Mean Sq is a ratio of variances, which is the F statistic. Our observed F statistic is 0.2217.
+
+How can we interpret the F statistic? One way to see whether our observed F of 0.2217 is big compared to what we would get by chance is to generate random data many, many times and see what the distribution of F-values looks like. We generated one random data set above, but we can repeat that process 10,000 times, run a regression and get the F-value from the ANOVA table each time, and then see what the distribution of randomly-generated F-values looks like. Be patient when you run this, it will take a minute.
+
+```{r random.data.f.values}
+
+f.values <- c()
+
+mean.NDVI <- mean(indep.samples$NDVI)
+sd.NDVI <- sd(indep.samples$NDVI)
+Year <- rep(c(1984,1998,2011), each = 50)
+
+for(i in 1:10000) {
+
+  NDVI <- rnorm(150, mean = mean.NDVI, sd = sd.NDVI)
+  f.values <- c(f.values,anova(lm(NDVI ~ Year))$F[[1]])
+  i <- i+1
+
+}
+
+
+
+data.frame(f.values) -> random.f
+
+sum(f.values > 0.2217)/10000 -> p.greater.obs
+
+ggplot(random.f, aes(x = f.values)) + geom_histogram() + labs(x = "F-value", y = "Number of F-values", title = paste(round(100*p.greater.obs, 2), "% of randomly generated F-values are above the observed F-value", sep = "")) + scale_x_continuous(limits = c(0,10))
+
+```
+
+Based on this simulation, a large percentage of the randomly generated F-values are bigger than what we observed with our NDVI data - as a proportion the percentage is (about) 0.63, which we can interpret as a probability, so the probability of obtaining an F value greater than or equal to our observed F-value by chance is 0.63 (about...this is a random simulation, your number may be a little different).
+
+Just like we could use the t-distribution as a mathematical model of random sampling, we can use the F-distribution as a model of random sampling. The F-distribution for our data is shaped like this:
+
+```{r f.dist}
+
+x <- seq(0,10, by = 0.1)
+
+px <- df(x, df1 = 1, df2 = 148)
+
+f_curve <- data.frame(x,px)
+
+x_f_obs <- seq(0.2217, 10, by = 0.1)
+
+p_f_obs <- df(x_f_obs, df1 = 1, df2 = 148)
+
+f_obs_shaded <- data.frame(x_f_obs, p_f_obs)
+
+ggplot(f_curve, aes(x = x, y = px)) + geom_area(data= f_obs_shaded, aes(x = x_f_obs, y = p_f_obs), color = 'red', fill = 'red') + geom_line(size = 2) + labs(x = "F", y = "P(F)") + scale_x_continuous(limits = c(0,10))
+
+
+
+```
+
+The F-distribution looks very similar to the histogram of randomly generated F values, which is why we can use it as a mathematical model of our random sampling process.
+
+The F-distribution's shape is defined by the degrees of freedom for the explained variation (in the numerator of the F value) and the unexplained variation (in the denominator of the F value), so the black line is the curve for numerator DF of 1, and denominator DF of 148. The observed F-value is 0.22, and shading the curve from that point and above in red shows how often a random sample would have produced a line that explained as much variation in NDVI as ours did. The F distribution is a probability distribution, like the t-distribution is, so this area is a probability, which we call the p-value for the test of an effect of Year. The p-value for the effect of Year in the ANOVA table is 0.6384 for our data - very similar to the probability of random data having F values greater than our observed data when we generated random data (again, the F-distribution is a good model for this process).
+
+And, like our random sampling simulation, the p-value obtained from the F-distribution tells us that the probability of getting a sample of data with a slope of -0.0003337 by random chance if the null hypothesis is true is high, 0.6384 - we expect 63.84% of randomly generated data sets to explain as much variation in the data as our observed line did. With a probability this high we can't be certain that the slope represents real change, so we retain the null hypothesis of no relationship between NDVI and Year. To consider the slope to be atypical of random sampling, and thus likely to indicate a real effect, the p-value would need to be 0.05 or less (0.05 is our alpha level for the test).
+
+So, our impression that the line looks pretty flat in our graph of the NDVI data is borne out by the regression analysis - the p-value indicates that a slope of -0.0003337 is typical of what one gets by random chance, and we would thus retain the null, and conclude that NDVI is independent of Year (or, more simply, that NDVI is not changing over time).
+
+### Checking assumptions
+
+The most important assumption of regression analysi is that the model fits the data - a straight line with a constant slope predicts that NDVI changes by the same amount each year, which leads to a linear increase or decrease. A good way to check this assumption is to look at the graph of NDVI against Year, with the straight line fitted through it - since the pattern appears to be that NDVI increased in 1998, but returned to close to the mean see in 1984 by 2011, a straight line is definitely not a good choice.
+
+Having reason to think that the change in NDVI is not a straight line trend over time we would not continue with the analysis, and the other assumptions of regression don't matter. But, since this is a review, for completeness we'll assess the other two important assumptions.
+
+The other two assumptions we routinely asses are normality and homogeneity of variances (HOV). Both of these assumptions are best assessed using the residuals - that is, the difference between data values and the line. For this data set, the residuals look like this (I added a little random variation to the Years to spread them out along the x-axis, so you can see the points and their residuals individually):
+
+```{r regression.residuals}
+
+Year.jitter <- indep.samples$Year + runif(150, min = -2, max = 2)
+
+lm(NDVI ~ Year.jitter, data = indep.samples) -> ndvi.year.jitter.lm
+
+predict(ndvi.year.jitter.lm) -> predicted
+residuals(ndvi.year.jitter.lm) -> residual
+
+data.frame(NDVI = indep.samples$NDVI, Year = Year.jitter, predicted, residual) -> reg.resid
+
+ggplot(reg.resid, aes(x = Year, y = NDVI)) + geom_segment(aes(y = predicted, xend = Year, yend = predicted + residual), color = 'red') + geom_point() + geom_smooth(method = "lm", se = F) 
+
+```
+
+The residuals are the red vertical lines that connect the data values to the NDVI prdicted by the line. 
+
+Regression assumes that the residuals will be:
+
+* Normally distributed
+* Have equal variances from left to right on the graph
+
+We can assess these assumptions with assumption tests - these are assumption tests, which use the null hypothesis the data meet the assumption being tested. The test of normality of residuals is done with the shapiro.test() function - we can get the residuals for the model with residuals(ndvi.year.lm), and then use this function as the argument for shapiro.test() like so:
+
+shapiro.test(residuals(ndvi.year.lm))
+
+```{r test.normality.lm}
+
+shapiro.test(residuals(ndvi.year.lm))
+
+```
+
+The null hypothesis for the Shapiro test of normality is that the data follow the normal distribution, so a p-value less than 0.05 means that the null hypothesis is rejected, and we fail the test.
+
+We can test for lack of homogeneity of variance (HOV) using the bptest() function, which is in the lmtest library. If you don't have it installed already, install lmtest now. The commands will be:
+
+library(lmtest)
+bptest(ndvi.year.lm)
+
+```{r test.hov.lm}
+
+library(lmtest)
+bptest(ndvi.year.lm)
+
+```
+
+According to the BP test we have HOV - the null hypothesis is that the variance in the residuals is the same from left to right along the x-axis, so if p > 0.05 we retain that null, and "pass" the test.
+
+If the data followed a straight line from year to year, and we passed the HOV test but failed normality, what would we have done? We probably would have proceeded to interpret the regression model - regression is **robust** to moderate deviations from normality, provided that we meet the HOV and linearity assumptions, meaning that we can still infer a linear chage in mean based on the slope of the regression even if the data are modestly non-normally distributed. But, since a straight line is a poor representation of how NDVI is changing on average over time, we shouldn't use regression even if we passed both the normality and HOV tests - a poorly fitting model trumps all other considerations.
+
+A few questions for you to answer about the regression analysis before you go on to ANOVA:
+
+**Question: the intercept is the other coefficient needed to fit the line through the data. The intercept is the expected average NDVI when Year is 0, and for our data it is 1.16. It would be unwise to interpret this value, why? Hint: what is the smallest Year we observed? And, what is NDVI, again?**
+
+>
+
+**Question: we have more or less been treating the ANOVA table's Year test as a test of the slope. If you look at the summary() output for ndvi.year.lm you'll see there is a t-test for the slope specifically - these coefficient tests specifically test the slope and intercept estimates against a null value of 0. They divide the estimate by its standard error to get a t-value, and then use the t-distribution to get a p-value. How does the p-value for the test of the slope for Year compare with the ANOVA table's test of variance explained by the line? What does this tell you about whether it's okay to treat the ANOVA table's test of Year as a test of the null hypothesis that the slope is equal to 0?**
+
+>
+
+**Question: at this point we know that the regression is not statistically significant. Why might we want to withhold judgment about NDVI being independent of year for now? Why? Hint: is it possible that there is a relationship that is different from the straight line relationship that regression tests for?**
+
+>
+
+## Analysis of Variance
+
+Treating Year as a numeric variable and using a linear regression to analyze it means that we are only looking for straight line changes in NDVI. The pattern we're seeing in these data is not linear - NDVI increase from 1984 to 1998 that reverses between 1998 and 2011 - so we could have changes in average NDVI over time that we fail to detect if we are only looking for straight line relationships.
+
+If instead we treated Year as a grouping variable, and asked if there are differences on average between the years without requiring the difference between years to have any particular pattern, we could find that there are statistically different mean NDVI between years after all.
+
+By default Year is imported as a numeric variable. To use it for grouping purposes we need to convert it to a **factor**, which is R's categorical variable data type. Categorical variables are made up of levels, which are categories rather than numbers (if our variable was Color, we might have levels Red, Blue, and Green, for example). We can convert Year to a factor and assign it to a new column in indep.samples:
+
+indep.samples$Year.factor <- factor(indep.samples$Year)
+
+```{r indep.make.year.factor.column}
+
+indep.samples$Year.factor <- factor(indep.samples$Year)
+
+```
+
+You now have three columns in indep.samples, the third one being Year.factor. You can confirm that Year and Year.factor are different by clicking the little blue circle with the white triangle inside it next to indep.samples, which displays a summary of the variables - Year is numeric (num), and Year.factor is a factor with three levels. Bear in mind that this means that R will consider 1984, 1998, and 2011 to be labels, but will not use their numeric values in any way when we use Year.factor as a predictor (they will be displayed in order because factor levels are created in alphabetical sort order by default, but their actual numeric values are not used).
+
+### Graphing means for each year
+
+ANOVA compares group means, and a good graph to illustrate what is being compared is a graph of means with 95% confidence intervals displayed as error bars.
+
+Considering how common this type of graph is, it is a little surprising that R does not have a built-in function to make the table needed. There is a library, called Rmisc, that has such a function that does what we need, so **if you are working on your own computer install Rmisc now - then in the get.summaryse.function code chunk below enter**:
+
+library(Rmisc)
+
+**If you're running R Studio through CougarApps** you can instead add this function by copying the code below into the get.summaryse.function code chunk (copy everything between row 307 and 319, including the closing curly brace, "}", and paste it into the get.summaryse.function code chunk):
+
+summarySE <- function (df, measurevar, groups) 
+{
+    df <- data.frame(df)
+    if (length(groups) == 1) {
+        grp.list <- list(df[, groups])
+        names(grp.list) <- groups
+    }
+    else grp.list <- as.list(df[, groups])
+    summ.func <- function(x) c(N = length(x), mean = mean(x), sd = sd(x), se = sd(x)/sqrt(length(x)), ci = qt(0.975, length(x)-1)*sd(x)/sqrt(length(x)))
+    output <- do.call(data.frame, aggregate(df[, measurevar], by = grp.list, FUN = summ.func))
+    names(output)[(length(grp.list)+1):(length(grp.list)+5)] <- c("N",measurevar,"sd","se","ci")
+    return(output)
+}
+
+```{r get.summaryse.function}
+
+summarySE <- function (df, measurevar, groups) 
+{
+    df <- data.frame(df)
+    if (length(groups) == 1) {
+        grp.list <- list(df[, groups])
+        names(grp.list) <- groups
+    }
+    else grp.list <- as.list(df[, groups])
+    summ.func <- function(x) c(N = length(x), mean = mean(x), sd = sd(x), se = sd(x)/sqrt(length(x)), ci = qt(0.975, length(x)-1)*sd(x)/sqrt(length(x)))
+    output <- do.call(data.frame, aggregate(df[, measurevar], by = grp.list, FUN = summ.func))
+    names(output)[(length(grp.list)+1):(length(grp.list)+5)] <- c("N",measurevar,"sd","se","ci")
+    return(output)
+}
+
+```
+
+Whether you installed Rmisc, or entered the function's code in the code chunk, you should now be able to use it to make a table of means, with sample size, standard deviation, standard error, and uncertainty (called "ci" in the table).
+
+We can now use summarySE() to get the mean NDVI each year - the command is:
+
+summarySE(indep.samples, "NDVI", "Year.factor") -> ndvi.year.summ
+ndvi.year.summ
+
+```{r mean.and.ci.by.year}
+
+summarySE(indep.samples, "NDVI", "Year.factor") -> ndvi.year.summ
+ndvi.year.summ
+
+```
+
+You should now have a summary table object, ndvi.year.summ, in your Environment, and since you entered the name below the summarySE() function the table's contents should also be displayed right below the code chunk. We will plot the data from this summary table.
+
+**Note how I am naming objects - having the ability to annotate your work is a big advantage of R Markdown, but it is still helpful to use names of objects that are "self documenting", meaning that they give some information about what they contain. The summary table created for NDVI by year is called ndvi.year.summ, instead of "my.cool.table1". Using a good naming convention helps you tremendously when you're doing a complex analysis**
+
+Now to graph the mean and 95% confidence intervals, we use ggplot() on this summary data:
+
+ggplot(ndvi.year.summ, aes(x = Year.factor, y = NDVI)) + geom_point() + geom_errorbar(aes(ymin = NDVI - ci, ymax = NDVI + ci))
+
+```{r plot.means}
+
+ggplot(ndvi.year.summ, aes(x = Year.factor, y = NDVI)) + geom_point() + geom_errorbar(aes(ymin = NDVI - ci, ymax = NDVI + ci), width = 0.1)
+
+```
+
+This ggplot() command is similar to the first, in that we identify a data set and assign roles to columns from that data set, and we use points to represent the means for each year. The error bars also come from the table, so we have another aes() statement within geom_errorbar() that uses the NDVI (mean) and ci (uncertainty) columns to construct the error bars. The width = 0.1 argument is part of geom_errorbar(), but is outside of aes(), so it is applied to all of the error bars - the devault width is way too big for my taste, and width = 0.1 makes the cross-bars look nicer.
+
+Based on the graph, our impression from looking at the scatterplot is reinforced - it looks like there was an increase in mean NDVI in 1998, followed by a decrease in 2011 back to about the same level as in 1984.
+
+But, the raw data isn't visible in this graph, so it's hard to tell if using means fits the data better than using a straight line. We can address that by adding the NDVI values from indep.samples to the graph:
+
+ggplot(ndvi.year.summ, aes(x = Year.factor, y = NDVI)) + geom_point() + geom_errorbar(aes(ymin = NDVI - ci, ymax = NDVI + ci)) + geom_point(data = indep.samples)
+
+```{r plot.means.data.values}
+
+ggplot(ndvi.year.summ, aes(x = Year.factor, y = NDVI)) + geom_point(data = indep.samples, color = "red") + geom_point() + geom_errorbar(aes(ymin = NDVI - ci, ymax = NDVI + ci), width = 0.1)
+
+```
+
+Because the column names are the same in indep.samples and ndvi.year.summ we didn't have to tell this second geom_point() which columns to use. To get the data points to plot behind the means and error bars the plot of the data points comes first, followed by the plot of means, and coloring the points red helps differentiate them from the mean and error bar symbols. 
+
+With this graph, you'll see that using the mean for each year is doing a better job of representing how NDVI differs between the years, because the means are in the middle of the data each yar. Given this, the ANOVA fits the data better than regression.
+
+To test for differences in mean NDVI among years, we will first fit a model that uses Year.factor as a predictor, and then ask for the ANOVA table.
+
+lm(NDVI ~ Year.factor, data = indep.samples) -> ndvi.year.factor.lm
+anova(ndvi.year.factor.lm)
+
+```{r ndvi.year.factor.anova}
+
+lm(NDVI ~ Year.factor, data = indep.samples) -> ndvi.year.factor.lm
+anova(ndvi.year.factor.lm)
+
+```
+
+We have a much larger amount of the variation in NDVI accounted for by Year.factor this time, such that the Mean sq. is bigger for Year.factor than for Residuals. The F-value is 11.477, and the p-value is very small (0.00002336). The F-distribution looks like this:
+
+```{r f.dist.anova}
+
+x_anova <- seq(0,12, by = 0.1)
+
+px_anova <- df(x_anova, df1 = 2, df2 = 147)
+
+f_curve_anova <- data.frame(x_anova,px_anova)
+
+x_f_obs_anova <- seq(11.477, 12, by = 0.01)
+
+p_f_obs_anova <- df(x_f_obs_anova, df1 = 2, df2 = 147)
+
+f_obs_shaded_anova <- data.frame(x_f_obs_anova, p_f_obs_anova)
+
+ggplot(f_curve_anova, aes(x = x_anova, y = px_anova)) + geom_area(data= f_obs_shaded_anova, aes(x = x_f_obs_anova, y = p_f_obs_anova), color = 'red', fill = 'red') + geom_line() + labs(x = "F", y = "P(F)") + annotate("segment", x = 11.477, xend = 11.477, y = 0.25, yend = 0, arrow = arrow(length = unit(0.03, 'npc'), type = "closed"))
+
+
+
+```
+
+This F-distribution is shaped a little differently, because there are 2 degrees of freedom for Year.factor (df for a categorical predictor is the number of categories minus 1), and 147 degrees of freedom for the residual term. I also extended the x-axis to 12.5 so we could plot the F-value of 11.477 on it, but there is so little area under the curve there that you can't see that it's shaded (11.477 is indicated by the arrow). But, that's why the p-value is so small - the probability of a random sample of NDVI values from a population with no differences between the years would produce variation between the years like we observed at a very low probability of 0.00002336. Given how low the probability is of seeing differences of this size by chance we can reject that hypothesis, in favor of the differences in mean NDVI being real differences.
+
+The ANOVA table's test of Year.factor is an _omnibus_ test, meaning that it tests for differences among the means for year overall, but doesn't tell us which means are different. We can get Tukey post-hocs on these means using the TukeyHSD() function - it wants the model to be in a different format, so we will use the aov() function on the model to convert it to a form that TukeyHSD() can work on - we can "nest" functions inside of other functions to get the results we need in this way:
+
+TukeyHSD(aov(ndvi.year.factor.lm))
+
+```{r ndvi.year.tukey}
+
+TukeyHSD(aov(ndvi.year.factor.lm))
+
+```
+
+The p-values are adjusted to compensate for the greater chances of false positives that comes from conducting multiple tests. Because these p-values are adjusted, you can consider them statistically significant if they are less than 0.05 (if they had not been adjusted, we would have had to adjust the alpha level instead, and only consider the differences significant if the un-adjusted p-values were below 0.05/3, for example).
+
+As you will see, the difference between the years is not 0 for any pair of means, but the difference is only large enough to be confident that it is not just due to random chance for 1998 compared with 1984, and for 1998 compared with 2011. The difference between 1998 and 1984, though not zero in our sample, was small enough that it could very easily just be due to random sampling.
+
+We can do our tests of assumptions again - since we're using residuals the assumption tests can change if the model changes, and now the residuals are based on differences of data values from group means, like so:
+
+```{r anova.residuals}
+
+predict(ndvi.year.factor.lm) -> predicted.anova
+residuals(ndvi.year.factor.lm) -> residual.anova
+
+Year <- rep(seq(-0.2, 0.2, length.out = 50), 3) + rep(c(1,2,3), each = 50)
+
+data.frame(NDVI = indep.samples$NDVI, Year, predicted.anova, residual.anova) -> anova.resid
+
+ggplot(anova.resid, aes(x = Year, y = NDVI)) + geom_segment(aes(x = Year, y = predicted.anova, xend = Year, yend = predicted.anova + residual.anova), color = 'red') + geom_point() + scale_x_discrete(name = "Year", limits = c("1984","1998","2011")) + geom_segment(x = 0.8, xend = 1.2, y = ndvi.year.summ$NDVI[1], yend = ndvi.year.summ$NDVI[1]) + geom_segment(x = 1.8, xend = 2.2, y = ndvi.year.summ$NDVI[2], yend = ndvi.year.summ$NDVI[2]) + geom_segment(x = 2.8, xend = 3.2, y = ndvi.year.summ$NDVI[3], yend = ndvi.year.summ$NDVI[3])
+
+```
+
+With the means in the middle of the data we would expect the residuals to be more symmetrically distributed than they were with our regression line, which under-estimated NDVI for 1998 pretty badly - we can test the residuals for normality and HOV:
+
+shapiro.test(residuals(ndvi.year.factor.lm))
+bptest(ndvi.year.factor.lm)
+
+```{r test.normality.hov.anova}
+
+shapiro.test(residuals(ndvi.year.factor.lm))
+bptest(ndvi.year.factor.lm)
+
+```
+
+You'll see that we still fail the normality test, but meet the HOV test. We can interpret these results, though, because a model that places a mean in the middle of each year's data fits the data much better, and ANOVA is _robust_ to violations of normality if HOV is met, and if the sample size is large (over about 35 observations per group, and we have 50).
+
+So, to wrap up this section:
+
+- It is possible to analyze these data using either regression or ANOVA
+- Using the correct analysis is necessary to understand the patterns in the data - an analysis can only find patterns it is designed to find, and using regression on data that changes, but not along a straight line, can fail to detect patterns in the data.
+
+A few questions before you go on to the data with repeated measurements:
+
+**Question: what is the null hypothesis in an ANOVA? Is it a hypothesis about sample means, or about population means?**
+
+>
+
+**Question: compare the Mean Sq values in the ANOVA tables for the regression analysis and the analysis of variance you just did - was the F ratio bigger for ANOVA because the explained variation went up, because the unexplained residual variation went down, or a combination of both?**
+
+>
+
+**Question: why does it matter how many group means we are comparing, such that Tukey tests are neeed? What would happen if you just did t-tests to compare the means for each pair of years?**
+
+>
+
+## Using the same points repeatedly
+
+The other option we're considering for monitoring changes in NDVI is to use the same points each year. We will learn some new methods for analyzing "repeated measures" data like these next week, but for this week we will use the paired t-test, which you learned about in your introductory statistics classes.
+
+First, let's import the data so we can give it a look - use the read_excel() function, but this time import the "PairedSamples" worksheet, and assign it to an object called paired.data.
+
+```{r paired.samples.import}
+
+read_excel("stat_review.xlsx", "PairedSamples") -> paired.data
+
+```
+
+If you open this data set by clicking on paired.data in the Environment tab, you'll see there is a column identifying the point, and then one for each year of NDVI data: NDVI_84, NDVI_98, and NDVI_11.
+
+We can get means for each column using the summary() function, using paired.data as the argument (give it a try):
+
+```{r summary.of.paired.data}
+
+summary(paired.data)
+
+```
+
+The mean is reported for each year, and you'll see that 1984 has a mean NDVI of -.4674, 1998 has a mean of 0.5602, and 2011 has a mean of 0.4950. This is similar to the pattern that we got when we used independent samples - increase between 84 and 98, followed by a decrease nearly back to the 1984 level.
+
+But, since we have the same points measured repeatedly, we don't expect the measurements from each year to be independent of one another - a point that is in a grassy field will have higher NDVI than one that is in a patch of chamise chapparal scrub, regardless of whether it's a wet year or dry year. There are two issues with this sort of data:
+
+- If we don't account for the lack of independence between measurements, we are acting as though we have 150 independent data values, when we do not - this can make it more likely we'll reject the null incorrectly
+- The variation between points due to differences in the vegetation type they are in is statistical "noise", meaning that it is adding random variation to the data that isn't related to whether there are changes from year to year. This makes it less likely we will detect a real difference is there is one.
+
+We can address both of these issues by analyzing the difference between the measurements at the same point in different years. This is what a paired t-test does - it subtracts two sets of paired measurements, and then compares them against a mean of 0 using a one-sample t-test.
+
+To do a paired t-test with R's t.test() function we just need to specify the two columns to be compared, and use the argument paired = T to get a paired test:
+
+with(paired.data, t.test(NDVI_84, NDVI_98, paired = T))
+
+```{r paired.t.test.84.98}
+
+with(paired.data, t.test(NDVI_84, NDVI_98, paired = T))
+
+```
+
+The with() command identifies the data set to use so that the t.test() function nested within it knows which data set holds the two columns of data. You'll see that the p-value is much less than 0.05, so there has been a change in NDVI between these years. The df is equal to 49 because the test is working with 50 differences, rather than 100 data values.
+
+In the next code chunk alter the command to compare NDVI_84 to NDVI_11, and then again to compare NDVI_98 to NDVI_11.
+
+```{r paired.t.test.other.years}
+
+with(paired.data, t.test(NDVI_84, NDVI_11, paired = T))
+
+with(paired.data, t.test(NDVI_98, NDVI_11, paired = T))
+
+with(paired.data, t.test(NDVI_84, NDVI_11, paired = F))
+
+```
+
+You'll see that there is a slight difference between 1984 and 2011, and another big difference between 1998 and 2011. The difference between 1984 and 2011 is small enough that if you did not focus on the difference between paired measurements, and compared the two years as though they were two independent samples, the p-value is no longer less than 0.05 - you can confirm this by copying/pasting the comparison of 1984 to 2011, changing the paired = T argument to paired = F and running the analysis again. 
+
+The advantage of tracking a fixed set of points over time, then, is that smaller differences are detectable than if independent samples are used - repeated measures of fixed locations are a very popular monitoring practice, and if they are analyzed properly this type of data can be very effective at detecting change.
+
+A final few questions to wrap up the review:
+
+**Question: of the three methods of analyzing changes in NDVI, which one provided the most sensitivity to detect changes? Which missed the changes in NDVI entirely?**
+
+>
+
+**Question: a paired t-test is a test of the mean of the difference between pairs of measurements against a population mean of 0. Why would the mean of the differences be 0 if NDVI isn't changing on average from one time to the next?**
+
+>
+
+**Question: if we tested for a difference in paired measurements and found that the mean of the difference is not different from 0, we would conclude that NDVI had not changed between the time points. But, this does not mean that NDVI is identical between the years, and it's possible that no point has identical measurements between the two time points. How is it possible to have every point change between two time points, but still have a mean of the differences equal 0?**
+
+>
+
+That's it! Knit your file and upload it to the class web site.

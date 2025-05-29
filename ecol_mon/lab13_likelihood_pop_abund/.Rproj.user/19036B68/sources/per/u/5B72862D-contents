@@ -1,0 +1,100 @@
+---
+title: "Profile likelihood"
+author: "Bill Kristan"
+date: "10/6/2021"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The observed frequencies
+
+```{r obs}
+obs <- c(76,48,23)
+
+```
+
+Multinomial probabilities
+
+```{r multinom}
+
+p <- 0.2733682781332553
+
+p_ch <- function(p) {c((1-p)*p, p*(1-p), p*p, (1-p)*(1-p))}
+
+
+```
+
+ML of f(00)
+
+```{r obs.f00}
+
+f00 <- 163.936271556499
+
+nhat <- f00 + sum(obs)
+
+```
+
+Multinomial coefficient:
+
+```{r mult.coef}
+
+library(logOfGamma)
+
+mult.coef <- gammaln(sum(obs) + f00 + 1) - gammaln(f00 +1)
+
+```
+
+Prob part:
+
+```{r loglike}
+
+freqs_ch <- function(x) {c(76,48,23,x)}
+
+loglike <- mult.coef + sum(freqs_ch(f00)*log(p_ch(p)))
+
+```
+
+Log likelihood for profile likelihood
+
+```{r loglike.profile.nhat}
+
+f00s <- seq(120, 210, by = 0.1)
+
+p_of_ch <- p_ch(p)
+
+loglike.f00s <- sapply(f00s, FUN = function(x) {gammaln(sum(obs) + x + 1) - gammaln(x + 1) + sum(freqs_ch(x)*log(p_ch(p)))} )
+
+data.frame(nhat = f00s + sum(obs), logLike = loglike.f00s) -> nhat.loglike
+
+```
+
+Plot the likelihood:
+
+```{r plot.nhat.like.nhat}
+
+library(ggplot2)
+ggplot(nhat.loglike, aes(x = nhat, y = logLike)) + geom_line()
+
+```
+
+Profile detection probability now:
+
+```{r loglike.profile.p}
+
+ps <- seq(0.23, 0.32, by = 0.001)
+
+loglike.ps <- sapply(ps, FUN = function(x) {gammaln(sum(obs) + f00 + 1) - gammaln(f00 + 1) + sum(c(obs,f00)*log(c((1-x)*x, x*(1-x), x*x, (1-x)*(1-x))))} )
+
+data.frame(p = ps, logLike = loglike.ps) -> ps.loglike
+
+```
+
+
+```{r plot.nhat.like.p}
+
+ggplot(ps.loglike, aes(x = p, y = logLike)) + geom_line()
+
+```

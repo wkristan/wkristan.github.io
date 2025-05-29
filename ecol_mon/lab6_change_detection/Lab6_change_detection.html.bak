@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Lab 6 - change detection</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <h1>Change detection</h1>
+    <p>We will be quantifying changes in cover types between 2004 and 2018 today, using vector cover type maps like the
+      ones we worked with the first week of class, as well as their raster-ized version. We will be able to see how
+      change detection is done using vector or raster data this way, with the same set of cover types.</p>
+    <p>These cover type maps are maintained by the San Diego Association of Governments (SANDAG), and they are primarily
+      used for land use planning purposes. They are thus much more detailed in the developed land cover types than they
+      are in their undeveloped cover types - most vegetated areas are just called "Landscape open space", and there are
+      no categories for different habitat types. But, we will be able to tell when undeveloped land in 2004 has been
+      developed, and what it has been converted to, which is sufficient for tracking conversion of undeveloped land to
+      developed land. To keep the analysis relatively simple I condensed the 60+ different cover types in the original
+      data into a set of 11, most of which are different types of human development.</p>
+    <p>We could use any two years for this exercise, but these two were chosen because we have NAIP images taken near
+      the same time that the cover type maps were produced, and we will be able to make use of the NAIP images to assess
+      the accuracy of the maps in our next exercise.</p>
+    <h2>Comparing cover types between 2004 and 2018 - raster cover type maps </h2>
+    <p>Let's start with the raster versions of the maps. Start up ArcMap and load lu_2004_rast and lu_2018_rast, which
+      are the vector cover type maps converted to a raster format. I used 30 x 30 m pixels to be consistent with the
+      size we have been using for our LandSat bands.</p>
+    <p>If you right-click on the raster maps and open their attribute tables, you'll see that the attribute tables have
+      both a numeric code and a text label in them, which makes them easy to interpret. To help you keep track of which
+      map is which, the label for land use is called "LU_2004" for the 2004 data, and "LU_2018" for the 2018 data. All
+      we need to do is to compare pixel to pixel between the two maps, and count up how often the land uses are the same
+      between the years, and how often they are different - this is called "cross tabulating".</p>
+    <p>Once we are done we will have a "transition matrix" that will look something like this (with only four of the
+      cover types shown to keep the example simple - these numbers are not the ones you will get from the actual map,
+      and are just for illustrative purposes):</p>
+    <p> </p>
+    <table style="width: 899px; height: 247px;" cols="7" cellspacing="0" border="3">
+      <colgroup width="85" span="7"></colgroup>
+      <tbody>
+        <tr>
+          <td height="16" align="LEFT"><br>
+          </td>
+          <td colspan="4" valign="MIDDLE" align="CENTER">Cover in 2018</td>
+          <td align="LEFT"><br>
+          </td>
+          <td align="LEFT"><br>
+          </td>
+        </tr>
+        <tr>
+          <td height="17" align="LEFT">Cover in 2004</td>
+          <td style="text-align: center;">Residential</td>
+          <td style="text-align: center;">Landscape open space</td>
+          <td style="text-align: center;">Water body</td>
+          <td style="text-align: center;">Agriculture</td>
+          <td align="LEFT"><br>
+          </td>
+          <td style="text-align: center;">Total for 2004</td>
+        </tr>
+        <tr>
+          <td height="16" align="LEFT">Residential</td>
+          <td sdval="900000" sdnum="1033;" align="RIGHT">900000</td>
+          <td sdval="0" sdnum="1033;" align="RIGHT">0</td>
+          <td sdval="0" sdnum="1033;" align="RIGHT">0</td>
+          <td sdval="0" sdnum="1033;" align="RIGHT">0</td>
+          <td align="LEFT"><br>
+          </td>
+          <td sdval="900000" sdnum="1033;" align="RIGHT">900000</td>
+        </tr>
+        <tr>
+          <td height="16" align="LEFT">Landscape open space</td>
+          <td sdval="1800" sdnum="1033;" align="RIGHT">1800</td>
+          <td sdval="2700000" sdnum="1033;" align="RIGHT">2700000</td>
+          <td sdval="9000" sdnum="1033;" align="RIGHT">9000</td>
+          <td sdval="18000" sdnum="1033;" align="RIGHT">18000</td>
+          <td align="LEFT"><br>
+          </td>
+          <td sdval="2728800" sdnum="1033;" align="RIGHT">2728800</td>
+        </tr>
+        <tr>
+          <td height="16" align="LEFT">Water body</td>
+          <td sdval="1800" sdnum="1033;" align="RIGHT">1800</td>
+          <td sdval="3600" sdnum="1033;" align="RIGHT">3600</td>
+          <td sdval="450000" sdnum="1033;" align="RIGHT">450000</td>
+          <td sdval="900" sdnum="1033;" align="RIGHT">900</td>
+          <td align="LEFT"><br>
+          </td>
+          <td sdval="456300" sdnum="1033;" align="RIGHT">456300</td>
+        </tr>
+        <tr>
+          <td height="16" align="LEFT">Agriculture</td>
+          <td sdval="0" sdnum="1033;" align="RIGHT">0</td>
+          <td sdval="0" sdnum="1033;" align="RIGHT">0</td>
+          <td sdval="0" sdnum="1033;" align="RIGHT">0</td>
+          <td sdval="81000" sdnum="1033;" align="RIGHT">81000</td>
+          <td align="LEFT"><br>
+          </td>
+          <td sdval="81000" sdnum="1033;" align="RIGHT">81000</td>
+        </tr>
+        <tr>
+          <td height="17" align="LEFT"><br>
+          </td>
+          <td align="LEFT"><br>
+          </td>
+          <td align="LEFT"><br>
+          </td>
+          <td align="LEFT"><br>
+          </td>
+          <td align="LEFT"><br>
+          </td>
+          <td align="LEFT"><br>
+          </td>
+          <td align="LEFT"><br>
+          </td>
+        </tr>
+        <tr>
+          <td height="16" align="LEFT">Total for 2018</td>
+          <td sdval="903600" sdnum="1033;" align="RIGHT">903600</td>
+          <td sdval="2703600" sdnum="1033;" align="RIGHT">2703600</td>
+          <td sdval="459000" sdnum="1033;" align="RIGHT">459000</td>
+          <td sdval="99900" sdnum="1033;" align="RIGHT">99900</td>
+          <td align="LEFT"><br>
+          </td>
+          <td style="text-align: right;">4166100<br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The cover type of a pixel in 2004 is indicated in the row labels, and the cover type of the same pixel in 2018 is
+      indicated in the column labels. The data are expressed as square meters. To interpret the table, pick a cover type
+      from 2004 in one of the rows, and read across the columns to see what the land cover has become in 2018. You'll
+      see that all of the 900,000 square meters of residential area in 2004 was still there in 2018, and none of it
+      became landscape open space, water bodies, or agriculture. There was a total of 2,728,800 square meters of
+      landscape open space in 2004, of which 2,700,000 were still landscape open space in 2018, but 1800 square meters
+      was converted to residential, and 18,000 square meters was converted to agriculture, and 9,000 square meters
+      became water bodies (presumably due to habitat restoration, or changes in reservoir level). Similarly, water body
+      area was still water body in 2018 (450,000 of 456,300 m<sup>2</sup>), but some was converted to residential (1,800
+      m<sup>2</sup>), some was converted to agriculture (900 m<sup>2</sup>), and some was converted to landscape open
+      space (3,600 m<sup>2</sup>, probably due to ecological succession, or low water level in reservoirs). All of the
+      agriculture from 2004 was still present in 2018.</p>
+    <p>We will calculate a table like this, using all 11 of the cover types in the cover type maps. ArcMap will give us
+      the cross-tabulation, and we can add totals in Excel.</p>
+    <p>1. <strong>Cross tabulate the maps</strong>. </p>
+    <p>First we will need to generate the cross-tabulation of the raster maps in ArcMap.</p>
+    <ul>
+      <li>
+        <p>Open the ArcToolbox, and navigate to "Spatial Analyst Tools" → "Zonal" → "Tabulate Area" - double-click to
+          start the tool.</p>
+      </li>
+      <li>
+        <p>Select lu_2004_rast as the "Input raster or feature zone data", and select "LU_2004" as the "Zone field".</p>
+      </li>
+      <li>
+        <p>Specify lu_2018_rast as the "Input raster or feature class data", and "LU_2018" as the "Class field".</p>
+      </li>
+      <li>
+        <p>Put the output table in your monitoring.mdb, and call it "trans_rast".</p>
+      </li>
+      <li>
+        <p>The processing cell size will come from the lu_2004_rast layer (the first one you selected) - the tool will
+          read the size of the pixel and use that to convert the counts of pixels into areas. The pixels are 30 x 30 m,
+          but the units of measure used by the layer is feet, so the numbers we get in the table will be in square feet.
+          How would you know this if I didn't tell you? See below...</p>
+      </li>
+      <li>
+        <p>Click "OK" to run.</p>
+      </li>
+    </ul>
+    <p>When the analysis is complete you'll have trans_rast listed as a table in your Table of Contents. Note that it
+      also sets the Table of Contents to "List by Source" mode, which shows the location of the files in your TOC,
+      complete with drive letters and paths. You can't drag files around to re-order them in this mode - if you need to
+      re-arrange files, you would need to switch back to "List by Drawing Order" mode, which you select by clicking on
+      the left-most icon just beneath the "Table Of Contents" window title bar. Keep the TOC in "List by Source" mode
+      for now, though, so we can export the table to an Excel file.</p>
+    <p>**How can you know the units used for trans_rast? The units are read from lu_2004_rast, and you can see what they
+      are by right-clicking on that layer, opening its "Properties", and switching to "Source" - if you scroll down to
+      the "Raster Information" section it gives the size of the cells, and the "XY Coordinate System" section lists the
+      "Linear unit" as being "Foot_US" - so, each pixel is 98.4252 feet x 98.4252 feet, which is the same as 30 m x 30
+      m. Why, you ask, did I use a spatial reference that uses feet when I wanted to define pixels in nice, round metric
+      units? The answer is, I wasn't thinking straight. But, having made the mistake it seemed a good opportunity to
+      show you how to look up the sizes of pixels in a raster map, so teachable moment and all that.**</p>
+    <p>2. <strong>Export the file</strong><strong>, open it in Excel</strong>. If you right-click and open the
+      trans_rast table you just created (double-clicking will not work!), you will see it has a column for "LU_2004",
+      which gives the cover type in 2004. The columns to the right are labeled "AGRICULTURE", "BEACH", etc., which are
+      the category names for the 2018 file - since they were converted to column names, which cannot have spaces, the
+      spaces are replaced with underscores, but otherwise they will match the categories from the 2004 file, and will be
+      in the same alphabetical order. </p>
+    <p>We want to get these data into Excel so we can do some data summary, like so:</p>
+    <ul>
+      <li>Start up Excel from within CougarApps, with a blank worksheet. Double click on the "Sheet1" label and change
+        it to "Raster".</li>
+      <li>Switch back to ArcMap, and open the trans_rast table. Click on the drop-down menu in the upper left corner of
+        the table, and choose "Select all".</li>
+      <li>Next, position your mouse over the gray boxes to the left of the cells in the table and right-click, then
+        select "Copy Selected". This is tricky - you must be in the gray boxes to the left of the cells, and you must
+        right-click.</li>
+      <li>Now, switch to Excel and paste into cell A1. If you don't get the complete table you didn't do the select all
+        / copy selected step correctly, go back and do it again.</li>
+    </ul>
+    <span style="font-family: &quot;Open Sans&quot;,sans-serif;">You should now have the table in Excel.</span><br>
+    <ul>
+    </ul>
+    <p>3.<strong> Calculate totals, convert to hectares, and calculate percents of rows</strong>. First we'll calculate
+      totals for 2004.</p>
+    <ul>
+      <li>In cell O1 (that's capital letter O with a 1 after it) type "2004 Total", and in cell O2 type =sum(c2:m2), and
+        hit ENTER. You now have the total area in square feet of agriculture in 2004 in the watershed.</li>
+      <li>Select the cell in O2 (by left-clicking just once - don't double-click), right-click and select "Copy". Then
+        select the rest of the cells, O2:O12, right-click and paste. You now have the areas of each of the cover types
+        in 2004. </li>
+    </ul>
+    <p>Next we'll calculate the 2018 totals:</p>
+    <ul>
+      <li>In row B14 type "2018 Total", and in cell C14 type =sum(c2:c12), and ENTER. You now have the total area of
+        agriculture in 2018. </li>
+      <li>Copy and paste this cell to the rest of the columns, D14 to M14, to get the totals for the rest of the cover
+        types.</li>
+    </ul>
+    <p>Now, we want to convert the numbers from square feet to hectares - the numbers are huge as square feet and
+      difficult to interpret (they are also not metric units, which is not very scientific). There are 107639 square
+      feet in a hectare, so if we divide the numbers in square feet by 107639 we will get area in hectares.</p>
+    <ul>
+      <li>First we'll get the layout of the table copied to a new set of cells below - select cells A1 to M12, copy, and
+        paste to A18 - this will put all the row and column labels in place, and we will write over the data values with
+        our hectares.</li>
+      <li>In A16 enter the label "Areas in hectares"</li>
+      <li>In cell C19 (where the agriculture data are) type =c2/107639 and hit ENTER - this gives you the data from cell
+        C2 in hectares.</li>
+      <li>Select (by left-clicking ONCE) cell C19, copy it, select C19 to M29 and paste it. You should now have the area
+        of land expressed in hectares, which is a better choice for such large areas. </li>
+    </ul>
+    <p>Now we will make one last version of the table that expresses the data as percentages of the row totals - since
+      the row totals are the total area of each cover type in 1990, the percentage of row total will tell us what
+      percentage of each land cover type in 2004 became each of the cover types in 2018.</p>
+    <ul>
+      <li>Copy the cells in A18 through M29 and paste them to A33 (you don't need to select the entire destination
+        range, just the upper-left cell will do).</li>
+      <li>Enter "Percent of row" in cell A31</li>
+      <li>In cell C34 enter the formula =c2/$o2 and hit ENTER - this is the proportion of agricultural land in 2004 that
+        was still agricultural in 2018 - you should see 0.726.. as the answer.</li>
+      <li>Select C34 (select, by clicking once!), copy it, and paste it to the entire range C34:M44 - since there is a
+        dollar sign before the column letter for the row total, $O, the same column is used for each calculation, but
+        the row updates as you move down the list of 2004 cover types. This should give you the proportion of row totals
+        for every cover type.</li>
+      <li>To convert these to a percentage representation, click on the % button in the "Number" format block of the
+        "Home" tab. Just below the % button is an "Increase Decimal" button, which you can click once to give you a
+        single decimal place for your percent.</li>
+    </ul>
+    <p>If all went well, you'll see that 72.6% of agriculture in 2004 was still agriculture in 2018, and 45.7% of beach
+      was still in that cover type in 2018.<br>
+    </p>
+    <p>5. <strong>Check for tell-ta</strong><strong>le signs of error</strong>. There are two basic reasons for a
+      transition from one cover type to another in this table: 1) a conversion from one type to another in the real
+      world, or 2) an error in the 2004 and/or 2018 cover type maps. Some types of errors won't be apparent (e.g. a
+      change from water body to landscape open space could be due to ecological succession, or it could be a mistake),
+      but some types of transitions are so unlikely they are almost certainly an error. For example, residential or
+      commercial areas in 2004 are very unlikely to become landscape open space in 2018. </p>
+    <p>6. <strong>Save the data</strong>. Save your Excel spreadsheet - call it "transition".&nbsp; This is the
+      transition matrix for the land use changes that you'll use in your report.</p>
+    <h2>Comparing land use polygons between 2004 and 2018.</h2>
+    <p>Now we will see how to use vector polygons to do change detection work. Back to ArcMap...</p>
+    <p>1. <strong>Load landuse_2004_simple.shp and landuse_2018_simple.shp</strong>. These are land cover vector maps,
+      like the ones we used in the first lab, except that they come from different years and I have simplified their
+      cover type categories.</p>
+    <p>2. <strong>Do a spatial overlay (union) of the two shapefiles</strong>. The <strong>union</strong> operation
+      overlays the features in both of the shapefiles, makes new polygons from the overlapping polygon outlines, and
+      makes an attribute table for the resulting shapefile that has all of the columns from both of the attribute tables
+      from the original files. Because of this you will end up with an attribute table that tells you what the land use
+      was in 2004, and what it is in 2018. The area of each new polygon is calculated as well, so we can get a
+      transition matrix by cross-tabulating the cover types, and adding the areas together.</p>
+    <p>To do the overlay:</p>
+    <ul>
+      <li>
+        <p>From the ArcMap menu, select "Geoprocessing" → "Union". </p>
+      </li>
+      <li>
+        <p>&nbsp;Drop down the "Input features" box, and first select landuse_2004_simple, then do it again and select
+          landuse_2018_simple.</p>
+      </li>
+      <li>
+        <p>&nbsp;Set the "Output Feature Class" to output to monitoring.mdb, and call the new layer "landuse_union". </p>
+      </li>
+      <li>
+        <p>Keep all other settings at default values, and click "OK" to run it.</p>
+      </li>
+    </ul>
+    <p>This might take a few minutes - as long as the "Union..." progress indicator is running at the bottom of the map
+      window be patient, it's still working.</p>
+    <p>Once it's done, you can zoom in to one of the areas with lots of lines, and turn the landuse_union layer on and
+      off to see how it compares with the other two layers. You should see that all of the lines from both
+      landuse_2004_simple and landuse_2018_simple are combined in landuse_union.</p>
+    <p>3. <strong>Export the attribute table</strong>. Right-click and open landuse_union's attribute table. You'll see
+      that there is an FID for each of the layers you overlaid, and a column identifying the land use in 2004 and
+      another for 2018 as well. If you scroll to the right you'll see there is also a Shape_Length and Shape_Area
+      column, which give the perimeter and surface area for each polygon, respectively. The units are taken from the
+      data set - since the units used in these layers is feet, the perimeter is in linear feet and area is in square
+      feet.</p>
+    <p>The units are a bad choice, because the numbers are huge and hard to compare. We should also pick something
+      metric, because this is Science! To get units in hectares, do the following:</p>
+    <ul>
+      <li>
+        <p> Drop down the "Table Options" menu (upper left corner of the Table window), and select "Add field".&nbsp;</p>
+      </li>
+      <li>
+        <p>In the "Add Field" window, use "Area_ha" as the name, and select the "Type" as "Double". We will be
+          calculating an area in hectares (ha), and we want to use double-precision floating point numbers so that small
+          polygons don't get assigned an area of 0. </p>
+      </li>
+      <li>
+        <p>Click "OK" to create the new field (column in the table). You will now have a blank column, with &lt;Null&gt;
+          appearing in all of the rows. </p>
+      </li>
+      <li>
+        <p>Right-click on the column label, Area_ha, and select "Calculate geometry". You will be warned that you are
+          going to do something that can't be undone, which is fine - say "Yes". In the "Calculate Geometry" window,
+          leave the property set to Area, but change the Units to hectares. click "OK". You will again be warned that
+          you can't undo the calculation, which is still fine - click "Yes".</p>
+      </li>
+    </ul>
+    <p>You should now have area in hectares.</p>
+    <p>Now that you have the area in hectares column we can export the table to an Excel file.</p>
+    <ul>
+      <li>Open the ArcToolbox, and find "Conversion Tools" → "Excel" → "Table to Excel"</li>
+      <li>Drop down the "Input Table" list and select "landuse_union" - this will cause the attribute table for
+        landuse_union to be used</li>
+      <li>For the "Output Excel File" put the file onto your S: drive in the same place as the "transition.xlsx" file
+        you made for your raster analysis - call it "landuse_union.xls"</li>
+      <li>Click "OK" to run the export</li>
+    </ul>
+    <span style="font-family: &quot;Open Sans&quot;,sans-serif;">We can now do the data summary in Excel.</span><br>
+    <p>4. <strong>Open the exported table in Excel, and make the transition matrix</strong>. Switch back to Excel, and
+      open the transition.xlsx file you made earlier (if it is not already open). We are now going to get a copy of the
+      data from landuse_union.xls into this file:</p>
+    <ul>
+      <li>Locate and open landuse_union.xls (keep transitions.xlsx open)</li>
+      <li>In the landuse_union.xls file there is one worksheet, with a tab labeled landuse_union - right-clicking on the
+        landuse_union tab and selecting "Move or copy..."</li>
+      <li>Select "transition.xlsx" from the "To book" list, select "Move to end", and check "Create a copy"</li>
+      <li>Click "OK", and you will have a landuse_union tab in your transition.xlsx file</li>
+    </ul>
+    <p>You can close landuse_union.xls now, you have a copy of the data in transition.xlsx.</p>
+    <ul>
+    </ul>
+    <p>Now to make the transition matrix for the vector data we will use a PivotTable. If you haven't used PivotTables
+      in Excel you're in for a treat - they make your life better.</p>
+    <ul>
+      <li> Select a cell inside of the landuse_union data (any single cell with a data value is fine, doesn't matter
+        which one).</li>
+      <li>Switch to the "Insert" tab, and click on "PivotTable". </li>
+      <ul>
+        <li>This will pop up a "Create Pivot Table" window, asking which data range to use, and where to put the new
+          table you're creating. Excel will find the data range, and "New worksheet" is fine, so click OK.</li>
+      </ul>
+      <li>To build the table you drag names of columns out of the list at the top of the Pivot Table Fields box into the
+        row, column, or values boxes below. Specifically:</li>
+      <ul>
+        <li>Drag "lu_2004" out of the "PivotTable Fields" list, and drop it into the "ROWS" box below - each row in the
+          table will be a cover type from 2004</li>
+        <li>Drag "lu_2018" into the "COLUMNS" box. Each column will be the land cover found in 2018.</li>
+        <li>Finally, drag "Area_ha" into the "VALUES" box. Be default any column dragged into the VALUES box is summed,
+          which is what we want here - this will give us the total area, in hectares, of all the combinations of land
+          cover in 2004 and land cover in 2018.</li>
+      </ul>
+    </ul>
+    <p>You'll see that this creates a table in which the land use in 2004 is in the rows, the land use in 2018 is in the
+      columns, and the total area of land in each combination of 2004 and 2018 land uses is in the body of the table.
+      This is your transition matrix - the row and column labels sort automatically, and the units are already in
+      hectares.</p>
+    <p>The tab is called "Sheet2", which isn't very descriptive - double-click on it and change it to "Vector", since
+      this is the transition matrix for the vector maps.</p>
+    <p> </p>
+    <p>The table you have is using Area_ha, so the units are already hectares and there's no need to do a conversion.
+      Pivot Tables automatically give row and column totals, so there's no need to do those calculations either.</p>
+    <p>There are a small number of blanks for one year or the other - small differences in where the coast was drawn are
+      responsible for this, because there is a little bit of area from 2004 that doesn't have any land use polygons to
+      match it in 2018, and vice versa. We can hide these by dropping down the menus next to "Column Labels" and "Row
+      Labels" and un-checking (blank)</p>
+    <p>To get the data expressed as a percent of row total we just need to change the display settings for the Area_ha
+      field:</p>
+    <ul>
+      <li>Drop down the "Sum of area_ha" menu from the "VALUES" box, and choose "Value field settings..."</li>
+      <li>You'll see in the "Value Field Settings" window that the "Summarize Values By" tab is showing - switch to the
+        "Show Values As" tab</li>
+      <li>In the "Show Values As" tab, drop down "Show values as" and change it from "No Calculation" to "% of Row
+        total", and click "OK"</li>
+    </ul>
+    <p>You can go back and forth between hectares and percent of row totals as needed. To view both at once you can copy
+      the pivot table and paste it to cells below the current one:</p>
+    <ul>
+      <li>Copy the pivot table - select A3:M16, and copy it</li>
+      <li>Paste the cells to A22 (just the upper-left cell needs to be selected)</li>
+      <li>Enter the label "Percent of row" in cell A20</li>
+    </ul>
+    <p>You'll see that the values are similar to, but not identical to, the raster map version of these data. Converting
+      between raster and vector maps is not perfect, and some amount of change in area can occur (how much depends on
+      the size of pixels used - the distortion is greater the bigger the pixel size).</p>
+    <h2>All done</h2>
+    <p>Save your transition matrix Excel spreadsheet, and a map file for today.</p>
+  </body>
+</html>

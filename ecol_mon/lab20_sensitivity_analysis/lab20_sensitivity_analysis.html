@@ -1,0 +1,373 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Lab 20 - Sensitivity analysis for matrix models</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <h1>Sensitivity and elasticity analysis</h1>
+    <p>One of the advantages of using demographic models to estimate population growth is that we can evaluate which
+      demographic rate has the biggest effect on population growth. This is extremely useful information, because
+      different environmental conditions can affect some demographic rates and not others. If we know which demographic
+      rate has the biggest effect on population growth we can direct management interventions to efforts that change
+      that rate. We use <strong>sensitivity analysis</strong> or <strong>elasticity analysis</strong> to help us
+      decide how best to intervene.</p>
+    <p>Both sensitivity and elasticity refer to the amount of change we can expect in growth rate when we change one of
+      the demographic rates. Sensitivity involves changing the demographic rate by a small, fixed amount and observing
+      the change in growth rate. Sensitivity calculated analytically, the way we will do it today, is an instantaneous
+      measure - the slope of a tangent line at a point.</p>
+    <p>Comparing sensitivities can be misleading because of differences in scale for survival and reproductive rates - a
+      change of 0.01 is a much larger change for a survival probability (which has to fall between 0 and 1) than for a
+      fecundity (which can be any positive value, and for some species may be in the tens of thousands). Elasticity
+      measures the change in λ for a constant percentage change in parameter values, which standardizes for differences
+      in units and allows us to make valid comparisons between survival and fecundity.</p>
+    <h2>Sensitivity and elasticity for the Mojave Raven model</h2>
+    <p>We will use the raven population models you made in the previous lab for this - open up your matrix model
+      spreadsheet from last time, and switch to the "Urban" tab, where the Lefkovitch matrix for birds living in town is
+      found.</p>
+    <table width="100%" border="0">
+      <tbody>
+        <tr>
+          <td><img style="width: 448px; height: 171px;" alt="Raven model" src="raven_diagram.png"></td>
+          <td><br>
+          </td>
+          <td>
+            <p>If you recall, the life history diagram we used to determine which survival probabilities (s) and
+              fecundity (F) entries we needed to include in our Lefkovitch matrix looked like this. Recall that the
+              circles are the life stages, and arrows connecting circles are transitions from one stage to another. Each
+              arrow has a demographic rate associated with it - arrows that form loops that start and end with the same
+              stage are survival probabilities for individuals who remain in the same stage.</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <table class="tableLarge">
+              <tbody>
+                <tr>
+                  <th><br>
+                  </th>
+                  <th style="text-align: center;" colspan="4" rowspan="1"><em>From</em>:</th>
+                </tr>
+                <tr>
+                  <th><em>To:</em></th>
+                  <th style="text-align: center;">HY</th>
+                  <th style="text-align: center; height: 19px;">J</th>
+                  <th style="text-align: center;">NB</th>
+                  <th style="text-align: center;">BR</th>
+                </tr>
+                <tr>
+                  <th>HY</th>
+                  <td style="text-align: center;"><br>
+                  </td>
+                  <td style="text-align: center;"><br>
+                  </td>
+                  <td style="text-align: center;"><br>
+                  </td>
+                  <td style="text-align: center;">F<sub>A</sub></td>
+                </tr>
+                <tr>
+                  <th>J</th>
+                  <td style="text-align: center;">S<sub>HY</sub></td>
+                  <td style="text-align: center;"><br>
+                  </td>
+                  <td style="text-align: center;"><br>
+                  </td>
+                  <td style="text-align: center;"><br>
+                  </td>
+                </tr>
+                <tr>
+                  <th>NB</th>
+                  <td style="text-align: center;"><br>
+                  </td>
+                  <td style="text-align: center;">S<sub>J</sub></td>
+                  <td style="text-align: center;">S<sub>NB</sub></td>
+                  <td style="text-align: center;">S<sub>BRNB</sub></td>
+                </tr>
+                <tr>
+                  <th>BR</th>
+                  <td style="text-align: center;"><br>
+                  </td>
+                  <td style="text-align: center;"><br>
+                  </td>
+                  <td style="text-align: center;">S<sub>NBBR</sub></td>
+                  <td style="text-align: center;">S<sub>BR</sub></td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+          <td><br>
+          </td>
+          <td>
+            <p>Based on the diagram, we laid out a matrix of demographic rates like so.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>We estimated population growth rate in the last lab - you should have it in cell B8 of your Urban worksheet. We
+      want to know how much we can expect it to change if we changed any single one of these demographic rates. We will
+      first calculate the sensitivities, and then will calculate elasticities for each of the demographic rates we used.</p>
+    <p>1. <strong>Lay out a table for sensitivities and elasticities for all parameters.</strong> In cell G11 enter
+      "Parameter", and then enter the following labels for the parameters in the rows below G11: </p>
+    <ul>
+      <li>SHY</li>
+      <li>SJ</li>
+      <li>SNB</li>
+      <li>SNBBR</li>
+      <li>SBR</li>
+      <li>FA</li>
+    </ul>
+    <p>We'll leave out SBRNB because it's 0 for ravens in the urban area. In cell H11 enter "Sensitivity", and in cell
+      i11 enter "Elasticity". Your layout should look like this:</p>
+    <img src="sens_elast_layout.png" alt="Layout">
+    <p>2. <strong>Calculate the reproductive values for the urban raven matrix</strong>. The sensitivities require us
+      to have both a stable age distribution (w, which is the "right eigenvector" of the matrix model) and the
+      reproductive values (v. which is the "left eigenvector" of the matrix model, which we will also put on a
+      proportional scale). Reproductive value is a measure of the relative contribution that each class makes to the
+      population. The method we use to calculate reproductive value will be very similar to the method that we used to
+      calculate the stable age distribution - the only difference is that we will lay out the values in rows below the
+      matrix rather than columns to the right of it.</p>
+    <p>Recall that Lw = λw (that is, multiplying the stable age distribution, w, by either the Lefkovich matrix or by λ
+      gives us the same result). It is also true that vL = vλ, so we can do these multiplications, sum their squared
+      differences, and then have Solver find values for v that make the squared differences equal zero. Note that I
+      reversed the order here - it's vL, not Lv - because in matrix multiplication the order matters.</p>
+    <ul>
+      <li>In sheet Urban, in cell A17 enter "Repro value (v)". While you're at it, change the label in G2 to "Stable
+        stage (w)", since we'll be referring to the stable age distribution as the w vector below.</li>
+      <li>Enter 0.4, 0.3, 0.2, 0.1 in B17 through E17 - these are the initial guesses for the elements of this
+        eigenvector, which Solver will change to estimate the actual values.</li>
+      <li>In cell A19 enter "vL". Select rows B19 through E19, and without changing the selection type
+        =mmult(b17:e17,b3:e6), and CTRL+SHIFT+ENTER to make it an array formula. This matrix multiplication is like the
+        one we did in column H, except that we are multiplying v (which has one row) by L (which has four columns) so
+        our output range had to have one row and four columns.</li>
+      <li>In cell A20 enter "v Lambda", and in cell B20 enter =$b8 * b17. Copy and paste this to the rest of the
+        columns, C20 through E20. Note that the order actually doesn't matter here - multiplying a vector by λ (a
+        scalar) means multiplying each of the elements in v by λ, and each of these are just normal multiplications for
+        which order is not important. </li>
+      <li>Now we need a sums of squared differences cell that we can have Solver set to 0 for us. In cell A22 enter
+        "SS", and in B22 enter =sum((b19:e19-b20:e20)^2), and CTRL+SHIFT+ENTER to make it an array formula.</li>
+      <li>We would also like to make the reproductive values sum to 1, like the stable age distribution values do. In
+        cell D22 enter "Sum", and in E22 sum cells B17 to E17. The sum should already be 1, because of the starting
+        values you're using.</li>
+      <li>Start Solver, and use the settings:</li>
+      <ul>
+        <li>Make the objective cell B22, and have Solver set it to 0</li>
+        <li>Use cells B17 through E17 as the cells to change</li>
+        <li>Add a constraint, and set E22 to 1.</li>
+        <li>Make sure the box is checked to make unconstrained variables non-negative (we want these to be proportions,
+          so they have to be positive).</li>
+        <li>Solve.</li>
+      </ul>
+    </ul>
+    <ul>
+    </ul>
+    <p>You should now have reproductive value estimates of 0.055, 0.144, 0.185, and 0.614. We just need these to
+      calculate sensitivity and elasticity, but they are interesting in their own right - according to these
+      reproductive values, breeding adults make the largest contribution to the population's persistence, and hatch year
+      birds make the least. The other non-breeding classes (juveniles and non-breeding adults) contribute about equally,
+      and much less than breeding adults do.</p>
+    <p></p>
+    <p>3. <strong>Calculate sensitivities</strong>. Sensitivity is calculated for each parameter by multiplying the
+      correct reproductive value by the correct stable age value, and then dividing by the matrix product of the
+      reproductive values and the stable age values. Let's get the matrix product first - we will multiply v by w, and
+      since v has one row and w has one column the output will be a single cell.</p>
+    <p>In cell G20 enter "vw", and in G21 enter =mmult(b17:e17, g3:g6), and CTRL+SHIFT+ENTER to make it an array
+      formula. You should get a value of 0.30101 for vw.</p>
+    <p>Now, let's calculate the sensitivity for SHY - notice that this survival probability is in the <em>second row</em>
+      of the <em>first column</em> of the Lefkovitch matrix of demographic rates. To calculate the sensitivity you need
+      to multiply the <em>reproductive value</em> that matches the row number for the parameter by the <em>stable age</em>
+      value that matches the column number. So, we need to multiply the second reproductive value (in cell C17) by the
+      first stable age value (in cell G3), and then divide by the vw cell you just calculated (in cell G21). That is, in
+      cell H12 enter =c17*g3/g21.</p>
+    <p>Now repeat for each of the parameters. The formulas are:</p>
+    <ul>
+      <li>For SJ in cell H13 use =d17*g4/g21</li>
+      <li>For SNB in cell H14 use =d17*g5/g21</li>
+      <li>For SNBBR in cell G15 use =e17*g5/g21</li>
+      <li>For SBR in cell G16 use =e17*g6/g21</li>
+      <li>For FA in cell G17 use =b17*g6/g21</li>
+    </ul>
+    <p>4. <strong>Calculate the elasticities</strong>. Elasticities are calculated from the sensitivities - you just
+      need to multiply the sensitivities by the demographic rates they pertain to, and then divide by lambda.</p>
+    <ul>
+      <li>In cell i12 enter the formula =b4*h12/b8</li>
+      <li>In cell i13 enter the formula =c5*h13/b8</li>
+      <li>In cell i14 enter the formula =d5*h14/b8</li>
+      <li>In cell i15 enter the formula =d6*h15/b8</li>
+      <li>In cell i16 enter the formula =e6*h16/b8</li>
+      <li>In cell i17 enter the formula =e3*h17/b8</li>
+    </ul>
+    <p>You should have a table that looks like this:</p>
+    <img src="sens_elast_urban.png" alt="Sensitivity and elasticity for urban ravens">
+    <p>Now that you have the sensitivities and elasticities side by side it's easier to compare them. You'll see that
+      although adult survival is clearly important whether you use sensitivity or elasticity, sensitivity overstate the
+      importance of parameters that are small numbers (like SNBBR), and the importance of parameters that are large
+      numbers (like fecundity would be in a species with very high reproductive output) will often be understated (that
+      isn't the case here, because the fecundity is a smaller number than adult survival, but usually the importance of
+      fecundity is understated using sensitivity). This is the reason that elasticities are the preferred measure of
+      evaluating the relative importance of parameters in a matrix population model.</p>
+    <p>Note that we did something similar to elasticity analysis with our life table models - we reduced each
+      demographic rate by 10% and recorded how λ changed in response. To do an actual elasticity analysis we would
+      divide the proportional change in λ by the proportional change in the demographic rate - if we had done that with
+      our life table model we would have gotten elasticities of: </p>
+    <p> </p>
+    <table class="tableLarge">
+      <tbody>
+        <tr>
+          <th>Demographic rate</th>
+          <th>Elasticity</th>
+        </tr>
+        <tr>
+          <td>First year s</td>
+          <td>0.153</td>
+        </tr>
+        <tr>
+          <td>Second year s</td>
+          <td>0.153</td>
+        </tr>
+        <tr>
+          <td>Adult s</td>
+          <td>0.678</td>
+        </tr>
+        <tr>
+          <td>Repro. young</td>
+          <td>0.064</td>
+        </tr>
+        <tr>
+          <td>Repro exper</td>
+          <td>0.097</td>
+        </tr>
+        <tr>
+          <td>Repro old</td>
+          <td>0.005</td>
+        </tr>
+      </tbody>
+    </table>
+    <p> You can see that even though we added a different class for non-breeding adults in our matrix model, and did not
+      model reproductive senescence in older birds, the elasticities are very similar for the rates we used in both -
+      the elasticity for adult survival is 0.678 according to our life table, and is 0.688 calculated analytically for
+      our matrix model. The method we used for the life tables works reasonably well, but it is an approximation whereas
+      the calculations we did for the matrix model are analytical values, and are thus mathematically correct.</p>
+    <ul>
+    </ul>
+    <p> </p>
+    <p>5. <strong>Plot the elasticities</strong>. You can plot the elasticities by selecting the parameter names (G11
+      to G17) and the elasticities (i11 to i17) and then inserting a line chart (use the line chart with markers). Label
+      the x-axis "Parameter", and the y-axis "Elasticity".</p>
+    <p>Clearly, the most important parameter for the urban population is breeding adult survival.</p>
+    <p>6. <strong>Repeat for the desert birds</strong>. For comparison, repeat these steps for the desert birds - you
+      can copy and paste most of what you've done today from the urban sheet to to the desert sheet, and just update the
+      repro value estimates with Solver to get the desert bird elasticities:</p>
+    <ul>
+      <li>Copy and paste the reproductive value cells to the Desert sheet - copy A17 to E22 from Urban, and paste it to
+        the same cells in Desert.</li>
+      <li>Run Solver to get the reproductive values for Desert birds - set B22 to 0 by changing B17 to E17, with the
+        constraint that E22 is equal to 1.</li>
+      <li>Copy and paste the sensitivity/elasticity calculations from the Urban to the Desert sheet - copy G11 to i21
+        from Urban and paste it in the same cells in Desert.</li>
+      <li>We have one more parameter for the desert birds, SBRNB, that we need to calculate</li>
+      <ul>
+        <li>Enter "SBRNB" into G18</li>
+        <li>In H18 enter =g6*d17/g21</li>
+        <li>To get the elasticity for SBRNB, in i18 enter =e5*h18/b8</li>
+      </ul>
+    </ul>
+    <p>Once these changes are complete, all of the elasticity calculations updated to reflect the desert raven
+      demographic rates - they should look like this:</p>
+    <img src="sens_elast_desert.png" alt="Sensitivity and elasticity for desert ravens">
+    <p>Plot the elasticities for desert birds - you'll see that allowing breeders to become non-breeders makes survival
+      of non-breeders as important as survival of breeders for the Desert population.</p>
+    <h2>Evaluating management alternatives</h2>
+    <p>So, cool, we have bunches of numbers to look at, what might we use them for? One practical reason to calculate
+      sensitivity and elasticity is to help us determine which demographic parameter to target for intervention.</p>
+    <p>For example, imagine that ravens in the Mojave desert were an endangered species that was rapidly declining
+      (rather than a conservation problem that we would like to reduce), and we wanted to stabilize the population. What
+      should we do?</p>
+    <p>If we didn't have the elasticity numbers, we might conclude that the biggest problem is that reproduction is low
+      in the desert, because fecundity for desert birds is only 60% of the fecundity of urban birds, whereas breeding
+      adult survival in the desert is (0.7+0.1)/0.96 = 0.833, or 83% of the urban survival rate. Non-breeding adult
+      survival is the same in the desert as in the urban population, so we wouldn't expect survival of non-breeders to
+      be a problem to solve at all.</p>
+    <p>But we do have elasticities to look at, and they tell a very different story. The elasticities indicate that
+      variation in adult survival has much more effect on population growth rate than fecundity does. So, even though
+      adult survival isn't as depressed in the desert population as reproduction is, we would still expect to have an
+      easier time stabilizing population growth if we increased adult survival than if we increased fecundity.</p>
+    <p>The elasticities tell us which demographic rate to expect to give us the best population growth bang for our
+      management buck, they don't tell us how much we would need to improve the demographic rates to stabilize the
+      population. We can evaluate this question by increasing each parameter one at a time until lambda equals 1.</p>
+    <p>7. <strong>Make a table of demographic rates for your results</strong>. Switch to the Desert sheet - we'll focus
+      on the Desert birds, as they are the ones with the lowest growth rate. </p>
+    <p>Copy the list of parameters in G11 through G18, and paste it into cell G25. In cell G23 enter "Parameter values
+      that stabilize the population".</p>
+    <p>In cell H25 enter "Observed", and in i25 enter "Value that stabilizes pop".</p>
+    <p>8. <strong>Copy the values from the matrix of demographic rates into the Observed column of your table</strong>.
+      We just need to record the rates from the matrix, and they are all numbers so it's a simple copy and paste. Just
+      make sure they go in the right locations (see the matrix with labels for each demographic rate, above, to help
+      you) - like this:</p>
+    <img src="stabilize_layout.png" alt="Values that stabilize layout">
+    <p>9. <strong>Record a copy of the actual growth rate for the desert population</strong>. In cell D8 enter the
+      label "Obs. lambda", and then copy lambda from cell B8 and paste it to E8 - we are about to have Solver set the
+      value for lambda in B8 to 1, so we need a copy that records the actual growth rate estimate.</p>
+    <p>10. <strong>Find demographic rates that stabilize the population</strong>. When we initially estimated growth
+      rate, we used the actual, observed demographic rates and had Solver vary lambda in cell B8 until the determinant
+      of (L-λI) equaled 0. Now, we will instead set lambda to 1, and then have Solver find the value for each
+      demographic rate that make the determinant equal 0. This will give us the value of the demographic rate needed to
+      stabilize the population.</p>
+    <ul>
+      <li>Enter 1 in cell D8 - this sets lambda to 1.</li>
+      <li>Start Solver, and tell it to set the determinant in B15 to 0 by changing B4, which is hatch year survival.</li>
+      <li>Copy Solver's hatch year survival solution and paste it into the "value that stabilizes" column, cell i26.</li>
+      <li>To re-set the hatch year survival to its observed value, copy cell H26 and paste it into cell B4.</li>
+    </ul>
+    <p>Like so:</p>
+    <video alt="Needed shy" controls="controls"><source src="shy_needed.mp4" type="video/mp4"></video>
+    <p>Repeat this process for each of the demographic rates. Make sure to record each value that stabilizes the
+      population, and make sure you re-set to original values before moving on to the next demographic rate. You should
+      get values that look like this:</p>
+    <p><img src="demog_needed_to_stabilize.png" alt="Rates needed to stabilize">'</p>
+    <p>A few things to notice:</p>
+    <ul>
+      <li>First, several of the parameters would need to be increased to impossible values - probabilities over 1 are
+        not possible, so the hatch year or juvenile survival needed to stabilize the population is so large that it is
+        mathematically impossible to stabilize the population by improving these rates. </li>
+      <li>Second, although some increases are not mathematically impossible, they are not practical. It is
+        mathematically possible to increase fecundity over 1, but it isn't reasonable to produce a 10-fold increase in
+        fecundity. Since the number of chicks that would need to be fledged is greater than the average clutch size for
+        this species, the increase in fecundity needed is probably beyond reach.</li>
+      <li>Third, some parameters are not mathematically impossible individually, but they are in aggregate. Both of the
+        transition probabilities (SNBBR and SBRNB) are part of the survival probabilities for a class (non-breeding and
+        breeding ravens, respectively). The probability of survival for non-breeding ravens is SNB + SNBBR, so even
+        though a probability for SNBBR of 0.514 is not mathematically impossible, adding it to the SNB value of 0.7
+        gives a probability of non-breeding survival of 1.214, which is not possible.</li>
+      <li>Finally, as expected, the two adult survival probabilities need the least improvement, which is what we
+        expected given their large elasticities. In combination with the transition probabilities they still exceed 1,
+        however, so it isn't possible to stabilize the population by focusing on a single parameter.</li>
+    </ul>
+    <p>Even though no single parameter can stabilize population, if we increased both of the adult survival
+      probabilities at the same time we would need less improvement in each individually. Breeding adults leave their
+      territories after the breeding season and are free to move around the area looking for food, so it's likely that
+      steps we take to improve survival of nonbreeding adults would also help breeding adult survival as well. Making it
+      easier for the adults to feed their chicks could improve adult survival as well. We could model these sorts of
+      changes that affect more than one demographic rate by doing something like (you don't need to do these, just FYI):</p>
+    <ul>
+      <li>Setting NB survival to equal BR survival - we could use a formula for cell D5 of =E6, so that SNB is equal to
+        SBR. Then, having Solver change SBR would also change SNB, and the amount of change needed to stabilize the
+        population should be less.</li>
+      <li>Setting any of the demographic rates to be a multiple of another cell - for example, if you entered a 1 into
+        cell B24, and then made all of the demographic rates equal to their demographic rate multiplied by B24, then
+        changing B24 would change all of the rates (i.e. entering =0.2*B24 into B4, =0.8*B24 into C5, and so on). If you
+        entered a 1 into B24 the rates would all have their original values, but if Solver varied cell B24 every rate
+        would change in response. The required amount of increase in every rate at once would be less than the
+        improvement needed for any single rate.</li>
+    </ul>
+    <p>To wrap up, set the Desert matrix back to its original values - assuming you changed SBRNB last set it back to
+      0.1. Also set lambda in cell B8 back to its original value by copy/pasting the Obs. lambda into it. With the
+      matrix and lambda set to their correct values all of your elasticities will also have correct values so you can
+      interpret them for your report.</p>
+    <p>That's it - save for use in your report.</p>
+    <p></p>
+    <p>Once you've done the calculations in Excel, if you want to learn to do them in R, see <a href="sens_elast_in_r.html">this</a>.
+    </p>
+  </body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <title>Using R for sensitivity and elasticity analysis</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <h3>Sensitivity and elasticity in R</h3>
+    <p>Sensitivity and elasticity is much easier to calculate in R than in
+      Excel, with just a couple of commands. The only reason to prefer Excel is
+      that it's easier to see what's going on, so spotting errors is easier
+      (but, since it takes more steps it's probably easier to make mistakes in
+      the first place with Excel, so there you go). </p>
+    <p>We are going to calculate the "sensitivity matrix", which we will then
+      use to calculate the "elasticity matrix" in R. The sensitivity matrix can
+      be calculated as the "outer product" of the reproductive values (the left
+      eigenvector) and the stable age distribution (the right eigenvector) for
+      our demographic matrix. </p>
+    <p>1. <strong>Calculate the sensitivity matrix</strong>, using the
+      following commands (note that anything after a # symbol is a "comment"
+      that explains the command, but can be omitted):</p>
+    <p>&nbsp;<span style="font-family: monospace;">W &lt;- eigen(urban)$vectors</span>&nbsp;
+      </p>
+    <p>This command places the right eigenvectors into an object called W. Note
+      the assignment is from the right side to the left side here because the
+      arrow points to the left.</p>
+    <p> </p>
+    <p>&nbsp;<span style="font-family: monospace;">w &lt;- abs(Re(W[,1]))&nbsp;</span>
+    </p>
+    <p>This command converts the first right eigenvector to real numbers, and
+      take the absolute values. Assign to lowercase w (R is case sensitive,
+      watch cases). This is the eigenvector associated with the growth rate,
+      which can be used to calculate the stable age distribution. We didn't
+      actually have any imaginary numbers in our eigenvectors or eigenvalues,
+      but they are common and this formula will work even if you do have them.<br>
+    </p>
+    <p><span style="font-family: monospace;">V &lt;- solve(Conj(W))&nbsp;</span>
+    </p>
+    <p>This command finds the matrix inverse (solve) for the "conjugate" of
+      uppercase W (the conjugate is needed when working with complex numbers
+      that have both real and imaginary parts - common in matrix models, but not
+      here. We could omit it without affecting the results, since we don't have
+      imaginary numbers in our W matrix). The inverse is assigned to uppercase
+      V.<br>
+    </p>
+    <p><span style="font-family: monospace;">v &lt;- abs(Re(V[1,]))</span>&nbsp;
+    </p>
+    <p>This takes the absolute values of the real parts of the first row of the
+      inverse matrix, and assigns the result to lowercase v. This is the first
+      left eigenvector, which we could use to calculate the reproductive values.
+      These aren't on a proportional scale, but that's okay for calculation of
+      sensitivities.<br>
+    </p>
+    <p><span style="font-family: monospace;">s &lt;- v%o%w</span> &nbsp; </p>
+    <p>This command calculates the "outer product" of v and w. This is a matrix
+      multiplication in which the first element of v is multiplied by each
+      element of w to create the first row, the second element of v is
+      multiplied by each element of w for the second row, etc. The outer product
+      of v and w is assigned to s, which is the sensitivity matrix.</p>
+    <p>Note that we got sensitivities by multiplying the left by the right
+      eigenvector, but when we used Excel we also had to divide by the matrix
+      product of vw, which we didn't do here. The reason is that R's approach to
+      obtaining v and w scales them so that the matrix product of v and w is 1,
+      which makes the final division step unnecessary.</p>
+    <p>We can now set the sensitivities to 0 for any demographic rate that's
+      zero in urban:<br>
+    </p>
+    <p><span style="font-family: monospace;">s[urban == 0] &lt;- 0&nbsp;</span>
+    </p>
+    <p>We don't estimate sensitivity to parameters that are equal to 0, so this
+      command replace the elements in the sensitivity elements with 0 if the
+      demographic rate is 0 in urban.</p>
+    <p>If you type s you should see the sensitivities match what you calculated
+      in Excel.</p>
+    <p>2. <strong>Look at the numbers</strong>. Type s at the command prompt to
+      see the values. Take a look at which parameters have the biggest
+      sensitivities - you'll see that every non-zero parameter in urban has a
+      non-zero sensitivity.</p>
+    <p>3. <strong>Calculate elasticity</strong>. We can calculate the
+      elasticities by multiplying each sensitivity by the demographic rate
+      divided by the growth rate.</p>
+    <p>Extract the growth rate and assign it to object lambda with:</p>
+    <p><span style="font-family: monospace;">eigen(urban)$values[1] -&gt; lambda</span></p>
+    <p>Divide the demographic rates in urban by lambda, and assign the result to
+      urban.lambda:</p>
+    <p><span style="font-family: monospace;">urban/lambda -&gt; urban.lambda</span></p>
+    <p>Finally, multiply the sensitivities by urban.lambda and assign to object
+      urban.elast with:</p>
+    <p><span style="font-family: monospace;">s * urban.lambda -&gt; urban.elast</span></p>
+    <p>Note that this seems as though it shouldn't work, because it looks like a
+      matrix multiplication (we are, after all, multiplying a matrix (s) by
+      another matrix (urban.lambda)). But, in R there is a difference between
+      multiplying one matrix by another (which is done by multiplying all the
+      matching elements) and doing a matrix multiplication (which is the matrix
+      multiplication we learned about in lecture - multiply across columns of
+      the left and down columns of the right, and sum the products). In R a
+      matrix multiplication would be s %*% urban.lambda, using the %*% operator
+      for the matrix operation instead of just a *.</p>
+    <p>Type urban.elast to see the values, they should match what you calculated
+      in Excel.</p>
+  </body>
+</html>

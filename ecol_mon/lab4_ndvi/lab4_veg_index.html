@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Lab 4 - Vegetation indices</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <h1>Vegetation indices - using images to measuring greenness</h1>
+    <p>So far we have emphasized using images for visually interpreting features. Even our false-color composites were
+      created to make it easy for a person to recognize different types of land cover in the image, but any
+      interpretation of cover types still required subjective judgment by a human observer about what they were seeing
+      on the screen.<br>
+    </p>
+    <p>Now we are going to begin using LandSat images to generate ecologically relevant data, without the need for
+      subjective judgment by an analyst. Specifically, we will use LandSat to calculate the Normalized Difference
+      Vegetation Index, or NDVI.</p>
+    <p>As you learned in lecture, NDVI takes advantage of differences in reflectance of visible red and near infrared EM
+      radiation between healthy, actively photosynthesizing vegetation and unhealthy, dormant vegetation. NDVI is thus
+      sometimes referred to as a <strong>greenness</strong> index. Calling NDVI a measure of greenness may seem odd,
+      given that green visible light is not used at all in the calculation, but remember that green visible light isn't
+      a reliable indicator of photosynthetic activity - a bright green football field that is covered with artificial
+      turf is not "green" in the sense of being photosynthetically active.</p>
+    <p><img src="ndvi_reflectances.png" alt="NDVI" style="float: left; margin-right: 10px; margin-bottom: 10px"></p>
+    <p>An example of how NDVI measures greenness of vegetation is shown in the illustration to the left - healthy,
+      actively photosynthesizing vegetation reflects near infrared EM radiation strongly, but absorbs visible red light.
+      In contrast, unhealthy, dormant vegetation still reflects near infrared radiation fairly strongly, but reflects
+      much more visible red.</p>
+    <p>NDVI is a very simple calculation - for LandSat 5 images, that records red visible light with Band 3, and near
+      infrared radiation with Band 4, NDVI is just:</p>
+    <p>NDVI = (Band 4 - Band 3) / (Band 4 + Band 3) </p>
+    <p>You can see example calculations in the illustration to the left, comparing a healthy green tree with a dormant
+      tree. The difference in reflectance between Band 4 and Band 3 is a better indication of photosynthetic activity
+      than either band by itself would be - the numerator of the NDVI calculation is thus the difference in reflectance
+      between band 4 and band 3, and the difference will be bigger for actively photosynthesizing plants than for
+      unhealthy or dormant plants of the same species.</p>
+    <p>But, the raw difference between the bands isn't sufficient for detecting differences in photosynthetic activity,
+      because different species of plants reflect different overall amounts of near infrared or visible red EM radiation
+      - this should not be surprising, given that different plant species may generally all be green, but the shade of
+      green in their foliage is different. But, in addition to the obvious color differences between plant species, our
+      Landsat pixels are recording more than just reflectance from a single species of plant. Each Landsat pixel covers
+      a 30x30 m area, which will often contain a mix of different plant species, and may contain vegetated and
+      unvegetated cover within the same pixel. Mixes of cover types affects the total amount of near IR and visible red
+      radiation that is reflected in the first place, and the amount of difference possible between band 4 and band 3 is
+      limited by the total reflectance for these bands (that is, the closer they are to 0 the smaller the difference can
+      be). To adjust for differences in overall amount of reflectance the difference between near IR and visible red is
+      divided by the sum of the near IR and visible red - dividing by a value to adjust for differences in total amount
+      is referred to as <strong>normalizing</strong> the data, thus we are calculating a normalized difference. This
+      normalized difference is used as a relative measure of greenness of vegetation, and thus we have a normalized
+      difference vegetation index.</p>
+    <p>Today we will start by calculating NDVI the correct way, using reflectance. This will allow us to use the NDVI
+      values to identify the general cover type (i.e. values less than 0.1 are usually barren, values between 0.2 and
+      0.3 are usually shrub and grassland, and values between 0.6 and 0.8 are usually wet, dense forests). We will do
+      the needed calculations for the Spring of 2011, and will identify where in the watershed the NDVI was over 0.2 as
+      a measure of vegetated cover.</p>
+    <p>ArcMap's Image Analysis tools include an easy to use NDVI button, but it is meant for display - the values that
+      are created are NDVI values scaled to fall between 0 ad 255 so that they can be used as a color channel. We can't
+      use these values to separate vegetated from unvegetated cover like we will with the reflectance-based NDVI
+      calculations, but we can use them to visualize differences in NDVI between seasons, or within the same season
+      across multiple years. We can use the Image Analysis NDVI button to give us a visualization of NDVI in the spring
+      and fall of the same year, assign these to color channels in a composite image, and use color variation to
+      illustrate seasonal change in greenness of vegetation. And, if we use the Image Analysis NDVI button to produce a
+      layer for the spring of three different years we can composite them to visualize changes in greenness over time.</p>
+    <p><em>Note: starting today, the results of the analysis you do will be needed for your first mini project write-up.
+        Make sure you save the data sets you are told to save, as well as a map file for the day's activity, for later
+        use! If you lose work from today, you will need to do it again to complete the mini project assignment.<br>
+      </em></p>
+    <p></p>
+    <p></p>
+    <h2>Calculating NDVI</h2>
+    <p>1. <strong>Load Band 3 and Band 4 for the Spring of 2011</strong>.</p>
+    <p>Start ArcMap with a new map, using monitoring.mdb as your default database.</p>
+    <p>We'll start by calculating NDVI the right way, using reflectance values instead of digital numbers (DN's). We
+      only need band 3 and band 4 to calculate NDVI, so we'll only load those two bands. </p>
+    <p>Click on the "load data" button and selecting bands 3 and 4 for spring 2011 - they are on the P: drive, in the
+      lab4 folder, then in folder sp11.</p>
+    <p>2. <strong>Calculate radiance for each band</strong>.</p>
+    <p>If you look at the bands in the table of contents, the color ramp used is grayscale, from black to white, with a
+      low pixel value of 13 and a high value of 245 for Band 3, and a low of 7 and a high of 215 for Band 4. These
+      values are <strong>digital numbers</strong> (DN), which are integer numbers between 0 and 255 that indicate the
+      relative amount of light to emit from the computer screen when displaying the image.</p>
+    <p>To calculate NDVI, we will convert the digital numbers to <strong>radiance</strong>, which is the amount of
+      light that was recorded by the sensors, and then convert radiance to <strong>reflectance</strong>, which is a
+      unitless ratio of the proportion of light that struck the pixel that was reflected. We'll do this in two steps,
+      starting with conversion of DN to radiance - this is a simple, linear formula:</p>
+    <p>radiance = (gain * DN) + bias</p>
+    <p>The band3 and band4 layers hold the DN's, so we will substitute the name of the band for DN when we do the
+      calculation. There is a different gain and bias value for each layer, but they are constants, so once we know
+      their values we can plug them in as single numbers. Gain and bias are properties of the sensors, and are updated
+      periodically as the sensors aged - for example,&nbsp;the Band 3 gain in 2011 was 1.043976 and bias was -2.21 (All
+      of the constants that we're using today come from this <a href="A%20Straight%20Forward%20guide%20for%20Processing%20Radiance%20and%20Reflectance_V_24Jul12.pdf">document</a>,
+      for your reference). Think of these numbers as adjustments that calibrate the sensors so that they produce
+      consistent measurements over time. </p>
+    <p>We can do calculations like this with the <strong>raster calculator</strong>, which is part of the <strong>Spatial
+        Analyst</strong> extension. Spatial Analyst is an optional add-on to ArcGIS that has most of the useful raster
+      processing functions (remember, images are a type of raster GIS data).</p>
+    <p>Spatial Analyst is installed, but it may not be loaded by default - if you try to run any of the Spatial Analyst
+      functions without loading it first you'll get an error message about a missing license file (not the actual
+      problem, and thus a confusing and unhelpful error message). So, the first thing you should do is to make sure
+      Spatial Analyst is loaded:</p>
+    <ul>
+      <li>Select "Customize" from the Menu bar, and then the "Extensions" option from the menu.</li>
+      <li>When the Extensions window opens, check the box next to "Spatial Analyst", and then "Close" the box.</li>
+    </ul>
+    <p>You should only have to do this once (but check that Spatial Analyst is turned on if you get weird error
+      messages).</p>
+    <p>Now that it's activated, you can access the Spatial Analyst tools by clicking on the little red toolbox icon, <img
+        alt="Tools" src="spatial_analyst_button.png">. You will get an "ArcToolbox" floating window, with lots of little
+      toolboxes. You can drag this window on top of the Table of Contents, and it will dock on top of it; you can then
+      switch between the Table of Contents and the ArcToolbox by selecting their tabs at the bottom of the window.</p>
+    <p>Find the Spatial Analyst Tools icon and click on the + to open it (<strong>not</strong> Spatial Statistics). </p>
+    <p>Now that you have the Spatial Analyst Tools open, find Map Algebra, and open it. Finally, double-click on "Raster
+      Calculator". You will see a window like this:</p>
+    <img src="raster_calculator.png" alt="Raster calculator">
+    <p>The Raster Calculator is used for doing calculations on raster layers (you may have guessed that from the name),
+      such as the calculation of radiance from the DN's in our layers. Like with the query builder we used to select
+      vector polygons based on their attributes, this tool is intended to help you build an expression by clicking on
+      the numbers, operators, and names of raster layers you need to do a calculation - as you click along, your
+      expression will be built in in the blank white field. You can in principle just type in formulas directly, but
+      I'll warn you, ArcMap is fussy about formatting and not very good at reporting the causes of errors, and you will
+      very likely make a typo that will cause your calculation to fail if you try to type the expression without using
+      the graphical interface. At least for now, it's best to rely on the point and click approach.</p>
+    <p>We'll start with the calculation for Band 3 from spring of 2011.</p>
+    <ul>
+      <li><strong>Set the output raster</strong>. The result of the calculation will be a new layer with pixels that
+        have radiances instead of DN's, and the "Output raster" field is how we tell the Raster Calculator where this
+        new layer will go. Click on the "Open folder" icon, and navigate to your S: drive. You can make a new folder
+        (called "lab4"), double-click to enter it, and then use "s11_band3_rad" in the "Name" field, and click "Save".
+        We only need radiance as a step that will get us to reflectance, so we won't save radiance into your
+        monitoring.mdb database.</li>
+      <li>To build the expression that calculates radiance:</li>
+      <ul>
+        <li>Use the number buttons to type in 1.043976, which is the gain. </li>
+        <li>Click on the * button (which is the symbol for multiplication).</li>
+        <li>Double click on sp11_band3.tif, which are the DN's</li>
+        <li>Click on the - button (subtraction, since the bias is negative)</li>
+        <li>Use the number buttons to type 2.21</li>
+      </ul>
+    </ul>
+    <p>Your final expression should look like (aside from using S: as the location of your output file): </p>
+    <p><img alt="Radiance" src="rad_expression.png"></p>
+    <p>It will take a few seconds, but as long as you see the progress notification at the bottom of the window:</p>
+    <img src="in_progress.png" alt="Yes it's working">
+    <p>then you can assume it's still working, and wait for it to finish. </p>
+    <p>When the calculation is done you'll see a new s11_band3_rad image in your table of contents (you can switch to
+      the table of contents tab to see the name). Notice that the legend showing the numbers associated with the shades
+      of gray in the table of contents now goes from a low of 11.36 to a high of 253.56 - note that these are now
+      decimal numbers instead of integer values.</p>
+    <p>You will need to repeat this calculation for band 4 for the Spring. The gain for Band 4 is 0.876024, and the bias
+      is -2.39. Use s11_band4_rad as the output file name.</p>
+    <p>3. <strong>Calculate reflectance for each band</strong>.</p>
+    <p>Now that you have radiances for Band 3 and Band 4, you need to calculate <strong>reflectance</strong>. The
+      formula is a little more complicated:</p>
+    <p>reflectance = (pi * radiance * d^2) / (E * sin(theta))</p>
+    <p>The terms on the right side are pi (3.14159), radiance (i.e. the results of our radiance calculation), d (the
+      distance between the sun and the earth, in astronomical units (one astronomical unit is the average distance from
+      the earth to the sun, so on average this value is 1, but varies slightly over time), E (band-specific radiance
+      emitted by the sun), and theta (the solar elevation angle above the horizon at the time that the image was
+      acquired). We know pi and radiance, and E is different for each band but has been constant for the period that
+      data has been acquired. The values for E we will use are:</p>
+    <table style="width: 219px; height: 79px;" border="1">
+      <tbody>
+        <tr>
+          <td>
+            <p>Band</p>
+          </td>
+          <td>
+            <p>E</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Band 3</p>
+          </td>
+          <td>
+            <p>1536</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Band 4</p>
+          </td>
+          <td>
+            <p>1031</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The earth-sun distance need depends on the date - the "Julian" date is the number of days since the start of the
+      year, so the combination of year and Julian date is used to find d, which is:</p>
+    <table style="width: 459px; height: 77px;" border="1">
+      <tbody>
+        <tr>
+          <td>
+            <p>Date</p>
+          </td>
+          <td>
+            <p>Julian date</p>
+          </td>
+          <td>
+            <p>d</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>4/15/2011 (spring 11)</p>
+          </td>
+          <td>
+            <p>105</p>
+          </td>
+          <td>
+            <p>1.0033</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The last piece that we need is theta, the solar elevation angle. This refers to how high the sun was in the sky
+      at the time the image was taken, and that will be different for every LandSat scene. The information is in a file
+      of metadata that's distributed with the images, which will have an MTL as the last three characters, and a .txt
+      extension. To look up the solar elevation angle from the MTL file, we need to start up ArcCatalog - click the
+      ArcCatalog button, <img src="arc_catalog_button.png" alt="Arc catalog">, to open it. Once it's open, navigate to
+      the lab4 folder on P:, and open the sp11 folder. You'll see that there are actually two files with MTL.txt as the
+      last characters, but one has an icon next to it that looks like a sheet of lined paper, and this is the one we
+      want to open - this is just a "text file" that has words and numbers in it. Double-click on the file to open it in
+      MS Notepad (Microsoft's text editor) so you can read it.</p>
+    <p><br>
+    </p>
+    <p>The formatting is a little messed up, but if you select "Format" → "Word wrap" you will see all of the
+      information in the file. Select "Edit" → "Find" and search for SUN_ELEVATION. You'll see that the sun elevation
+      when this image was acquired was 57.79040550 degrees above the horizon. You can close Notepad, as well as the
+      ArcCatalog window.</p>
+    <p>Armed with these pieces of information, you're ready to calculate reflectance for each radiance band.</p>
+    <p>Start with radiance for band 3 in spring of 2011.</p>
+    <ul>
+      <li>Open the raster calculator.</li>
+      <li>Set the output raster to s11_band3_ref in your lab4 folder (<em>not</em> in a database file, this is still a
+        step on the way to NDVI, and we don't need to save it permanently)</li>
+      <li>Click the open-parentheses button, (</li>
+      <li>Use the number buttons to type in the value of pi, 3.141592654, then the multiplication button, *</li>
+      <li>Double-click s11_band3_rad, then the multiplication button</li>
+      <li>Double-click on the "Square" function (it's near the end of the "Math" list in the scrolling window - the
+        first block is "Conditional", which you can see at the top of the scrolling list), and then enter 1.0033 as the
+        earth/sun distance.</li>
+      <li>Click outside of the Square function's parentheses, and click on the close-parenthesis button, ) - this
+        completes the numerator of the formula</li>
+      <li>Click on the division button, /</li>
+      <li>Click on the open-parenthesis button, (</li>
+      <li>Enter E, which is 1536, then the multiplication symbol, *</li>
+      <li>Double-click on the Sin function (in the Tigonometric list).</li>
+      <li>The sin function requires angles to be in radians, and we have an angle in degrees, so enter the sun elevation
+        angle along with a conversion factor, as: 57.7904055 * 3.141592654 / 180</li>
+      <li>Click outside of the Sin function's parentheses, and click on the close parentheses button, )</li>
+    </ul>
+    <p>If all went well, your expression looks like this:</p>
+    <img alt="Reflectance" src="reflectance_expression.png"><br>
+    <p>Click on "OK", and you in a few seconds you'll have a s11_band3_ref layer. If you did it correctly, you should
+      have a low value of 0.027646 and a high of 0.616999 for your reflectance s11_band3_ref layer (if you don't get
+      that double check your calculation - if they match out to several decimal places you're good to go).</p>
+    <p>**Note: if you need to re-do a calculation ArcMap will not let you overwrite an old file with a new file - you
+      can open ArcCatalog and delete the layer created by the incorrect calculation first (find it in your output
+      folder, right-click on it and delete it)**</p>
+    <p>You now will need to repeat this calculation for band 4. Considering that this was a complex formula that you
+      don't want to have to type by hand again, it's a good idea to "recall" the calculation you just did and make the
+      few modifications needed to apply it to Band 4. To do this you will need to find the "Results" window - it should
+      open up as a tab along with the Table of Contents and ArcToolbox. Each ArcToolbox function you run adds an entry
+      to the Results window, and the most recent one will be at the top (labeled "Raster calculator" [100..] or some
+      similar number). If you double-click on this entry the Raster Calculator opens up again with all of the settings
+      used for your s11_band3_ref calculation. To modify it to calculate reflectance to band 4 you just need to: </p>
+    <ul>
+      <li>Change the radiance band you're using to s11_band4_rad - you can change the 3 to a 4 by hand</li>
+      <li>Change the value of E from 1536 to 1031 (again, you can edit this by hand, just don't delete any white spaces
+        between arguments, or delete any quotes or parentheses)</li>
+      <li>Change the output raster to be band4_ref instead of band3_ref.</li>
+    </ul>
+    <p>You don't need to change the distance or the sun angle, because both bands are from the same image, and pi and
+      the conversion of angles to radians are the same. Click "OK" to get your Band 4 reflectances. The values should
+      have a minimum of 0.013566, and a maximum of 0.67412.</p>
+    <p>Now you have reflectance for both of the bands, so you can calculate NDVI.</p>
+    <p>4. <strong>Calculate NDVI for spring of 2011</strong>.</p>
+    <p>We can now calculate NDVI. Open the raster calculator again and:</p>
+    <ul>
+      <li>Set the output to go into your monitoring.mdb database, using the layer name "s11_ndvi"</li>
+      <li>Build the expression:<br>
+        <br>
+        ("s11_band4_ref" - "s11_band3_ref") / ("s11_band4_ref" + "s11_band3_ref") <br>
+      </li>
+      <li>Click "OK" do do the calculation.</li>
+    </ul>
+    <p>You'll see that the numbers you get for s11_ndvi are continuous, running from -0.39 to 0.85.</p>
+    <p>5. <strong>Change the color ramp so that high NDVI looks green</strong>.</p>
+    <p>By default, since NDVI is a single number, ArcMap uses a grayscale color ramp to display it. We can change this
+      color scheme to something that makes it more obvious what the numbers mean.</p>
+    <ul>
+      <li>Double-click on sp11_ndvi, and in the "Layer Properties" window, switch to the "Symbology" tab. </li>
+      <li>Drop down the "Color ramp:" selector, and pick one that changes from a dark color (like brown) on the left to
+        a green on the right. This makes it more apparent that high values of NDVI indicate green vegetation. Setting a
+        color ramp doesn't change the data at all, but it does make the map easier to interpret.</li>
+      <li>Click "OK" to set the new color ramp and return to the map.</li>
+    </ul>
+    <p>Take a minute to look at the color variation - you'll see that water bodies have very low NDVI, and that there is
+      variation in terrestrial areas during the spring. If you add the World_Imagery.lyr from Lab 2 to your map, and put
+      the NDVI layer on top of it, you can use the Swipe tool from the Image Analysis window to see what kinds of cover
+      tend to have low NDVI in the spring - you'll see that most are densely populated areas. Some of the highest NDVI
+      values come from large irrigated lawns, like what you find in golf courses. Undeveloped shrublands have moderately
+      high NDVI in the spring, since it is our rainy season.</p>
+    <p>6. <strong>Make a layer that shows vegetated areas</strong>.</p>
+    <p>Since we expect NDVI values over 0.2 to be vegetated, we can use the raster calculator to make a map that
+      differentiates between vegetated and un-vegetated areas. To do this, start the Raster Calculator, and build the
+      expression:</p>
+    <p>"sp11_ndvi" &gt; 0.2</p>
+    <p>with the "Output raster" called "vegetated", inside of your monitoring.mdb database.</p>
+    <p>Using a comparison operator like =, &lt; or &gt; is a "logical test", and the Raster Calculator returns either
+      "true" (which is a value of 1 to a computer), or "false" (which returns a value of 0). The resulting "vegetated"
+      layer shows all the areas with NDVI over 0.2 in one color, and all the areas that are less than or equal to 0.2 in
+      another.</p>
+    <p>7. <strong>Quantify the amount of vegetated area in the watershed</strong>.</p>
+    <p>If you right-click on the "vegetated" layer, you'll see you can open the attribute table. An attribute table for
+      a raster data set is simple - it gives a row for each of the data values present in the raster map, and a count of
+      the number of pixels that have that value. There are only two values in the "vegetated" layer, and you want to
+      know how many are equal 1. Write that number down.</p>
+    <p>Next, to convert a number of cells into an area, you just need to multiply by the area of each cell. LandSat
+      pixels are 30 m on a side, or 900 square meters. A hectare is 100 m on a side, or 10,000 square meters, so a 30 x
+      30 m pixel covers 900/10000 = 0.09 hectares. If you multiply the number of pixels with a 1 by 0.09 you will get
+      the number of hectares of vegetated land in the watershed.</p>
+    <p>Note that although this method didn't require us to make any subjective judgments about the cover types we see,
+      this is not a perfect method - golf courses and older housing areas with mature landscaping are being classified
+      as "vegetated" using this method. We will learn another method of doing cover typing in our next class meeting
+      that will do better at differentiating between undeveloped and developed land, but bear in mind that objective
+      methods aren't always better when it comes to cover typing! Well trained mappers would not mistake housing
+      developments for undeveloped vegetation.</p>
+    <h2>Visualizing seasonal change in NDVI</h2>
+    <p>We are now going to learn a quick and easy way to visualize seasonal change over time, by assigning NDVI layers
+      to color channels on the monitor. The method of calculating NDVI you just learned is the best method to use for
+      any sort of quantitative analysis, but we can't assign a "floating point" layer (i.e. one with decimal numbers) to
+      a channel on the monitor, we need digital numbers for that. </p>
+    <p>To visualize change in NDVI over time we can Instead use the Image Analysis window's NDVI button to make layers
+      that represent NDVI, but on a 0 - 255 scale that can be used for visualization.</p>
+    <p>Before you move on, you can right-click and remove from the table of contents all of the ref and rad layers, as
+      well as the vegetated layer, and just leave your sp11_ndvi layer and the original .tif files. Removing layers from
+      the TOC doesn't delete them from your S: drive, but it does get them out of the list of layers we have to choose
+      from, which makes it easier to find the layers we want to use in the next steps.</p>
+    <p>1. <strong>Make an NDVI layer from the Image Analysis window for sp11 using the tif files</strong>.</p>
+    <p>Make sure the bands are in numeric order, with band3 above band4 in the table of contents.</p>
+    <p>In the Image Analysis window, select sp11_band3.tif and sp11_band4.tif, and then click on the NDVI button (the
+      maple leaf next to the composite button) <img src="ndvi_button.png" alt="NDVI">.</p>
+    <p>You'll see you have an NDVI layer with a color ramp assigned that makes high levels of NDVI green, and low levels
+      orangeish brown. Doing it this way, the NDVI values are scaled to fall between 0 and 255, so we lose the numeric
+      interpretation of the index, but it's still a useful way of seeing where the green areas are and where the barren
+      areas are.</p>
+    <p>2. <strong>Make an NDVI layer for f11</strong>.</p>
+    <p>Do the same operation you did in the previous step for Fall 2011 - load the f11_band3.tif and f11_band4.tif
+      layers, put them in numeric order, select them both in the Image Analysis window, and click on the NDVI button.</p>
+    <p>You should now have an NDVI_sp11_band3.tif and an NDVI_f11_band3.tif layer in your TOC. If you put them in order,
+      with Spring 11 above Fall 11 and then use the swipe tool, you'll see that there is a big decrease in greenness in
+      the fall in undeveloped areas - this makes sense since fall is our dry season.</p>
+    <p>3. <strong>Composite NDVI for spring and for fall</strong>.</p>
+    <p>Swiping is fine, but it's useful to be able to make a single image that shows the differences between two layers
+      - we can do this by using the two NDVI layers in a composite, and then use color variation on the screen to tell
+      us where the drying is happening between spring and fall.</p>
+    <ul>
+      <li>In the Image Analysis window select both of the NDVI layers that you just made (NDVI_sp11_band3.tif and
+        NDVI_f11_band3.tif), and composite them using the Composite Bands button. You should now see an odd and rather
+        ugly-looking false-color image, which is using the NDVI layers assigned to color channels. Assuming you had the
+        NDVI layers in order with spring first, Band_1 is spring NDVI, and Band_2 is fall NDVI. By default, ArcMap will
+        assign spring (as Band_1) to Red, and fall (as Band_2) to both green and blue. </li>
+      <li>We would like places where the plants are growing in the spring to be green on the map, so set Band_1 to the
+        Green channel, and Band_2 to both the Red and Blue channel.</li>
+      <li>The contrast is not good initially, but we can improve it with the "Histogram" tool, <img src="increase_contrast.png"
+          alt="Increase the contrast"> - click on the composite, drop down the histogram menu and select the "Esri"
+        method, which gives a good separation between the colors.</li>
+    </ul>
+    <p>You should now have a map with purple and green, as well as white, black, and shades of gray. To interpret what
+      you're seeing, you need to think about how RGB color works:</p>
+    <ul>
+      <li>If NDVI is about the same in the spring and fall, then the RGB values will be about the same, and you'll get
+        white (255,255,255), black (0,0,0), or a shade of gray. White areas will be places like golf courses that are
+        watered all year round. Black areas will include reservoirs and roads, which have low NDVI all year round.</li>
+      <li>If NDVI is high in the spring but low in the fall, you will get RGB values that are low, high, low, which will
+        give you a green color - 0,255,0 being the most extreme case, which is an intense green color on the screen.
+        Areas with a green color on the screen will generally be undeveloped areas that are lush during the spring
+        growing season but dry out in the fall.</li>
+      <li>Having high values for red and blue but low values for green gives purple, so the purple areas have high NDVI
+        in the fall and lower in the spring. You'll see that a lot of the purple is in housing developments - people do
+        a lot of watering in the fall when it's dry, and less so in the spring. Areas that are not developed that are
+        purple may be going through post-fire recovery, such that they had bare ground early in the spring of 2011 but
+        by fall 2011 they were becoming vegetated again.</li>
+    </ul>
+    <ul>
+    </ul>
+    <h2></h2>
+    <h2>Visualize change in NDVI over time</h2>
+    <p>We can extend this visualization approach to view changes in spring NDVI over time. We can calculate NDVI for the
+      spring of 1984, the spring of 1998, and then composite those with the spring of 2011 to see how greenness has
+      changed over this 27 year period.</p>
+    <p>1. <strong>Calculate NDVI for spring of 1984 and for 1998</strong>.</p>
+    <p>Add band 3 and band 4 for 1984 and for 1998 to the table of contents (they are in folders sp84 and sp98 in the
+      lab4 folder of the P: drive). Put them in order so that band 3 is above band 4 for each year.</p>
+    <p>Select band 3 and 4 for spring of 1984 in the Image Analysis window, and make an NDVI layer. Repeat for spring of
+      1998.</p>
+    <p>2. <strong>Make an NDVI composite for 1984, 1998, and 2011</strong>.</p>
+    <p>Put the three spring NDVI layers in chronological order in the table of contents.</p>
+    <p>Select all three spring NDVI layers in the Image Analysis window, and make a composite. By default, this assigns
+      1984 to red, 1998 to green, and 2011 to blue.</p>
+    <p>Adjust the contrast if needed (use the Esri option in the histogram tool of the Image Analysis window).</p>
+    <p></p>
+    <p> To understand what you're looking at, remember how color works in the RGB model...the table below gives colors
+      associated with several different combinations of R,G,B values, the pattern of land cover change that this
+      represents, and the likely cause of the pattern of change.</p>
+    <p> </p>
+    <p></p>
+    <table style="width: 100%;" border="1">
+      <tbody>
+        <tr>
+          <td>
+            <p><strong>Red (1984)</strong></p>
+          </td>
+          <td>
+            <p><strong>Green (1998)</strong></p>
+          </td>
+          <td>
+            <p><strong>Blue (2011)</strong></p>
+          </td>
+          <td>
+            <p><strong>Color</strong></p>
+          </td>
+          <td>
+            <p><strong>Land cover change indicated</strong></p>
+          </td>
+          <td>
+            <p><strong>Likely cause?</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>High</p>
+          </td>
+          <td>
+            <p>High</p>
+          </td>
+          <td>
+            <p>High</p>
+          </td>
+          <td style="background-color: rgb(250, 250, 250);"><br>
+          </td>
+          <td>
+            <p>No change - green in all three years</p>
+          </td>
+          <td>
+            <p>Green vegetation all three years</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Low</p>
+          </td>
+          <td>
+            <p>Low</p>
+          </td>
+          <td>
+            <p>Low</p>
+          </td>
+          <td style="background-color: rgb(50, 50, 50);"><br>
+          </td>
+          <td>
+            <p>No change - not green in all three years</p>
+          </td>
+          <td>
+            <p>Lack of vegetation all three years</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>High</p>
+          </td>
+          <td>
+            <p>High</p>
+          </td>
+          <td>
+            <p>Low</p>
+          </td>
+          <td style="background-color: rgb(250, 250, 50);"><br>
+          </td>
+          <td>
+            <p>Vegetated areas became un-vegetated between 1998 and 2011</p>
+          </td>
+          <td>
+            <p>Loss of vegetation (due to development or fire) shortly before 2011</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>High</p>
+          </td>
+          <td>
+            <p>Low</p>
+          </td>
+          <td>
+            <p>Low</p>
+          </td>
+          <td style="background-color: rgb(250, 50, 50);"><br>
+          </td>
+          <td>
+            <p>Vegetated areas became un-vegetated between 1984 and 1998</p>
+          </td>
+          <td>
+            <p>Loss of vegetation due to development after 1984 (probably not fire, or vegetation would have recovered
+              by 2011).</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Low</p>
+          </td>
+          <td>
+            <p>Low</p>
+          </td>
+          <td>
+            <p>High</p>
+          </td>
+          <td style="background-color: rgb(50, 50, 250);"><br>
+          </td>
+          <td>
+            <p>Un-vegetated areas grew vegetation between 1998 and 2011</p>
+          </td>
+          <td>
+            <p>New park, new agricultural field, new golf course - artificial, irrigated vegetation</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Low</p>
+          </td>
+          <td>
+            <p>High</p>
+          </td>
+          <td>
+            <p>Low</p>
+          </td>
+          <td style="background-color: rgb(50, 250, 50);"><br>
+          </td>
+          <td>
+            <p>Un-vegetated areas grew vegetation between 1984 and 2011, then became un-vegetated in 2011</p>
+          </td>
+          <td>
+            <p>Possibly due to fire before 1984, then again before 2011, with recovery in between.</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Low</p>
+          </td>
+          <td>
+            <p>High</p>
+          </td>
+          <td>
+            <p>High</p>
+          </td>
+          <td style="background-color: rgb(50, 250, 250);"><br>
+          </td>
+          <td>
+            <p>Un-vegetated areas grew vegetation between 1984 and 1998</p>
+          </td>
+          <td>
+            <p>Fire recovery after 1984, or new artificial vegetation</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>High</p>
+          </td>
+          <td>
+            <p>Low</p>
+          </td>
+          <td>
+            <p>High</p>
+          </td>
+          <td style="background-color: rgb(250, 50, 250);"><br>
+          </td>
+          <td>
+            <p>Vegetated area became un-vegetated between 1984 and 1998, then became vegetated between 1998 and 2011</p>
+          </td>
+          <td>
+            <p>Fire just before 1998, or development followed by growth of new artificial vegetation</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>See if you can find areas that have developed since 1984. To help you check, add the World Imagery layer we used
+      in previous labs beneath the composite, and then use the swipe tool to see what the land cover looks like under
+      the colors.</p>
+    <h2>All done</h2>
+    <p>Don't forget to save a map file (lab4.mxd). Your monitoring.mdb database has your NDVI layer for the spring of
+      2011, and your map of vegetated areas according to spring NDVI, which you need for your report - this should all
+      be in the database on your S: drive, and is thus saved already.</p>
+    <p>Also, bear in mind that your composites of seasonal change in NDVI, and of change over the time in NDVI are not
+      permanently stored yet. If you want copies of these, you'll need to save them. For example:</p>
+    <ul>
+      <li>Right-click on Composite_NDVI_sp11_band3.tif, and select "Data" → "Export data".</li>
+      <li>In the "Export Raster Data" window, change the output location to your S: drive, and change the "Name" of the
+        output file to "seasonal_ndvi". Change the format to "PNG" - this will save the image in a format that can be
+        read by ArcMap, but also by any software that can read images (it is a popular format for images on web pages,
+        for example).</li>
+      <li>Click "Save", and when you are asked about adding "NoData" pixels, say "Yes" - this has to do with the fact
+        that images are rectangular arrays of cells, but our images are an irregular polygon. The blank area around the
+        pixels are assigned a pixel value "NoData", and to make room for this extra value that isn't in the range 0 to
+        255 the image has to use more bits per channel.</li>
+      <li>You won't see this in ArcMap or ArcCatalog, but the PNG format does not contain spatial information - to get
+        the image to display in the correct location a "World File" is created that has the same name and the PNG file,
+        but with a "pgw" extension - you will thus have seasonal_ndvi.png and seasonal_ndvi.pgw created when you use
+        this format. The World File has to be present in the same folder as the PNG for ArcMap to place it in the right
+        location. If you just want something you can put into MS Word, or display on a web page, then you don't need the
+        World File. If you want to be able to put the image into a GIS and have it show up in the right location, you'll
+        need to keep the World File along with the PNG file.</li>
+    </ul>
+    <p>You can save Composite_NDVI_sp84_band3.tif the same way - use a file name that indicates this is your composite
+      of spring NDVI for three years.<br>
+    </p>
+    <p></p>
+  </body>
+</html>

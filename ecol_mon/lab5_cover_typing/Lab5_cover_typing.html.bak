@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Lab 5 - cover typing</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <h1>Classifying cover types from LandSat data</h1>
+    <p>We now know how to obtain and work with LandSat data, and how to calculate a measure of vegetation greenness from
+      reflectance in the red and near-infrared bands using NDVI. The next step is to use it to figure out how to derive
+      cover type thematic information from the images.</p>
+    <h2>What's a cover type, anyway?</h2>
+    <p>Land cover is the material at the surface of the earth, and cover types are categories of land cover. The
+      materials we find on the surface are extremely variable, including anything from buildings, to vegetation made up
+      of a wide range of different species of plant in varying combinations, to soils of different types and moisture
+      contents, to various kinds of wetlands, to housing developments of varying ages, lot sizes, and degree of natural
+      or artificial landscaping. When we apply cover types, no matter how many categories we use, we will need to apply
+      discrete category names to this vast diversity of surface cover we find within our watershed.</p>
+    <p>If you think about that, it should make you a little uneasy.</p>
+    <p>Think just about the variety in man-made land cover. If we define a "developed" cover type to indicate an area
+      that has been developed by people, it could be covered by anything from pavement to a botanical garden. We could
+      be more specific and define a category for "suburban housing development", but this encompasses everything from
+      the high-density, tightly packed, new developments around campus to the low-density mini-ranches in Rancho Santa
+      Fe. The mini-ranches in RSF will primarily consist of bare ground, grass, and ornamental landscaping, whereas the
+      high-density housing will be primarily covered by roofs, concrete, and blacktop, with only a little vegetation.</p>
+    <p>The problem is as bad or worse when we consider natural (i.e. not anthropogenic) land cover, such as vegetated
+      areas. The most common approach is to categorize vegetated areas into "vegetation types", which are operationally
+      defined by the dominant species of plant (although sometimes with codominant species, if a single species isn't
+      dominant), possibly in combination with age/size class categories. However, as ecologists you should know that
+      species respond individualistically to environmental conditions, and the mix of species that we see at a site is
+      not due to some coordinated response among the species that make up the vegetation type, it's the result of each
+      of the species present finding suitable conditions at the site. This means that there are not always clear,
+      natural breaks between even the <em><strong>def</strong></em><em><strong>initions</strong></em> of vegetation
+      types (i.e. the difference between "oak woodland" and "grassland" with scattered oak trees is a matter of degree,
+      not kind). Consider this example:</p>
+    <img alt="One type or two?" src="one_type_or_two.png">
+    <p>Is this a picture of two vegetation types that are intermixed, or one somewhat internally heterogeneous
+      vegetation type? To map the vegetation in this image we would need to make a decision and define our cover type
+      categories accordingly, but either choice is supportable on ecological grounds.</p>
+    <p>Once vegetation types have been defined your problems are not over, because ecological transitions ("ecotones")
+      between vegetation types are rarely knife-edged. Consider this example:</p>
+    <img alt="Where's the boundary?" src="wheres_the_boundary.png">
+    <p>If we consider the shrubby vegetation to be one type and the grass to be another, where does one stop and the
+      other end? Would you include the shrubs that are trailing off into the grass in the upper right corner to be part
+      of the shrubs or part of the grass? Would a single, isolated shrub be a patch of the shrubby habitat? If a single
+      shrub is not a patch, then how many would it take to become a patch? Likewise, when are the spaces between the
+      shrubs big enough to be a separate patch of grass, and when are they just spaces between shrubs?</p>
+    <h2>Classification systems</h2>
+    <p>The examples above are not meant to frustrate and confuse you, they illustrate the basic problem in
+      classification: ultimately, to map land cover we have to assign areas on the ground to cover types that we have
+      defined, but classification imposes boundaries on natural features in which the boundaries are often fuzzy at
+      best, and may not really exist at all. To some extent the cover types can be based on ecological criteria - for
+      example, wetlands have very different functions and different species from the uplands surrounding them, and using
+      a "wetlands" cover type is a good idea any time wetlands are found in your project area. However, in many
+      instances<em> the choices will depend on how we plan to use the cover type map</em>. If we want to track changes
+      in all the major wildlife habitat types found in our region, we would probably want to use an established wildlife
+      habitat classification scheme, such as California's Wildlife Habitats Relationship System categories (you can find
+      their system <a href="https://wildlife.ca.gov/Data/CWHR/Wildlife-Habitats">here</a>). General schemes like this
+      are not tailored to the habitat requirements of any single species of wildlife, but rather attempt to
+      differentiate between habitats that tend to support very different ecological communities. A generalist species
+      like a coyote will use many of the habitat types listed in the WHR system, and a specialist like the Cactus Wren
+      will be restricted to a small number (such as coastal sage scrub and chaparral), but even within those general
+      types they will only be found if large patches of cactus are also present within the habitat.</p>
+    <p>Similarly, if we were interested in monitoring plant communities, irrespective of how animals use them, we might
+      use the California Native Plant Society's vegetation types (you can find their system <a href="http://www.cnps.org/cnps/vegetation/manual.php">here</a>).</p>
+    <p>In contrast with these general approaches, we may only be interested in mapping habitat for a single species of
+      plant or animal. In this case we would define our categories based on the particular needs of the species of
+      interest, and for a species like the Cactus Wren we would only be concerned with whether the vegetated area had
+      cactus in it. For a specific, targeted classification like this we might group all of the vegetated cover types
+      that are used by our species into a cover type called "habitat", and all other vegetated areas that aren't used as
+      "non-habitat". Similarly, if we were just interested in tracking human development activity we might be willing to
+      have just two categories, "developed" and "undeveloped".</p>
+    <p>Generally what this means to us is that the cover type categories we use should be clearly defined, but also that
+      the definitions of cover types we use should be devised to be useful for our purposes. Think of your cover type
+      classification in the way you think about mathematical models of the real world - abstractions, simplifications,
+      known not to be a perfect representation of reality at some level, but still useful.</p>
+    <p>The classes that we will use for this project are:</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td>
+            <p>Cover type</p>
+          </td>
+          <td>
+            <p>Definition</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Developed</p>
+          </td>
+          <td>
+            <p>Any anthropogenic cover type other than agriculture (housing areas, shopping malls, roads)</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Agriculture</p>
+          </td>
+          <td>
+            <p>Area used for crops, orchards, vineyards, or livestock</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Scrub</p>
+          </td>
+          <td>
+            <p>Shrub-dominated vegetation</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Grassland</p>
+          </td>
+          <td>
+            <p>Grass-dominated vegetation</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Forest</p>
+          </td>
+          <td>
+            <p>Tree dominated vegetation</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Woodland</p>
+          </td>
+          <td>
+            <p>Grasslands with scattered trees (primarily oak woodland in our area)</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Open water</p>
+          </td>
+          <td>
+            <p>Water bodies</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Wetland</p>
+          </td>
+          <td>
+            <p>Vegetation associated with water and saturated soils, including riparian areas and marshes.</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>Bare ground</p>
+          </td>
+          <td>
+            <p>Naturally barren areas, such as rock outcrops, or bare soil.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <h2>How we will proceed</h2>
+    <p>As you learned in lecture, and experimented with in Lab 2, one way to map cover types is to hand-draw polygons
+      around patches you see on the computer screen. This is a very good way of obtaining cover type data, in that it
+      can be very accurate if the mapper is skilled at interpreting cover types from images (not an easy thing to do, by
+      the way). However, it has several drawbacks: </p>
+    <ol>
+      <li>It is labor intensive and time consuming</li>
+      <li>Because of 1, it is expensive</li>
+      <li>It requires an observer to interpret features on the map and draw polygons around them, which is subjective
+        and in principle is thus less repeatable among observers than other approaches we will learn about. </li>
+    </ol>
+    <p>The cost and time considerations are the least scientifically weighty issues, but they are not unimportant -
+      conservation dollars are never over-abundant, and money spent on mapping habitats can detract from money spent
+      buying land and managing habitats. Additionally, in rapidly changing landscapes a two-year manual mapping project
+      will produce a map that is already two years out of date on the day it is completed. Particularly for change
+      detection in a rapidly urbanizing area such as our own, automated approaches that can produce results in near real
+      time have a lot going for them, even if they are prone to errors that a skilled analyst wouldn't make.</p>
+    <p> </p>
+    <p>We will use a couple of approaches to cover typing LandSat data today, so that you can learn their strengths and
+      weaknesses. ArcGIS supports both unsupervised and supervised classification, but really only supports one way of
+      doing each one. There are many more possible methods than are included in ArcGIS, but we will focus today on the
+      methods we have available in the software. Both seek to find <strong>spectral signatures</strong> (i.e. mean
+      values of reflectance bands) that typify the land cover types present in the scene.</p>
+    <p>A schematic of the approach we will use is taken from the ArcGIS help file on image classification:</p>
+    <p><img class="break" src="http://help.arcgis.com/en/arcgisdesktop/10.0/help/00nv/GUID-0F3DFAD0-4791-4B3F-81C5-6562432D6ADB-web.png"
+        purpose="img" alt="Image classification workflow" title="Image classification workflow"></p>
+    <p><br>
+    </p>
+    <p>In the interest of time, we won't spend much time on step 1, data exploration and preprocessing. Just for your
+      information, though, there are many different things that we could do to prepare the data. </p>
+    <ul>
+      <li>We might want to convert the digital numbers (DN) into radiance, and then convert radiance into reflectance.
+        This is a really good thing to do when one wants to use the same classification for two different time periods.
+        If you don't use reflectance then some of what appears to be change in cover type will be due just to
+        differences in illumination at the time that the image was taken.</li>
+      <li>We could correct for variation in illumination due to topography. The same cover type on two different sides
+        of a hill can look very different, which will lead to different spectral signatures for the same cover type -
+        this is never good, because we want to use spectral signature to classify cover, and we'd like each cover type
+        to have one and only one signature.</li>
+      <li>We could correct for atmospheric effects. Differences in the images can in part be due to different amounts of
+        haze, water vapor, particulates, etc. in the air. Correcting for these sorts of effects can be done by finding
+        features on the ground that should have the same reflectances at the two different time points, and adjusting
+        the entire images so that those features match. Typically several different features would actually be used to
+        make the adjustment more robust.</li>
+    </ul>
+    <p>We will want to compare cover types at two different time points, but we will deal with the issues above when we
+      do the classification, rather than as pre-processing steps. Consequently, we will work with the raw DN's for our
+      LandSat images.</p>
+    <h2>Unsupervised classification</h2>
+    <p>Unsupervised classification looks easier than supervised classification based on the schematic, above, and it
+      does involve fewer steps in the beginning. Since we don't specify the cover types in advance, there's no need to
+      collect "training" data. Essentially, with unsupervised classification clusters of similar value across the bands
+      used are discovered in the data, with the assumption that pixels from the same cover type will tend to have
+      similar values across the bands, which are different from pixels that come from different cover types. Finding
+      clusters of similar band values should be equivalent to finding different cover types. However, since we don't
+      specify cover types in advance, we have more work to do after the classification is done to figure out what cover
+      types are that these discovered clusters represent.</p>
+    <p>ArcGIS uses an "Iso Cluster" algorithm (algorithm means a process used to solve a problem) for unsupervised
+      classification. Although you do not tell the iso cluster algorithm what the classes should be, you do have to tell
+      it how many clusters to use. Typically the best strategy is to be conservative, and ask for more cover types than
+      you would like to end up with, and then combine clusters that upon inspection prove to be from the same cover type
+      but with slightly different spectral signatures. Once you specify the number of clusters to find, ArcMap assigns
+      initial, arbitrary means for each class for each landsat band, distributed along the range of data to be
+      clustered. For example, if we specified 10 clusters, and each band has values from 0 to 255, the first set of
+      means for cluster 1 might be 25,25,25,25,25,25, the means for cluster 2 might be 50,50,50,50,50,50, and so forth.
+      Each pixel is then assigned to a cluster based on its "Euclidean distance" from the cluster's means. Euclidean
+      distance should be familiar to you, since you learned about it in your geometry class - it's the straight line
+      distance between two points. With a single band, the distance between a pixel value and the mean for one of the
+      clusters is just:</p>
+    <img alt="One dimension" src="euc_dist_1d.png">
+    <p>where B1<sub>p</sub> is the pixel value for band 1 and B1<sub>cm1</sub> is the band 1 cluster mean for the first
+      cluster. Squaring the difference and then taking the square root causes this to be a positive value, regardless of
+      whether the pixel value is above or below the cluster mean. For two landsat bands, the formula is the same as the
+      length of the hypotenuse of a triangle given the leg lengths, like you learned in geometry class. The formula is:</p>
+    <img alt="Euclidean distanc" src="euclid_dist_2d.png">
+    <p>The squared distances between the pixel value and the cluster 1 means for band 1 and band 2 are calculated and
+      the square root of their sum gives the distance. With more than two bands, we just continue to add squared
+      differences between pixels and the cluster mean for the band. For the six LandSat bands we're using the distance
+      would be:</p>
+    <p> <img alt="Euclidean distance in 6 dimensions" src="euclid_dist_6d.png"></p>
+    <p> This distance is calculated for every pixel for every set of cluster means (that is, each band for cm2, each
+      band for cm3, etc.), and each pixel is assigned to the cluster it's closest to (that is, the cluster whose mean it
+      has the shortest Euclidean distance from). </p>
+    <p>Once each pixel has been assigned, the means are re-calculated based on the pixels that are currently in the
+      cluster, which are likely to be different from the initial arbitrary means. Distances between pixels and these new
+      means are then calculated, and the pixels are re-assigned as needed. This process is repeated either until no
+      pixel re-assignments occur, or until the number of "iterations" (number of repeats of the process) you specify has
+      been reached. The greater the number of iterations the longer the analysis will take to complete, but the more
+      likely you are to get reliable results that represent distinct clusters in the data.</p>
+    <h3>Iso clustering</h3>
+    <p>1. <strong>Start ArcMap, and add the spring 2011 LandSat scene</strong>. We're going to use the 2011 data for
+      our first foray into cover typing. Once ArcMap is open, add bands 1-5 and band 7 from the sp11 folder, which is in
+      the Lab5 folder on the P: drive. We will omit band 6 because it has a different spatial resolution than the others
+      (remember, Band 6 is the thermal infrared band with 120x120 m pixels).</p>
+    <p>2. <strong>Make a composite of the six bands</strong>. Make sure the bands are listed in order from band 1 at
+      the top to band 7 at the bottom of the table of contents.</p>
+    <p>Then, open the Image Analysis window, and select all six bands. Click on the "Composite" button in the
+      "Processing" tools (like last time). Don't worry about the assignments of bands to channels on the monitor, it
+      won't affect the analysis we do (if it bothers you that the composite looks wrong, feel free to assign bands 3, 2,
+      and 1 to red, green, and blue respectively - this is the natural color composite).</p>
+    <p>In the Table Of Contents, right-click on the composite that was created, open the Properties, and switch to the
+      "General" tab - you can change the "Layer Name" to "spring11composite" and click "OK".</p>
+    <p>The layer naming bug makes it difficult to tell the bands apart (they are all called Band_1), but they are in the
+      same order as they are listed in the TOC and Image Analysis window, so as long as you have them in order there
+      everything will work fine.</p>
+    <p>3. <strong>Open the "Image Classification" toolbar</strong>. The tools that we'll use are all part of the
+      "Spatial Analyst" extension, which adds imagery and raster data analysis functions to ArcMap.&nbsp; The functions
+      that are specifically related to image classification have been collected into a handy little toolbar, which we'll
+      make extensive use of today.</p>
+    <p>Position your mouse someplace over a blank area of the button bars at the top of the ArcMap window, and
+      right-click. Select "Image Classification" from the set of available toolbars. You'll see a new, floating toolbar
+      titled "Image Classification", <img src="image_classification_toolbar.png">. If your spring11composite image is
+      not already listed as the active image, click on the dropdown menu and select it.</p>
+    <p>4. <strong>Generate the classified image and a signature file</strong>. Now we will conduct the iso clustering.</p>
+    <ul>
+      <li>On the "Image Classification" toolbar, select "Classification" → "Iso Cluster Unsupervised Classification".
+        The "Iso Cluster Unsupervised Classification" window will pop up.</li>
+      <ul>
+        <li>If you had spring11composite selected, it should already be as the raster bands. Note that even though
+          spring11composite is just a single name, the clustering will use all six bands in that composite image.</li>
+        <li>Set the number of classes to 15. We only have nine cover types, but some of the categories we want to use,
+          like "Developed", mixes together some very different things - anything from a parking lot to a mini-ranch in
+          Rancho Santa Fe - which will have very different spectral signatures. We need to have some additional
+          categories so that their spectral signatures can be differentiated by the iso clustering algorithm, and then
+          after we have the clusters we can lump together any that represent different types of development.</li>
+        <li>Put the "Output classified raster" into your monitoring.mdb database, and call the output classified raster
+          "unsupervised_1".</li>
+        <li>Leave the minimum class size and sample intervals at the default values.</li>
+        <li>For the output signature file, navigate to your S: drive, and call the file "unsup_signatures.gsg". We could
+          in principle use this signature file to apply our classification to another map - we aren't going to do this
+          for the unsupervised classification, but we can look at it to see what the spectral signatures look like for
+          the classes.</li>
+        <li>Once the settings are done (such that your window looks like <a href="isoclustering_settings.png">this</a>)
+          click "OK" to run the tool. </li>
+      </ul>
+    </ul>
+    <p>It might take a minute or two, be patient - as long as you're seeing the "Iso Cluster Unsupervised
+      Classification..." progress indicator at the bottom of your map it's working. When it's done, the classified map
+      will be displayed with 15 different color-coded categories, each named by a cluster ID number between 1 and 15.</p>
+    <h3>Interpreting the clusters</h3>
+    <p>Now the hard part - figuring out what the cover type for each of the clusters is.</p>
+    <p>You will need to be able to inspect each color on the map individually, so if you can't tell some of the colors
+      apart you can change the color scheme by double-clicking on the name of the image, and then in the "Symbology" tab
+      selecting a color scheme that has 15 colors that you can easily distinguish.</p>
+    <p>To figure out what the cover types are we will compare the clusters to high-resolution NAIP imagery.</p>
+    <p>1. <strong>Load the NAIP images into your map</strong>. Add the four NAIP layer files to your map (NAIP
+      2012.lyr, NAIP 2012 CIR.lyr, NAIP 2010.lyr, and NAIP 2010 CIR.lyr) from the Lab5 folder on P:.</p>
+    <p>You can also add the "<strong>cover_type_areas</strong>" shapefile - this is a set of 40 points I digitized
+      showing examples of each of the cover types. You can open the cover_type_areas attribute table, click on
+      "CoverType" to sort the cover type categories, select the rows that have a category you want to observe, and then
+      zoom into the selected points on the map to see which of the unsupervised_1 colors they are in.</p>
+    <p>2. <strong>Re-arra</strong><strong>nge the table of contents, and set up swiping</strong>. Place your clusters
+      in unsupervised_1 above the four NAIP images. Turn off every other layer but your clusters and the NAIP image you
+      want to compare against. Zoom into the coastal Del Mar area, where the San Dieguito River runs into the ocean, at
+      the western edge of the watershed polygon.</p>
+    <p>Turn on the NAIP 2010 layer (check the box next to it). Use the "Swipe Layer" tool in the Image Analysis window
+      to swipe the unsupervised_1 layer. If you are trying to distinguish two categories that are both vegetated, turn
+      on the color infrared version so you can see differences in near infrared reflectance. You can also turn off the
+      2010 images and turn on the 2012 images to make sure that the land cover is the same in the area you are observing
+      for both years - if so, it's safe to assume it's the same in 2011.</p>
+    <p>3. <strong>Interpret the cover types. </strong>Now you have things set up, and you can figure out which of the
+      nine cover types in the table above each of your categories represents. </p>
+    <p>Pick the low-hanging fruit first - open water is really easy to classify, because it doesn't look like anything
+      else, so we'll use it as an example of how you will assign cover types:</p>
+    <ul>
+      <li> As you swipe unsupervised_1 from over the NAIP images, look at the pools of water just inland from the mouth
+        of the river you'll see that they are all the same color.</li>
+      <li>Find this color in the table of contents - if the colors aren't sufficiently distinct to be sure which one it
+        is, you can use the "Identify tool", <img alt="Identify tool" src="identify.png">, to click on a pixel from one
+        of the water bodies in the map, and its category number will be reported as the "Pixel value". Find this number
+        in the table of contents.</li>
+      <li>Set the name of the cover type to "Water" in the table of contents - this will help you keep track of the
+        cover types, as you identify them. This can be done within the table of contents, but it's a little tricky - you
+        need to select the number 1, and then click again in the lower left corner to turn on editing. If you do it
+        right you'll see this: <img src="rename_water.png" alt="Rename water"> - note that the 1 is in an edit box -
+        you can type a new name for it now, so change it to "1 Water"</li>
+    </ul>
+    <p>Note that this didn't change the data in unsupervised_1, or the "Value" in the attribute table - changing the
+      labeling in the TOC just helps you keep track of which cover types you've already identified.</p>
+    <p>You will complete these steps for all of the cover types in the map. Some suggestions:</p>
+    <ul>
+      <li>Look next for the biggest blocks of pixels that you can find with the same color, and see what's under them
+        using the swipe tool. You'll see for example that areas of manicured, watered lawns tend to fall in the same
+        cluster - manicured grass is a type of development. Make note of the category number, that it is a "Developed"
+        cover type, and change the label in the table of contents for that number to "Developed".</li>
+      <li>Next look at the rooftops in the Del Mar Fairgrounds. You'll see that they are highly reflective surfaces, but
+        you'll also see that this isn't unique - there are also areas of bare ground, dirt parking lots with cars parked
+        in them, concrete surfaces (like Highway 5), etc that have been assigned the same cover type as these rooftops.
+        All of these are developed land cover, so call this category "Developed" as well.</li>
+      <li>Now for some of the harder stuff in the Del Mar area - the housing areas are really messy, because there are
+        several cover classes that are associated with them. The reason for the mix of spectral signatures is that
+        suburban developments are a mix of very different things - the roofs of houses have different signatures than do
+        lawns, all of which are mixed together. Neighborhoods with big lots and large yards will be different than ones
+        with small lots and small yards, since the pavement and house signatures will dominate in the latter. All of the
+        categories that are in the housing areas treat as "Developed".</li>
+      <li>Next you can look at the undeveloped areas. Re-locate (zoom out, pan, then zoom in) to the area around Lake
+        Hodges (the large lake south of Escondido, that crosses Highway 15 - it's where the points in "cover_type_areas"
+        with FID 3, 4, and 5 are found, you can select one of these from the cover_type_areas attribute table and zoom
+        to it to get into the right area). Most of the land around Lake Hodges is undeveloped, and is covered with
+        various types of scrub and grasslands. Base your interpretation on the largest patches of color you see - they
+        will be least affected by the "mixed pixel" problem of having more than one cover type in a single pixel. As
+        you're deciding what the cover types are, consider the following:</li>
+      <ul>
+        <li>The undeveloped land in this area is covered by a few different dominant vegetation types, primarily made up
+          of chaparral (dominated by Chamise shrubs), coastal sage scrub (dominated by several possible species, but
+          generally having smaller, less dense vegetation than chaparral), riparian woodland along the edge of the lake
+          and by the river, and various other types of wetlands. The NAIP images have good enough resolution to see
+          individual trees fairly clearly, so you should be able to tell which areas are shrublands, and which are
+          grasslands - assign them to "Scrub" and "Grassland", respectively.</li>
+        <li>Note that some of the categories will be different because of shading - a patch of chaparral that goes up
+          and over a ridge may be split into two categories because one side is in direct sunlight and the other side is
+          in shade, but since both are chaparral you can call both "Scrub".</li>
+        <li>Look for the cover type classes near the lake, and along the river below the dam (to the west, in the
+          direction of Del Mar). The vegetation in these areas will be various kinds of wetland and riparian vegetation.
+          Riparian vegetation is often dominated by trees, but since it's associated with water call it "Wetland" rather
+          than forest. The color infrared images will help you tell - riparian vegetation will generally be nice and red
+          because it gets lots of water.</li>
+      </ul>
+      <li>Look for agricultural cover types in the San Pasqual Valley, just east of the end of Lake Hodges. The
+        "cover_type_areas" points with FID 6 and 7 are in this area, you can select and zoom to them (one is in a
+        planted field, and one is in an avocado orchard). A field of corn will look different than an avocado grove, and
+        both will look different than a field that has been freshly plowed but hasn't yet been planted, but all of these
+        possibilities are an "Agriculture" cover type.</li>
+      <li>Forests and woodlands will be further east, to the right of the map. Oak woodlands are found in the area
+        around Santa Ysabel ("cover_type_areas" FID 10). Forests are at high elevation, at the eastern edge of the
+        watershed ("cover_type_areas" FID 12 and 13). The forest types you'll see will be either deciduous black oak
+        forest, or mixed conifer forest - deciduous trees and conifers have very different appearances from above, and
+        these may well receive different categories in your unsupervised classification, but both are tree dominated
+        vegetation that isn't associated with a water body and both can be assigned to "Forest".</li>
+      <li>There is a large rocky bare area at "cover_type_areas" FID 8 to look at. You may find that bare ground is
+        difficult to distinguish from development. </li>
+    </ul>
+    <p>Once you have identified each of the cover types we are using, find any of the categories in unsupervised_1 that
+      don't yet have a cover type assigned and classify them. You can find where they are by right-clicking on
+      unsupervised_1 and opening the attribute table, and then clicking on the row with the as yet unclassified category
+      - this will select all the pixels of that category, which highlights them on the screen so you can zoom in on them
+      for inspection.</p>
+    <p>You'll see that in some cases different land cover types get the same color in unsupervised_1 - bare ground is
+      hard to distinguish from areas that are covered with large buildings with reflective roofs, for example, and
+      forests and wetlands are hard to tell apart based on these six Landsat bands.<br>
+    </p>
+    <p>4. <strong>Double-check your cover types in other parts of the map</strong>. Now that you have identified cover
+      types based on a few locations where the decision is relatively simple, look around the map and see whether your
+      assignments of cover types are consistent across the map. For example, you identified open water in Del Mar, so
+      make sure that it's correctly classified for Lake Hodges, and check that any areas classified as water in the map
+      really are a water body. Likewise, if you classified a forest type in the high elevation mountainous areas to the
+      east see whether that cover type is showing up in low elevation areas - if so, make sure that the areas near the
+      coast with that cover type number also have tree cover (you may find some torrey pine woodlands close to the coast
+      that you would like to have classified as forest, but you might also find that ornamental trees planted in housing
+      developments get classified as Forest as well, when what you would like them to be is Developed).</p>
+    <p>5. <strong>Make a new layer that has been re-coded to your assigned cover types</strong>. You should now have
+      all of the categories in unsupervised_1 identified as one of our nine cover types. Now that you know, for example,
+      that several different signatures are all developed land, you will want to combine them all into one "Developed"
+      category in a new map. But, the changes you made to the legend for unsupervised_1 just changed the labeling in the
+      TOC, it didn't change the data. We now want to make a new raster layer in which the categories reflect our
+      interpretation of the land cover types.</p>
+    <p> </p>
+    <ul>
+    </ul>
+    <p> </p>
+    <p> To convert your old cover type ID's to the new ones you assigned in your table of contents you just need to tell
+      ArcMap what the old numbers are in unsupervised_1, and what new numbers will be assigned. Since the numbers are
+      not very descriptive, we will also write down what the new cover types are for reference. We'll put this into a
+      table in Excel for future reference.</p>
+    <ul>
+      <li>Start Excel (through CougarApps, so you can save this to your S: drive), with a blank table open.</li>
+      <li>In A1 type the column label "OldValue", and enter the numbers 1 to 15 in the cells below - these are the
+        currently assigned cover types in unsupervised_1</li>
+      <li>In cell C1 (yes, skip B for now) enter the label "CovType", and in cells C2 through C16 type the cover types
+        you assigned, using your Table of Contents in ArcMap as a guide - if number 1 is Open water, then enter "Open
+        water", and so on for all 15 of the old cover types</li>
+      <li>In cell B1 enter the label "NewValue", and then in B2 through B16 enter numbers for the new cover types. All
+        of the entries that are going to be the same cover type get the same number, so if the first new cover type is
+        "Open water" it receives a 1 in cell B2, and any other rows that are also open water (if there are any) would
+        get a 1 as well. If the second row is Forest it receives a 2, and all the other Forest cover types get a 2 here
+        as well. Continue until all the new cover types are assigned a new numeric code.</li>
+      <li>This table tells you what the cover types of your new map will be, so save it in S: for reference (call it
+        "old_and_new_unsupervised_cover_types.xlsx"</li>
+    </ul>
+    <p>Now you can make a final cover type map that uses the cover types you assigned:</p>
+    <ul>
+      <li>Open the Arc Toolbox, and find "Spatial Analyst" → "Reclass" → "Reclassify". </li>
+      <ul>
+        <li>Select your unsupervised_1 map as the "Input raster", and make sure "Value" is the reclass field. </li>
+      </ul>
+      <ul>
+        <li>The "Old values" are taken from the cover type ID's as they are currently assigned, and don't need to be
+          changed. </li>
+        <li>The "New values" column is where you type the new numbers you assigned. Only type the numbers, don't type in
+          the text descriptions. Make sure that "NoData" stays as "NoData".</li>
+      </ul>
+      <ul>
+        <li>Set the output raster to go to your monitoring.mdb database, with a "Name" of "cover_spring11" and click
+          "OK". You should get a new layer called "cover_spring11" in the table of contents with only the new codes you
+          assigned.</li>
+      </ul>
+    </ul>
+    <p> When you're done you should have your new cover_spring11 map displayed, with just the nine cover types we wanted
+      to map instead of the 15 clusters found in the unsupervised classification.</p>
+    <p>As you were working through this you should have seen a few things that could be issues with this method of cover
+      typing:</p>
+    <ul>
+      <li>The same cover type can have multiple spectral signatures - developed areas can be covered in concrete,
+        asphalt, roofs of buildings, grass (golf courses, yards), or trees. But, also you probably saw that scrub
+        vegetation can have a different signature depending on the species of shrub, but also on what is underneath and
+        between the shrubs - bare ground or rock between shrubs gives a different spectral signature than grass growing
+        between shrubs does.</li>
+      <li>A single spectral signature can come from different cover types - naturally bare ground can look the same as
+        rooftops of buildings at a 30x30 m pixel resolution, and riparian areas can look like upland forests.</li>
+    </ul>
+    <p>It's possible to address these issues to an extent by using other kinds of data that supplement the imagery -
+      things like "digital elevation models" that give the elevation at every pixel, and can be used to get slope and
+      aspect as well (slope being the steepness, and aspect being the direction the hill is facing) can help tell the
+      difference between different vegetation cover types. Maps of soil types can also help. Pixel-level differences may
+      not be very distinct when 30 x 30 m pixels are used, but may be more clear when combined with higher-resolution
+      images, or possibly even with coarser resolution (a coarser resolution may help tell the difference between
+      development and open areas, such that naturally bare ground may be differentiated from rooftops). Using data from
+      different seasons can also help, since natural vegetation is green during the wet season but dries out in the dry
+      season, whereas developed areas are often watered and stay green during the dry season. It is also possible to
+      develop measures of texture by looking at patterning of pixels in the vicinity, which can help tell the difference
+      between things like grasses and shrubs.</p>
+    <p>And, another approach to classification can be attempted, called supervised classification. At this point, the
+      required part of the assignment for the undergrads is done, but if you are interested in seeing how a different
+      approach that uses the same data can give a different cover type map, feel free to proceed (for the grad students
+      this next part of the exercise is required).</p>
+    <p> </p>
+    <h2>Supervised classification - optional for undergrads, required for grad students</h2>
+    <p>Supervised classification differs from unsupervised classification in that we specify the classes we want to map
+      in advance. We give ArcMap a set of polygons with known cover types, and it creates spectral signatures from them.
+      It then classifies the rest of the unknown pixels in the map based on which of the known cover types the pixel is
+      most similar to in its band values. </p>
+    <p>The biggest advantage of supervised classification is that we can be certain that the cover types that we're
+      interested in will show up in the final set of cover types, and we don't need to inspect the cover types to figure
+      out what they are. The biggest disadvantage is that it's really easy to define a heterogeneous cover type that
+      include pixels with really different spectral values. The problem with this is that when the pixels are averaged
+      together to make the spectral signature for the cover type, the averages will be between the signatures for these
+      very different pixels, possibly to the point that the pixels that belong to the cover type will be closer in
+      signature to other cover types than to their own. Think, for example, of the wild mix of cover types that were
+      assigned to "Developed" when you did your unsupervised classification. You probably found that some of those
+      pixels were dominated by ornamental trees, and looked like forests. Some were dominated by manicured lawns, and
+      looked like wild grasslands. Some were dominated by streets and houses, and looked completely different from the
+      ornamental trees and lawns around them. When we average together the pixels with ornamental trees, lawns, houses,
+      and streets together the means may not be very close to most of the pixels that make up the cover type. When we go
+      to classify unknown pixels the ornamental trees may end up closer to natural forests, the manicured lawns may end
+      up closer to grasslands, and the houses and streets may end up closer to bare ground or rock outcrops.</p>
+    <p>We could address this problem, if we know of it in advance, by intentionally using more categories initially than
+      we need - we could start with a category for "ornamental plants" and a separate one for "buildings", and then lump
+      them together into a single "Developed" land cover type later, like we did with the unsupervised approach. But, as
+      a learning exercise, we are going to try to use just the nine categories we want at the end, and we'll see how
+      well the supervised approach deals with the heterogeneity in some of the categories.</p>
+    <h3>Training data</h3>
+    <p>Training data are data points or areas on the map of known cover type, which are used to develop spectral
+      signatures. ArcMap can use training data defined by points, lines, or polygons, which it overlays with the LandSat
+      data to select the pixels that overlap with them, and then averages the pixels in each band to get the spectral
+      signatures for each cover type.</p>
+    <p>Training data can come from field sampling - one can go out into the field with a GPS, stand in the middle of one
+      of the cover types (like a housing development, or a forest, etc.), and record both the coordinate and the cover
+      type. This can be an excellent way to generate training data for cover types that are easy to identify on the
+      ground, but difficult to identify from imagery - forest types that differ in the mix of tree species that compose
+      them are notoriously difficult to distinguish from an air photo without a great deal of training and experience,
+      but are much easier to tell apart on the ground.</p>
+    <p>For our purposes, we will generate training data from ArcMap. We'll use our NAIP images to find a selection of
+      areas of each of the cover types we want, and draw polygons around them. We will then use the polygons to average
+      the pixels in the LandSat bands to derive signature files. Finally, we'll use the signature files to classify the
+      rest of the pixels in the map into cover types.</p>
+    <p>1. <strong>Prepare to </strong><strong>begin</strong>. Turn off everything except the 2012 NAIP image. Zoom to
+      the coastal Del Mar area again.</p>
+    <p>2. <strong>Identify the first cover types for the training data set</strong>. To get our training samples, we
+      need to do the following:</p>
+    <ul>
+      <li> In the "Image Classification" toolbar, make sure your LandSat composite is selected (spring11composite).
+        Then, click on the "Training Sample Manager" button (<a href="training_sample_manager.png">this</a> one). The
+        window that opens will look like a little spreadsheet. </li>
+      <li>Move the Training Sample Manager window so that you can see the ponds in the NAIP image, then click on the
+        "Draw Polygon" button in the "Image Classification" toolbar (<a href="draw_polygon.png">this</a> one).</li>
+      <li>Now, draw a polygon on the map that falls completely inside of one of the ponds. Draw the polygon by
+        left-clicking once at each vertex you want, and then double-clicking at the final one. You'll see that when
+        you're done the Training Sample Manager now has a row filled in, with ID of 1, Class Name of Class 1, Value of
+        1, a color assigned, and a Count of the number of pixels in spring11composite that are within the polygon. This
+        is the first of your water cover type training sample.</li>
+      <li>Change the Class Name to "Open water". The color isn't important, it's just to help you keep track of which
+        polygons you draw go with which cover types, so you can leave them as assigned (unless the colors really offend
+        your sensibilities, then by all means pick something nice). Bear in mind that we are working with LandSat data
+        that has been "clipped" to the watershed boundary, so even though the ocean is an excellent example of open
+        water it falls outside of the region for which we have LandSat data.</li>
+      <li>Next, move over to Lake Hodges, and draw a polygon that falls completely inside the surface of the water (it
+        doesn't have to cover the entire lake surface, but make it as large a a portion of the lake as you can). When
+        you're done, you'll have a second entry, with ID of 2, Class Name of Class 2, Value of 2, a new color, and a
+        count. </li>
+      <li>In the Training Sample Manager, select the first two rows by shift-clicking, then click the "Merge training
+        sample" button (<a href="merge_polygons.png">this</a> one). You should now have one row for both of the
+        polygons, that uses Water as its class name, with a count of 2. You can add additional polygons in Lake Hodges,
+        and perhaps one more from another water body in the watershed to complete the Open water training data
+        selection.</li>
+    </ul>
+    <p>3. <strong>Move on to the other categories that you identified in your final unsupervised classification map</strong>.
+      When you're done you should have just one row for each of the final categories that you want. You may need to zoom
+      to other regions of the map to find some good spots - you can use the "cover_type_areas" layer to find a selection
+      of them. Make sure the polygons you draw are inside of the area we have LandSat data for - you can turn on
+      spring11composite to double check where the data set's boundaries are.</p>
+    <p>4. <strong>Check the statistical distributions of the pixels</strong>. The classification algorithm works best
+      when a) the distribution of the training data is normal, and b) when there is good separation in spectral
+      signatures between groups. Of the two, the second is by far the most important, since overlap among the signatures
+      means that the cover types can't be distinguished by their spectral signatures.</p>
+    <ul>
+      <li>To check the distributions, click on the "Show histograms" tool (above "Color" on the training sample
+        manager). Select each of your cover types one by one, and the histograms will update. Ideally, each will be a
+        nice, symmetrical, unimodal bell curve in each of the six bands. If you see more than one mode, that could be a
+        problem, since it means you have more than one distinct spectral signature captured in your training samples.
+        The x-axis scaling is the same for all of them, so you would like to see the averages falling at different
+        locations for each of your cover types, which you can check by selecting all of your cover types at once. You
+        should see the colors concentrating at different places along the x-axis in at least one of the bands. If they
+        don't all is not necessarily lost though, because combinations of bands may still be distinct.</li>
+      <li>To check for separation in two bands at a time, select all of your cover types, and click on the "Show
+        Scatterplots" button. You should now see plots of bands plotted against one another (all possible combinations
+        are given). This type of graph has less information about whether the data are normal, but the separation
+        between cover types is usually better when more than one band is considered at a time, so look for separation in
+        the cover types (i.e. non-overlapping colors are best). If there are colors that completely intermix with
+        others, that cover type doesn't have a distinct spectral signature and may not classify well. If you don't see
+        good separation, don't despair - the combination of all the bands at once may separate still better than these
+        pairs of two bands at a time, but it's difficult to plot more than two at once. </li>
+    </ul>
+    <p>5. <strong>Generate the signature file</strong>. First, make the "Value" numbers in the Training Sample Manager
+      match the ones you used for your unsupervised map - the "Value" is all that will be written to the cover type map,
+      so it's good to do this to make it easier to match the codes in "Value" with the cover type names later on. It
+      will also make comparison between supervised and unsupervised maps easier.</p>
+    <p> </p>
+    <p>Click on the "Create a Signature File" button (above the "Count" column of the training samples manager), and
+      save the file to your S: drive. Call the file "training_sp11.gsg". The signature file will save means for each
+      band for each cover type, and a covariance matrix for each cover type as well. The covariance matrix is used to
+      help improve the assignment of pixels to cover types, so let's take a brief statistical detour to see how.</p>
+    <p> </p>
+    <p>Covariance is related to correlation, and you should recall that correlations are measures of association between
+      two variables that can have any decimal value between -1 and 1 (negative correlations indicate that an increase in
+      one variable is accompanied by a decrease in the other, and a positive correlation means that an increase in one
+      is accompanied by an increase in the other). The formula for correlation can be written as:</p>
+    <p> <img alt="Correlation" src="correlation.png"></p>
+    <p> </p>
+    <p> where s<sub>x</sub> and s<sub>y</sub> are the standard deviations for the two variables. Covariance is a measure
+      of the average cross-products between two variables (that is, the distance of a data point from the x-variable
+      mean multiplied by the distance of the data point from the y-variable mean):</p>
+    <p> </p>
+    <p> <img alt="Covariance" src="covariance.png"></p>
+    <p> </p>
+    <p>From this hopefully you can see that correlations are a kind of standardized covariance, in that dividing the
+      covariances by the standard deviations is what causes the correlation to be bounded between -1 and 1. Conversely,
+      covariances are raw measures of the tendency of variables to increase or decrease relative to one another in a
+      consistent way. Correlations don't have units, but covariances have the units of the product of the two variables,
+      and covariances are not bounded between -1 and 1. If you calculated the covariance between a variable and itself,
+      you would be multiplying the difference between a data point and its mean by itself, yielding the square of the
+      difference. The covariance between x and x would then be the variance of x:</p>
+    <p> <img alt="Variacne" src="variance.png"> </p>
+    <p>A covariance matrix is the set of covariances between pairs of variables. An example might look something like
+      this:</p>
+    <p> </p>
+    <table style="width: 522px; height: 280px;" cols="7" cellspacing="0" border="3">
+      <colgroup width="57" span="7"></colgroup>
+      <tbody>
+        <tr>
+          <td height="16" align="LEFT"><br>
+          </td>
+          <td align="LEFT">Band 1</td>
+          <td align="LEFT">Band 2</td>
+          <td align="LEFT">Band 3</td>
+          <td align="LEFT">Band 4</td>
+          <td align="LEFT">Band 5</td>
+          <td align="LEFT">Band 7</td>
+        </tr>
+        <tr>
+          <td height="16" align="LEFT">Band 1</td>
+          <td sdval="154.52239" sdnum="1033;0;0.0" align="RIGHT">154.5</td>
+          <td sdval="88.25638" sdnum="1033;0;0.0" align="RIGHT">88.3</td>
+          <td sdval="118.5614" sdnum="1033;0;0.0" align="RIGHT">118.6</td>
+          <td sdval="-17.23803" sdnum="1033;0;0.0" align="RIGHT">-17.2</td>
+          <td sdval="61.13432" sdnum="1033;0;0.0" align="RIGHT">61.1</td>
+          <td sdval="71.56245" sdnum="1033;0;0.0" align="RIGHT">71.6</td>
+        </tr>
+        <tr>
+          <td height="16" align="LEFT">Band 2</td>
+          <td sdval="88.25638" sdnum="1033;0;0.0" align="RIGHT">88.3</td>
+          <td sdval="55.23504" sdnum="1033;0;0.0" align="RIGHT">55.2</td>
+          <td sdval="75.47023" sdnum="1033;0;0.0" align="RIGHT">75.5</td>
+          <td sdval="2.30601" sdnum="1033;0;0.0" align="RIGHT">2.3</td>
+          <td sdval="54.62931" sdnum="1033;0;0.0" align="RIGHT">54.6</td>
+          <td sdval="51.57075" sdnum="1033;0;0.0" align="RIGHT">51.6</td>
+        </tr>
+        <tr>
+          <td height="16" align="LEFT">Band 3</td>
+          <td sdval="118.5614" sdnum="1033;0;0.0" align="RIGHT">118.6</td>
+          <td sdval="75.47023" sdnum="1033;0;0.0" align="RIGHT">75.5</td>
+          <td sdval="110.62748" sdnum="1033;0;0.0" align="RIGHT">110.6</td>
+          <td sdval="2.26323" sdnum="1033;0;0.0" align="RIGHT">2.3</td>
+          <td sdval="89.89365" sdnum="1033;0;0.0" align="RIGHT">89.9</td>
+          <td sdval="82.63217" sdnum="1033;0;0.0" align="RIGHT">82.6</td>
+        </tr>
+        <tr>
+          <td height="16" align="LEFT">Band 4</td>
+          <td sdval="-17.23803" sdnum="1033;0;0.0" align="RIGHT">-17.2</td>
+          <td sdval="2.30601" sdnum="1033;0;0.0" align="RIGHT">2.3</td>
+          <td sdval="2.26323" sdnum="1033;0;0.0" align="RIGHT">2.3</td>
+          <td sdval="174.19128" sdnum="1033;0;0.0" align="RIGHT">174.2</td>
+          <td sdval="121.52521" sdnum="1033;0;0.0" align="RIGHT">121.5</td>
+          <td sdval="28.67983" sdnum="1033;0;0.0" align="RIGHT">28.7</td>
+        </tr>
+        <tr>
+          <td height="16" align="LEFT">Band 5</td>
+          <td sdval="61.13432" sdnum="1033;0;0.0" align="RIGHT">61.1</td>
+          <td sdval="54.62931" sdnum="1033;0;0.0" align="RIGHT">54.6</td>
+          <td sdval="89.89365" sdnum="1033;0;0.0" align="RIGHT">89.9</td>
+          <td sdval="121.52521" sdnum="1033;0;0.0" align="RIGHT">121.5</td>
+          <td sdval="277.61039" sdnum="1033;0;0.0" align="RIGHT">277.6</td>
+          <td sdval="146.66108" sdnum="1033;0;0.0" align="RIGHT">146.7</td>
+        </tr>
+        <tr>
+          <td height="16" align="LEFT">Band 7</td>
+          <td sdval="71.56245" sdnum="1033;0;0.0" align="RIGHT">71.6</td>
+          <td sdval="51.57075" sdnum="1033;0;0.0" align="RIGHT">51.6</td>
+          <td sdval="82.63217" sdnum="1033;0;0.0" align="RIGHT">82.6</td>
+          <td sdval="28.67983" sdnum="1033;0;0.0" align="RIGHT">28.7</td>
+          <td sdval="146.66108" sdnum="1033;0;0.0" align="RIGHT">146.7</td>
+          <td sdval="109.39396" sdnum="1033;0;0.0" align="RIGHT">109.4</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The rows and the column labels are the same, they are the set of six bands we will use in our cover typing. Every
+      cell in the table for which the row and column name is not the same is the covariance between the variables. Every
+      cell for which the row and column names are the same is the variance for that variable. Since the rows and columns
+      are the same, each pair of variables shows up twice, once above the "main diagonal" (which is where all the row
+      and column names are the same, running upper left to lower right), and once below the main diagonal.</p>
+    <p> </p>
+    <p>You can see from this, for example, that most of the variables are positively related, meaning that an increase
+      in radiance for one band is associated with an increase in radiance for the other. The only exception is the
+      relationship between band 1 and band 4, which is negative (an increase in band 1 is associated with a decrease in
+      band 4).</p>
+    <p> </p>
+    <p>Why is this important? The pixels will be assigned based on which cover type they are most likely to belong to
+      (the "Maximum Likelihood" criterion). We have six different bands that we are working with, but let's just
+      consider two for the moment so we can envision what's going on better. The probability that a pixel belongs to a
+      cover type depends on the means on both of the bands, and on the variance around the means. As you know, a normal
+      probability distribution for a <em><strong>single</strong></em> variable is "bell-shaped", so what would a normal
+      distribution for <em><strong>two</strong></em> variables look like?</p>
+    <img alt="Bivariate normal" src="bivariate_normal_no_corr.png"><br>
+    <br>
+    <p>On the 3-d graph on the left, the x- and y-axes are each a LandSat band, and the height is the probability of
+      observing a particular x,y pair. The 2-d graph on the right is a plot of concentric circles, and for each one the
+      edges of the circle have equal probability (like a topographic map), with the outer circle having the lowest
+      probability, increasing as you move inward. If you drew a line around the 3-d graph at a constant height and then
+      looked down on it from above, you would get the 2-d graph on the right. When the x and y-axes are not correlated
+      you will get concentric rings like this, that are not up or down. Note that the 2-d graph may look elliptical if
+      the x- and y-axes are not plotted with the same units, but even if the shape is elliptical it will not be tilted
+      up or down if the variables have a correlation of 0.</p>
+    <p>Compare the uncorrelated case with the case in which x and y are strongly positively correlated, as below:</p>
+    <br>
+    <img alt="Strong positive correlation" src="bivariate_normal_pos_corr.png"><br>
+    <br>
+    <p>The positive correlation means that high values of band 1 and band 2 are likely, and low values of band 1 and
+      band 2 are likely, but high values of band 1 are unlikely to accompany low values of band 2, and vice versa.</p>
+    <p><br>
+    </p>
+    <p><img alt="Effect of correlation on probability" src="effect_correlation_on_probability.png" style="float: left; margin-right: 15px">
+      The correlations have a big effect on classifying our unknown pixels. Consider the example to the left - the
+      ellipses in the three different panels represent the outer ring in our 2-d graphs above, showing the distribution
+      of the training data on band 1 and band 2 for one of the cover types. The plus in the middle of the ellipse is the
+      mean on x (band 1) and y (band 2), and is in the same location in all three panels. The happy face in the upper
+      right is a pixel for which we would like to calculate probability of belonging to this cover type, and it too is
+      in the same location in all three panels. If only the means were important, and the covariances didn't matter,
+      then the unknown pixel would always either be assigned to the cover type or not.</p>
+    <p>You can see that when the correlation between the two bands is negative the unknown pixel falls well outside of
+      the ellipse - the probability that the pixel belongs in that cover type is going to be pretty small. When there is
+      no correlation the unknown pixel is slightly outside of the ellipse - the unknown pixel has a moderate probability
+      of belonging in that cover type. Finally, when the correlation is positive the unknown pixel easily falls inside
+      of the ellipse, and is likely to be of that cover type.</p>
+    <p>Although the graphs show correlations to make the interpretation easier, variances and covariances are actually
+      used in the probability calculations. The covariance matrix is included in the signature file so that this effect
+      can be included in the classification process.</p>
+    <p>So, to summarize, accurately assigning pixels to cover types depends on knowing not only the means but variances
+      and correlations (and thus covariances) as well. The effect is the same when you have 6 bands instead of 2, but
+      6-dimensional graphs are hard to draw.</p>
+    <br>
+    <p>6. <strong>Classify the unknown pixels</strong>. Now that you know how this is working, you can go ahead and
+      classify your cover types. From the "Image Classification" toolbar, drop down "Classification", and select
+      "Maximum Likelihood Classification". The spring11composite should already have been included as the input raster
+      band, but if not add it.</p>
+    <p>Next, enter the "training_sp11.gsg" signature file you just created in "Input signature file".</p>
+    <p>The output classified raster should be called "supervised_sp11", and should go into your monitoring.mdb database.</p>
+    <p>The rest of the options can stay at their default values. Click "OK".</p>
+    <p>When it's done, the cover type map should be automatically added to the table of contents.</p>
+    <p>7. <strong>See if it worked</strong>. We will work next week on quantifying accuracy, but for now compare the
+      new cover type map to the NAIP imagery and see how it looks. Specifically, look at a couple of things:</p>
+    <ul>
+      <li>Check whether the classified pixels that fall within your original training polygons are all one color. If
+        they are, then the spectral signatures were pretty distinct. If not, then some of what you could see with your
+        eyes was one cover type had the spectral signature of some other cover type.</li>
+      <li>Pick one of your cover types and see whether it's correct in as many places on the map as you can find it. You
+        can zoom in and out and use the "Swipe" tool for this. In other words, if you pick "Developed", is the land
+        always actually developed (according to the World Imagery layer) under the "Developed" pixels?</li>
+      <li>Compare your unsupervised map to your supervised map. Are the categories always the same, or do they differ
+        sometimes? You can check this by making a composite of the two maps, assigning unsupervised to green and blue
+        and supervised to red. Places where they disagree will be colored.</li>
+    </ul>
+    <p>And that's all for today! Save a map file, but the rest of your work should be in monitoring.mdb on your S: drive
+      already.</p>
+    <p><br>
+    </p>
+    <p> </p>
+  </body>
+</html>

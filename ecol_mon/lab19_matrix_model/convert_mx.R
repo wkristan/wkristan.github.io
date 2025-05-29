@@ -1,0 +1,9 @@
+convert_mx <- function(mx_str){
+  mx_str<-substr(mx_str, 2, nchar(mx_str)-1)
+  mx_str<-gsub('; ',';',mx_str)
+  mx_str<-gsub(';', ',', mx_str)
+  mx_str<-gsub(' ', ',', mx_str)
+  mx_str<-paste('c(',mx_str,')',sep='')
+  mx <- eval(parse(text=mx_str))
+  mx<-matrix(mx, nrow=sqrt(length(mx)), byrow=T)
+  return(mx) }

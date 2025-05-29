@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Lab 17 - Survival analysis</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script type="text/javascript" src="survival.js"></script>
+  </head>
+  <body onload="drawPlots()">
+    <h1>Lab 17 - Apparent survival estimation in demographically open populations<br>
+    </h1>
+    <p>We're going to make one more visit to the wonderful world of mark/recapture data to learn about survival
+      estimation. The data will look familiar, as we will be using capture histories, but the design of the study, the
+      characteristics of the populations, and the way we model the capture histories will all be different. The survival
+      analysis we will be working with is called the <strong>Cormack-Jolly-Seber</strong> model, named for the people
+      who developed the approach.</p>
+    <p>One thing that should be obvious is that you can't simultaneously assume demographic closure and estimate
+      survival, since deaths violate the demographic closure assumption. By definition, survival analysis doesn't assume
+      demographic closure. Less obviously, we can also partially relax the geographic closure assumption - we are going
+      to be working only with re-captures of animals that were captured and marked in the first capture period, so
+      movement into the population is irrelevant (the immigrants will not be marked, and can't affect our analysis).
+      Emigration out of the population is still an issue, however, because marked individuals who leave the population
+      can't be recaptured, and will appear to have died. Since this is a possibility, as long as we can't be certain the
+      population is geographically closed we refer to these survival estimates as <strong>apparent survival</strong>,
+      since some of what appears to be mortality may actually be emigration.</p>
+    <p>Relaxing closure assumptions is a big change, because they had important consequences for our interpretation of
+      the zeros in our capture histories. If a population is demographically and geographically closed we could treat
+      zeros in our capture histories as known outcomes - a zero was assumed to be an animal that was alive and present
+      in the population but went undetected. It didn't matter whether the zeros were leading or trailing - a leading
+      zero (such as 011) meant we missed capturing the animal in the first trapping period, and a trailing zero (110)
+      meant we missed recapturing the animal.</p>
+    <p>Since we are no longer assuming demographic closure, trailing zeros could potentially be due to two different
+      events: 1) the animal survived but went undetected, or 2) the animal died. We will not be using "dead recoveries"
+      - that is, deaths are not detected, so there's no way to tell a mortality from a failure to encounter a living
+      animal. Our survival models will have to account for this ambiguity.<br>
+    </p>
+    <p>In addition to having to treat trailing zeros differently, we will need to change how we interpret the entire
+      capture history when we estimate survival. As before, we will call the encounter probability p. However, now we
+      are primarily interested in what happens in the intervals between captures, because those are the periods of time
+      over which survival or mortality are occurring, so we will model the probabilities of survival between the
+      captures. Survival probability is symbolized with a Greek upper-case phi, or ϕ. To begin, we'll assume that p and
+      ϕ did not change over time, so a single p and ϕ are used for all time periods.</p>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><img alt="111" src="model111_history.png" onclick="changeImage(this, ['model111.png','model111_history.png'])"></td>
+          <td>
+            <p>&nbsp;To the left is the simplest capture history to model, which is 111.</p>
+            <p>With survival estimation, all capture histories begin with a capture - the capture history begins when an
+              animal is marked and released for the first time. There is no capture probability assigned to the first
+              capture (we'll call this time 0, or t=0) because having a first capture is a given (if we were to assign
+              it a probability, it would be 1, because we know we caught the animal at t=0).</p>
+            <p>If you click on the image it will change to show the only possible explanation for this history. In order
+              for the animal to be captured the next time it has to survive until the second capture period with
+              probability of ϕ, and then be captured again with a probability of p. The probability of both surviving
+              from t=0 to t=1 <em><strong>and</strong></em> being captured at t=1 is ϕp. Likewise, to be detected at
+              t=2 the animal needs to survive another year <em><strong>and</strong></em> be captured again, which also
+              has a probability of ϕp. We calculate the probability of the entire history by multiplying the
+              probabilities along the path defined by the arrows - the probability of surviving <em><strong>and</strong></em>
+              being captured at time 1 <em><strong>and</strong></em> surviving <em><strong>and</strong></em> being
+              captured at time 2 is ϕpϕp.</p>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" rowspan="1">
+            <p>Note that although the capture history looks just like the kind we would use to estimate population size,
+              the sampling design is different. We don't need to keep the captures close together in time because we
+              don't want to assume demographic closure - the captures are spaced far enough apart that some mortality is
+              likely to have occurred, and usually the captures are over ecologically meaningful time periods, such as
+              seasons or years. We'll be working with data collected each year, so ϕ is annual survival probability, and
+              p is the probability of being detected in a given year. </p>
+          </td>
+        </tr>
+        <tr>
+          <td><img alt="101" src="model101_history.png" onclick="changeImage(this, ['model101.png','model101_history.png'])"></td>
+          <td>
+            <p>Now, let's look at a history with a 0 in it.</p>
+            <p>If you click once to see the model, you'll notice that the only difference from our model for 111 is that
+              we used (1-p) to model the 0 at t=1. An embedded zero (i.e. zeros followed by ones) like this one is not
+              ambiguous - since we know the animal was alive at time 2 it must have been alive at time 1 as well (so, we
+              are assuming animals aren't dying and coming back to life - the "no zombie apocalypse" assumption, or
+              NZA). The probability of this capture, then, is ϕ(1-p)ϕp</p>
+          </td>
+        </tr>
+        <tr>
+          <td><img alt="110" src="model110_history.png" onclick="changeImage(this, ['model110_history_opt1.png', 'model110_history_opt2.png', 'model110.png','model110_history.png'])"></td>
+          <td>
+            <p>The NZA assumption can't be invoked with a trailing zero though. Things are clear enough for the first
+              recapture - the animal has to have survived with probability ϕ to have been recaptured at time t=1, and
+              the probability of that capture is p. But, for the second period there are two possibilities - click once
+              to see the first:</p>
+            <ul>
+              <li>Option 1 is that the animal could have died between t=1 and t=2, with a probability of 1-ϕ. We aren't
+                including dead recoveries, so if an animal dies then there is no chance it will be recaptured, and we
+                don't need to include a probability of recapture along that path. The probability for this option is
+                ϕp(1-ϕ)</li>
+              <li>Click again and you'll see the second possibility (Option 2) - the animal could have survived with
+                probability ϕ<em><strong></strong></em> <em><strong>and</strong></em> then gone undetected at t=2 with
+                probability 1-p. The probability for this option is ϕpϕ(1-p)</li>
+            </ul>
+            <p>The two possible fates for the animal at time 2 are <strong>mutually exclusive</strong> alternatives -
+              that is, an animal can't both be alive and dead at the same time (NZA). We can thus add the probabilities
+              for each path to give us the probability of capture history. This is the <strong>addition rule</strong>
+              for mutually exclusive "or" probabilities, if you remember your intro stats. So, the probability for the
+              whole history is:</p>
+            <p> ϕpϕ(1-p) + ϕp(1-ϕ)</p>
+            <p>If you click on the image one more time you'll see the branching paths that represent both of these
+              possibilities - the probability of each path is the product of the coefficients along each step of the
+              path, and the sum of the two paths is the probability of the history.</p>
+          </td>
+        </tr>
+        <tr>
+          <td><img alt="100" src="model100_history.png" onclick="changeImage(this, ['model100_history_opt1.png', 'model100_history_opt2.png', 'model100_history_opt3.png','model100.png','model100_history.png'])"></td>
+          <td>
+            <p>The last possible history, 100, is the most complicated because it has two trailing zeros. If you click
+              on the image once you'll see the first possible explanation for the history:</p>
+            <ul>
+              <li>Option 1 is that the animal died before the first recapture at t=1, with probability 1-ϕ. </li>
+              <li>Click again to see the second possible explanation (Option 2) - it's possible that the animal survived
+                undetected to the first recapture and then died before the second. The probability of this option is
+                ϕ(1-p)(1-ϕ). </li>
+              <li>Click again to see the third possible explanation (Option 3) - the animal could have survived
+                undetected through both recaptures. The probability of this option is&nbsp;ϕ(1-p)ϕ(1-p). </li>
+            </ul>
+            <p>Since any of these three possibilities may have occurred, and they are mutually exclusive, we add them up
+              to get the probability of the capture history: </p>
+            <p> </p>
+            <p>(1-ϕ) + ϕ(1-p)(1-ϕ) + ϕ(1-p)ϕ(1-p)</p>
+            <p>Click once more to see the full set of pathways possible, but just like with history 110 you can find the
+              probability of the history by multiplying coefficients along each path and then adding them together
+              across the three possible paths through the diagram. </p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>It's possible to algebraically simplify these formulas - for example, for history 110 we could express the
+      probability ϕpϕ(1-p) + ϕp(1-ϕ) as ϕp - (ϕp)<sup>2</sup>. The simplified version is easier to enter into Excel, but
+      it is less clearly a model for the 110 capture history. We will stick with the un-simplified versions to help us
+      understand how the formulas are related to the capture histories.</p>
+    <p>To keep things simple today we won't allow new animals to be added to the population in the second capture
+      period, so we won't have 010, 011 capture histories. If we were going to use these we would ignore the leading 0
+      and model the histories just using the survival and capture probabilities for the t=1 to t=2 periods. Adding new
+      animals to a study is common when the recaptures at t=1 and t=2 were actual captures - capturing a previously
+      unmarked individual and just letting it go would be a pretty foolish waste of effort (note that adding new
+      captures in the last period would tell us nothing about survival, so there would never be a need for a 001
+      history). But, if we initially captured animals, marked them conspicuously, and then resighted them later rather
+      than capturing them again, we would only have histories with 1 in the first position - we will just work with
+      animals that were all marked at time t=0.</p>
+    <h2>Time-varying encounter and survival</h2>
+    <p>The probabilities of capture histories above all use a single p and a single ϕ, which means they assume encounter
+      and survival probability to be the same for each interval - we can call this <strong>model ϕp</strong>. It is
+      quite possible that survival and encounter probabilities are not constant, and we could allow one or the other, or
+      both, to change over time. A model in which encounter probability changes over time but survival is constant would
+      be called <strong>model ϕp<sub>t</sub></strong>, and the capture histories would have these probabilities:</p>
+    <p>Table 1. Model ϕp<sub>t</sub> capture history probabilities</p>
+    <table style="text-align: left; width: 500px; height: 168px;" cellspacing="2" cellpadding="2" border="1">
+      <tbody>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>History</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>Probability</p>
+            <p> </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>111</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>ϕp<sub>1</sub>ϕp<sub>2</sub></p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>101</p>
+          </td>
+          <td>
+            <p>ϕ(1-p<sub>1</sub>)ϕp<sub>2</sub></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>110</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>ϕp<sub>1</sub>ϕ(1-p<sub>2</sub>) + ϕp<sub>1</sub>(1-ϕ)</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>100</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>(1-ϕ) + ϕ(1-p<sub>1</sub>)(1-ϕ) + ϕ(1-p<sub>1</sub>)ϕ(1-p<sub>2</sub>)</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>A single ϕ is used, but the encounter probabilities are subscripted to indicate the capture period, and we use p<sub>1</sub>
+      for t=1, and p<sub>2</sub> for t=2. </p>
+    <p>If survival varies but encounter probability does not then we would have <strong>model ϕ<sub>t</sub>p</strong>.
+      The capture histories would have the probabilities:</p>
+    <p>Table 2. Model ϕ<sub>t</sub>p probabilities.<strong><br>
+      </strong></p>
+    <table style="text-align: left; width: 500px; height: 168px;" cellspacing="2" cellpadding="2" border="1">
+      <tbody>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>History</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>Probability</p>
+            <p> </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>111</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>ϕ<sub>1</sub>pϕ<sub>2</sub>p</p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>101</p>
+          </td>
+          <td>
+            <p>ϕ<sub>1</sub>(1-p)ϕ<sub>2</sub>p</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>110</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>ϕ<sub>1</sub>pϕ<sub>2</sub>(1-p) + ϕ<sub>1</sub>p(1-ϕ<sub>2</sub>)</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>100</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>(1-ϕ<sub>1</sub>) + ϕ<sub>1</sub>(1-p)(1-ϕ<sub>2</sub>) + ϕ<sub>1</sub>(1-p)ϕ<sub>2</sub>(1-p)</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Finally, it's possible that both encounter probability and survival vary over time, which gives us <strong>model
+        ϕ<sub>t</sub>p<sub>t</sub></strong>. The probabilities for this model are:</p>
+    <p>Table 3. Model ϕ<sub>t</sub>p<sub>t</sub> probabilities.</p>
+    <table style="text-align: left; width: 500px; height: 168px;" cellspacing="2" cellpadding="2" border="1">
+      <tbody>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>History</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>Probability</p>
+            <p> </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>111</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>ϕ<sub>1</sub>p<sub>1</sub>ϕ<sub>2</sub>p<sub>2</sub></p>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p>101</p>
+          </td>
+          <td>
+            <p>ϕ<sub>1</sub>(1-p<sub>1</sub>)ϕ<sub>2</sub>p<sub>2</sub></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>110</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>ϕ<sub>1</sub>p<sub>1</sub>ϕ<sub>2</sub>(1-p<sub>2</sub>) + ϕ<sub>1</sub>p<sub>1</sub>(1-ϕ<sub>2</sub>)</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="vertical-align: top;">
+            <p>100</p>
+            <p> </p>
+          </td>
+          <td style="vertical-align: top;">
+            <p>(1-ϕ<sub>1</sub>) + ϕ<sub>1</sub>(1-p<sub>1</sub>)(1-ϕ<sub>2</sub>) + ϕ<sub>1</sub>(1-p<sub>1</sub>)ϕ<sub>2</sub>(1-p<sub>2</sub>)</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>We can use AICc to tell us which of these models best describes our data.</p>
+    <h2>Estimating survival</h2>
+    <table style="width: 100%" border="1">
+      <tbody>
+        <tr>
+          <td><img alt="Crow with wing tag." src="L3hans5a.jpg"><br>
+          </td>
+          <td>
+            <p>We will return to the ravens of the West Mojave for this exercise. In addition to studying their breeding
+              biology, my colleagues trapped and marked a large number of ravens at the landfill at Edwards Air Force
+              Base in 1996. Birds were either equipped with a radio transmitter backpack and wing tagged, or were just
+              given wing tags (the picture on the left gives you an idea of what the wing tags look like, although this
+              is a picture of a crow...I couldn't find a good wing tagged raven picture for you, sorry). </p>
+            <p>The data we actually collected in this study is a little complicated for this class - we had a mix of
+              live and dead recoveries, had detection periods in both the summer and winter, distinguished between
+              adults and juveniles, and there were several trapping events in which new birds were added to the marked
+              population.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>We will work with two simplified versions of the data, one with only three years that you will use to try out
+      defining the models for the capture histories, and one with all five years of data for the birds caught in 1996
+      that you can use to fit all four of the models we're interested in and compare them with AICc.</p>
+    <p>First, open <a href="survival_fiveyr.xls">this</a> Excel file. You'll see that there are two sheets, one called
+      Example and one called Data. In both I have already summarized the capture histories for you. We will start with
+      Example, which has only three years of data and has encounter history probabilities that are not too complicated
+      to work with.<br>
+    </p>
+    <p>1. <b>Set up the Example worksheet for ML estimation</b>. I have given you a column of labels for the four
+      parameters (D), and a place where you can enter your link functions and betas (E and F). You also have a column
+      for the multinomial capture histories (H), and a label for the log likelihood (cell C10).</p>
+    <p>In cell E2 enter the sine link function - type =(sin(f2)+1)/2. Copy and paste this function to the rest of the
+      MLE cells.<br>
+    </p>
+    <p>We will ultimately want to fit models that either have time-varying survival, capture probability, or both. To
+      make that simple you will set up your multinomial probabilities in column H as though both survival and capture
+      probabilities are time varying. To fit models that have constant survival or capture probabilities, like model
+      phi,p, we will enter a beta for phi1 and p1, and then make phi2 and p2 point to their values - we will only let
+      Solver vary the betas that are entered as numbers, and the others will use the same values. </p>
+    <p>So, to make this work:</p>
+    <ul>
+      <li>Type a 0 in cell F2 and F4. This will set the initial beta to 0 for both phi1 and for p1. We are starting them
+        both at the same place, but we will have Solver change these two cells, so we will end up with a different
+        estimate of p1 and phi1. </li>
+      <li>In cell F3 type =f2. This sets the beta for p2 to be the same as for p1 - whatever value Solver picks for p1
+        will also be used for p2...this model thus uses a single, constant p.</li>
+      <li>In cell F5 type =f4. This sets the beta for phi2 to be the same as for phi1. Like with the capture
+        probabilities, phi1 and phi2 will now be the same, which means this first model uses a constant phi.</li>
+    </ul>
+    <p>Under the "Multinomial probability" label in column H you will enter your probabilities for each capture history.
+      This is where we translate the equations in Table 1 above into cell formulas in the spreadsheet. Take a crack at
+      doing this yourself - use the MLE's as phi and p, not the betas. Even though we have set p2 to be the same as p1,
+      and phi2 to be the same as phi1, lay out your multinomial probabilities using the p1, p2, phi1, and phi2 MLE's
+      that match the formulas in Table 1 - this will allow us to specify a different model just by changing the betas.
+      If you get it right, the multinomial probabilities sum to 1. I'll give you the hardest one, for history 100 - its
+      formula is:</p>
+    <p>(1-ϕ<sub>1</sub>) + ϕ<sub>1</sub>(1-p<sub>1</sub>)(1-ϕ<sub>2</sub>) + ϕ<sub>1</sub>(1-p<sub>1</sub>)ϕ<sub>2</sub>(1-p<sub>2</sub>)</p>
+    <p>To translate this into an Excel formula, enter into cell H5:</p>
+    <p>=(1-E2)+E2*(1-E4)*(1-E3)+E2*(1-E4)*E3*(1-E5)</p>
+    <p>You should get a value of 0.6875 for the multinomial probability of this history.</p>
+    <p>The rest are easier (shorter, at least), so try them out yourself... the formulas are:</p>
+    <p>History 111 (cell H2): ϕ<sub>1</sub>p<sub>1</sub>ϕ<sub>2</sub>p<sub>2</sub></p>
+    <p>History 110 (cell H3): ϕ<sub>1</sub>p<sub>1</sub>ϕ<sub>2</sub>(1-p<sub>2</sub>) + ϕ<sub>1</sub>p<sub>1</sub>(1-ϕ<sub>2</sub>)</p>
+    <p>History 101 (cell H4): ϕ<sub>1</sub>(1-p<sub>1</sub>)ϕ<sub>2</sub>p<sub>2</sub></p>
+    <p>When your done, your table should look like this:</p>
+    <img src="initial_mle_table.png" alt="Initial table">
+    <p>Note that you can't see in this screenshot that the beta for phi2 and p2 are both formulas pointing to the cells
+      above them, but make sure you have the number 0 entered for phi1 and p1, and formulas for phi2 and p2.</p>
+    <p>If this is not what you're getting, check your formulas - check that you used parentheses where they were needed.</p>
+    <p>Once your probabilities are all correct, beneath the "LnLikelihood" label in cell C10 we will calculate the log
+      of the likelihood function. In C11 sum the frequencies multiplied by the logs of the probabilities. We did this in
+      our population estimation sheet a couple of weeks ago, you can do it with an array formula in this cell (hint:
+      it's =sum(freqs*ln(probs)), just replace freqs and probs with the correct cell ranges). If you do it right you'll
+      get a value of -228.71. We don't need to calculate a multinomial coefficent (the gammaln() function) because we
+      aren't estimating the frequency of animals that were never caught this time - all we need is the "probability
+      part" of the multinomial likelihood.</p>
+    <p>You're ready to roll! Time to get some estimates.</p>
+    <p>2. <strong>Start up Solver, and get your estimates for phi and p</strong>. Start up Solver, and set cell C11 to
+      maximize, by changing <strong>JUST</strong> the betas in f2 and f4 (the betas in f3 and f4 will update
+      automatically, don't vary them). Your results should look like this:</p>
+    <img src="phi_p_estimates.png" alt="Estimates">
+    <p>You should see that even though we have a line for phi1 and another for phi2 there is just one estimate for phi,
+      because the beta for phi2 is just a pointer to the beta for phi1. Same goes for the p's - even though there are
+      lines for p1 and p2 there is only one value that is being used for both.</p>
+    <p>Now, to get estimates for the model with time-varying survival but constant capture probability we would just
+      need to:</p>
+    <ul>
+      <li>Copy the beta from F2 and paste it into F3 - F3 is no longer a formula pointing to the value in F2, it is its
+        own separate value.</li>
+      <li>Start Solver, and have it maximize the log likelihood by varying the betas in F2, F3, and f4. This will
+        produce a separate estimate of phi1 and phi2, but only a single estimate for p because p2 is still just a
+        pointer to p1.</li>
+    </ul>
+    <p>Run this model, and you'll get results that look like this:</p>
+    <img src="phit_p_estimates.png" alt="phit p">
+    <p>With this model we have a difference in survival for the two different time periods between captures. The log
+      likelihood is higher for this model, but we used an additional parameter to achieve that increase in log
+      likelihood, so we would need to do some model comparison using AICc to tell which is better supported by the data.
+      We'll save that step for the full data set, which we will turn to now.</p>
+    <p>We won't make an AIC table for the Example data set, but the graphs below let you compare observed and expected
+      numbers for the three models you fit, plus the problematic model with time-varying survival and time-varying
+      encounter probability:</p>
+    <div id="survival_wrapper" style="float:left; width: 100%">
+      <div id="phip_wrapper" style="float: left; width: 45%; border: 1px solid black; margin: 10px; padding: 10px">
+        <div id="phip_graph" style="float:left"> </div>
+        <div id="phip_controls_div" style="float:left; width:40%">
+          <table>
+            <tbody>
+              <tr>
+                <td>
+                  <p>p:</p>
+                </td>
+                <td>
+                  <p><input id="p1_input" value="0.5" max="1" min="0" step="0.01" style="width: 75px" onchange="drawphip()"
+                      type="number"><a class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phi_p_p_profile.png"
+                          style="width: 400px"></span></a>&nbsp;&nbsp;</p>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <p> ϕ:</p>
+                </td>
+                <td>
+                  <p><input id="phi1_input" value="0.5" step="0.01" onchange="drawphip()" style="width: 75px" type="number"><a
+                      class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phi_p_phi_profile.png" style="width: 400px"></span></a>&nbsp;&nbsp;</p>
+                </td>
+              </tr>
+              <tr>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="phipt_wrapper" style="float: left; width: 45%; border: 1px solid black; margin: 10px; padding: 10px">
+        <div id="phipt_graph" style="float:left"> </div>
+        <div id="phipt_controls_div" style="float:left">
+          <table>
+            <tbody>
+              <tr>
+                <td>
+                  <p>p<sub>1</sub></p>
+                </td>
+                <td>
+                  <p><input id="p2_t1_input" value="0.5" max="1" min="0" step="0.01" onchange="drawphipt()" style="width: 75px"
+                      type="number"><a class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phi_pt_p1_profile.png"
+                          style="width: 400px"></span></a></p>
+                </td>
+                <td>
+                  <p>p<sub>2</sub></p>
+                </td>
+                <td>
+                  <p><input id="p2_t2_input" value="0.5" max="1" min="0" step="0.01" onchange="drawphipt()" style="width: 75px"
+                      type="number"><a class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phi_pt_p2_profile.png"
+                          style="width: 400px"></span></a></p>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <p>ϕ</p>
+                </td>
+                <td>
+                  <p><input id="phi2_input" value="0.5" max="1" min="0" step="0.01" onchange="drawphipt()" style="width: 75px"
+                      type="number"><a class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phi_pt_phi_profile.png"
+                          style="width: 400px"></span></a></p>
+                </td>
+                <td><br>
+                </td>
+                <td><br>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="clear:both"> </p>
+      <div id="phitp_wrapper" style="float: left; width: 45%; border: 1px solid black; margin: 10px; padding: 10px">
+        <div id="phitp_graph" style="float:left"> </div>
+        <div id="phitp_controls_div" style="float:left">
+          <table>
+            <tbody>
+              <tr>
+                <td>
+                  <p>p</p>
+                </td>
+                <td>
+                  <p><input id="p3_input" value="0.5" max="1" min="0" step="0.01" onchange="drawphitp()" style="width: 75px"
+                      type="number"><a class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phit_p_p_profile.png"
+                          style="width: 400px"></span></a></p>
+                </td>
+                <td><br>
+                </td>
+                <td><br>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <p>ϕ<sub>1</sub></p>
+                </td>
+                <td>
+                  <p><input id="phi3_t1_input" value="0.5" max="1" min="0" step="0.01" onchange="drawphitp()" style="width: 75px"
+                      type="number"><a class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phit_p_phi1_profile.png"
+                          style="width: 400px"></span></a></p>
+                </td>
+                <td>
+                  <p> ϕ<sub>2</sub></p>
+                </td>
+                <td>
+                  <p><input id="phi3_t2_input" value="0.5" max="1" min="0" step="0.01" onchange="drawphitp()" style="width: 75px"
+                      type="number"><a class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phit_p_phi2_profile.png"
+                          style="width: 400px"></span></a></p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="phit_pt_wrapper" style="float: left; width: 45%; border: 1px solid black; margin: 10px; padding: 10px">
+        <div id="phit_pt_graph" style="float:left"> </div>
+        <div id="phit_pt_controls_div" style="float:left">
+          <table>
+            <tbody>
+              <tr>
+                <td>
+                  <p>p<sub>1</sub></p>
+                </td>
+                <td>
+                  <p><input id="p4_t1_input" value="0.5" max="1" min="0" step="0.01" onchange="drawphit_pt()" style="width: 75px"
+                      type="number"><a class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phit_pt_p1_profile.png"
+                          style="width: 400px"></span></a></p>
+                </td>
+                <td>
+                  <p>p<sub>2</sub> </p>
+                </td>
+                <td>
+                  <p><input id="p4_t2_input" value="0.5" max="1" min="0" step="0.01" onchange="drawphit_pt()" style="width: 75px"
+                      type="number"><a class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phit_pt_p2_profile.png"
+                          style="width: 400px"></span></a></p>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <p>ϕ<sub>1</sub></p>
+                </td>
+                <td>
+                  <p><input id="phi4_t1_input" value="0.5" max="1" min="0" step="0.01" onchange="drawphit_pt()" style="width: 75px"
+                      type="number"><a class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phit_pt_phi1_profile.png"
+                          style="width: 400px"></span></a></p>
+                </td>
+                <td>
+                  <p>ϕ<sub>2</sub></p>
+                </td>
+                <td>
+                  <p><input id="phi4_t2_input" value="0.5" max="1" min="0" step="0.01" onchange="drawphit_pt()" style="width: 75px"
+                      type="number"><a class="tooltip">(profile at ML)<span class="tooltiptext"><img src="model_phit_pt_phi2_profile.png"
+                          style="width:400px"></span></a></p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p><br>
+    </p>
+    <p><br>
+    </p>
+    <p> Finding the maximum likelihood values for p and ϕ isn't hard for the simplest model, ϕ.p. in the upper left -
+      you'll see that values around 0.6 for survival and 0.9 for detection probability produce the highest likelihood. </p>
+    <p> Similarly, with the second model in the upper right, with constant survival but time-varying detection
+      probability (ϕ.p<sub>t</sub>) - values of 0.6 or so for ϕ and 0.9 and 1 for the detection probabilities work well.
+      The observed bars can get closer to the expected with two different probabilities of detection than with one, but
+      the match between observed and expected is not perfect with the ϕ.p<sub>t</sub> model.</p>
+    <p>With just three years of data we run into trouble with the last two models, because it is possible to make the
+      expected values exactly match the observed values for both of them. This is a problem when the number of
+      parameters estimated by the model is equal to or greater than the degrees of freedom available - with four capture
+      histories we have four different capture histories, which means we have 4-1 = 3 degrees of freedom, so a model
+      that has 3 parameters consumes all of them and explains the data perfectly. If you enter the values for model ϕ<sub>t</sub>p
+      of 0.537 for the first ϕ, 0.743 for the second, and 0.931 for p you'll see that the observed and expected values
+      are virtually identical - this model is explaining nearly all the variation in the data. If you hover over the
+      "(profile at ML)" links you'll see the likelihood function for each of the estimates, which we could use to get
+      confidence intervals - they are all curved around the estimate, so the data has enough information in it to give
+      us good estimates for this model</p>
+    <p>But, we're out of variation to explain with model ϕ<sub>t</sub>p, and model ϕ<sub>t</sub>p<sub>t</sub> has one
+      more parameter in it. If you enter the values of 0.537 for ϕ<sub>1</sub>, 0.692 for ϕ<sub>2</sub>, 0.931 for p<sub>1</sub>,
+      and 1 for p<sub>2</sub> you'll see that it has almost exactly the same log likelihood as model ϕ<sub>t</sub>p.
+      Given that the only difference between ϕ<sub>t</sub>p and ϕ<sub>t</sub>p<sub>t</sub> is that we have two different
+      detection probabilities for the latter, you can turn ϕ<sub>t</sub>p<sub>t</sub> into ϕ<sub>t</sub>p. by just
+      plugging in the ϕ<sub>t</sub>p coefficients into ϕ<sub>t</sub>p<sub>t</sub> and the log likelihood is unchanged -
+      in other words, if you plug in 0.537 for the first ϕ, 0.743 for the second, and 0.931 for both of the p's you can
+      turn ϕ<sub>t</sub>p<sub>t</sub> into ϕ<sub>t</sub>p, and get the same log likelihood. This means that the ϕ<sub>t</sub>p<sub>t</sub>
+      model doesn't have a unique, best set of paremeter estimates. You can see the problem with this if you hover over
+      the profiles - the one for ϕ<sub>2</sub> is really flat, which means that a wide range of values could be used and
+      produce a log likelihood that is almost the same.</p>
+    <p>We won't run into this issue using the full five years of data, because we have a total of 16 possible histories,
+      of which 10 were observed in the study, so we will have plenty of degrees of freedom to fit model ϕ<sub>t</sub>p<sub>t</sub>.
+      Just bear in mind that although it's possible to use CJS models to estimate survival with as few as three years of
+      data, having only four possible histories limits the models you're able to fit, and adding more years overcomes
+      that problem.</p>
+    <p>3. <strong>Get estimates for model </strong><strong>ϕp for the full data set</strong>. Now that you see how
+      this process works, switch to the Data sheet and you'll see that you have a very similar setup as in the Example
+      sheet, but with five years of data for ravens caught in 1996. The multinomial probabilities are substantially more
+      complicated, so I did them for you - you will focus on setting the model parameters to make the four models we
+      will compare (model ϕp, model ϕ<sub>t</sub>p, model ϕp<sub>t</sub>, and model ϕ<sub>t</sub>p<sub>t</sub>). </p>
+    <p>Before you start, notice a few things:</p>
+    <ul>
+      <li>The histories and their frequencies are in columns A and B. Some of the histories that were possible were not
+        observed - I included them in the list and calculated multinomial probabilities for them so that you can see
+        what the complete set looks like. The full set is also needed to make the sum of the capture histories equal 1,
+        which is helpful for checking your work. Since the log likelihood is calculated by multiplying these frequencies
+        by the log of the probabilities of the histories, the histories with frequency of 0 have zero effect on the log
+        likelihood - we could leave these histories out and it would not affect the estimates of phi or p.</li>
+      <li>There are now four survival probabilities: phi1, phi2, phi3, and phi4. They represent survival from 1996 to
+        1997 (phi1), from 1997 to 1998 (phi2), from 1998 to 1999 (phi3) and from 1999 to 2000 (phi4). I've highlighted
+        the survival probabilities in yellow.</li>
+      <li>There are four capture probabilities: p1, p2, p3, and p4. They represent the probability of being observed in
+        1997 (p1), 1998 (p2), 1999 (p3), and 2000 (p4).</li>
+      <li>If you look at the betas in column F, only phi1 and p1 have numbers entered at first. All the rest of the
+        phi's point to F2, and all the rest of the p's point to F6. The sheet is thus set up to find the estimates for
+        model ϕp initially.</li>
+      <li>The multinomial probabilities are complicated when there are one or more trailing zeros. The most complicated
+        is history 10000, which are birds caught in 1996 and never seen again. The approach is just like you used for
+        the example, but with more zeros and thus more possible paths. If you double-click on the formula in H2 you'll
+        see there are five different calculations that describe possible paths through the data - each either ends with
+        a mortality (a 1-_phi) except for the final one, which ends with a non-detection in the final year of the study.
+        Don't change anything, and hit ENTER.</li>
+      <li>Note that to help me assemble these properly I defined names for each of the values in column E and used them
+        in the formula - _phi1 is just a pointer to E2, _p1 points to E6, and so on. Hit ENTER to get out of edit mode
+        (don't change anything!).</li>
+    </ul>
+    <p>Okay, you can now run Solver to get the estimates - set the log-likelihood to maximize, by changing ONLY cell F2
+      and F6. If all goes well you'll get estimates that look like this:</p>
+    <img src="phidotpdot_ests.png" alt="Phidot pdot estimates">
+    <p>4. <strong>Record the results for model phi,p</strong>. copy the one phi estimate (cell E2) and paste-special
+      its value to the Parameters table - this model is phi,p so paste it into cell B36. Then copy the one estimate for
+      p and paste-special its value into cell B40.</p>
+    <p>Copy the log-likelihood and paste-special its value to cell B29 - we will calculate an AIC table to compare the
+      four models, and we need the model log likelihoods for this.</p>
+    <p>Enter the number of parameters (2, a single phi, and a single p) into cell C29.</p>
+    <p>5. <strong>Fit model phi_t,p</strong>. This next model uses a different value for phi for each of the time
+      periods, but still uses a constant capture probability. To set up this model, all you need to do is change the
+      formulas in cells F3 through F5 to have numeric values rather than formulas. Copy the beta from cell F2 and paste
+      it into cells F3, F4 and F5.</p>
+    <p>Run Solver again, and this time have it change the betas in F2 through F6 (only F6 needs to change for the p's,
+      the rest are still formulas pointing to this value). If all goes well, you'll get these estimates:</p>
+    <img src="phitp_ests.png" alt="Phi_t p estimates">
+    <p>You'll see that, if this model is well supported by the data, there is fairly substantial variation in survival
+      probability between the years. Copy the four MLE estimates for the phi's and paste-special their values to cells
+      C36 through C39. Also copy the single p1 estimate and paste-special its value to C40.</p>
+    <p>Copy and paste-special the log likelihood to cell B30, and enter the number of parameters into C30, which is...
+      how many? Click <a href="javascript:ReverseDisplay('n_param')">here</a> to see.</p>
+    <div id="n_param" style="display: none">
+      <p style="border-style: solid; padding: 10px;">There are four phi parameters and one p, so five total.</p>
+    </div>
+    <p>6. <strong>Fit model phi,p_t</strong>. Now to fit a model with time-varying capture probability, but constant
+      survival, we need to set cells F3, F4 and F5 to point back at the single beta in F2, but replace the formulas in
+      cells F7, F8, and F9 with the value from F6.</p>
+    <ul>
+      <li>Enter =f2 into cells f3, f4, and f5</li>
+      <li>Copy the value from f6 and paste it into cells f7, f8, and f9.</li>
+    </ul>
+    <p>Run Solver again, and this time change cells F2 and cells F6 through F9.&nbsp; and you should get estimates:</p>
+    <img src="phipt_ests.png" alt="Phi pt estimates">
+    <p>This model predicts low recapture probabilities in 1998 and 2000 rather than low survival in those years.</p>
+    <p>To record the results, copy and paste-special the single MLE for phi into cell D36, and copy/paste-special the
+      four estimates for p1-p4 into cells D40-43.</p>
+    <p>Copy/paste-special the log likelihood into cell B31. Count the number of parameters and enter it into C31 (it's
+      the same as the previous model, right?).</p>
+    <p>7. <strong>Fit model phi_t, p_t</strong>. This model will find different betas for every estimate, so copy the
+      beta from F2 and paste it into F3 through F5. Run Solver, and have it change all of the values in F2 through F9.
+      Your results should be:</p>
+    <img src="phitpt_ests.png" alt="Phi_t p_t estimates">
+    <p>You'll see that the seemingly lower survival between 1999 and 2000 we saw when recapture probability was held
+      constant is now higher - 0.819 rather than 0.638 - but the recapture probability is lower instead.</p>
+    <p>Record these results - copy and paste-special the values for all eight of the estimates from column E into cells
+      E36 to E43. Copy/paste-special the log likelihood for this model into cell B32, and enter the number of parameters
+      (which is... what? Count up how many estimated values there were for this model).</p>
+    <p>8. <strong>Look at how the models compare</strong>. Now that you have all four of the models we should compare
+      how well the data supports each one.</p>
+    <ul>
+      <li>In cell D29 calculate the first AIC value - multiply the log-likelihood in cell B29 by -2, multiply the number
+        of parameters in C29 by 2, and add them.</li>
+      <li>In cell E29 calculate the AICc - the formula is: =D29 + (2*c29*(c29+1))/(b$19-c29-1)</li>
+      <li>Copy and paste the formulas in D20 and E29 to the cells below (C30 through C32).</li>
+      <li>Calculate the deltas - in cell F29 subtract the minimum AICc from the first AICc value, using the formula =e29
+        - min(e$29:e$32)</li>
+      <li>Calculate the weights - in cell G29 enter the formula =exp(-0.5*f29)/sum(exp(-0.5*f$29:f$32)) , and enter it
+        as an array formula (CTRL+SHIFT+ENTER)</li>
+      <li>Copy and paste cell G29 to cells G30, G31, G32.</li>
+    </ul>
+    <p>You should get a table that looks like this:</p>
+    <img src="aic_table.png" alt="AIC table">
+    <p> You'll see that there is good evidence that survival is time-varying, since the two models with the best support
+      both allow for varying survival probability. Capture probability may or may not be time varying, since the model
+      with only varying capture probability has substantially less support, but the model with both varying phi and p
+      has moderate support.</p>
+    <p>If you look at the estimates, the decrease in survival between 1997 and 1998 (phi2) is present in both
+      well-supported models. But, if both recapture and survival probability are allowed to vary over time then survival
+      does not decline substantially between 1999 and 2000 but recapture probability does.</p>
+    <p>Where could we go from here? There are several things we could do:</p>
+    <ul>
+      <li>We could try models that have differences in phi or p in some years but not others. Since survival seems to be
+        pretty similar for phi1 and phi3, and for phi2 and phi4, we could make those pairs of values the same by letting
+        Solver vary one and setting the other to equal the parameter being varied. We would have to be careful with this
+        one, though, because fitting models based on patterns found during analysis runs the risk of over-fitting, which
+        can lead us to interpret a model that seems to be well supported but isn't accurate.</li>
+      <li>We could see whether there are differences in survival by age class. Ravens are easy to age in their first
+        year, so we could see if there is evidence that first year survival is different. We would need to split the
+        capture histories by age group and see if the animals that were captured in their first year had different
+        probabilities of survival for the first year after capture compared to the other, older birds.</li>
+      <li>We could use individual covariates. It is possible to have the probabilities of survival or capture depend on
+        the individual characteristics of the ravens (such as their weight). The setup for this type of analysis is
+        different, so we won't attempt a model like this in Excel, but it is possible to test hypotheses about whether
+        bigger birds survive better using this approach.</li>
+    </ul>
+    <p>And that's it! Save your completed worksheet for your report.</p>
+    <p> </p>
+  </body>
+</html>

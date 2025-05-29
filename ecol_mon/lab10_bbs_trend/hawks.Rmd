@@ -1,0 +1,109 @@
+---
+title: "Polynomial regression of hawk counts"
+author: "Your name here"
+date: "`r date()`"
+output: 
+  word_document:
+    reference_docx: template.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+download.file('https://wkristan.github.io/template.docx', 'template.docx', mode = 'wb')
+```
+
+## Polynomial regression
+
+This is a prime example of an analysis that is easier to do in R than in Excel - R's seemingly greater complexity, it dramatically simplifies this analysis.
+
+First, import the R worksheet from your hawks.xlsx Excel file, into a data set called hawks.
+
+library(readxl)
+read_excel("hawks.xlsx", sheet = "R") -> hawks
+
+```{r import.R.data}
+
+
+
+```
+
+
+Fitting a polynomial regression is done using the poly() function to define the predictor variables. To begin with Osprey, a linear regression (polynomial to the order 1) would be done as:
+
+lm(OSPR ~ poly(Year, 1), data = hawks) -> ospr.linear.lm
+
+```{r ospr.linear}
+
+
+```
+
+To fit the higher order polynomials, you just need to increase the number in the poly() function. Fit the quadratic, cubic, fourth order, and fifth order polynomials next - name each one as I did the first, but change linear to match the order of the polynomial.
+
+```{r ospr.other.four.models}
+
+
+
+```
+
+Note that we didn't need to convert Year to a sequence of numbers, which would make the interpretation easier.
+
+To do the comparison between the models we just need a single command, anova(). When we use the anova() command with the list of models as arguments it compares them against one another in sequence (first to second, second to third, etc.). We can use the point at which we stop getting a significant improvement in fit to pick the best model.
+
+The command is (assuming you used the same model names, adjust if needed):
+
+anova(ospr.linear.lm, ospr.quad.lm, ospr.cubic.lm, ospr.fourth.lm, ospr.fifth.lm)
+
+```{r compar.ospr.models}
+
+
+
+```
+
+You'll see that we get a significant improvement in fit by including a quadratic, but not by including a cubic, fourth, or fifth-order term. The results are not quite identical to Excel, but they are close.
+
+Now that we know that a quadratic curve is what fits best, graphing it with ggplot() is not too hard. The geom_smooth() function produces the line, and if we specify method = "lm" we can then specify the formula for the quadratic model as y ~ poly(x,2), and ggplot will take the y and x variables we identified in the aes() statement to produce the curve:
+
+library(ggplot2)
+ggplot(hawks, aes(x = Year.z, y = OSPR)) + geom_point() + geom_smooth(method = "lm", formula = y ~ poly(x, 2), se = F)
+
+```{r plot.ospr}
+
+
+
+```
+
+If we want the first derivative we need to specify what the quadratic formula is, so we need the coefficients from the fitted model. The coefficients for the quadratic model are obtained with:
+
+coefficients(ospr.quad.lm)
+
+```{r ospr.quad.lm.coef}
+
+
+
+```
+
+Now we can get the first derivative of the quadratic with the D() function. The syntax is D(equation.as.expression, x.variable), so:
+
+D(expression(0.5181319 + 0.9471321 * Year - 0.5456788 * Year^2), "Year")
+
+```{r ospr.quad.first.deriv}
+
+
+
+```
+
+We can plot this with ggplot(), using geom_function(), but there's a catch...
+
+When you use poly() to do polynomial regression, R uses this to construct "orthogonal contrasts", which make each polynomial term independent of the other. This is a good thing statistically, but the contrasts are based on a "scaled" x variable. Scaling means subtracting the mean year from each year, and dividing this difference by the standard deviation of year. To plot the derivative we need to use this scaled Year in the formula so that the predictions and the x-axis labels line up.
+
+ggplot(hawks, aes(x = Year, y = OSPR)) + geom_function(fun = function(Year) 0.9471321 - 0.5456788 * (2 * scale(Year))) + labs(y = "Change in OSPR per year")
+
+```{r plot.ospr.first.derivative}
+
+
+
+```
+
+You can see here that the quadratic curve was increasing through 1990 (because the rates of change were positive), peaked in 1990 (because the rate of change is 0), and then declined.
+
+Not too bad, right? If you want to try a species or two on your own to see if you can adapt the instructions to a new species go ahead - this is all that is required, though.

@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Lab 9 - Sampling designs</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+    <title>Sampling designs</title>
+  </head>
+  <body>
+    <h1>Sampling designs</h1>
+    <p>As you learned in lecture, different sampling designs are appropriate for
+      different types of estimation tasks. We will use two of the common
+      probability sampling designs, <strong>Simple Random Sampling</strong>
+      (SRS) and <strong>Stratified Random Sampling</strong> (StRS), to estimate
+      the average greenness and wetness within the San Dieguito River watershed
+      - I thought you might be getting tired of NDVI, so I use the Tasseled Cap
+      transformation on the spring 2011 LandSat images, and we will work with
+      greenness and wetness as the quantities of interest.</p>
+    <p>In addition to the two good sampling designs, we will use a bad one to
+      see why it's bad - we will use <strong>convenience sampling</strong> to
+      see how making measurements at locations that are convenient does not
+      necessarily produce good results.</p>
+    <p>If we were measuring greenness and wetness in the field, we would only
+      know the measurements we collect, but wouldn't know the population
+      parameter. Since this is a simulation of sampling in the field, though, we
+      can measure NDVI for every pixel in the map and calculate the mean - I've
+      done this for you, and the mean for greenness is μ = <strong>0.0844</strong>,
+      and for wetness it is μ = <strong>-0.0923</strong> (wetness and greenness
+      values are relative, so negative numbers are not a problem). We will
+      compare the sample-based estimates we get to these known population values
+      to see whether our estimates are unbiased.</p>
+    <h2>The bad way - convenience sampling</h2>
+    <p>We'll start with the method that you are supposed to avoid, so that we
+      can compare it with the two probability sampling methods.</p>
+    <p>Start a new map, and add both the "greenness.tif" and "wetness.tif"
+      raster grids to your table of contents - it's in the lab9 folder on the P:
+      drive. You can also add the watershed boundary ("sdrp_watershed.shp") from
+      the same folder, we'll be using it later. Put the NDVI layer on top so you
+      can see it.</p>
+    <p>If you look at the two layers you'll see that they show different
+      patterns in the landscape - greenness is like NDVI, in that it measures
+      the amount of green, growing vegetation is in the pixel, and it primarily
+      contrasts near infrared reflectance (Band 4) with the other bands. Wetness
+      is an independent measure of moisture, and it contrasts mid-infrared bands
+      (5 and 7) with the others. The big, obvious difference is that water
+      bodies are not green, but they are very wet - you'll see they are black in
+      the greenness image but white in the wetness image.</p>
+    <p>To simulate a sample of convenience, we will sample greenness and wetness
+      from the pixels that fall at random locations along major roads running
+      through the watershed. Roads tend to be placed very non-randomly, in the
+      flatter portions of the landscape, and we would expect the land cover
+      along roads to be affected by this. Thus, even if we generate random
+      points along the road, the roads themselves are non-randomly placed, which
+      may bias our estimates of greenness and wetness.</p>
+    <p>1. <strong>In ArcMap add the file roads_gt25.shp to your project</strong>.
+      These are roads in the watershed that have traffic speeds at or over 25
+      mph.</p>
+    <p>2. <strong>Generate random points along the roads</strong>. Open the
+      ArcToolbox (click on the icon with the little red toolbox) and select
+      "Data Management Tools" → "Sampling" → "Create random points". When the
+      tool launches, do the following:</p>
+    <ul>
+      <li>Specify a directory on your S: drive as the output location (make a
+        new folder called "lab9" for this).</li>
+      <li>For "Output Point Feature Class" use "random_on_roads.shp".</li>
+      <li>For "Constraining Feature Class" specify "roads_gt25". This will make
+        the points fall on the roads.</li>
+      <li>For "Number of Points" use 210.</li>
+      <li>For "Minimum Allowed Distance" use 0 - this will force the points to
+        fall on the road (this is the default, so no change as long as it's
+        already set to 0).</li>
+    </ul>
+    <p>Click "OK" to get your points. You'll see they fall along the roads
+      within the watershed.</p>
+    <p>3. <strong>Get greenness and wetness measurements at the points on the
+        road</strong>.&nbsp; For each of our sampling designs we will be
+      overlaying points that we generate on top of the greenness and wetness
+      maps, and "extracting" the map values from under the points to use as our
+      sample of data. We'll then export the data to Excel, which is easier to
+      use to calculate the standard errors and confidence intervals.</p>
+    <ul>
+      <li>Find "Spatial Analyst Tools" → "Extraction" → "Sample" and
+        double-click it. With this tool we will do the overlay and extract
+        operation, which will give us a table with the greenness and wetness
+        underneath each random points.</li>
+      <ul>
+        <li>Select "greenness.tif", and "wetness.tif" as the "Input rasters" -
+          select each one at a time, and they will be added to the list.</li>
+      </ul>
+      <ul>
+        <li>Set "random_on_roads.shp" as the "Input location raster or point
+          features".</li>
+      </ul>
+      <ul>
+        <li>For the output, call the file "green_wet_roads", and put it in your
+          "lab9" folder on your S: drive.</li>
+      </ul>
+      <ul>
+        <li>Run the command (click "OK").</li>
+      </ul>
+    </ul>
+    <p>You should now have an output table in your Table of Contents (this
+      causes the display to change to "List By Source" mode, so you'll see the
+      locations of the files listed as well - either P: or S: depending on the
+      file).</p>
+    <ul>
+    </ul>
+    <p><strong>4. Export the table to an Excel file</strong></p>
+    <p> If you open the newly created table in ArcMap, you'll see there is a
+      field (column) for Rowid (the row number), OID (or "object ID", a serial
+      number that helps ArcMap keep track of which point is which),
+      "RANDOM_ON_ROADS" (which is the ID from the "random_on_roads.shp" file),
+      an X and a Y column that contain the coordinates for the points, and
+      finally the "GREENNESS_BAND_1" and "WETNESS_BAND_1" columns that have the
+      data. </p>
+    <p>Note that you can get some statistical information for any column in an
+      ArcMap table without using any analysis tools - if you right-click on
+      "SP11_NDVI" and pick "Statistics", you will get a report that gives a
+      frequency histogram, and some summary statistics. </p>
+    <p>But, we need to export the data to Excel to do the calculations we want
+      to do. </p>
+    <ul>
+      <li>In the ArcToolbox find "Conversion Tools" → "Excel" → "Table to Excel"
+        and launch the tool. </li>
+      <ul>
+        <li>Select "green_wet_roads" as the "Input Table", and call the output
+          table "green_wet_roads.xls" - put the output in the lab9 folder on
+          your S: drive. </li>
+        <li>Click "OK" to export the file. </li>
+      </ul>
+    </ul>
+    <p><strong>5. Calculate the mean and 95% confidence interval</strong>. Now
+      you will calculate the estimates (average, standard deviation, standard
+      error and 95% confidence intervals for each variable). This is not easy to
+      do in ArcMap, but it is straightforward in Excel - fire up Excel, and open
+      your green_wet_roads.xls file.</p>
+    <p>**Note: the exported Excel file has the first row with the variable names
+      "frozen", meaning that as you scroll up and down through the data the
+      labels stay in the first row. This is fine, but initially you'll be
+      positioned in the middle of the file, and you'll need to scroll to the top
+      in order to see the PivotTable layout properly.**</p>
+    <p>To get the PivotTable you need do the following:</p>
+    <ul>
+      <li>Position yourself inside of the data, and insert a PivotTable</li>
+      <li>In the "Create PivotTable" settings window, change to "Existing
+        Worksheet", and select cell H1 as the output location (while the
+        settings window is open you can still click on the cell, which will
+        record it as the location for the output table)</li>
+      <li>Click "OK" to create the PivotTable table template.</li>
+    </ul>
+    <p>Once the template is active, do the following:</p>
+    <ul>
+      <li>Drag "GREENNESS_BAND_1" into the "Values", and change the field
+        setting to "Average"</li>
+      <li>Drag it into "Values" again, and set the field settings to "StDev"</li>
+      <li>Drag it into "Values" one more time, and set the value settings to
+        "Count"</li>
+    </ul>
+    <p>You now have the mean, standard deviation, and sample size for greenness.</p>
+    <p>Repeat these steps for WETNESS_BAND_1 - drag it into "VALUES" three
+      times, set the first to "Average", the second to "StDev", and the third to
+      "Count".</p>
+    <p>The default layout puts each summary statistic in a different column,
+      which is bad - it's much easier to see everything if they are in several
+      rows of a single column. You can change the layout by dragging the "Σ
+      Values" from the "COLUMNS" box into the "ROWS" box.</p>
+    <p>When you're done you should have a table that looks like this (the
+      numbers will differ, your random points will be different than mine, but
+      the layout will match):</p>
+    <img src="green_wet_convenience_pivot.png" alt="Greenness and wetness pivot">
+    <ul>
+    </ul>
+    <p>To calculate the confidence intervals, do the following:</p>
+    <ul>
+      <li>In cell J1 enter the label "Lower limit", and in K1 enter "Upper
+        limit". You may want to make the columns narrower so you can see what
+        you're doing.</li>
+      <li>In cell J4, next to the Count of GREENNESS_BAND_1 count, enter the
+        formula = i2 - tinv(0.05, i4-1)*i3/sqrt(i4) , which gives you the lower
+        limit for the 95% confidence interval around mean greenness (why? We are
+        subtracting the critical t-value multiplied by the standard error from
+        the mean)</li>
+      <li>In cell K4, next to the lower limit you just calculated, enter the
+        same formula but change the - to a + to get the upper limit.</li>
+    </ul>
+    <p>Now, to get the confidence interval for wetness you just need to select
+      cells J4 and K4, copy them, and paste them to J7 (Excel will know to paste
+      both cells, you just need to select the left-most one).</p>
+    <p><strong>6. Check whether the population means are inside of the
+        intervals.</strong></p>
+    <p>Do the following:</p>
+    <ul>
+      <li>In cell L1 enter the label "Contains pop. mean?"</li>
+      <li>In cell L4 enter the formula =and(j4 &lt; 0.0844, k4 &gt; 0.0844) -
+        this formula checks if the lower limit is below the population mean for
+        greenness, and if the upper limit is above the population mean. If this
+        is true you'll get a value of TRUE when you hit ENTER. If not,
+        population mean isn't inside of the confidence interval, and you'll get
+        a FALSE.</li>
+      <li>Enter the same formula into cell L7, but change the population mean to
+        the wetness mean.</li>
+    </ul>
+    <p>Save your Excel file (don't worry about the warning about saving to the
+      old xls format, nothing bad will happen). </p>
+    <p>7. <strong>Record your results in the class database</strong>. You
+      probably will find your intervals don't contain the population means, but
+      single intervals don't tell us much about whether the sampling is biased -
+      even if our sampling wasn't biased we would expect 5% of the samples we
+      selected along roads to fail to contain the population mean, and for any
+      single interval you may just have gotten one of those 5%. To see if we are
+      missing the population mean more often than expected we will need to look
+      at the entire class's results, so record your means, lower limits, and
+      upper limits in the database on the course web site. We'll check how your
+      confidence intervals compare as a class once everyone is done.</p>
+    <h3>Simple random sampling</h3>
+    <p>Simple random sampling in the watershed is done by generating random
+      points within the watershed boundary, and measuring greenness and wetness
+      at each point. Random points can in principle follow any number of
+      different distributions, but usually we consider points to be spatially
+      random if every x and y coordinate within the area is equally like to
+      occur - in other words, we sample a uniform distribution of x coordinates
+      and y coordinates, constrained to fall within the watershed boundary.</p>
+    <p>The process is otherwise the same - once you have random points you'll
+      sample greenness and wetness, export the data to Excel to calculate the
+      confidence intervals, and report your intervals to the class database.</p>
+    <p>1. <strong>Generate random points in the watershed</strong>. Select the
+      "Create Random Points" tool again, but this time you will use the
+      watershed boundary as the constraining feature class.</p>
+    <ul>
+      <li>Start the Create Random Points tool again</li>
+      <li>Set the output location to your lab9 folder on S:</li>
+      <li>Use "srs.shp" as the "Output Point Feature Class".</li>
+      <li>Set "sdrp_watershed" as the "Constraining Feature Class" - this will
+        make the points fall within the watershed.</li>
+      <li>Use 210 points.</li>
+      <li>Click "OK" to make the points.</li>
+    </ul>
+    <p>When they are created and displayed you'll see that they're distributed
+      throughout the watershed, not just on the roads.</p>
+    <p>2. <strong>Sample wetness and greenness from these 210 points</strong>.
+      Use the "Sample" command again. Use greenness.tif and wetness.tif as the
+      input rasters, but change the point feature to srs. Call the output table
+      "green_wet_srs", and put it in our sampling folder on S:. Click "OK" to
+      run the tool.</p>
+    <p>3. <strong>Export the data to an Excel file</strong>. As before, export
+      the table to an Excel file called green_wet_srs.xls.</p>
+    <p>4. <strong>Make your PivotTable, and calculate your confidence intervals</strong>.
+      Now open green_wet_srs.xls in Excel, and calculate your means and
+      confidence intervals.</p>
+    <p>The layout is the same as your roads tables, to the point that once
+      you've set up the PivotTable you can copy and paste your confidence
+      interval labels and formulas from the roads file into the srs file to do
+      the calculation of lower and upper interval, and to check if the interval
+      contains the population means - that is, select the cells from J1 to L7
+      from the roads file, copy them, and paste them to J1 in the srs file.</p>
+    <p>5. <strong>Report your results to the class database</strong>. Record
+      your mean, lower limit, and upper limit to the class database and we'll
+      compare them as a class.</p>
+    <h3>Stratified random sampling</h3>
+    <p>This time we will stratify by major cover type. We shouldn't be too
+      surprised to find that different types of cover have different greenness
+      and wetness. Developed areas and fresh water are two of the cover types we
+      have in the watershed, and we expect both of those to have very low
+      greenness, but water bodies will have high wetness. Because of this, it's
+      likely that our estimate of mean greenness and wetness for the watershed
+      will be more precise (i.e. smaller standard error, narrower confidence
+      intervals) if we stratify our sampling by cover type. On the other hand,
+      the sample sizes will be smaller for each cover type, which will make the
+      standard errors larger. Since these two factors work in opposition to one
+      another, we will see whether we're better off on balance with stratified
+      sampling or SRS.</p>
+    <p>Bear in mind that the purpose of stratified sampling is to come up with a
+      <em>single estimate of the population mean</em> - we often also make use
+      of the information in each strata, but the strata means and standard
+      errors are used here to calculate a single mean and standard error for the
+      whole watershed.</p>
+    <p>1. <strong>In ArcMap, add the file "cover_types.shp" to your table of
+        contents</strong>. This is going to be the "constraining feature class"
+      for our points.</p>
+    <p>To make the strata more obvious, double-click on the cover_types in the
+      table of contents, and switch to the "Symbology" tab. Change the "Show:"
+      setting to "Categories" → "Unique values". Make sure "covtype" is showing
+      in "Value Field", and click on "Add all values". You should now have a
+      different color for each cover type, with the cover types labeled in the
+      TOC.</p>
+    <p>This is a different cover type map than what we have been using - it has
+      much better categories for vegetation than the ones we have been using,
+      but we do not have multiple years of updated versions of it to use for
+      change detection. It is very good for our purposes today, though.</p>
+    <p>2. <strong>Generate random points, using cover_types.shp as the
+        constraining feature</strong>. Use the "Create Random Points" again for
+      this, BUT make sure to change the number of points to 15. The number of
+      points we enter pertains to how many will be placed in each cover type,
+      and since there are 14 cover types using 15 per cover type gives us a
+      total of 14 x 15 = 210 points as we've had for the other two examples (now
+      you know why we didn't use a round number like 200 in the previous steps).</p>
+    <p>Call the output points "strat.shp", and put it in the sampling folder on
+      your S: drive.</p>
+    <p>3. <strong>Join the cover types to the stratified samples</strong>.
+      Right now the only information in the strat.shp points that indicates
+      which cover type they're in is a column called "CID", which gives the
+      number corresponding with cover types. A numeric code is harder to
+      interpret than a nice text cover type name, which are in the attribute
+      table for cover_types. We can add them to the strat.shp attribute table by
+      joining the cover_types attribute table to it, and then copying them into
+      a blank field in the table. First we'll make the blank field:</p>
+    <ul>
+      <li>Open the strat attribute table</li>
+      <li>From the drop-down menu, select "Add field"</li>
+      <ul>
+        <li>In the "Add Field" window, name the new field "cover", and change
+          its "Type" to "Text"</li>
+        <li>Click "OK" to create the new field.</li>
+      </ul>
+    </ul>
+    <p>Next we need to join the attribute table for cover_types to our strat
+      points:</p>
+    <p></p>
+    <ul>
+      <li>Right-click on "strat" and select "Joins and Relates" → "Join".</li>
+      <ul>
+        <li>In "1. Choose the field..." select CID. This is the code that will
+          match the feature ID (or FID) column in cover_types.</li>
+        <li>In "2. Choose the table to join to this layer,..." select
+          "cover_types".</li>
+        <li>In "3. Choose the field in the table..." choose FID. These are the
+          same numeric codes found in the CID column of strat, and we can match
+          rows based on this matching column. </li>
+        <li>Click "OK".&nbsp;</li>
+      </ul>
+    </ul>
+    <p>Nothing obvious will happen, but if you right-click on strat and open the
+      attribute table, you'll see the covtype field that describes the cover
+      types is now attached to the table.</p>
+    <p>Now we just need to use the "Field calculator" to permanently copy the
+      covtype column's descriptions to the blank cover column we added earlier -
+      do the following:</p>
+    <ul>
+      <li>Open the strat attribute table, and the right-click on the blank
+        "cover" column's column name, and select "Field calculator"</li>
+      <ul>
+        <li>In the "Field Calculator" window we will build the expression that
+          will set the values in the strat.cover field - you'll see that just
+          above the big white rectangle where our expression will go it says
+          "strat.cover = ", so we do not need to include this part of the
+          expression, we just need to specify what will co into the strat.cover
+          field</li>
+        <li>Double-click cover_types.covtype to add it to the expression.</li>
+        <li>Click "OK" to copy the contents of covtype into cover.</li>
+      </ul>
+    </ul>
+    <p>The cover column now has the cover types in it - you can close the
+      attribute table.</p>
+    <p>You can also remove the join, since you have the cover types in the strat
+      attribute table now - right click on strat, select "Joins and Relates" →
+      "Remove all joins"</p>
+    <p>4. <strong>Look at the distribution of the points on the map</strong>.
+      If you change the symbology on strat to "Categories" → "Unique values"
+      with "cover" as the "Value Field", you'll see how the points are
+      distributed (you might want to make the points a little bigger, and to
+      turn off the cover_types layer so you can see them better - make the
+      points bigger BEFORE you "add all values" so that the symbol size will be
+      used for all of the categories). </p>
+    <p>You may see that the distribution of points may look more clustered than
+      the SRS points, because some of the cover types are less common than
+      others, yet they received the same number of points. This is not a problem
+      - the distribution of points within each cover type is random, and this
+      will mean our estimates are unbiased (if we do the calculations right!).</p>
+    <p>5. <strong>Sample greenness and wetness at the stratified points</strong>.
+      We'll use a different tool for this - we'll use the "Extract Multi Values
+      to Points" tool so that the greenness and wetness will be added to the
+      attribute table for strat. This is more convenient in this case, because
+      we will then also have the cover types in cover as part of the exported
+      file, and that will make our summary work in Excel easier.</p>
+    <ul>
+      <li>Find "Spatial Analyst Tools" → "Extraction" → "Extract Multi Values to
+        Points" tool and start it.</li>
+      <ul>
+        <li>Select "strat" as the "Input point features"</li>
+        <li>Add both "greenness.tif" and "wetness.tif" as the "Input Rasters"</li>
+        <li>There is no output file, because the values will be added to the
+          attribute table for strat.shp - click "OK" to run the tool</li>
+      </ul>
+    </ul>
+    <p>When you're done you can open the attribute table for strat, and you'll
+      see that there is now a greenness and a wetness column in it.</p>
+    <p> </p>
+    <p>6. <strong>Export strat.shp's attribute table to an Excel file</strong>.
+      Run the Table to Excel tool, and select strat as the table to output. Call
+      the output Excel file green_wet_strat.xls.</p>
+    <p> </p>
+    <p>7. <strong>Open the green_wet_strat.xls file in Excel</strong>. You'll
+      see that the structure of this file is a little different than the
+      previous two - the columns with greenness and wetness are columns D and E,
+      and we have the cover type identified in column C.</p>
+    <p>8. <strong>Calculate means, standard deviations, and sample sizes</strong>.
+      We will use Excel pivot tables to do the basic summary calculations.</p>
+    <p>We will do this with one table for each variable, starting with
+      greenness:</p>
+    <ul>
+      <li>Insert a PivotTable, and put it in cell H1</li>
+      <li>Lay out the table to calculate means, standard deviations, and sample
+        sizes grouped by cover type:</li>
+      <ul>
+        <li>Use "cover" as the "Row Labels". </li>
+        <li>Drag "greenness" into the "Values" box three times, and set them to
+          get average, standard deviation, and count</li>
+        <li>Keep the Σ Values in the Columns this time</li>
+      </ul>
+    </ul>
+    <p>When you're done your table should be laid out like this (but with
+      different numbers, random sampling and all that):</p>
+    <img src="green_wet_strat_pivot.png" alt="Green strat pivot table layout">
+    <ul>
+      <ul>
+      </ul>
+    </ul>
+    <p>If you look at the averages, you'll see that the cover types differ in
+      their average greenness quite a bit. This is a good indication that we
+      were wise to stratify - these differences added variability to the simple
+      random sample estimate, but will not be included in our stratified
+      estimate of mean greenness and wetness for the watershed.</p>
+    <p>We could calculate the standard errors and confidence intervals for the
+      cover types at this point if we wanted to - one of the advantages of
+      stratified sampling is that it gives you estimates for meaningful
+      categories that exist in your area, and you may want to compare them. But,
+      our purpose today is to compare stratified sampling with SRS and
+      convenience sampling as a method of estimating the population mean, so
+      we'll skip calculation of standard errors for the cover types.</p>
+    <p><strong>9. Calculate the "strata weights".</strong></p>
+    <p>We are going to weight the estimate of the mean greenness for the whole
+      watershed by the relative amount of the watershed that is in each cover
+      type. Since the mean for the watershed is affected proportionately by the
+      cover types based on their area of coverage, weighting by the area will
+      give us an unbiased estimate of the mean for the entire watershed. To get
+      this we need to know the amount of land covered by each cover type. This
+      was in the attribute table for cover_types.shp, but I already exported it
+      to an Excel file for you - open the file cover_types_areas.xls from the P:
+      drive, and you'll see this:</p>
+    <p><img src="cov_areas.png" alt="Cover type areas"></p>
+    <p>The cover types are in the same alphabetical sort order as they are in
+      your green_wet_strat.xls sheet, so you can jut copy Area from C1:C15 of
+      this cover_type_areas.xls file, switch to green_wet_strat.xls, and paste
+      it into cell o2 (<em>very important</em> it goes in column O so the
+      weights don't get over-written when you switch to wetness later).</p>
+    <p>The rest of the instructions pertain to green_wet_strat.xls, you can
+      close cover_type_areas.xls.</p>
+    <p>To convert these areas from column 0 into weights we need to divide each
+      by the sum of the areas to get proportions of the total covered by each
+      stratum:</p>
+    <ul>
+      <li>In cell P2 type "Weights"</li>
+      <li>In cell P3 type =o3/sum(o$3:o$16). The dollar signs before the row
+        numbers in the sum mean that the same range of cells will be summed even
+        as you copy and paste the formula to the rows below.</li>
+      <li>Copy and paste the formula to the rest of the strata - you now have
+        your strata weights. If you select all the weights from p3 to p16 you'll
+        see the "Sum" recorded in the grey status bar at the bottom of the Excel
+        window is 1 - these are proportions of a total, so they should sum to 1.</li>
+    </ul>
+    <p>Now you have the weights, and we can use them to calculate the weighted
+      mean greenness for the watershed.</p>
+    <ul>
+    </ul>
+    <p>10. <strong>Calculate the weighted mean greenness</strong>. A weighted
+      mean is just data values multiplied by their weights, which are then
+      summed together. We could do this by first multiplying the weights by the
+      means in a new column, and then summing the products, but I'm going to
+      show you a way of doing all of this in a single cell using an <strong>array
+        formula</strong>.</p>
+    <p>To calculate the weighted mean do the following:</p>
+    <ul>
+      <li>In cell H21 write the label "Watershed mean"</li>
+      <li>In cell i21 write the formula =sum(i3:i16*p3:p16) , but BEFORE YOU HIT
+        ENTER hold down the CTRL and SHIFT keys first, and while you have CTRL +
+        SHIFT held down hit ENTER. This key combination creates an array
+        formula, which does the multiplications across the matching cells for i3
+        to i16 and p3 to p16, and then sums the products, which is our weighted
+        average.</li>
+    </ul>
+    <p>You'll see that the formula bar shows "curly braces" around the formula,
+      {}, which indicates that it's an array formula. An array formula takes a
+      range of cells as arguments for a formula that usually only takes a single
+      cell, and applies the calculation to each of the cells in the array. You
+      can think if the array i3:i16 as being an array of average greennesses,
+      like so:</p>
+    <p>{0.095, 0.122, 0.066, ... , 0.003}</p>
+    <p>(that is, the first three greennesses rounded to three decimal places,
+      for Agriculture, Alkali, and Bare) and p3:p16 as an array of weights:</p>
+    <p>{0.094, 0.002, 0.001, ... , 0.008}</p>
+    <p>The array formula multiplies the matching elements of the first array of
+      greennesses by the second array of weights, so the calculation is:</p>
+    <p>{0.095*0.094, 0.122*0.002, 0.066*0.001, ... , 0.003*0.008}</p>
+    <p>The sum() command then sums all of these products, which gives us the
+      weighted mean of greenness.<br>
+    </p>
+    <p> </p>
+    <blockquote>
+      <p>Before we move on, a little more about stratum weights...</p>
+      <p>You can think of any arithmetic mean as being a weighted mean - the
+        formula for the mean is Σ x<sub>i</sub> / n, which means "sum the data
+        values (x<sub>i</sub>) and divide the sum by the sample size (n)". This
+        is mathematically the same as x<sub>1</sub>(1/n) + x<sub>2</sub>(1/n) +
+        ... x<sub>i</sub>(1/n) - expressed this way you can see that we're
+        calculating a weighted mean, but by using a weight of 1/n for every data
+        value we give equal weight to each one so that each data value
+        contributes equally to the mean. The difference with what we are doing
+        is that we're allowing different data values to have different
+        contributions to the mean.</p>
+      <p>Any set of weights that sum to 1 would work, but not all would be
+        unbiased estimators of the population mean. If we weighted each stratum
+        equally we would be weighting rare cover types, like Beach, equally with
+        common ones, like Chaparral, and the mean would not be expected to equal
+        the population mean - if estimates don't equal the population parameter
+        on average, across many samples, then the estimator is <strong>biased</strong>.
+        If we just averaged the strata mean greennesses we would be weighting
+        each equally, and would be getting a biased estimate of the mean for the
+        watershed. The "Grand Total" row of the PivotTable is doing just this,
+        and you'll see it isn't equal to the weighted watershed mean you just
+        calculated (it is probably lower, because it is over-representing some
+        rare cover types that have low NDVI).</p>
+    </blockquote>
+    <p> </p>
+    <p><strong>11. Calculate the weighted standard error, and the confidence
+        interval</strong> </p>
+    <p>Next, let's do the standard error for this weighted average. We will need
+      array formulas for this as well.</p>
+    <p>We have to use the stratum weights to get our standard error, but we
+      can't use the same formula we used for the mean because standard
+      deviations are not additive - if we multiplied the weights by the standard
+      deviations and summed them we would get the wrong answer. Variances, which
+      are just standard deviations squared, are additive, so we can use them to
+      calculate a "variance of the mean", and once we have that we can take the
+      square root of it to get the standard deviation. Do the following:</p>
+    <ul>
+      <li>Change the statistic in your PivotTable from StdDev (standard
+        deviation) to Var (for variance)</li>
+      <li>Write "Variance of the mean" into cell H22</li>
+      <li>In I22 enter the array formula: <br>
+        <br>
+        =sum((o3:o16^2)*(j3:j16)/(k3:k16))<br>
+        <br>
+        and hit CTRL+SHIFT+ENTER.</li>
+    </ul>
+    <p>This formula multiplies the squared weights (calculate as an array with
+      o3:o16^2) by the variances (j3:j16), and then divides each product its
+      sample size (k3:k16) - it then sums up the values.</p>
+    <p>Now, to calculate standard error, in cell H23 write "Standard error", and
+      in I23 type =sqrt(i22). The standard error of the mean is just the square
+      root of variance of the mean, just like standard deviation is the square
+      root of variance.</p>
+    <p>Next we need to calculate confidence intervals. </p>
+    <ul>
+      <li>In cell H24 write "T-value", and in i24 type =tinv(0.05, k17-14). The
+        degrees of freedom are different for stratified sampling, because in
+        order to get our estimate of the overall mean we had to estimate 14
+        strata means, which are deducted from the total sample size of 210 (the
+        total sample size appears in cell k17 in the PivotTable, so k17 - 14
+        gives us the degrees of freedom).</li>
+      <li>Type "Lower" in cell H25, and type =i21-i23*i24 in cell i25. This is
+        the lower limit of the 95% interval.</li>
+      <li>Type "Upper" in cell H26, and type =i21+i23*i24 in cell i26. This is
+        the upper bound.</li>
+    </ul>
+    <p>You now have a 95% confidence interval for the mean grenness in the
+      watershed, based on a stratified sampling design.</p>
+    <p>12. <strong>Check whether the population mean is within the interval,
+        and report it to the class database</strong>. The population mean for
+      greenness is 0.0844, so if this value is between your lower and upper
+      limits it's included. Enter your estimated mean and upper and lower CI
+      bounds to the class database.</p>
+    <p>13. <strong>Switch to wetness</strong>. If you click inside of the pivot
+      table you can switch to wetness and get all the calculations to update -
+      drag the three Greenness summaries out of Σ VALUES, drag Wetness into Σ
+      VALUES three times, and set one to Average, one to Var, and one to Count.
+      All the calculations update with the Wetness data, and you now have a 95%
+      CI for wetness. Report the mean and confidence interval to the class
+      database. </p>
+    <p>The population mean for wetness is -0.0923, so if this value falls
+      between the lower and upper limit then your CI contained the population
+      mean (negative numbers, remember).</p>
+    <p>Once everyone has recorded their estimates and intervals I will produce
+      some graphs that show how they compare between the different sampling
+      designs. We'll see whether each design is unbiased (that is, if the
+      estimates fall equally on either side of the population mean, and contain
+      the population mean within their confidence intervals 95% of the time),
+      and whether they differ in their precision (that is, whether one gives
+      narrower confidence intervals than the others).</p>
+    <p> </p>
+    <h2>Sampling for early detection and eradication - rapid assessment
+      (optional for Biol 420, mandatory for Biol 620)</h2>
+    <p>Sometimes the goal of a monitoring program is aimed at something other
+      than unbiased estimation of a quantity. Sometimes the purpose is to detect
+      a problem as early as possible so you can treat it before it gets out of
+      hand. </p>
+    <img alt="Pepperweed" src="Weeds2.JPG" style="float:left; margin-right: 10px; margin-bottom: 10px">
+    <p>The SDRP had such a situation in 2004 when perennial pepperweed (<em>Lepidium
+        latifolium</em>) was found in the park. Perennial pepperweed is
+      originally from Eurasia, and it was probably introduced to California
+      accidentally as a contaminant of agricultural products (possibly mixed
+      with sugar beet seeds, or with rice straw). A patch of it is shown in the
+      picture to the left - these plants are young still, but mature plants have
+      thick woody stems and can grow to six feet tall. Perennial pepperweed has
+      extensive roots that out-compete native plants, and could have eventually
+      displaced the trees in the riparian strip you see in the background. By
+      the time it was detected it had already spread to about 400 acres.
+      Eradication is difficult and expensive - herbicide has to be applied
+      multiple times to kill the plant, and other methods, like using goats to
+      kill the plant, can have undesirable side-effects (you have to be careful
+      that the goats haven't been feeding on other potentially invasive plants,
+      because the seeds could survive the trip through the goats' digestive
+      systems. Introducing a second invasive while you are trying to eradicate
+      the first is not good management). Mature plants shed seed that can
+      persist in the soil (the "seed bank"), and will need to be eradicated
+      repeatedly as the seeds germinate over several years.</p>
+    <p>Clearly, it's much less important to have an unbiased estimate of the
+      size of a patch of perennial pepperweed than it is to know that it's
+      present in the watershed so you can go kill it before it spreads.
+      Eradication of a 1 acre patch is much easier than a 400 acre patch
+      (probably more than 400 times easier, since the plants in the 400 acre
+      patch have had time to get larger and establish a seed bank). </p>
+    <p style="clear:both">There are a couple of differences between this kind of
+      monitoring and the sampling designs we have talked about so far. </p>
+    <img alt="Goats eating weed" src="goats_pepperweed.jpg" style="float: left; margin-right: 10px; margin-bottom: 10px">
+    <p>A. The first, and perhaps most fundamental one, is that we may not choose
+      to use probability sampling. Or we may, but with some modification. We
+      usually think of probability sampling as meaning that every unit in the
+      sampling universe is equally likely to be selected, but this isn't quite a
+      complete definition. The more accurate definition is that probability
+      sampling means that the probability that any unit will be included in the
+      sample is known. Probability sampling is a protection against bias, but we
+      care less about bias now than about effectiveness - our goal is to find
+      the pepperweed, and if this can best be done with a biased sampling
+      design, so be it. However, we may still choose to use probability sampling
+      methods that allow some units a greater chance of being sampled - for
+      example, since we know that pepperweed likes alkaline soils (i.e. pH over
+      7) and seems to be introduced and inadvertently spread via agricultural
+      operations, we may focus more intense sampling in areas that are most
+      likely to have a successful introduction. A successful introduction
+      requires first that the propagules of the plant (seed or fragments) arrive
+      at a site, and then that the site is suitable for the plant's
+      establishment and spread. Focusing on areas with alkaline soils near
+      agricultural areas may help increase the chances we will find the
+      outbreak.</p>
+    <p>If we focus exclusively on the areas we think most likely to have an
+      outbreak, however, we are placing a great deal of confidence in our
+      judgment of how the plant is likely to establish and spread. Once a small
+      population has established, the seed may be distributed by birds or other
+      animals (including people) over larger areas, and the established
+      population becomes a new source of threat of introduction. It may make
+      sense to focus our most intense sampling on areas judged most likely to
+      experience an outbreak, but we should put some effort into other areas as
+      well to give us the opportunity to find unexpected outbreaks if they
+      occur. </p>
+    <p>B. We will want to use rapid assessment techniques. Rapid assessment is
+      not a precisely definable term - it is basically a fancy way of saying
+      "quick and dirty". A data collection method is considered "rapid
+      assessment" if it provides data about a parameter of interest in a way
+      that is faster than other available methods. Usually, the way to gain
+      speed is to be more qualitative than quantitative, and/or to use a coarser
+      resolution than you would use with the available alternative methods. To
+      be more qualitative, we might walk out to a site and write down what we
+      judge to be the vegetation type, rather than laying out a transect and
+      recording the species and sizes of all the plants that intersect it. It is
+      also possible to make semi-quantitative recordings of cover of various
+      plant types by writing down an "ocular estimates" (i.e. educated guesses,
+      by presumably trained and experienced personnel) of the percent cover of
+      various plants at the site. The Releve method (developed by Braun-Blanquet
+      in the 1920's and 1930's) is a popular semi-quantitative rapid assessment
+      method for sampling vegetation types.</p>
+    <p>Qualitative sampling is usually more subjective than quantitative methods
+      are, and qualitative methods are thus more prone to individual variation.
+      This is a serious problem when the goal is to estimate percent cover of
+      the various plants in a site, but it's not a big problem when the goal is
+      to detect the presence of invasive species. Provided that all observers
+      can identify the species when they see it, rapid assessment would be
+      perfectly suited to the goal.</p>
+    <p>C. We will want to use a coarser resolution for our data. Instead of
+      trying to estimate the <em>amount</em> of pepperweed, we will be focusing
+      on the presence or absence of pepperweed. This ultimately is our first
+      priority, and although we may do more quantitative measurement of sizes of
+      patches once the pepperweed is found to help us prioritize where to begin
+      our eradication, the first step is to find the stuff. Our methods can
+      focus on the occurrence of the plant, rather than on the size of the
+      population.</p>
+    <p>Once we choose to focus on a low-resolution, qualitative measure like
+      occurrence, the errors we can make become qualitative as well. With a
+      quantitative sample we may worry about "error" in the sense of numeric
+      difference between our estimates and the true value (which is a
+      quantitative error). With qualitative sampling, when we are only recording
+      presence/absence, our errors are either that we say the pepperweed is
+      present when it is not (a false positive, or "commission" error -
+      equivalent to a Type I error in hypothesis testing), or we say that
+      pepperweed is absent when it is actually there (a false negative, or
+      "omission" error - equivalent to a Type II error in statistics). Clearly,
+      we want false negatives to be as rare as possible - if we miss it, it will
+      spread and become a much bigger problem. False positives will have less
+      troubling consequences - a little wasted time and effort to double-check
+      whether the pepperweed is actually there - but false positives will
+      usually be less of a problem. False positives are not cost-free, of
+      course, in that a method that produces huge numbers of false positives
+      creates a burden on managers, and false alarms can reduce confidence in
+      the monitoring program.</p>
+    <h3>You sunk my pepperweed!</h3>
+    <p>For this last exercise, you will use what you now know about perennial
+      pepperweed to find the location of the outbreak. You know that pepperweed
+      likes alkaline soils, and that it's most likely to occur near agricultural
+      areas. You will find likely areas on the map, and draw points where you
+      would go check for pepperweed. You can then load a polygon file that shows
+      where the outbreak was, and see whether you would have found it.</p>
+    <p>Use the cover type map to guide your search. You can make "layers" from
+      your cover types to make it easier to do your search. For example, to pull
+      out all the vegetation on alkaline soils from cover_types you could:</p>
+    <ul>
+      <li>Right-click on "cover_types" and open the attribute table. </li>
+      <li>Click on the gray rectangle to the left of the Alkali cover type, and
+        the row will turn light blue. You'll see that several distinct polygons
+        on the map are selected as well (this is a "multipart" layer, like we
+        used to generate random points by cover type in our error checking lab,
+        so a single row in the attribute table pertains to all the polygons of
+        that cover type in the map).</li>
+      <li>Make a layer from the selection by right-clicking on "cover_types" in
+        the table of contents again, and select "Selection" → "Create layer from
+        selected features". This will add a layer called "cover_types_selection"
+        to the table of contents. </li>
+      <li>Double click on cover_types_selection, and in the "General" tab of the
+        "Layer Properties" re-name the layer "Alkali". Layers are not permanent,
+        separate data sets, they are just the set of selected features from
+        another data set that you've separated temporarily to make it easier to
+        see where they are.</li>
+      <li>While you have the properties open, switch to "Symbology" and change
+        the color to something prominent and easy to see (bright red, yellow, or
+        green work well).</li>
+    </ul>
+    <p>You can now do the same thing to make a layer for Agriculture, using a
+      different color to make it easy to see both in the map.</p>
+    <p>Once you have your likely spots identified, draw some points where you
+      would want to search. Right-click in the button bars area, and add the
+      "Draw" toolbar. The drop-down menu with a polygon on it (next to the
+      capital A) allows you to draw various types of features on the map. Drop
+      this down and select "Marker". Now you can place a dot wherever you think
+      the pepperweed is most likely to be. Place up to 10 points where you think
+      it is most likely to occur.</p>
+    <p>Now, if you click on the arrow icon in the Draw toolbar (NOT the arrow in
+      the Tools toolbar that's loaded by default), you can double-click on your
+      points and change their colors - change them to red.</p>
+    <p>Next, add another 10 points in areas you think might contain pepperweed
+      but are less likely than the first set. You can leave these the default
+      color (as long as the default is not red).</p>
+    <p>Now you can see how you did! On the P: drive, in the "dont_look_yet"
+      folder you will find "pepperweed.shp", which is the location of the
+      outbreak. Load that into your table of contents, and see if any of your
+      points fall into the polygon. If they do, or are at least close, you would
+      have found it.</p>
+    <h2>All done</h2>
+    <p>That's it for today. Keep a copy of your map file and your sampling
+      points, you will use it in the next project write up. Once everyone's
+      confidence intervals are entered I'll put together a graph with the
+      intervals for the whole class, which we can look over in a later class
+      meeting.<br>
+    </p>
+  </body>
+</html>
