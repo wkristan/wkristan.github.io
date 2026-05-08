@@ -1,0 +1,334 @@
+---
+title: "Biol 531 final exam"
+author: "Your name"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Blood pressure in Nepal
+
+The data set you will work on comes from a study by Khanal et al. (2017, Prevalence, associated factors, awareness, treatment, and control of hypertension: Findings from a cross sectional study conducted as a part of a community based intervention trial in Surkhet, Mid-western region of Nepal. PLoS ONE 12(10):e0185806. https://doi.org/10.1371/journal.pone.0185806
+
+Download the data set, hypertension_data.xlsx, from Canvas into your project folder, and import it. PLEASE DO NOT DISPLAY THE DATA SET IN YOUR CODE!!! There are 1159 rows, it will add dozens of pages to your knitted file. If you want to show just the first 10 rows use head(data.set.name) to display it, or to look at it yourself you can click on the name of the data set in your Environment to open up a viewer.
+
+```{r import.data}
+
+
+
+```
+
+The data set has the following measurements:
+
+- sex: Men, Women
+- age.cat: age category as a label, levels 30-39, 40-49, 50-59, 60 and older
+- smoking: tobacco smoking, levels past smoker, current smoker, non smoker
+- chewing.tobacco: tobacco chewing, levels no tobacco, current tobacco
+- alcohol: alcohol consumption, levels no alcohol, current alcohol
+- salt: intake of salt per day, in g
+- METs: minutes per week of aerobic exercise
+- BMI: body mass index, weight in kg divided by squared height in m
+- SBP: systolic blood pressure
+- DBP: diastolic blood pressure
+
+Systolic blood pressure is the pressure in arteries during heart contraction, and diastolic blood pressure is the pressure between contractions. The elastic expansion of arteries during a heart contraction reduces the peak systolic blood pressure, and the elastic rebound of arterial walls after the heart finishes its contraction raises diastolic blood pressure above what it would be with rigid arterial walls. Atherosclerosis, the loss of elasticity in arteries (i.e. "hardening" of arteries) is thus associated both with higher systolic and lower diastolic blood pressures.
+
+You will explore which variables best explain blood pressure with two different sets of models that differ in how they treat SBP and DBP:
+
+- The first set will use SBP and DBP to calculate pulse pressure, PP, which will be used as a response variable. Higher values of PP are associated with elevated risk of heart attacks and strokes. The rest of the variables in the data set will be predictors of PP.
+- The second set will model systolic blood pressure, SBP, as the response, but will use diastolic blood pressure, DBP, as a predictor in every model. As arteries harden SBP should become increasingly different from DBP, which then becomes variation in SBP that other variables can account for.
+
+### Pulse pressure
+
+Calculate pulse pressure, and add it to the data set as a new variable called PP. Do this by subtracting DBP from SBP and assigning the differences to name.of.data.set.you.are.using$PP (make sure you subtract DBP from SBP - confirm that you get all positive values for PP before proceeding to the models).
+
+```{r calculate.pulse.pressure}
+
+
+
+```
+
+Make an empty models list:
+
+```{r models.list}
+
+
+
+```
+
+Fit models using PP as the response, and each of the variables (other than SBP and DBP) one at a time as predictors. Add each one to your models list, using name.of.the.predictor.lm as the name of the model.
+
+```{r single.variable.models}
+
+
+
+```
+
+Fit a model with an interaction between age.cat and smoking, and add it to the models.list as age.smoking.lm
+
+```{r age.smoking.lm}
+
+
+
+```
+
+Fit a model with an interaction between age.cat and alcohol, and add it to the models.list as age.alcohol.lm
+
+```{r age.alcohol.lm}
+
+
+
+```
+
+Fit a model with an interaction between age.cat and BMI, and add it to the models.list as age.bmi.lm
+
+```{r age.bmi.lm}
+
+
+
+```
+
+Fit a model with all three of the previous two-way interactions between age.cat and BMI, age.cat and smoking, and age.cat and alcohol and add it to the models.list as age.bmi.alcohol.smoking.lm
+
+```{r age.bmi.alcohol.smoking.lm}
+
+
+
+```
+
+Fit a model that has age.cat, BMI, alcohol, smoking, METs and salt as predictors but with no interactions between them. Call the model age.bmi.alcohol.smoking.salt.mets.lm.
+
+```{r age.bmi.alcohol.smoking.salt.mets.lm}
+
+
+
+```
+
+Fit an intercept-only model for PP and add it to models.list as intercept.lm
+
+```{r intercept.lm}
+
+
+
+```
+
+Extract the AIC statistics from the models list and put them into an object (use sapply, and transpose the output so that the rows are the model names and columns are number of parameters and AIC values - make sure to convert it to a data frame as well):
+
+```{r extract.aic}
+
+
+
+```
+
+Label the columns K and AIC:
+
+```{r label.columns}
+
+
+
+```
+
+Calculate the delta AIC, and place it in a column called dAIC of the aic table you are building:
+
+```{r daic}
+
+
+
+```
+
+Note that we won't need to use AICc for this exercise. Be prepared to explain why.
+
+Calculate the AIC weights:
+
+```{r weights}
+
+
+
+```
+
+Show the completed table, sorted by dAIC:
+
+```{r sorted.table}
+
+
+
+```
+
+Next you will need to use emmip to get the table needed to graph the model for age.bmi.alcohol.smoking.salt.mets.lm. This is tricky, I'll give you the command, just make sure the names of all the objects are correct given what you're using. We will let emmip() predict values at the means of the numeric predictors (METs, BMI, salt) and just get the predicted means for the various combinations of age.cat, alcohol, and smoking:
+
+```{r emmip}
+
+library(emmeans)
+
+emmip(models.list$age.bmi.alcohol.smoking.salt.mets.lm, age.cat ~ alcohol+smoking, plotit = F) -> model.table.gg
+
+```
+
+Now make a graph that puts PP on the y-axis, age.cat on the x-axis, groups/colors by smoking, and splits the graphs into two using alcohol (i.e. use + facet_wrap(~alcohol) to split by alcohol level). Put lines on the graph using model.table.gg (remembering that PP is called yvar in that data set). These lines will be connecting dots between levels of age.cat, so use geom_line(data = model.table.gg, aes(y = yvar)) to get them. Put points on the graph from the hypertension data set. 
+
+```{r graph.model}
+
+
+
+```
+
+Get the emmeans predicted marginal means for the three levels of smoking:
+
+```{r emmeans.of.age.bmi.alchol.smoking.salt.mets.lm}
+
+
+
+```
+
+Get the model R2 and adjusted R2 from your models list:
+
+```{r model.r2.adjusted.r2}
+
+
+
+```
+
+### Diastolic BP as a predictor of systolic BP
+
+Now we are going to repeat the steps you used above, but this time with SBP as the response. To model the deviations of SBP from DBP that is associated with atherosclerosis you will include DBP as a predictor in every model. This does not calculate a pulse pressure, but it does allow the other predictors to account for SBP that is either greater than or less than expected given the DBP.
+
+Make an empty models list called models.list.dbp:
+
+```{r models.list.dbp}
+
+
+
+```
+
+Fit models using SBP as the response, and each of the variables one at a time as predictors. Add each one to models.list.dbp, using each predictor to name the model (as you did above). Make sure to ALWAYS include DBP in every model.
+
+```{r single.variable.models.dbp}
+
+
+
+```
+
+Fit a model with an interaction between age.cat and smoking, and add it to the models.list.dbp as age.smoking.lm (along with DBP, naturally).
+
+```{r age.smoking.lm.dbp}
+
+
+
+```
+
+Fit a model with an interaction between age.cat and alcohol, and add it to the models.list.dbp as age.alcohol.lm (don't forgot DBP)
+
+```{r age.alcohol.lm.dbp}
+
+
+
+```
+
+Fit a model with an interaction between age.cat and BMI, and add it to the models.list.dbp as age.bmi.lm (with... some other predictor, can't quite put my finger on it.)
+
+```{r age.bmi.lm.dbp}
+
+
+
+```
+
+Fit a model with the two-way interactions between age.cat and smoking, age.cat and alcohol, and age.cat and BMI and add it to the models.list as age.bmi.alcohol.smoking.lm (and with DBP, of course)
+
+```{r age.bmi.alcohol.smoking.lm.dbp}
+
+
+
+```
+
+Fit a model that has age.cat, BMI, alcohol, smoking, METs and salt as main effects (along with DBP)
+
+```{r age.bmi.alcohol.smoking.lm.salt.mets.dbp}
+
+
+
+```
+
+Fit a model that has only DBP as a predictor (since DBP is included in every model this is equivalent to an intercept-only model for this set, as it is the baseline against which every other model is compared). Call the model dbp.lm.
+
+```{r dbp.lm}
+
+
+
+```
+
+Extract the AIC statistics from the models list and put them into an object:
+
+```{r extract.aic.dbp}
+
+
+
+```
+
+Label the columns K and AIC:
+
+```{r label.columns.dbp}
+
+
+
+```
+
+Calculate the delta AIC, and place it in a column called dAIC of the aic table you are building:
+
+```{r daic.dbp}
+
+
+
+```
+
+Calculate the AIC weights:
+
+```{r weights.dbp}
+
+
+
+```
+
+Show the completed table, sorted by dAIC:
+
+```{r sorted.table.dbp}
+
+
+
+```
+
+Use emmip to get the table needed to graph the SBP model for age.bmi.alcohol.smoking.salt.mets.lm (this is just like the one I gave you above):
+
+```{r emmip.dbp}
+
+
+
+```
+
+Now make the graph of this model, like you did for the same model of PP above:
+
+```{r graph.model.dbp}
+
+
+
+```
+
+Get the emmeans predicted marginal means for the three levels of smoking:
+
+```{r emmeans.of.age.bmi.alchol.smoking.salt.mets.lm.dbp}
+
+
+
+```
+
+Get the model R^2^ and adjusted R^2^ from your models list:
+
+```{r model.r2.adjusted.r2.dbp}
+
+
+
+```
+
+That's it! I'll see you in class on Thursday evening.
