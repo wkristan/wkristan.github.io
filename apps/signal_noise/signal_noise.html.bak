@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+
+
+
+    <title>Signal to noise ratio</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://unpkg.com/konva@8.3.5/konva.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #f0f0f0;
+      }
+
+      #controls {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div id="controls">
+      <p>Relative amount of signal and noise (signal to noise ratio):</p>
+      <p>Amount of noise (i.e. random variation):&nbsp;
+        <input id="noise" min="0" max="5" step="0.1" value="5" type="range">&nbsp;Low signal/high noise (ratio close to 0)</p>
+            <p>Amount of signal (i.e. picture clarity):&nbsp;
+        <input id="contrast" min="0" max="100" step="0.1" value="0.5" type="range">&nbsp;Low signal/high noise (ratio close to 0)</p>
+    </div>
+    <script>
+      Konva.Image.fromURL('https://wkristan.github.io/eagle.png', function (eagle) {
+        var stage = new Konva.Stage({
+          container: 'container',
+          width: window.innerWidth,
+          height: window.innerHeight,
+        });
+
+        var layer = new Konva.Layer();
+
+        eagle.position({
+          x: 50,
+          y: 100,
+        });
+        eagle.cache();
+        eagle.filters([Konva.Filters.Noise, Konva.Filters.Contrast]);
+        layer.add(eagle);
+        stage.add(layer);
+
+        var sliders = ['noise', 'contrast'];
+        sliders.forEach(function (attr) {
+          var slider = document.getElementById(attr);
+          function update() {
+            eagle[attr](parseFloat(slider.value));
+          }
+          slider.oninput = update;
+          update();
+        });
+      });
+    </script>
+</body></html>

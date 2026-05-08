@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANOVA and the F Distribution</title>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --accent: #2563eb;
+      --shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #eef4ff 0%, var(--bg) 100%);
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid rgba(209,213,219,0.75);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+      align-items: end;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input, button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      font-size: 1rem;
+      background: white;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      font-weight: 600;
+      transition: transform 0.08s ease, opacity 0.15s ease;
+    }
+
+    button:hover { opacity: 0.95; }
+    button:active { transform: translateY(1px); }
+
+    .primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .secondary {
+      background: #0f766e;
+      color: white;
+    }
+    
+    .tertiary {
+      background: green;
+      color: white;
+      }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .stat {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .stat .k {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .stat .v {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 18px;
+    }
+
+    .plot {
+      width: 100%;
+      height: 430px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 0.96rem;
+    }
+
+    th, td {
+      border-bottom: 1px solid #e5e7eb;
+      padding: 10px 8px;
+      text-align: right;
+    }
+
+    th:first-child, td:first-child { text-align: left; }
+    th { background: #f9fafb; }
+
+    .note {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .plot { height: 380px; }
+    }
+  </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>ANOVA and the F Distribution for Three Groups</h1>
+      <div class="subtitle"> Each click draws three random samples from the same
+        normal population, computes a one-way ANOVA, and adds the resulting F
+        statistic to the sampling distribution. Under the null hypothesis of
+        equal group means, those F values follow an F distribution. </div>
+      <div class="grid">
+        <div class="panel">
+          <h2 style="margin-top:0; font-size:1.15rem;">Random samples and group
+            means</h2>
+          <div id="samplePlot" class="plot"></div>
+          <div class="note"> The dots are raw data values for the three groups.
+            Horizontal line segments mark each sample mean. ANOVA compares
+            variability <em>between</em> group means to variability <em>within</em>
+            groups. </div>
+        </div>
+        <div class="panel">
+          <h2 style="margin-top:0; font-size:1.15rem;">ANOVA table</h2>
+          <table id="anovaTable">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>SS</th>
+                <th>df</th>
+                <th>MS</th>
+                <th>F</th>
+                <th>p-value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Between groups</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td>Within groups</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td>Total</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="note"> For three groups, the F statistic uses <strong>df<sub>1</sub>
+              = k - 1 = 2</strong> and <strong>df<sub>2</sub> = N - k</strong>,
+            where <em>N</em> is the total number of observations. </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="controls">
+          <div> <label for="nPerGroup">Sample size per group</label> <input id="nPerGroup"
+              min="3" max="100" value="12" type="number"> </div>
+          <div> <label for="mu">Population mean</label> <input id="mu" step="0.1"
+              value="50" type="number"> </div>
+          <div> <label for="sigma">Population standard deviation</label> <input
+              id="sigma" min="0.1" step="0.1" value="10" type="number"> </div>
+          <div> <button id="sampleOnce" class="primary" type="button">Draw 1<br>
+              Sample</button> </div>
+          <div> <button id="sampleMany" class="secondary" type="button">Add
+              1000 More F Values</button> </div>
+          <div> <button id="resetF" class="tertiary" type="button">Reset<br>
+              F Distribution</button> </div>
+        </div>
+        <div class="meta">
+          <div class="stat">
+            <div class="k">Collected F values</div>
+            <div class="v" id="countF">0</div>
+          </div>
+          <div class="stat">
+            <div class="k">Latest F statistic</div>
+            <div class="v" id="latestF">—</div>
+          </div>
+          <div class="stat">
+            <div class="k">Numerator df</div>
+            <div class="v" id="df1">2</div>
+          </div>
+          <div class="stat">
+            <div class="k">Denominator df</div>
+            <div class="v" id="df2">33</div>
+          </div>
+        </div>
+        <div style="margin-top:14px;"> <label for="alphaSlider">Alpha level: <span
+              id="alphaValue">0.050</span></label> <input id="alphaSlider" min="0.001"
+            max="0.200" step="0.001" value="0.050" type="range"> </div>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="panel">
+        <h2 style="margin-top:0; font-size:1.15rem;">Sampling distribution of F
+          statistics</h2>
+        <div id="fPlot" class="plot"></div>
+        <div class="note"> The histogram shows the empirical distribution of F
+          statistics from the samples collected so far. The theoretical F curve
+          is included in the legend as <strong>F distribution curve</strong>
+          and starts hidden; click its legend entry to overlay it. </div>
+      </div>
+    </div>
+    <script>
+    const groupLabels = ["Group 1", "Group 2", "Group 3"];
+    const groupColors = ["#2563eb", "#059669", "#dc2626"];
+    const fValues = [];
+    let latestAnova = null;
+
+    function randn() {
+      let u = 0;
+      let v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+
+    function sampleNormal(n, mu, sigma) {
+      const out = [];
+      for (let i = 0; i < n; i += 1) out.push(mu + sigma * randn());
+      return out;
+    }
+
+    function mean(arr) {
+      return arr.reduce((a, b) => a + b, 0) / arr.length;
+    }
+
+    function anovaOneWay(groups) {
+      const k = groups.length;
+      const ns = groups.map(g => g.length);
+      const N = ns.reduce((a, b) => a + b, 0);
+      const means = groups.map(mean);
+      const grandMean = groups.flat().reduce((a, b) => a + b, 0) / N;
+
+      let ssBetween = 0;
+      let ssWithin = 0;
+
+      for (let i = 0; i < k; i += 1) {
+        ssBetween += ns[i] * Math.pow(means[i] - grandMean, 2);
+        for (const x of groups[i]) {
+          ssWithin += Math.pow(x - means[i], 2);
+        }
+      }
+
+      const ssTotal = ssBetween + ssWithin;
+      const dfBetween = k - 1;
+      const dfWithin = N - k;
+      const dfTotal = N - 1;
+      const msBetween = ssBetween / dfBetween;
+      const msWithin = ssWithin / dfWithin;
+      const F = msBetween / msWithin;
+
+      return {
+        means,
+        ssBetween,
+        ssWithin,
+        ssTotal,
+        dfBetween,
+        dfWithin,
+        dfTotal,
+        msBetween,
+        msWithin,
+        F
+      };
+    }
+
+    function jitter(width = 0.18) {
+      return (Math.random() - 0.5) * 2 * width;
+    }
+
+    function fmt(x, digits = 3) {
+      return Number.isFinite(x) ? x.toFixed(digits) : "—";
+    }
+
+    function logGamma(z) {
+      const p = [
+        676.5203681218851,
+        -1259.1392167224028,
+        771.3234287776531,
+        -176.6150291621406,
+        12.507343278686905,
+        -0.13857109526572012,
+        9.984369578019571e-6,
+        1.5056327351493116e-7
+      ];
+
+      if (z < 0.5) {
+        return Math.log(Math.PI) - Math.log(Math.sin(Math.PI * z)) - logGamma(1 - z);
+      }
+
+      z -= 1;
+      let x = 0.9999999999998099;
+      for (let i = 0; i < p.length; i += 1) {
+        x += p[i] / (z + i + 1);
+      }
+      const t = z + p.length - 0.5;
+      return 0.9189385332046727 + (z + 0.5) * Math.log(t) - t + Math.log(x);
+    }
+
+    function betaFunc(a, b) {
+      return Math.exp(logGamma(a) + logGamma(b) - logGamma(a + b));
+    }
+
+    function fPdf(x, d1, d2) {
+      if (x <= 0) return 0;
+      const a = d1 / 2;
+      const b = d2 / 2;
+      const num = Math.pow(d1 / d2, a) * Math.pow(x, a - 1);
+      const den = betaFunc(a, b) * Math.pow(1 + (d1 / d2) * x, a + b);
+      return num / den;
+    }
+
+    function betacf(x, a, b) {
+      const MAXIT = 100;
+      const EPS = 1e-8;
+      const FPMIN = 1e-30;
+      const qab = a + b;
+      const qap = a + 1;
+      const qam = a - 1;
+      let c = 1;
+      let d = 1 - qab * x / qap;
+      if (Math.abs(d) < FPMIN) d = FPMIN;
+      d = 1 / d;
+      let h = d;
+
+      for (let m = 1; m <= MAXIT; m += 1) {
+        const m2 = 2 * m;
+        let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+        d = 1 + aa * d;
+        if (Math.abs(d) < FPMIN) d = FPMIN;
+        c = 1 + aa / c;
+        if (Math.abs(c) < FPMIN) c = FPMIN;
+        d = 1 / d;
+        h *= d * c;
+
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+        d = 1 + aa * d;
+        if (Math.abs(d) < FPMIN) d = FPMIN;
+        c = 1 + aa / c;
+        if (Math.abs(c) < FPMIN) c = FPMIN;
+        d = 1 / d;
+        const del = d * c;
+        h *= del;
+        if (Math.abs(del - 1) < EPS) break;
+      }
+
+      return h;
+    }
+
+    function betai(x, a, b) {
+      if (x <= 0) return 0;
+      if (x >= 1) return 1;
+      const bt = Math.exp(
+        logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x)
+      );
+      if (x < (a + 1) / (a + b + 2)) {
+        return bt * betacf(x, a, b) / a;
+      }
+      return 1 - bt * betacf(1 - x, b, a) / b;
+    }
+
+    function fCdf(x, d1, d2) {
+      const a = d1 / 2;
+      const b = d2 / 2;
+      const xx = (d1 * x) / (d1 * x + d2);
+      return betai(xx, a, b);
+    }
+
+    function fInvCdf(p, d1, d2) {
+      if (p <= 0) return 0;
+      if (p >= 1) return Infinity;
+      let low = 0;
+      let high = 1;
+      while (fCdf(high, d1, d2) < p) {
+        high *= 2;
+        if (high > 1e6) break;
+      }
+      for (let i = 0; i < 80; i += 1) {
+        const mid = (low + high) / 2;
+        if (fCdf(mid, d1, d2) < p) {
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
+      return (low + high) / 2;
+    }
+
+    function updateSamplePlot(groups, means) {
+      const traces = [];
+
+      groups.forEach((g, i) => {
+        traces.push({
+          x: g.map(() => i + 1 + jitter()),
+          y: g,
+          mode: "markers",
+          type: "scatter",
+          name: groupLabels[i] + " data",
+          marker: { size: 10, color: groupColors[i], opacity: 0.82 },
+          hovertemplate: groupLabels[i] + "<br>Value: %{y:.2f}<extra></extra>"
+        });
+
+        traces.push({
+          x: [i + 1 - 0.28, i + 1 + 0.28],
+          y: [means[i], means[i]],
+          mode: "lines",
+          type: "scatter",
+          name: groupLabels[i] + " mean",
+          line: { width: 5, color: groupColors[i] },
+          hovertemplate: groupLabels[i] + " mean: %{y:.2f}<extra></extra>",
+          showlegend: false
+        });
+      });
+
+      Plotly.react("samplePlot", traces, {
+        margin: { l: 60, r: 20, t: 20, b: 55 },
+        xaxis: {
+          tickvals: [1, 2, 3],
+          ticktext: groupLabels,
+          range: [0.5, 3.5],
+          title: "Groups"
+        },
+        yaxis: { title: "Observed value" },
+        legend: { orientation: "h", y: 1.12 },
+        paper_bgcolor: "white",
+        plot_bgcolor: "white"
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function updateAnovaTable(a) {
+      latestAnova = a;
+      const pValue = 1 - fCdf(a.F, a.dfBetween, a.dfWithin);
+      const tbody = document.querySelector("#anovaTable tbody");
+      tbody.innerHTML = [
+        "<tr>",
+        "<td>Between groups</td>",
+        `<td>${fmt(a.ssBetween)}</td>`,
+        `<td>${a.dfBetween}</td>`,
+        `<td>${fmt(a.msBetween)}</td>`,
+        `<td>${fmt(a.F)}</td>`,
+        `<td>${fmt(pValue, 4)}</td>`,
+        "</tr>",
+        "<tr>",
+        "<td>Within groups</td>",
+        `<td>${fmt(a.ssWithin)}</td>`,
+        `<td>${a.dfWithin}</td>`,
+        `<td>${fmt(a.msWithin)}</td>`,
+        "<td>—</td>",
+        "<td>—</td>",
+        "</tr>",
+        "<tr>",
+        "<td>Total</td>",
+        `<td>${fmt(a.ssTotal)}</td>`,
+        `<td>${a.dfTotal}</td>`,
+        "<td>—</td>",
+        "<td>—</td>",
+        "<td>—</td>",
+        "</tr>"
+      ].join("");
+
+      document.getElementById("latestF").textContent = fmt(a.F);
+      document.getElementById("df1").textContent = a.dfBetween;
+      document.getElementById("df2").textContent = a.dfWithin;
+      document.getElementById("countF").textContent = fValues.length.toLocaleString();
+    }
+
+    function percentile(arr, p) {
+      if (arr.length === 0) return 1;
+      const s = [...arr].sort((a, b) => a - b);
+      const idx = Math.min(s.length - 1, Math.max(0, Math.floor(p * (s.length - 1))));
+      return s[idx];
+    }
+
+    function resetFDistribution() {
+      fValues.length = 0;
+      latestAnova = null;
+      document.getElementById("countF").textContent = "0";
+      document.getElementById("latestF").textContent = "—";
+      updateFPlot();
+    }
+
+    function updateFPlot() {
+      const n = parseInt(document.getElementById("nPerGroup").value, 10);
+      const alpha = parseFloat(document.getElementById("alphaSlider").value);
+      const df1 = 2;
+      const df2 = 3 * n - 3;
+      const critF = fInvCdf(1 - alpha, df1, df2);
+      const maxObserved = fValues.length ? Math.max(...fValues) : 1;
+      const xMax = Math.max(6, percentile(fValues, 0.995) * 1.15, maxObserved * 1.05, critF * 1.15);
+
+      const xCurve = [];
+      const yCurve = [];
+      const rejectX = [];
+      const rejectY = [];
+      const steps = 300;
+      for (let i = 0; i <= steps; i += 1) {
+        const x = 0.001 + (xMax - 0.001) * i / steps;
+        const y = fPdf(x, df1, df2);
+        xCurve.push(x);
+        yCurve.push(y);
+        if (x >= critF) {
+          rejectX.push(x);
+          rejectY.push(y);
+        }
+      }
+
+      const binCount = Math.max(15, Math.min(50, Math.round(Math.sqrt(Math.max(fValues.length, 1)) * 2)));
+      const binSize = xMax / binCount;
+
+      const histogram = {
+        x: fValues,
+        type: "histogram",
+        histnorm: "probability density",
+        xbins: { start: 0, end: xMax, size: binSize },
+        name: "Observed F values",
+        marker: { color: "#93c5fd", line: { color: "#2563eb", width: 1 } },
+        opacity: 0.78,
+        hovertemplate: "F bin density: %{y:.3f}<extra></extra>"
+      };
+
+      const currentMarker = {
+        x: latestAnova ? [latestAnova.F] : [],
+        y: latestAnova ? [fPdf(latestAnova.F, df1, df2)] : [],
+        mode: "markers",
+        type: "scatter",
+        name: "Latest F statistic",
+        marker: { size: 13, color: "#111827", symbol: "diamond" },
+        hovertemplate: "Latest F: %{x:.3f}<extra></extra>"
+      };
+
+      const theory = {
+        x: xCurve,
+        y: yCurve,
+        mode: "lines",
+        type: "scatter",
+        name: "F distribution curve",
+        visible: "legendonly",
+        line: { color: "#dc2626", width: 3 },
+        hovertemplate: "Theoretical density: %{y:.3f}<br>F: %{x:.3f}<extra></extra>"
+      };
+
+      const rejectionRegion = {
+        x: rejectX,
+        y: rejectY,
+        type: "scatter",
+        mode: "lines",
+        name: `Rejection region (alpha = ${alpha.toFixed(3)})`,
+        visible: "legendonly",
+        fill: "tozeroy",
+        line: { color: "rgba(220,38,38,0.9)", width: 1.5 },
+        hovertemplate: "Reject H0 here<br>F: %{x:.3f}<br>Density: %{y:.3f}<extra></extra>"
+      };
+
+      const criticalLine = {
+        x: [critF, critF],
+        y: [0, fPdf(critF, df1, df2)],
+        mode: "lines",
+        type: "scatter",
+        name: `Critical F = ${critF.toFixed(3)}`,
+        visible: "legendonly",
+        line: { color: "#7c3aed", width: 2, dash: "dash" },
+        hovertemplate: "Critical F: %{x:.3f}<extra></extra>"
+      };
+
+      Plotly.react("fPlot", [histogram, currentMarker, theory, rejectionRegion, criticalLine], {
+        margin: { l: 60, r: 20, t: 20, b: 55 },
+        barmode: "overlay",
+        xaxis: { title: `F statistic (df1 = ${df1}, df2 = ${df2})`, range: [0, xMax] },
+        yaxis: { title: "Density" },
+        legend: { orientation: "h", y: 1.12 },
+        annotations: [{
+          x: critF,
+          y: fPdf(critF, df1, df2),
+          text: `alpha = ${alpha.toFixed(3)}<br>critical F = ${critF.toFixed(3)}`,
+          showarrow: true,
+          arrowhead: 2,
+          ax: 60,
+          ay: -40,
+          bgcolor: "rgba(255,255,255,0.9)",
+          bordercolor: "#d1d5db"
+        }],
+        paper_bgcolor: "white",
+        plot_bgcolor: "white"
+      }, { responsive: true, displayModeBar: false });
+
+      document.getElementById("countF").textContent = fValues.length.toLocaleString();
+      document.getElementById("df1").textContent = df1;
+      document.getElementById("df2").textContent = df2;
+      document.getElementById("alphaValue").textContent = alpha.toFixed(3);
+    }
+
+    function generateThreeGroups() {
+      const n = parseInt(document.getElementById("nPerGroup").value, 10);
+      const mu = parseFloat(document.getElementById("mu").value);
+      const sigma = parseFloat(document.getElementById("sigma").value);
+      const groups = [
+        sampleNormal(n, mu, sigma),
+        sampleNormal(n, mu, sigma),
+        sampleNormal(n, mu, sigma)
+      ];
+      const a = anovaOneWay(groups);
+      fValues.push(a.F);
+      return { groups, anova: a };
+    }
+
+    function drawOne() {
+      const result = generateThreeGroups();
+      updateSamplePlot(result.groups, result.anova.means);
+      updateAnovaTable(result.anova);
+      updateFPlot();
+    }
+
+    function drawMany() {
+      let last = null;
+      for (let i = 0; i < 1000; i += 1) {
+        last = generateThreeGroups();
+      }
+      if (last) {
+        updateSamplePlot(last.groups, last.anova.means);
+        updateAnovaTable(last.anova);
+      }
+      updateFPlot();
+    }
+
+    document.getElementById("sampleOnce").addEventListener("click", drawOne);
+    document.getElementById("sampleMany").addEventListener("click", drawMany);
+    document.getElementById("resetF").addEventListener("click", resetFDistribution);
+
+    document.getElementById("nPerGroup").addEventListener("change", resetFDistribution);
+    document.getElementById("mu").addEventListener("change", resetFDistribution);
+    document.getElementById("sigma").addEventListener("change", resetFDistribution);
+    document.getElementById("alphaSlider").addEventListener("input", updateFPlot);
+
+    updateFPlot();
+  </script>
+  </body>
+</html>

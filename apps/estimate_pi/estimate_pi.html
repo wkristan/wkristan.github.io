@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Estimating %pi</title>
+    <meta content="Bill Kristan" name="author">
+    <meta content="BlueGriffon wysiwyg editor" name="generator">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=13fc6f0fc4e7a40cfb28e8d5414ce9679&authkey=AeebrenPYCL2zysCC2bsZiw"></script>
+    <script type="text/javascript" src="estimate_pi.js"></script>
+    <script type="text/javascript" src="https://csusm-my.sharepoint.com/personal/wkristan_csusm_edu/_layouts/15/guestaccess.aspx?docid=1ef9142b21a1740a3b4e2b62d84542dfd&authkey=AVSULSnJJMH27-YzZmUt1mE"></script>
+  </head>
+  <body>
+    <p>We know that π is the ratio of the circumference of a circle to its
+      diameter - regardless of the size of the circle C/d = 3.14159.</p>
+    <p>We know the value of π, and don't really need to estimate it. We can take
+      advantage of the fact we know its value, though, to learn about
+      estimation.</p>
+    <p>A circle with radius r has an area of πr<sup>2</sup>, which we'll call C.
+      A square that contains the circle, such that the circle touches all four
+      sides of the square, will have a side length of 2r, and an area of (2r)<sup>2</sup>
+      or 4r<sup>2</sup> - we'll call this area S. The ratio of the area of the
+      circle to the area of the square is thus:</p>
+    <p><img src="area_ratios.png" alt="Area ratios" title="Area ratios"> </p>
+    <p>Solving for π gives us an estimator for π in terms of the relative areas
+      of the circle and square:</p>
+    <p><img src="est_pi.png" alt="Estimate pi" title="Estimate pi"></p>
+    <p>Now, if you look at the picture below you'll see that some points are
+      being randomly placed, all of which fall inside the square and some of
+      which also fall inside the circle. If we assume that the number that will
+      fall in the circle is proportional to the size of the circle, we can count
+      up how many fall inside the circle as an index of the size of the circle
+      (in statistics an index is a variable that is expected to change
+      consistently when another variable changes, and can thus be used as an
+      indicator of the second variable). The total number of points is an index
+      of the size of the square. Multiplying the number of points falling inside
+      of the circle by 4 and dividing by the number of points in the square
+      gives us an estimator for π.</p>
+    <p id="debug_msg"> </p>
+    <br>
+    <div id="wrapper_div" style="float: left; border: solid black 4px; margin-right: 10px; margin-bottom: 10px; width: 810px;">
+      <div id="circ_div" style="width: 400px; height: 400px; float:left"></div>
+      <div id="hist_div" style="width: 400px; height: 400px; float:right"></div>
+      <p>In circle = C = <span id="n_circ"></span>&nbsp; &nbsp; &nbsp; In
+        square = S = <span id="n_rect"></span>&nbsp; &nbsp; &nbsp;Estimated
+        value of π = 4C/S = <span id="est_pi"></span> </p>
+      <p>Enter a sample size: <input id="n" min="1" value="10" style="width: 50px"
+          onchange="drawChartReset()" type="number"></p>
+      <button id="randomize_dir" onclick="drawChart()">Randomize</button> <button
+        id="reset" onclick="drawChartReset()">Reset</button> <button id="lots"
+        onclick="makeLotsOfCircs()">Select 1,000</button>
+      <p>Number of estimates = <span id="n_ests"></span>&nbsp; &nbsp;
+        &nbsp;Mean of estimates of π = <span id="pi_mean"></span></p>
+    </div>
+    <br>
+    <p> If you hit the "Randomize" button a new set of points is
+      selected, with the number created equal to the sample size specified. Each
+      time you select a new set of points you'll generate a new estimate, which
+      is added to the histogram on the right. The average of the estimates is
+      reported as "Mean of estimates of π = ". As you select multiple sets of
+      points you'll see that the estimates vary, and will not equal 3.14. You
+      can click the "Select 1,000" button to repeat the selection 1,000 times,
+      and if you do you'll see that the mean of the estimates is close to 3.14.
+      This shows you that this estimator is <strong>unbiased</strong> - the
+      average of the estimates equals the value we are estimating. A biased
+      estimate would give us an average of the estimates that is not equal to
+      3.14.</p>
+    <p>Even with a small sample size of 10 the estimator is unbiased. Increasing
+      the sample size isn't necessary to get an unbiased estimate, but it does
+      give us better precision. Try increasing to sample size to 100 and see how
+      1,000 estimates at that sample size vary. You should see that the
+      estimates fall closer on average to 3.14, so any single estimate based on
+      a sample size of 100 will tend to be closer to the correct value than a
+      sample of size 10. You can increase the sample size to 1000 and the
+      precision will be even better.</p>
+  </body>
+</html>

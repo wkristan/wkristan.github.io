@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="ttests.js" type="text/javascript"></script>
+    <title>The t-tests</title>
+    <style>/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ffffe0;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+</style> <script>function openApp(evt, divName) {
+  		// Declare all variables
+  		var i, tabcontent, tablinks;
+
+  		// Get all elements with class="tabcontent" and hide them
+  		tabcontent = document.getElementsByClassName("tabcontent");
+  		for (i = 0; i < tabcontent.length; i++) {
+    		tabcontent[i].style.display = "none";
+  		}
+
+  		// Get all elements with class="tablinks" and remove the class "active"
+  		tablinks = document.getElementsByClassName("tablinks");
+  			for (i = 0; i < tablinks.length; i++) {
+    			tablinks[i].className = tablinks[i].className.replace(" active", "");
+  			}
+
+  			// Show the current tab, and add an "active" class to the button that opened the tab
+  			document.getElementById(divName).style.display = "inline-block";
+  			evt.className += " active";
+			}
+  </script>
+  </head>
+  <body onload="drawCharts()">
+    <div class="tab"> <button id="onesample_button" class="tablinks" onclick="openApp(this, 'onesample_div')">
+        One-sample t-tests </button> <button id="twosample_button" class="tablinks"
+        onclick="openApp(this, 'twosample_div')"> Two sample t-tests </button>
+      <button id="paired_button" class="tablinks" onclick="openApp(this, 'paired_div')">
+        Paired t-tests </button> </div>
+    <div id="onesample_div" class="tabcontent">
+      <h2>One sample t-test<br>
+      </h2>
+      <p><strong>Use:</strong> comparisons between the mean of a single sample
+        (x̄) and a hypothetical value for the population mean (μ).</p>
+      <p><strong>Example:</strong> testing the effect of brandy on body
+        temperature.</p>
+      <table style="width: 100%" class="tableLarge" border="1">
+        <tbody>
+          <tr>
+            <th>Null hypothesis - H<sub>0</sub>: μ = 98.6<br>
+              <br>
+              (<input id="null_true" name="null_tf" value="true" onchange="drawOneSample()"
+                checked="true" type="radio"> <label for="null_true">Null is
+                true</label>) </th>
+            <th>Alternative hypothesis - H<sub>A</sub>: μ
+              <select name="alt" id="alt" style="appearance: none" onchange="drawOneSample()">
+                <option value="not_equal">&nbsp; ≠ &nbsp;</option>
+                <option value="less_than">&nbsp; &lt; &nbsp;</option>
+                <option value="greater_than">&nbsp; &gt; &nbsp;</option>
+              </select>
+              98.6 <br>
+              <br>
+              (<input id="alt_true" name="null_tf" value="false" onchange="drawOneSample()"
+                type="radio"> <label for="alt_true">Null is false, alternative
+                is true</label>) </th>
+          </tr>
+          <tr>
+            <td>
+              <div id="onesample_null" style="width: 600px; margin: 0 auto"> </div>
+              <p> Sample size: <input id="n_onesample" value="20" min="3" max="100"
+                  type="number"> <button onclick="drawOneSample()">Draw a new
+                  sample</button></p>
+              <p>Population standard deviation: <input id="sd_onesample" value="0.3"
+                  min="0.01" max="0.6" step="0.01" onchange="drawOneSample()" type="number"></p>
+            </td>
+            <td>
+              <div id="onesample_alt" style="width: 600px; margin: 0 auto"> </div>
+              <div id="alt_diff_onesample">
+                <p>Actual population mean: <input id="alt_mean_onesample" value="98.7"
+                    min="97.6" max="100" step="0.01" ,="" onchange="drawOneSample()"
+                    type="number"> </p>
+              </div>
+              <br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="tdist_wrapper" width="800px">
+        <p> <strong>Test of H<sub>0</sub></strong> - what is the probability
+          that a mean of <span id="obs_mean_onesample"></span> came from a
+          distribution with μ = 98.6? </p>
+        <div id="tdist_onesample" style="float:left"> </div>
+        <div id="ttest_stats" style="margin-top: 20px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Statistic</th>
+                <th>Value</th>
+              </tr>
+              <tr>
+                <td>Mean</td>
+                <td id="onesample_mean"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>Standard deviation</td>
+                <td id="onesample_sd"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>Standard error</td>
+                <td id="onesample_se"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>t<sub>obs</sub></td>
+                <td id="onesample_t"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>d.f.</td>
+                <td id="onesample_df"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>p</td>
+                <td id="onesample_p"><br>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p> Alpha level: <input id="alpha_onesample" value="0.05" step="0.01"
+              max="1" min="0" onchange="drawOneSample()" )="" type="number"> </p>
+        </div>
+      </div>
+    </div>
+    <div id="twosample_div" class="tabcontent">
+      <h2>Two sample t-test<br>
+      </h2>
+      <p><strong>Use:</strong> comparisons between the means of two different
+        samples (x̄<sub>1</sub>, x̄<sub>2</sub>).</p>
+      <p><strong>Example:</strong> testing difference in heart rate between
+        lobsters treated with GABA and untreated controls.</p>
+      <table style="width: 100%" class="tableLarge" border="1">
+        <tbody>
+          <tr>
+            <th>Null hypothesis - H<sub>0</sub>: μ<sub>control</sub> = μ<sub>GABA</sub><br>
+              <br>
+              (<input id="null_true_ts" name="null_tf_ts" value="true" onchange="drawTwoSample()"
+                checked="true" type="radio"> <label for="null_true_ts">Null is
+                true</label>) </th>
+            <th>Alternative hypothesis - H<sub>A</sub>: μ<sub>control</sub>
+              <select name="alt_ts" id="alt_ts" style="appearance: none" onchange="drawTwoSample()">
+                <option value="not_equal">&nbsp; ≠ &nbsp;</option>
+                <option value="less_than">&nbsp; &lt; &nbsp;</option>
+                <option value="greater_than">&nbsp; &gt; &nbsp;</option>
+              </select>
+              μ<sub>GABA</sub> <br>
+              <br>
+              (<input id="alt_true_ts" name="null_tf_ts" value="false" onchange="drawTwoSample()"
+                type="radio"> <label for="alt_true_ts">Null is false,
+                alternative is true</label>) </th>
+          </tr>
+          <tr>
+            <td>
+              <div id="twosample_null" style="width: 600px; margin: 0 auto"> </div>
+              <p> Sample size: <input id="n_twosample" value="20" min="3" max="100"
+                  type="number"> <button onclick="drawTwoSample()">Draw a new
+                  sample</button></p>
+              <p>Population standard deviation: <input id="sd_twosample" value="2.5"
+                  min="0.1" max="5" step="0.1" onchange="drawTwoSample()" type="number"></p>
+            </td>
+            <td>
+              <div id="twosample_alt" style="width: 600px; margin: 0 auto"> </div>
+              <div id="alt_diff_twosample">
+                <p>Actual GABA population mean: <input id="alt_mean_twosample"
+                    value="16.1" min="10" max="40" step="0.1" ,="" onchange="drawTwoSample()"
+                    type="number"> </p>
+              </div>
+              <br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="tdist_twosample_wrapper" width="800px">
+        <p> <strong>Test of H<sub>0</sub></strong> - what is the probability
+          that two samples drawn from a population with the same μ would have
+          sample means as different as <span id="obs_mean_twosample"></span>? </p>
+        <div id="tdist_twosample" style="float:left"> </div>
+        <div id="ttest_stats_ts" style="margin-top: 20px">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Statistic</th>
+                <th>GABA</th>
+                <th>Control</th>
+              </tr>
+              <tr>
+                <td>Mean</td>
+                <td id="gaba_mean"><br>
+                </td>
+                <td id="control_mean"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>Standard deviation</td>
+                <td id="gaba_sd"><br>
+                </td>
+                <td id="control_sd"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>Pooled standard error</td>
+                <td id="pooled_se" colspan="2"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>t<sub>obs</sub></td>
+                <td id="twosample_t" colspan="2"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>d.f.</td>
+                <td id="twosample_df" colspan="2"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>p</td>
+                <td id="twosample_p" colspan="2"><br>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p> Alpha level: <input id="alpha_twosample" value="0.05" step="0.01"
+              max="1" min="0" onchange="drawTwoSample()" )="" type="number"> </p>
+        </div>
+      </div>
+    </div>
+    <div id="paired_div" class="tabcontent">
+      <h2>Paired t-tests<br>
+      </h2>
+      <p><strong>Use:</strong> comparisons between the mean of differences
+        between paired measurements (x̄<sub>diff</sub>) and a hypothetical value
+        for the population mean of zero (μ = 0).</p>
+      <p><strong>Example:</strong> testing differences in bicep circumference
+        between dominant and subordinate arms of a sample of n people.</p>
+      <table style="width: 100%" class="tableLarge" border="1">
+        <tbody>
+          <tr>
+            <th>Null hypothesis - H<sub>0</sub>: μ<sub>diff</sub> = 0<br>
+              <br>
+              (<input id="null_true_paired" name="null_tf_paired" value="true" onchange="drawOneSample()"
+                checked="true" type="radio"> <label for="null_true_paired">Null
+                is true</label>) </th>
+            <th>Alternative hypothesis - H<sub>A</sub>: μ<sub>diff</sub>
+              <select name="alt_paired" id="alt_paired" style="appearance: none"
+                onchange="drawPaired()">
+                <option value="not_equal">&nbsp; ≠ &nbsp;</option>
+                <option value="less_than">&nbsp; &lt; &nbsp;</option>
+                <option value="greater_than">&nbsp; &gt; &nbsp;</option>
+              </select>
+              0 <br>
+              <br>
+              (<input id="alt_true_paired" name="null_tf_paired" value="false" onchange="drawPaired()"
+                type="radio"> <label for="alt_true_paired">Null is false,
+                alternative is true</label>) </th>
+          </tr>
+          <tr>
+            <td>
+              <div id="paired_null" style="width: 600px; margin: 0 auto"> </div>
+              <p> Sample size: <input id="n_paired" value="10" min="3" max="100"
+                  type="number"> <button onclick="drawPaired()">Draw a new
+                  sample</button></p>
+              <p>Population standard deviation of differences: <input id="sd_paired"
+                  value="0.14" min="0.01" max="0.28" step="0.01" onchange="drawPaired()"
+                  type="number"></p>
+            </td>
+            <td>
+              <div id="paired_alt" style="width: 600px; margin: 0 auto"> </div>
+              <div id="alt_diff_paired">
+                <p>Actual population mean of differences: <input id="alt_mean_paired"
+                    value="0.1" min="-1" max="1" step="0.01" ,="" onchange="drawPaired()"
+                    type="number"> </p>
+              </div>
+              <br>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div id="tdist_wrapper_paired" width="800px">
+        <p><strong>Test of H<sub>0</sub></strong> - what is the probability that
+          a mean of differences of <span id="obs_mean_paired"></span> came from
+          a distribution with μ<sub>diff</sub> = 0?</p>
+        <div id="paired_data_wrapper" style="float:left">
+          <table id="paired_data_table" class="tableLarge" style="float:left; margin-top: 20px">
+            <tbody>
+              <tr>
+                <th>Individual no.</th>
+                <th>Dominant</th>
+                <th>Subordinate</th>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="tdist_paired" style="float:left"> </div>
+        <div id="ttest_stats_paired" style="margin-top: 20px; float: left">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Statistic</th>
+                <th>Value</th>
+              </tr>
+              <tr>
+                <td>Mean of differences (D-S)</td>
+                <td id="paired_mean"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>Standard deviation of differences</td>
+                <td id="paired_sd"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>Standard error of differences</td>
+                <td id="paired_se"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>t<sub>obs</sub></td>
+                <td id="paired_t"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>d.f.</td>
+                <td id="paired_df"><br>
+                </td>
+              </tr>
+              <tr>
+                <td>p</td>
+                <td id="paired_p"><br>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p> Alpha level: <input id="alpha_paired" value="0.05" step="0.01" max="1"
+              min="0" onchange="drawPaired()" )="" type="number"> </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

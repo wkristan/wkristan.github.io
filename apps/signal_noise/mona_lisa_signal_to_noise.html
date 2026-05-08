@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mona Lisa Signal-to-Noise Ratio Demo</title>
+    <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --accent: #f59e0b;
+      --border: rgba(255,255,255,0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(1120px, 100%);
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 24px;
+    }
+
+    .panel {
+      background: rgba(17, 24, 39, 0.92);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .image-panel { padding: 20px; }
+
+    .sidebar {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    h1 {
+      font-size: clamp(1.8rem, 2vw, 2.4rem);
+      margin: 0 0 8px;
+      line-height: 1.1;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .canvas-wrap {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 560px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.06);
+      overflow: hidden;
+      position: relative;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      background: #0b1220;
+    }
+
+    .control-card, .metric-card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+    }
+
+    .label-row, .metric-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .value-pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.14);
+      color: #fbbf24;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .big-number {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-top: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .small {
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .legend {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .legend .metric-card { min-height: 112px; }
+
+    .status {
+      min-height: 1.25rem;
+      color: #cbd5e1;
+      font-size: 0.95rem;
+    }
+
+    .footer-note {
+      font-size: 0.92rem;
+      color: var(--muted);
+      padding-top: 4px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: #fde68a;
+      background: rgba(255,255,255,0.05);
+      padding: 0.1em 0.35em;
+      border-radius: 6px;
+    }
+
+    @media (max-width: 900px) {
+      .app { grid-template-columns: 1fr; }
+      .canvas-wrap { min-height: 360px; }
+    }
+  </style>
+  </head>
+  <body>
+    <div class="app">
+      <section class="panel image-panel">
+        <div class="canvas-wrap"> <canvas id="canvas" aria-label="Mona Lisa with adjustable signal and random pixel noise"></canvas>
+        </div>
+      </section>
+      <aside class="panel sidebar">
+        <div>
+          <h1>Statistical testing as Signal vs. Noise</h1>
+          <p> When we test hypotheses, we try to distinguish real effects from
+            random sampling variation. Test statistics (like t or F) are usually
+            expressed as some sort of signal to noise ratio, where bigger values
+            indicate a strong signal compared with the random variation
+            considered to be statistical "noise". </p>
+        </div>
+        <div class="control-card">
+          <div class="label-row"> <strong>Signal intensity (size of response)</strong>
+            <span class="value-pill" id="signalLabel">100%</span> </div>
+          <input id="signalSlider" min="0" max="100" step="1" value="1" type="range">
+          <p class="small" style="margin-top: 10px; margin-bottom: 16px;"> Lower
+            values are analogous to small responses to treatment (e.g. small
+            differences between treatment and control means) </p>
+          <div class="label-row"> <strong>Noise level (random variation)</strong>
+            <span class="value-pill" id="noiseLabel">0</span> </div>
+          <input id="noiseSlider" min="0" max="500" step="1" value="500" type="range">
+          <p class="small" style="margin-top: 10px;"> Higher values add more
+            "static interference" to the image, which simulates the effect that
+            random sampling variation has on our ability to detect the response.
+          </p>
+        </div>
+        <div class="metric-card">
+          <div class="metric-row"> <strong>Signal-to-noise ratio<br>
+              (test statistic size)</strong> </div>
+          <div class="big-number" id="snrValue">—</div>
+          <p class="small" id="snrText">Loading image…</p>
+        </div>
+        <div class="legend">
+          <div class="metric-card">
+            <div class="metric-row"><strong>Signal power</strong></div>
+            <div class="big-number" id="signalPower" style="font-size: 1.6rem;">—</div>
+            <p class="small">Intensity of the image color, analogous to the
+              amount of response to treatment.</p>
+          </div>
+          <div class="metric-card">
+            <div class="metric-row"><strong>Noise power</strong></div>
+            <div class="big-number" id="noisePower" style="font-size: 1.6rem;">—</div>
+            <p class="small">Amount of random noise, analogous to random
+              sampling variation.</p>
+          </div>
+        </div>
+        <div class="control-card">
+          <p> Try varying the signal intensity and the noise level. You'll see
+            that you can achieve a big signal to noise ratio by either boosting
+            the signal (intensifying the color) or reducing the noise (reducing
+            random variation). Conversely, even small amounts of random noise
+            make weak signals difficult to detect. </p>
+        </div>
+        <div class="status" id="status">Loading image…</div>
+        <div class="footer-note"> Formula used: <code>SNR = signal power /
+            noise power</code> </div>
+      </aside>
+    </div>
+    <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    const signalSlider = document.getElementById('signalSlider');
+    const noiseSlider = document.getElementById('noiseSlider');
+
+    const signalLabel = document.getElementById('signalLabel');
+    const noiseLabel = document.getElementById('noiseLabel');
+    const snrValue = document.getElementById('snrValue');
+    const snrText = document.getElementById('snrText');
+    const signalPowerEl = document.getElementById('signalPower');
+    const noisePowerEl = document.getElementById('noisePower');
+    const statusEl = document.getElementById('status');
+
+    const BASELINE = 125;
+    let originalImageData = null;
+
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function formatNumber(value, digits = 2) {
+      return Number(value).toLocaleString(undefined, {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      });
+    }
+
+    function computeSignalPower(data) {
+      let sumSq = 0;
+      let count = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i] - BASELINE;
+        const g = data[i + 1] - BASELINE;
+        const b = data[i + 2] - BASELINE;
+        sumSq += r * r + g * g + b * b;
+        count += 3;
+      }
+      return count ? sumSq / count : 0;
+    }
+
+    function buildSignalImage(signalPercent) {
+      const source = originalImageData.data;
+      const adjusted = new Uint8ClampedArray(source.length);
+      const t = signalPercent / 100;
+
+      for (let i = 0; i < source.length; i += 4) {
+        adjusted[i] = clamp(BASELINE + t * (source[i] - BASELINE), 0, 255);
+        adjusted[i + 1] = clamp(BASELINE + t * (source[i + 1] - BASELINE), 0, 255);
+        adjusted[i + 2] = clamp(BASELINE + t * (source[i + 2] - BASELINE), 0, 255);
+        adjusted[i + 3] = source[i + 3];
+      }
+
+      return adjusted;
+    }
+
+    function render() {
+      if (!originalImageData) return;
+
+      const signalPercent = Number(signalSlider.value);
+      const noisePercent = Number(noiseSlider.value);
+      const amplitude = (noisePercent / 100) * 120;
+
+      signalLabel.textContent = `${signalPercent}%`;
+      noiseLabel.textContent = `${noisePercent}`;
+
+      const signalPixels = buildSignalImage(signalPercent);
+      const outputPixels = new Uint8ClampedArray(signalPixels.length);
+
+      let noiseSqSum = 0;
+      let noiseCount = 0;
+
+      for (let i = 0; i < signalPixels.length; i += 4) {
+        for (let c = 0; c < 3; c++) {
+          const noise = (Math.random() * 2 - 1) * amplitude;
+          const original = signalPixels[i + c];
+          const noisy = clamp(original + noise, 0, 255);
+          outputPixels[i + c] = noisy;
+          const diff = noisy - original;
+          noiseSqSum += diff * diff;
+          noiseCount += 1;
+        }
+        outputPixels[i + 3] = signalPixels[i + 3];
+      }
+
+      const output = new ImageData(outputPixels, originalImageData.width, originalImageData.height);
+      ctx.putImageData(output, 0, 0);
+
+      const signalPower = computeSignalPower(signalPixels);
+      const noisePower = noiseCount ? noiseSqSum / noiseCount : 0;
+
+      signalPowerEl.textContent = formatNumber(signalPower, 2);
+      noisePowerEl.textContent = formatNumber(noisePower, 2);
+
+      if (signalPower <= 1e-12 && noisePower <= 1e-12) {
+        snrValue.textContent = '—';
+        snrText.textContent = 'No signal and no added noise.';
+      } else if (noisePower <= 1e-12) {
+        snrValue.textContent = '∞';
+        snrText.textContent = signalPercent === 0
+          ? 'Flat baseline image with essentially no noise.'
+          : 'No added noise yet.';
+      } else if (signalPower <= 1e-12) {
+        snrValue.textContent = '-∞';
+        snrText.textContent = 'Signal has collapsed to the flat baseline while noise remains.';
+      } else {
+        const snr = signalPower / noisePower;
+        snrValue.textContent = formatNumber(snr, 2);
+        if (snr >= 4) {
+          snrText.textContent = 'High SNR: the signal is very easy to see.';
+        } else if (snr >= 2) {
+          snrText.textContent = 'Moderate SNR: the signal is still clear, but noise is noticeable.';
+        } else if (snr >= 1) {
+          snrText.textContent = 'Lower SNR: the signal is getting harder to distinguish.';
+        } else {
+          snrText.textContent = 'Low SNR: noise is competing strongly with the signal.';
+        }
+      }
+    }
+
+    function initializeFromImage(img) {
+      const maxWidth = 560;
+      const scale = Math.min(1, maxWidth / img.naturalWidth);
+      canvas.width = Math.round(img.naturalWidth * scale);
+      canvas.height = Math.round(img.naturalHeight * scale);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      statusEl.textContent = 'Drag either slider to change signal and noise.';
+      render();
+    }
+
+    function loadImage() {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.referrerPolicy = 'no-referrer';
+      img.onload = () => initializeFromImage(img);
+      img.onerror = () => {
+        statusEl.textContent = 'Could not load the Mona Lisa image from Wikimedia in this preview environment.';
+        snrText.textContent = 'Image unavailable.';
+      };
+      img.src = 'https://upload.wikimedia.org/wikipedia/commons/6/6a/Mona_Lisa.jpg';
+    }
+
+    signalSlider.addEventListener('input', render);
+    noiseSlider.addEventListener('input', render);
+
+    loadImage();
+  </script>
+  </body>
+</html>

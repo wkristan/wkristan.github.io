@@ -1,0 +1,105 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>The F distribution</title>
+    <script src="https://cdn.plot.ly/plotly-3.3.0.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script src="sampling_anova.js" charset="utf-8"></script>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+  </head>
+  <body>
+    <div id="sampling_dist_div">
+      <h2> What to expect from random sampling </h2>
+      <p> The great challenge we have in interpreting experimental results is
+        that random variation will produce differences between sample means.
+        This is true even if we apply no treatment at all, and just take several
+        random samples from the same population and compare their means.</p>
+      <p>If a treatment is having no effect, then for all practical purposes the
+        results of the experiment will be no different from taking random
+        samples from the same distribution. There will no doubt be differences
+        between the sample means, because random samples almost never produce
+        identical means, but the differences are just random sampling effects if
+        the treatment doesn't do anything.</p>
+      <p> We can never be 100% certain that an observed difference isn't due to
+        random sampling. But, we can minimize the chances that we'll end up
+        treating a random difference as a real one if we know how much variation
+        is produced by random chance alone. Then, if our observed results look
+        very different from what chance usually produces we can conclude they
+        are probably a real effect of treatment. If instead the means are no
+        more different than we expect to get by chance we should conclude that
+        the difference is only due to random chance.</p>
+      <p>To see how this works with ANOVA, the app below selects three samples
+        from the same normal distribution. It calls one of the groups "Control",
+        one "Treatment 1", and the third "Treatment 2", but these are just
+        labels to mimic what you would do in an actual experiment. In reality,
+        there is no difference between the groups at the population level,
+        because all three are randomly sampled from the same population.</p>
+      <p>Each time a sample is selected, the ANOVA is conducted and an F-value
+        is computed. The graph for a single experiment is on the left, and the
+        F-value obtained from it is added to the graph on the right. After you
+        run the simulation a few times to be sure you understand how it's
+        working, click the "Conduct experiment 1000 times" to produce 1000
+        repetitions (the same procedure is done as when you click the conduct
+        experiment once button, but 1000 repetitions are done and all 1000
+        F-values are added to the graph on the right. The final repetition is
+        graphed on the left).</p>
+      <div id="repeated_sampling_wrapper" style="width: 1201px; height: 601px; clear: right">
+        <div id="anova_table" style="width: 450px; height: 400px; float: left">
+          <table class="tableLarge">
+            <tbody>
+              <tr>
+                <th>Term</th>
+                <th>df</th>
+                <th>SS</th>
+                <th>MS</th>
+                <th>F</th>
+                <th>p</th>
+              </tr>
+              <tr>
+                <td>Model<br>
+                </td>
+                <td>2<br>
+                </td>
+                <td id="model_ss">100<br>
+                </td>
+                <td id="model_ms">50<br>
+                </td>
+                <td id="frat">5<br>
+                </td>
+                <td id="pval">0.014<br>
+                </td>
+              </tr>
+              <tr>
+                <td>Residual<br>
+                </td>
+                <td id="resid_df">27<br>
+                </td>
+                <td id="resid_ss">270<br>
+                </td>
+                <td id="resid_ms">10<br>
+                </td>
+                <td><br>
+                </td>
+                <td><br>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <p><br>
+          </p>
+        </div>
+        <div id="one_repeat" style="width: 400px; height: 400px; float: left"> </div>
+        <div id="many_repeats" style="width: 400px; height: 400px; float: left">
+        </div>
+        <div id="repeated_controls" style="width: 400px; height: 250px; float: left">
+          <p>Sample size: <input id="sample_size" style="width:60px" value="10"
+              type="number"></p>
+          <p> <button onclick="drawCharts()"> Conduct experiment once </button>
+            <button onclick="run1k()"> Conduct experiment 1000 times </button></p>
+          <button onclick="reset()"> Reset </button> </div>
+      </div>
+    </div>
+    
+  </body>
+</html>

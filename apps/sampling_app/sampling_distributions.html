@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Random sampling</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <style>/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ffffe0;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}
+    </style>
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script type="text/javascript" src="sampling.js"></script>
+  </head>
+  <body onload="drawCharts()">
+    <div id="header">
+      <h1>Sampling distributions</h1>
+    </div>
+    <div id="content">
+      <div class="tab"> <button id="app1" class="tablinks" onclick="openApp(this, 'app1_div')">
+          Selecting samples </button> <button id="sampling_dist" class="tablinks"
+          onclick="openApp(this, 'sampling_dist_div')"> Sampling distributions </button>
+        <button id="tdist" class="tablinks" onclick="openApp(this, 'tdist_div')">
+          The t-distribution </button> <button id="error_power" class="tablinks"
+          onclick="openApp(this, 'error_power_div')"> Error and power </button>
+      </div>
+      <div id="app1_div" class="tabcontent">
+        <h2>Comparing fertilized and unfertilized plots<br>
+        </h2>
+        <p> Click the "conduct experiment" button repeatedly - sometimes the
+          fertilizer seems to work, sometimes not, but every run is just random
+          sampling </p>
+        <div id="two_group_wrapper" style="width: 600px; height: 401px; clear: right">
+          <div id="twogroup_experiment_div" style="width: 400px; height: 400px; float: left">
+          </div>
+          <div id="twogroup_controls" style="width: 200px; height: 250px; float: left">
+            <p> <span id="difference"></span> </p>
+            <p> At the population level, how much does fertilizer increase
+              yield? <input id="popdiff" value="0" style="width: 40px" type="number">
+            </p>
+            <p> <button onclick="drawChart1()"> Conduct experiment </button> </p>
+          </div>
+        </div>
+      </div>
+      <div id="sampling_dist_div" class="tabcontent">
+        <h2> What to expect from random sampling </h2>
+        <p> Any given experimental outcome could potentially have occurred by
+          random chance. To tell the difference between chance differences and
+          real experimental </p>
+        <div id="repeated_sampling_wrapper" style="width: 1201px; height: 601px; clear: right">
+          <div id="popdist" style="width: 400px; height: 400px; float: left"> </div>
+          <div id="one_repeat" style="width: 400px; height: 400px; float: left">
+          </div>
+          <div id="many_repeats" style="width: 400px; height: 400px; float: left">
+          </div>
+          <div id="repeated_controls" style="width: 400px; height: 250px; float: left">
+            <p>Sample size: <input id="sample_size" style="width:60px" value="10"
+                type="number"></p>
+            <p> <button onclick="drawChart2()"> Conduct experiment once </button>
+              <button onclick="run1k()"> Conduct experiment 1000 times </button></p>
+            <button onclick="reset()"> Reset </button> </div>
+        </div>
+      </div>
+      <div id="tdist_div" class="tabcontent">
+        <h2> Using the t-distribution </h2>
+        <p> The t-distribution can be used as a model of random sampling. Its
+          shape depends on degrees of freedom. The x-axis is standard errors,
+          and the number of standard errors to encompass 95% of the curve around
+          the middle is called the critical value. </p>
+        <div id="tdist_wrapper_div" style="float: left; border: solid black 4px; margin-left: 10px; width: 805px;">
+          <div id="tchart_div" style="width: 800px; height: 400px;"></div>
+          <p id="critval" align="center">Mean of sample means</p>
+          <p align="center">Enter a sample size (n = 2 or more) <input id="n_tdist"
+              min="2" value="5" oninput="drawChart3()" style="width: 75px" type="number"></p>
+        </div>
+        <p style="clear:both"></p>
+      </div>
+      <div id="error_power_div" class="tabcontent">
+        <h2> Statistical errors and power </h2>
+        <p> When you conduct a null hypothesis significance test you draw a
+          definite conclusion (reject the null, or retain the null) by setting a
+          cutoff point for considering differences to be real or not. But,
+          drawing the line at p &lt; 0.05 is a little arbitrary - the curves are
+          smooth, they do not have any noticeable break or change in shape at
+          the point that we draw this line. Deciding that an experiment that
+          gives us a p-value of 0.049 indicates a real effect of the treatment,
+          while one with a p-value of 0.051 is just random sampling is hard to
+          justify.</p>
+        <p>This app shows the relationship between the status of the null
+          hypothesis (whether it is true or false in reality) and statistical
+          errors. It also allows you to change the sample size so that you can
+          see how sample size affects error rates (or not!). Finally, you can
+          switch between the x-axis displaying t-values, or displaying
+          differences in yield (that is, the data units) so that you can explore
+          the process from either perspective.</p>
+        <div id="wrapper_div_errpow" style="float: left; border: solid black 4px; margin-bottom: 20px; width: 900px; padding: 10px">
+          <div id="ep_chart_div" style="width: 450px; height: 300px; float: left;"></div>
+          <div id="output_div" style="width: 400px; float: right"> <span id="alpha_error"
+              style="display: none">
+              <p>If the null is true, only Type I error is possible. The
+                probability of a Type I error is the alpha level, which is set
+                to<br>
+                <span id="alpha_level" style="background: rgb(204,229,255);">0.05</span></p>
+            </span> <span id="beta_power">
+              <p>If the null is false, only Type II (β) error is possible. We
+                can only measure β error for a specific alternative. In reality
+                we don't know what the alternative is, but setting the amount of
+                difference between the population means shows how β and power
+                are affected by the size of difference, the alpha level, and the
+                sample size.</p>
+              <p><span style="background: rgb(255,255,0);">β error = <span id="beta_error">0.0004</span></span>,
+                <span style="background: rgb(180,180,255);">power = <span id="power">0.0006</span>
+                </span></p>
+            </span></div>
+          <div id="controls_div" style="clear:both; padding: 10px; width: 70%">
+            <div id="diff_div" style="padding: 5px; float: left; margin-right: 20px">
+              <p>Difference between population means<br>
+                (Difference is <span id="amt_diff">0</span>, so H<sub>0</sub>
+                is <span id="null_tf" style="color: red">true</span>)</p>
+              <p>μ<sub>Control</sub>&nbsp;-&nbsp;μ<sub>Fertilizer</sub> = <input
+                  id="diff_means" min="0" max="40" value="0" step="1" onchange="drawChart4()"
+                  style="width: 50px" type="number"></p>
+              <p><button id="switchChart" onclick="switchChart()" style="width: 150px">Switch
+                  to <span id="ct">Yield</span></button><button id="reset_t_dists"
+                  onclick="resetToObs()">Reset</button></p>
+            </div>
+            <div id="alpha_div" style="padding: 5px; float: left">
+              <p>Alpha level = <input id="alpha" min="0.01" max="0.75" value="0.05"
+                  step="0.01" oninput="drawChart4()" style="width: 50px" type="number"></p>
+              <p>n per group = <input id="n_t_comp" min="2" value="10" oninput="drawChart4()"
+                  style="width: 50px" type="number"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

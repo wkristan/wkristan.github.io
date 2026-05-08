@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+    
+    <title>The binomial distribution</title>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script src="main.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-3.3.0.min.js" charset="utf-8"></script>
+  </head>
+  <body onload="readOnLoad()">
+       <div id="content">
+
+      <div id="eqn_wrapper" style="width: 600px; float:left; border: 1px solid black">
+        <div id="eqn_div" style="width: 590px; float:left">
+          <p> The binomial formula, for your reference, is: </p>
+          <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="font-size: 18">
+            <semantics>
+              <mrow>
+                <mi>P</mi>
+                <mrow>
+                  <mrow>
+                    <mo fence="true" form="prefix" stretchy="false">(</mo>
+                    <mrow>
+                      <mi>X</mi> </mrow>
+                    <mo fence="true" form="postfix" stretchy="false">)</mo> </mrow>
+                  <mo stretchy="false">=</mo>
+                  <mfrac>
+                    <mrow>
+                      <mi>N</mi>
+                      <mi>!</mi> </mrow>
+                    <mrow>
+                      <mi>X</mi>
+                      <mi>!</mi>
+                      <mrow>
+                        <mo fence="true" form="prefix" stretchy="false">(</mo>
+                        <mrow>
+                          <mrow>
+                            <mi>N</mi>
+                            <mo stretchy="false">−</mo>
+                            <mi>X</mi> </mrow> </mrow>
+                        <mo fence="true" form="postfix" stretchy="false">)</mo>
+                      </mrow>
+                      <mi>!</mi> </mrow> </mfrac> </mrow>
+                <msup>
+                  <mi>p</mi>
+                  <mi>X</mi> </msup>
+                <msup>
+                  <mrow>
+                    <mo fence="true" form="prefix" stretchy="false">(</mo>
+                    <mrow>
+                      <mrow>
+                        <mn>1</mn>
+                        <mo stretchy="false">−</mo>
+                        <mi>p</mi> </mrow> </mrow>
+                    <mo fence="true" form="postfix" stretchy="false">)</mo> </mrow>
+                  <mrow>
+                    <mi>N</mi>
+                    <mo stretchy="false">−</mo>
+                    <mi>X</mi> </mrow> </msup> </mrow>
+              <annotation encoding="StarMath 5.0">P( X ) = { N! } over {
+                X!(N-X)! } p^X( 1-p )^{ N-X }</annotation> </semantics> </math>
+          <p> Dividing it into its probability part and its counting part makes
+            it easier to see how it's working. Change any of the three things
+            you can, number of eggs, probability of a female, or number of
+            females in a clutch, and see how the calculation is done. </p>
+          <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="font-size: 18"><semantics><mrow><mrow><mtext>Probability
+                    part</mtext>
+                  <mo stretchy="false">=</mo>
+                  <msup>
+                    <mi>p</mi>
+                    <mi>X</mi> </msup> </mrow>
+                <mrow>
+                  <msup>
+                    <mrow>
+                      <mo fence="true" form="prefix" stretchy="false">(</mo>
+                      <mrow>
+                        <mrow>
+                          <mn>1</mn>
+                          <mo stretchy="false">−</mo>
+                          <mi>p</mi> </mrow> </mrow>
+                      <mo fence="true" form="postfix" stretchy="false">)</mo> </mrow>
+                    <mrow>
+                      <mo fence="true" form="prefix" stretchy="false">(</mo>
+                      <mrow>
+                        <mrow>
+                          <mi>N</mi>
+                          <mo stretchy="false">−</mo>
+                          <mi>X</mi> </mrow> </mrow>
+                      <mo fence="true" form="postfix" stretchy="false">)</mo> </mrow>
+                  </msup>
+                  <mo stretchy="false">=</mo>
+                  <msup>
+                    <mi><span class="p_succ">0.5</span></mi>
+                    <mi><span class="x_successes">0</span></mi> </msup> </mrow>
+                <mrow>
+                  <msup>
+                    <mrow>
+                      <mo fence="true" form="prefix" stretchy="false">(</mo>
+                      <mrow>
+                        <mrow>
+                          <mn>1</mn>
+                          <mo stretchy="false">−</mo>
+                          <mi><span class="p_succ">0.5</span></mi> </mrow> </mrow>
+                      <mo fence="true" form="postfix" stretchy="false">)</mo> </mrow>
+                    <mrow>
+                      <mo fence="true" form="prefix" stretchy="false">(</mo>
+                      <mrow>
+                        <mrow>
+                          <mi><span class="n_total">2</span></mi>
+                          <mo stretchy="false">−</mo>
+                          <mi><span class="x_successes">0</span></mi> </mrow> </mrow>
+                      <mo fence="true" form="postfix" stretchy="false">)</mo> </mrow>
+                  </msup>
+                  <mo stretchy="false">=</mo>
+                  <mrow>
+                    <mn><span class="prob_each">0.25</span></mn> </mrow> </mrow>
+              </mrow>
+              <annotation encoding="StarMath 5.0">"Probability of any single way
+                to get X successes out of N trials" = p^X (1-p)^( N-X ) = 0.5^27
+                = 7.45 times 10^{</annotation></semantics></math>
+          <p> The "counting part" of the formula gives the number of different
+            ways that <span class="x_successes">0</span> females out of <span class="n_total">2</span> could happen: </p>
+          <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="font-size: 18">
+            <semantics>
+              <mrow>
+                <mtext>Counting part</mtext>
+                <mo stretchy="false">=</mo>
+                <mfrac>
+                  <mrow>
+                    <mi>N</mi>
+                    <mi>!</mi> </mrow>
+                  <mrow>
+                    <mi>X</mi>
+                    <mi>!</mi>
+                    <mrow>
+                      <mo fence="true" form="prefix" stretchy="false">(</mo>
+                      <mrow>
+                        <mrow>
+                          <mi>N</mi>
+                          <mo stretchy="false">−</mo>
+                          <mi>X</mi> </mrow> </mrow>
+                      <mo fence="true" form="postfix" stretchy="false">)</mo> </mrow>
+                    <mi>!</mi> </mrow> </mfrac>
+                <mo stretchy="false">=</mo>
+                <mfrac><mrow><mn><span class="n_total">2</span></mn>
+                    <mi>!</mi>&nbsp;</mrow><mrow><mn><span class="x_successes">0</span></mn>
+                    <mi>!</mi>
+                    <mrow>
+                      <mo fence="true" form="prefix" stretchy="false">(</mo>
+                      <mrow><mrow><mn><span class="n_total">2</span></mn>
+                          <mo stretchy="false">−</mo>
+                          <mn><span class="x_successes">0</span></mn> </mrow> </mrow>
+                      <mo fence="true" form="postfix" stretchy="false">)</mo> </mrow>
+                    <mi>!</mi> </mrow> </mfrac>
+                <mo stretchy="false">=</mo>
+                <mn><span class="counting_part">1</span></mn> </mrow>
+              <annotation encoding="StarMath 5.0">"Number of ways to get X
+                successes out of N trials" = { N! } over { X!(N-X)! } = { 27! }
+                over { 18!(27-18)! } = 4686825</annotation></semantics> </math>
+          <p>The probability part and counting part are multiplied together to
+            get the binomial probability: </p>
+          <math xmlns="http://www.w3.org/1998/Math/MathML" display="block" style="font-size: 18">
+            <semantics>
+              <mrow>
+                <mi>P</mi>
+                <mrow>
+                  <mrow>
+                    <mo fence="true" form="prefix" stretchy="false">(</mo>
+                    <mrow>
+                      <mi><span class="x_successes">0</span></mi> </mrow>
+                    <mo fence="true" form="postfix" stretchy="false">)</mo> </mrow>
+                  <mo stretchy="false">=</mo>
+                  <mrow>
+                    <mtext>counting</mtext>
+                    <mo stretchy="false">×</mo>
+                    <mtext>probability</mtext> </mrow>
+                  <mo stretchy="false">=</mo>&nbsp;<mrow><mn><span class="counting_part">1</span></mn>
+                    <mo stretchy="false">×</mo>
+                    <mn><span class="prob_each">0.25</span></mn> </mrow>
+                  <mo stretchy="false">=</mo>
+                  <mn><span class="binom_prob">0.5</span></mn> </mrow> </mrow></semantics>
+          </math>
+          <p>You should see this probability highlighted in blue in the table
+            and on the graph.</p>
+        </div>
+      </div>
+      <div id="chart_table_wrapper" style="float:left; width: 650px; margin-left: 20px">
+        <div id="chart_controls_wrapper" style="float:left; width:405px">
+          <div id="chart_div" style="float:left; width: 400px; height: 300px"> </div>
+          <div id="controls_div" style="float:left; width:400px; margin-left: 20px">
+            <p>Total eggs in a clutch (N): <input id="n" value="2" min="1" style="width: 50px" type="number"></p>
+            <p>Number of female (X): <input id="x" value="0" min="0" max="5" style="width: 50px" type="number"> </p>
+            <p> Prob. egg is female (p): <input id="p_succ" value="0.5" min="0" max="1" step="0.01" style="width: 50px" type="number"> </p>
+          </div>
+        </div>
+        <div id="table_div" style="float:left; width:200px; margin-left: 20px; clear:right"></div>
+      </div>
+      
+    </div>
+    <script type="text/javascript" src="binom_dist_calculation.js"></script>
+</body></html>

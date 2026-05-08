@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Why Equal Variances Matter for Pooled t-Tests</title>
+  <style>
+    :root {
+      --bg: #f7f9fc;
+      --card: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #d1d5db;
+      --accent: #2563eb;
+      --accent2: #d97706;
+      --accent3: #059669;
+      --danger: #dc2626;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(180deg, #f8fbff 0%, #f5f7fb 100%);
+      color: var(--ink);
+    }
+
+    .wrap {
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      font-size: clamp(1.7rem, 2.8vw, 2.5rem);
+      line-height: 1.1;
+      margin: 0 0 10px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 1.02rem;
+      max-width: 1000px;
+      margin-bottom: 22px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 330px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(209, 213, 219, 0.7);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      padding: 18px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .section-title {
+      font-size: 0.96rem;
+      font-weight: 700;
+      margin: 18px 0 10px;
+      letter-spacing: 0.02em;
+    }
+
+    .control {
+      margin-bottom: 14px;
+    }
+
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+
+    .value {
+      color: var(--accent);
+      font-weight: 700;
+      min-width: 56px;
+      text-align: right;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      font-size: 0.98rem;
+      background: #fff;
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 0.96rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.12s ease, opacity 0.12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .secondary {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .notes {
+      margin-top: 14px;
+      padding: 12px 13px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      color: var(--muted);
+      font-size: 0.91rem;
+      line-height: 1.45;
+    }
+
+    .main {
+      display: grid;
+      gap: 20px;
+    }
+
+    .plots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      padding: 14px 16px 16px;
+    }
+
+    .panel h2 {
+      margin: 0 0 4px;
+      font-size: 1.06rem;
+    }
+
+    .panel p {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    svg.plot {
+      width: 100%;
+      height: 260px;
+      display: block;
+      background: linear-gradient(180deg, #fcfdff 0%, #f8fbff 100%);
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .stat-box {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      font-size: 0.93rem;
+      line-height: 1.5;
+    }
+
+    .stat-box strong {
+      font-size: 1rem;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .swatch {
+      width: 13px;
+      height: 13px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .takeaway {
+      padding: 18px;
+      font-size: 1rem;
+      line-height: 1.55;
+    }
+
+    .takeaway strong {
+      color: var(--danger);
+    }
+
+    .mini {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: 1fr; }
+      .controls { position: static; }
+      .plots-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Why equal variances are assumed for the pooled two-sample t-test</h1>
+    <div class="sub">
+      This illustration keeps the population means equal and changes only the variances. It compares a case that violates the pooled t-test assumption (low SD vs high SD) with a clean reference case where both samples come from the same intermediate-SD population. Repeated sampling shows that large absolute t-values occur more often when the pooled equal-variance assumption is false.
+    </div>
+
+    <div class="grid">
+      <div class="card controls">
+        <div class="section-title">Population spreads</div>
+        <div class="control">
+          <label for="sdLow"><span>Low-variance population SD</span><span class="value" id="sdLowVal"></span></label>
+          <input id="sdLow" type="range" min="0.4" max="3.0" step="0.1" value="1.0" />
+        </div>
+        <div class="control">
+          <label for="sdHigh"><span>High-variance population SD</span><span class="value" id="sdHighVal"></span></label>
+          <input id="sdHigh" type="range" min="0.6" max="5.0" step="0.1" value="3.0" />
+        </div>
+        <div class="control">
+          <label for="midWeight"><span>Intermediate SD position</span><span class="value" id="midWeightVal"></span></label>
+          <input id="midWeight" type="range" min="0.1" max="0.9" step="0.05" value="0.5" />
+        </div>
+
+        <div class="section-title">Sample sizes per repetition</div>
+        <div class="row2">
+          <div class="control">
+            <label for="n1"><span>Group 1 n</span></label>
+            <input id="n1" type="number" min="3" max="200" step="1" value="8" />
+          </div>
+          <div class="control">
+            <label for="n2"><span>Group 2 n</span></label>
+            <input id="n2" type="number" min="3" max="200" step="1" value="30" />
+          </div>
+        </div>
+
+        <div class="section-title">Simulation</div>
+        <div class="control">
+          <label for="reps"><span>Repetitions</span><span class="value" id="repsVal"></span></label>
+          <input id="reps" type="range" min="200" max="20000" step="200" value="6000" />
+        </div>
+
+        <div class="btns">
+          <button class="primary" id="runBtn">Run simulation</button>
+          <button class="secondary" id="resetBtn">Reset defaults</button>
+        </div>
+
+        <div class="notes">
+          <strong>What is being compared?</strong><br>
+          <br>
+          <strong>Left histogram:</strong> one sample from the smaller-SD population and one from the larger-SD population<br>
+          <strong>Right histogram:</strong> both samples drawn independently from the same intermediate-SD population<br>
+          <br>
+          The simulation uses the smaller and larger SD values based on the actual slider settings, so swapping which box holds the bigger number does not change the result.
+        </div>
+      </div>
+
+      <div class="main">
+        <div class="plots-grid">
+          <div class="card panel">
+            <h2>Populations that differ only in variance</h2>
+            <p>These two populations share mean 0 but differ only in spread. The smaller and larger SDs are determined from the two slider values.</p>
+            <div class="legend">
+              <span class="legend-item"><span class="swatch" style="background:#2563eb"></span>Low variance</span>
+              <span class="legend-item"><span class="swatch" style="background:#d97706"></span>High variance</span>
+            </div>
+            <svg class="plot" id="popPlot1" viewBox="0 0 620 260"></svg>
+          </div>
+
+          <div class="card panel">
+            <h2>Equal-variance reference population</h2>
+            <p>Both groups in the reference condition are sampled from this same intermediate-variance population.</p>
+            <div class="legend">
+              <span class="legend-item"><span class="swatch" style="background:#059669"></span>Intermediate variance population</span>
+            </div>
+            <svg class="plot" id="popPlot2" viewBox="0 0 620 260"></svg>
+          </div>
+        </div>
+
+        <div class="plots-grid">
+          <div class="card panel">
+            <h2>Distribution of pooled t-values: low vs high</h2>
+            <p>Repeated samples from equal-mean populations using the smaller SD versus the larger SD.</p>
+            <svg class="plot" id="histPlot1" viewBox="0 0 620 260"></svg>
+            <div class="stat-box" id="stats1"></div>
+          </div>
+
+          <div class="card panel">
+            <h2>Distribution of pooled t-values: intermediate vs intermediate</h2>
+            <p>Repeated samples where both groups come from the same population, so the equal-variance assumption is true.</p>
+            <svg class="plot" id="histPlot2" viewBox="0 0 620 260"></svg>
+            <div class="stat-box" id="stats2"></div>
+          </div>
+        </div>
+
+        <div class="card takeaway" id="takeaway"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const els = {
+      sdLow: document.getElementById('sdLow'),
+      sdHigh: document.getElementById('sdHigh'),
+      midWeight: document.getElementById('midWeight'),
+      n1: document.getElementById('n1'),
+      n2: document.getElementById('n2'),
+      reps: document.getElementById('reps'),
+      sdLowVal: document.getElementById('sdLowVal'),
+      sdHighVal: document.getElementById('sdHighVal'),
+      midWeightVal: document.getElementById('midWeightVal'),
+      repsVal: document.getElementById('repsVal'),
+      popPlot1: document.getElementById('popPlot1'),
+      popPlot2: document.getElementById('popPlot2'),
+      histPlot1: document.getElementById('histPlot1'),
+      histPlot2: document.getElementById('histPlot2'),
+      stats1: document.getElementById('stats1'),
+      stats2: document.getElementById('stats2'),
+      takeaway: document.getElementById('takeaway'),
+      runBtn: document.getElementById('runBtn'),
+      resetBtn: document.getElementById('resetBtn')
+    };
+
+    const defaults = {
+      sdLow: 1.0,
+      sdHigh: 3.0,
+      midWeight: 0.5,
+      n1: 8,
+      n2: 30,
+      reps: 6000
+    };
+
+    function clamp(x, a, b) {
+      return Math.max(a, Math.min(b, x));
+    }
+
+    function fmt(x, digits = 2) {
+      return Number(x).toFixed(digits);
+    }
+
+    function getParams() {
+      const rawSdLow = parseFloat(els.sdLow.value);
+      const rawSdHigh = parseFloat(els.sdHigh.value);
+
+      // Always interpret the two sliders by their actual magnitudes so the
+      // simulation does not depend on which control happened to hold the larger value.
+      const sdLow = Math.min(rawSdLow, rawSdHigh);
+      const sdHigh = Math.max(rawSdLow, rawSdHigh);
+
+      const w = parseFloat(els.midWeight.value);
+      const sdMid = sdLow + w * (sdHigh - sdLow);
+
+      return {
+        rawSdLow,
+        rawSdHigh,
+        sdLow,
+        sdHigh,
+        sdMid,
+        midWeight: w,
+        n1: clamp(parseInt(els.n1.value || defaults.n1, 10), 3, 200),
+        n2: clamp(parseInt(els.n2.value || defaults.n2, 10), 3, 200),
+        reps: clamp(parseInt(els.reps.value || defaults.reps, 10), 200, 20000)
+      };
+    }
+
+    function updateLabels() {
+      const p = getParams();
+      els.sdLowVal.textContent = fmt(p.rawSdLow);
+      els.sdHighVal.textContent = fmt(p.rawSdHigh);
+      els.midWeightVal.textContent = fmt(p.sdMid) + ' SD';
+      els.repsVal.textContent = p.reps.toLocaleString();
+      els.n1.value = p.n1;
+      els.n2.value = p.n2;
+
+      const lowLabel = els.sdLow.previousElementSibling?.querySelector('span');
+      const highLabel = els.sdHigh.previousElementSibling?.querySelector('span');
+      if (lowLabel && highLabel) {
+        lowLabel.textContent = `Population A SD (effective low = ${fmt(p.sdLow)})`;
+        highLabel.textContent = `Population B SD (effective high = ${fmt(p.sdHigh)})`;
+      }
+    }
+
+    function normalPdf(x, mu, sd) {
+      const z = (x - mu) / sd;
+      return Math.exp(-0.5 * z * z) / (sd * Math.sqrt(2 * Math.PI));
+    }
+
+    function sampleNormal(mu = 0, sd = 1) {
+      let u = 0;
+      let v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+      return mu + sd * z;
+    }
+
+    function mean(arr) {
+      let s = 0;
+      for (let i = 0; i < arr.length; i++) s += arr[i];
+      return s / arr.length;
+    }
+
+    function variance(arr, m) {
+      let s = 0;
+      for (let i = 0; i < arr.length; i++) {
+        const d = arr[i] - m;
+        s += d * d;
+      }
+      return s / (arr.length - 1);
+    }
+
+    function pooledT(sdA, sdB, n1, n2) {
+      const a = new Array(n1);
+      const b = new Array(n2);
+      for (let i = 0; i < n1; i++) a[i] = sampleNormal(0, sdA);
+      for (let j = 0; j < n2; j++) b[j] = sampleNormal(0, sdB);
+      const ma = mean(a);
+      const mb = mean(b);
+      const va = variance(a, ma);
+      const vb = variance(b, mb);
+      const sp2 = (((n1 - 1) * va) + ((n2 - 1) * vb)) / (n1 + n2 - 2);
+      return (ma - mb) / Math.sqrt(sp2 * (1 / n1 + 1 / n2));
+    }
+
+    function runSimulation(sdA, sdB, n1, n2, reps) {
+      const tvals = new Array(reps);
+      let countGt2 = 0;
+      let countGt3 = 0;
+      let sumSq = 0;
+      let sumAbs = 0;
+
+      for (let i = 0; i < reps; i++) {
+        const t = pooledT(sdA, sdB, n1, n2);
+        tvals[i] = t;
+        const at = Math.abs(t);
+        if (at > 2) countGt2 += 1;
+        if (at > 3) countGt3 += 1;
+        sumSq += t * t;
+        sumAbs += at;
+      }
+
+      return {
+        tvals,
+        propGt2: countGt2 / reps,
+        propGt3: countGt3 / reps,
+        rms: Math.sqrt(sumSq / reps),
+        meanAbs: sumAbs / reps
+      };
+    }
+
+    function makeSvg(el, inner) {
+      el.innerHTML = inner;
+    }
+
+    function svgAxes(w, h, pad, xTicks, yTicks, xMap, yMap, xFmt, yFmt) {
+      let g = '';
+      g += `<line x1="${pad.l}" y1="${h - pad.b}" x2="${w - pad.r}" y2="${h - pad.b}" stroke="#9ca3af" stroke-width="1.2" />`;
+      g += `<line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${h - pad.b}" stroke="#9ca3af" stroke-width="1.2" />`;
+
+      for (const x of xTicks) {
+        const xx = xMap(x);
+        g += `<line x1="${xx}" y1="${pad.t}" x2="${xx}" y2="${h - pad.b}" stroke="#eef2f7" stroke-width="1" />`;
+        g += `<text x="${xx}" y="${h - pad.b + 20}" text-anchor="middle" fill="#6b7280" font-size="12">${xFmt(x)}</text>`;
+      }
+
+      for (const y of yTicks) {
+        const yy = yMap(y);
+        g += `<line x1="${pad.l}" y1="${yy}" x2="${w - pad.r}" y2="${yy}" stroke="#eef2f7" stroke-width="1" />`;
+        g += `<text x="${pad.l - 8}" y="${yy + 4}" text-anchor="end" fill="#6b7280" font-size="12">${yFmt(y)}</text>`;
+      }
+
+      return g;
+    }
+
+    function drawPopulationPlots() {
+      const { sdLow, sdHigh, sdMid } = getParams();
+      const W = 620;
+      const H = 260;
+      const pad = { l: 48, r: 18, t: 18, b: 38 };
+      const xMin = -10;
+      const xMax = 10;
+      const maxY = Math.max(normalPdf(0, 0, sdLow), normalPdf(0, 0, sdMid), normalPdf(0, 0, sdHigh)) * 1.1;
+
+      const xMap = x => pad.l + (x - xMin) / (xMax - xMin) * (W - pad.l - pad.r);
+      const yMap = y => H - pad.b - y / maxY * (H - pad.t - pad.b);
+      const xTicks = [-8, -4, 0, 4, 8];
+      const yTicks = [0, maxY * 0.25, maxY * 0.5, maxY * 0.75, maxY];
+
+      function curve(sd, color, fillOpacity = 0.08) {
+        let path = '';
+        let area = `M ${xMap(xMin)} ${yMap(0)} `;
+        for (let i = 0; i <= 250; i++) {
+          const x = xMin + (xMax - xMin) * i / 250;
+          const y = normalPdf(x, 0, sd);
+          path += (i === 0 ? 'M' : 'L') + xMap(x) + ' ' + yMap(y) + ' ';
+          area += `L ${xMap(x)} ${yMap(y)} `;
+        }
+        area += `L ${xMap(xMax)} ${yMap(0)} Z`;
+        return `<path d="${area}" fill="${color}" opacity="${fillOpacity}" /><path d="${path}" fill="none" stroke="${color}" stroke-width="3" />`;
+      }
+
+      const axes = svgAxes(W, H, pad, xTicks, yTicks, xMap, yMap, x => x, y => y.toFixed(2));
+      const meanLine = `<line x1="${xMap(0)}" y1="${pad.t}" x2="${xMap(0)}" y2="${H - pad.b}" stroke="#9ca3af" stroke-dasharray="5,5" /><text x="${xMap(0) + 6}" y="${pad.t + 14}" fill="#6b7280" font-size="12">shared mean</text>`;
+      const labels = `<text x="${W / 2}" y="${H - 6}" text-anchor="middle" fill="#6b7280" font-size="12">Value</text><text transform="translate(14 ${H / 2}) rotate(-90)" text-anchor="middle" fill="#6b7280" font-size="12">Density</text>`;
+
+      makeSvg(els.popPlot1, axes + meanLine + curve(sdLow, '#2563eb') + curve(sdHigh, '#d97706') + labels);
+      makeSvg(els.popPlot2, axes + meanLine + curve(sdMid, '#059669', 0.12) + labels);
+    }
+
+    function histogram(arr, bins, minX, maxX) {
+      const counts = new Array(bins).fill(0);
+      const width = (maxX - minX) / bins;
+      for (const x of arr) {
+        if (x < minX || x > maxX) continue;
+        let idx = Math.floor((x - minX) / width);
+        if (idx < 0) idx = 0;
+        if (idx >= bins) idx = bins - 1;
+        counts[idx] += 1;
+      }
+      return { counts, width };
+    }
+
+    function drawHistPlot(el, tvals, accent) {
+      const W = 620;
+      const H = 260;
+      const pad = { l: 48, r: 18, t: 18, b: 38 };
+      const xMin = -6;
+      const xMax = 6;
+      const bins = 44;
+      const hist = histogram(tvals, bins, xMin, xMax);
+      const maxC = Math.max(...hist.counts, 1);
+
+      const xMap = x => pad.l + (x - xMin) / (xMax - xMin) * (W - pad.l - pad.r);
+      const yMap = y => H - pad.b - y / maxC * (H - pad.t - pad.b);
+      const xTicks = [-6, -4, -2, 0, 2, 4, 6];
+      const yTicks = [0, maxC * 0.25, maxC * 0.5, maxC * 0.75, maxC];
+
+      let svg = svgAxes(W, H, pad, xTicks, yTicks, xMap, yMap, x => x, y => Math.round(y));
+
+      for (let i = 0; i < bins; i++) {
+        const x0 = xMin + i * hist.width;
+        const x1 = x0 + hist.width;
+        const y = hist.counts[i];
+        const left = xMap(x0) + 0.5;
+        const width = Math.max(1, xMap(x1) - xMap(x0) - 1);
+        const top = yMap(y);
+        const height = H - pad.b - top;
+        svg += `<rect x="${left}" y="${top}" width="${width}" height="${height}" fill="${accent}" opacity="0.75" />`;
+      }
+
+      svg += `<line x1="${xMap(-2)}" y1="${pad.t}" x2="${xMap(-2)}" y2="${H - pad.b}" stroke="#dc2626" stroke-dasharray="5,4" stroke-width="2" />`;
+      svg += `<line x1="${xMap(2)}" y1="${pad.t}" x2="${xMap(2)}" y2="${H - pad.b}" stroke="#dc2626" stroke-dasharray="5,4" stroke-width="2" />`;
+      svg += `<text x="${xMap(-2) - 4}" y="${pad.t + 15}" text-anchor="end" fill="#dc2626" font-size="12">-2</text>`;
+      svg += `<text x="${xMap(2) + 4}" y="${pad.t + 15}" text-anchor="start" fill="#dc2626" font-size="12">2</text>`;
+      svg += `<text x="${W / 2}" y="${H - 6}" text-anchor="middle" fill="#6b7280" font-size="12">Pooled t statistic</text>`;
+      svg += `<text transform="translate(14 ${H / 2}) rotate(-90)" text-anchor="middle" fill="#6b7280" font-size="12">Count</text>`;
+
+      makeSvg(el, svg);
+    }
+
+    function updateStats(el, res, labelA, labelB) {
+      el.innerHTML = `
+        <strong>${labelA} vs ${labelB}</strong><br>
+        Proportion with |t| > 2: <strong>${(100 * res.propGt2).toFixed(1)}%</strong><br>
+        Proportion with |t| > 3: <strong>${(100 * res.propGt3).toFixed(1)}%</strong><br>
+        RMS size of t: <strong>${res.rms.toFixed(2)}</strong><br>
+        Mean absolute t: <strong>${res.meanAbs.toFixed(2)}</strong>
+      `;
+    }
+
+    function render() {
+      updateLabels();
+      drawPopulationPlots();
+
+      const { sdLow, sdMid, sdHigh, n1, n2, reps } = getParams();
+      const resMismatch = runSimulation(sdLow, sdHigh, n1, n2, reps);
+      const resEqual = runSimulation(sdMid, sdMid, n1, n2, reps);
+
+      drawHistPlot(els.histPlot1, resMismatch.tvals, '#d97706');
+      drawHistPlot(els.histPlot2, resEqual.tvals, '#059669');
+      updateStats(els.stats1, resMismatch, 'low SD', 'high SD');
+      updateStats(els.stats2, resEqual, 'intermediate SD', 'intermediate SD');
+
+      const inflation = ((resMismatch.propGt2 / Math.max(resEqual.propGt2, 1e-9)) - 1) * 100;
+      const sampleSizesNearlyEqual = Math.abs(n1 - n2) <= 1;
+      const largerSampleHasLargerVariance = (n2 > n1 && sdHigh > sdLow) || (n1 > n2 && sdLow > sdHigh);
+
+      const balanceMsg = sampleSizesNearlyEqual
+        ? 'Because the sample sizes are nearly equal here, the distortion is usually smaller.'
+        : 'Because the sample sizes are unequal here, the variance mismatch distorts the pooled denominator more strongly.';
+
+      const directionMsg = largerSampleHasLargerVariance
+        ? 'In this setup, the larger sample is paired with the larger variance, which often makes the pooled t distribution especially heavy-tailed.'
+        : 'Pairing the larger variance with the smaller sample can change the pattern, but the mismatch still breaks the pooled assumption.';
+
+      els.takeaway.innerHTML = `
+        <strong>Key idea:</strong> the left panel violates the equal-variance assumption, while the right panel is the reference case where both groups come from the same intermediate-variance population.
+        In this run, the share of samples with <em>|t| &gt; 2</em> was <strong>${(100 * resMismatch.propGt2).toFixed(1)}%</strong> for low-vs-high, compared with <strong>${(100 * resEqual.propGt2).toFixed(1)}%</strong> for intermediate-vs-intermediate.
+        That is an increase of about <strong>${inflation.toFixed(0)}%</strong> in large t-values when variances differ.
+        <div class="mini">
+          ${balanceMsg} ${directionMsg} This is why the pooled two-sample t-test assumes equal variances: when that assumption fails, extreme t-values can occur more often than the equal-variance reference suggests.
+        </div>
+      `;
+    }
+
+    function resetDefaults() {
+      els.sdLow.value = defaults.sdLow;
+      els.sdHigh.value = defaults.sdHigh;
+      els.midWeight.value = defaults.midWeight;
+      els.n1.value = defaults.n1;
+      els.n2.value = defaults.n2;
+      els.reps.value = defaults.reps;
+      render();
+    }
+
+    [els.sdLow, els.sdHigh, els.midWeight, els.reps].forEach(el => {
+      el.addEventListener('input', () => {
+        updateLabels();
+        drawPopulationPlots();
+      });
+    });
+
+    [els.n1, els.n2].forEach(el => {
+      el.addEventListener('input', updateLabels);
+    });
+
+    els.runBtn.addEventListener('click', render);
+    els.resetBtn.addEventListener('click', resetDefaults);
+
+    resetDefaults();
+  </script>
+</body>
+</html>
+
+

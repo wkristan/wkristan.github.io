@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="main.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script type="text/javascript" src="log_trans.js"></script>
+    <title>Animated log transformation</title>
+  </head>
+  <body onload="drawCharts()">
+    <p><br>
+    </p>
+    <div id="graph_div_wrapper" style="width: 505px; height: 650px; float:left">
+      <div id="graph_div" style="width: 400px; height: 300px"> </div>
+      <div id="qqplot_div" style="width: 400px; height: 295px"> </div>
+      <p><i>Linear scale (no transformation)</i> <input min="0" max="100" value="0"
+          class="slider" id="prop_log" oninput="drawTransChart()" type="range">
+        <i>Log scale</i></p>
+    </div>
+    <div id="mf_div_wrapper" style="width: 305px; height: 600px; float:left">
+      <div id="m_div" style="width: 300px; height: 250px; float:left"> </div>
+      <div id="f_div" style="width: 300px; height: 250px; float:left"> </div>
+    </div>
+    <br style="clear:both">
+    <p> Counts of males or females are bell shaped (graphs on the right), but
+      ratios of m/f are skewed (upper left), which is clear on the normal
+      probability plot (lower left). The arrow indicating equal numbers of males
+      and females (m = f) is at 1 on a linear scale, which is not in the middle
+      of the data - values extend to nearly 3 above this point, but can only
+      have a minimum of 0. A sex ratio of 3 means that there are 3 times as many
+      males as females, and a sex ratio of 1/3 (or 0.333) means that there are
+      three times as many females as males, but even though these are equally
+      different from even numbers 3 is much further away on a linear scale from
+      1 than 0.333 is.</p>
+    <p> If you drag the slider to the right they transition into log scale. You
+      will see that:</p>
+    <ul>
+      <li>Any number raised to the power of 0 is 1, so the location along the
+        x-axis on a log scale where m = f is at 0</li>
+      <li>The log ratios are symmetrical around 0. This is because the natural
+        log of 3 is 1.1, and the natural log of 1/3 is -1.1 - so, on a log scale
+        these are the same distance away from 0, but a female-biased ratio is
+        negative and a male-biased ratio is positive.</li>
+    </ul>
+    <p>Using a log-transformation on these data set the mean to 0,&nbsp; and
+      made deviations away from equal number symmetrical around that mean -
+      thus, the data became normally distributed, which you can see in the
+      histogram of log ratios, and the normal probability plot of the
+      transformed data.</p>
+  </body>
+</html>

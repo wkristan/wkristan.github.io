@@ -1,0 +1,302 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+
+
+
+
+
+    <title>One or two tailed testing</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+  <style>/* Style the tab */
+.tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;
+}
+
+/* Style the buttons that are used to open the tab content */
+.tab button {
+  background-color: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tab button.active {
+  background-color: #ccc;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-top: none;
+}</style>
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="one_two_tail_testing.js"></script>
+  </head>
+  <body onload="readOnLoad()">
+    <div id="wrapper_div" style="float: left; border: solid black 4px; width: 924">
+      <div id="chart_wrapper" style="float:left; width: 600px; height: 800px;">
+        <div id="chart_div1" style="width: 400px; height: 400px;float:left"></div>
+        <div id="chart_div2" style="width: 200px; height: 400px;float:left"></div>
+
+   <p style="margin-left: 10px">Observed t-value is: <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline" style="font-size: 24">
+ <semantics>
+  <mrow>
+   <mfrac>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mover accent="true">
+        <mi>x</mi>
+        <mo stretchy="false">¯</mo>
+       </mover>
+       <mo stretchy="false">−</mo>
+       <mi>μ</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <msub>
+     <mi>s</mi>
+     <mover accent="true">
+      <mi>x</mi>
+      <mo stretchy="false">¯</mo>
+     </mover>
+    </msub>
+   </mfrac>
+   <mo stretchy="false">=</mo>
+   <mfrac>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mn id="cur_xbar">98.6</mn>
+       <mo stretchy="false">−</mo>
+       <mn id="cur_mu">98.6</mn>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mfrac>
+     <mn id="cur_s">2</mn>
+     <msqrt>
+      <mn id="cur_n">100</mn>
+     </msqrt>
+    </mfrac>
+   </mfrac>
+   <mo stretchy="false">=</mo>
+   <mfrac>
+    <mn id="cur_diff">0</mn>
+    <mn id="cur_se">0.2</mn>
+   </mfrac>
+   <mo stretchy="false">=</mo>
+   <mn id="cur_tobs">0</mn>
+  </mrow>
+  <annotation encoding="StarMath 5.0">( bar x - %mu ) over {s sub bar x} = ( 98.6 - 98.6 ) over { 2 over sqrt 100 } = 0 over 0.2 = 0</annotation>
+ </semantics>
+</math>
+        </p>
+        <div id="twotail_info" style="display:block; padding: 10px">
+          <p> Two-tailed t-tests can detect any difference from μ, so a x̄ that
+            is either above or below μ could be statistically significant. </p>
+        </div>
+        <div id="onetail_info" style="display:block; padding: 10px">
+          <p> One-tailed t-tests can only detect differences in one direction -
+            when one tail is selected you are asked whether the alternative
+            hypothesis is "Greater than μ" or "Less than μ" because only
+            differences in the direction you select can be detected. </p>
+        </div>
+        <div id="pval_info" style="display:block; padding: 10px">
+          <p> We are reporting the test results as a p-value - the test is
+            statistically significant if p is less than the alpha level you've
+            selected, <span id="cur_alpha">0.05</span>. </p>
+          <div id="gt_lt_p_info" style="display:none">
+            <p> With a one-tailed test the p-value is calculated from the
+              observed t-value to the tail indicated as the alternative - with <span id="gtlt_pval">'Greater than μ'</span> selected the curve is
+              shaded from the observed t-value to <span id="posneginf">positive
+                infinity</span>. </p>
+          </div>
+        </div>
+        <div id="rejret_info" style="display:block; padding: 10px">
+          <p> We are reporting the test results using a rejection and retention
+            region. With a <span id="oneortwo">two tailed</span> test selected
+            <span id="alpha_percent">2.5%</span> of the curve is placed in <span id="whichofthetails">each of the tails</span>, and we reject the
+            null if the observed t-value falls into this rejection region.</p>
+        </div>
+      </div>
+      <div id="null_div" style="float:left; width: 300px; padding: 10px; background-color: lightcyan">
+        <h3> Null hypothethesis </h3>
+        <p>H<sub>0</sub>: μ = <input id="mu" value="98.6" min="90" max="105" step="0.1" style="width: 75px" oninput="drawChart()" type="number"></p> </div>
+      <div id="settings_div" style="float:left; width: 300px; padding: 10px; background-color: #ffffcc">
+        <h3>Test settings - analyst's choices</h3>
+        <p>Tails:
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<select id="opt_onetwo" onchange="onetwoActions(this)">
+            <option value="one">One</option>
+            <option value="two" selected="selected">Two</option>
+          </select>
+        </p>
+        <div id="gtlt_wrapper" style="display:none; padding: 10px">
+          <p><i>Alternative: greater than or less than μ</i></p>
+          <p><label> <input id="greater_than" name="opt_gtlt" checked="checked" value="gt" onchange="drawChart()" type="radio">Greater than μ </label>
+            <label class="radio-inline"> <input id="Less_than" name="opt_gtlt" value="lt" onchange="drawChart()" type="radio">Less than μ </label></p>
+        </div>
+        <p>Alpha level: α = <input id="alpha" value="0.05" min="0.001" max="0.5" step="0.001" style="width:75px" oninput="drawChart()" type="number"></p>
+        <p>Show results using:
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<select id="rejret" onchange="drawChart()">
+            <option value="p_val" selected="selected">p-value</option>
+            <option value="rej">Reject/retain regions</option>
+          </select>
+        </p>
+      </div>
+      <div id="data_div" style="float:left; width:300px; padding: 10px; background-color: #e6ffe6">
+        <h3> The data - what you measured </h3>
+        <p>Sample mean: x̄ = <input id="xbar" value="98.6" min="90" max="105" step="0.1" style="width: 75px" oninput="drawChart()" type="number"></p>
+        <p>Sample standard deviation: <br>s = <input id="stdev" value="4" min="0.5" max="10" step="0.1" style="width: 75px" oninput="drawChart()" type="number"> </p>
+        <p> Sample size: n = <input id="n" value="10" min="2" max="6000" style="width: 75px" oninput="drawChart()" type="number"><br>
+          (df = n - 1 = <span id="df">99</span>)</p>
+      </div>
+    </div>
+<div id="things_to_try_div" style="width: 370px; height: 1000px; float:left; display:inline; margin-left: 20px">
+  <h3>
+    Things to try
+  </h3>
+  <div class="tab">
+  <button class="tablinks" onclick="openThing(event, 'twoTailedTest')">Two tailed test</button>
+    <button class="tablinks" onclick="openThing(event, 'oneTailedTest')">One tailed test</button>
+    <button class="tablinks" onclick="openThing(event, 'newMean')">Sample mean</button>
+    <button class="tablinks" onclick="openThing(event, 'newN')">Sample size</button>
+  <button class="tablinks" onclick="openThing(event, 'newAlpha')">Alpha level</button>
+      <button class="tablinks" onclick="openThing(event, 'newS')">Standard deviation</button>
+
+</div>
+
+<!-- Tab content -->
+<div id="newMean" class="tabcontent">
+  <h4>Size of difference that is detectable</h4>
+  <p>To begin there is no difference to detect - the sample mean and population mean are the same.</p>
+  <p>Set the display to p-value, and increase the value of x̄ to 98.9 - you'll see that x̄ - μ is now 0.3, which increases the observed t-value to 0.237. The p-value for an observed t-value is 0.8179.</p>
+  <p>Now that you see where the p-value comes from, switch the display to reject/retain regions. Increase the sample mean temperature to 100, and the t-value becomes 1.107 - a difference in temprature of 1.4 degrees is 1.107 standard errors, which has a two-tailed p-value of 0.2971. This is not yet enough to be statistically significant. 
+  </p>
+  <p>Continue to increase the sample mean, and you'll see that when it reaches 101.5 the observed t-value increases to 2.293, which has a p-value of 0.0476 - this is finally statistically significant.</p>
+  <p>
+    Switch to a one-tailed test, with an alternative of greater than μ - you can now decrease the sample mean to 101 and it will still be statistically significant - a smaller difference is detectable with a one-tailed test, if it's in the expected direction.
+  </p>
+</div>
+
+<div id="newN" class="tabcontent">
+  <h4>Effect of sample size</h4>
+  <p>Set the sample mean to 98.9, set the Tails to Two, and show the results as Reject/retain region. You'll see that the observed t-value is 0.237, which is solidly inside of the retention region - with this sample size a difference of 0.3 degrees could easily be random sampling variation.</p>
+  <p>
+    Now start increasing the sample size and watch the observed t-value - you'll see that t gets bigger as the sample size increases. Observed t-value gets bigger with increasing n because the standard error gets smaller - if you look at the observed t-value calculation the standard error gets smaller as n increases, which causes observed t to increase.
+  </p>
+  <p>
+    Continue to increase the sample size until the observed t-value enters the rejection region in the upper tail - you'll see that when n reaches 686 the difference of 0.3 degrees becomes statstically significant. Increasing sample size increases the precision of x̄ as an estimate of μ, such that a small difference between x̄ and μ can be detected.
+  </p>
+  <p>
+    Degrees of freedom also go up as n increases, narrows the t-distribution - smaller t-values are needed to fall into the rejection region if the t-distribution is narrow.
+  </p>
+  <p>
+    Increasing n always increases the chances of detecting a real difference for a two-tailed test, but only does so for a one-tailed test if the difference is in the direction being tested for. Switch to a one-tailed test and set the alternative to less than μ, and you'll see that increasing sample size makes the observed t move away from the rejection region.
+  </p>
+</div>
+
+<div id="oneTailedTest" class="tabcontent">
+  <h4>One-tailed t-tests</h4>
+  <p>Select the one-tailed t-test option now.</p>  
+  <p>Show the results using the "Reject/retain regions" option, and with the alternative set to Greater than μ you'll see that only an increase in temperature can fall into a rejection region with this choice of one-tailed test.</p>
+  <p>
+    If you change the alternative to Less than μ the rejection region is placed in the lower tail, and only a decrease in temperature could ever be statistically significant with that choice of one-tailed test.
+  </p>
+  <p>
+    Note though that the rejection region in the single tail that has one is greater than with a two-tailed test. All of the alpha level's probability is placed in one tail in a one-tailed test, but it is split between both tails for a two-tailed test.</p>
+  <p>One-tailed testing thus can detect a smaller change than a two-tailed test can, provided it's in the right direction.</p>
+</div>
+  <div id="twoTailedTest" class="tabcontent">
+    <h4>Two-tailed t-tests</h4>
+    <p>Two-tailed tests can detect differences in either direction. It is rare that a significant difference in an unexpected direction would be uninteresting, so two-tailed testing is much more common than one-tailed testing.</p>
+    <p>
+      The p-value in a two-tailed test is obtained by calculating an observed t-value, calculating its negative, and then finding the area under the t-distribution from the positive observed t-value to positive infinity and from the negative observed t-value to negative infinity. These tails represent the random outcomes that would be as far from μ or further - if our observed t-value is bigger than most t-values that would be produced by random chance the p-value will be small. If most random differences are bigger than our observed difference then the p-value will be large.
+    </p>
+    <p>
+      Initially the sample mean is set to equal the null hypothesis of 98.6, so the t-value is 0, and all of the curve is shaded, giving us a p-value of 1.
+    </p>
+    <p>
+      If you switch Show results using to "Reject/retain regions" you'll see that an observed t-value that falls far enough from μ in either direction will end up in a rejection region. When the observed t-value is big enough to fall in a rejection region it will also have a p-value that is less than the alpha level we've selected, and thus viewed from either perspective it will be statsitically significant (how much of the tails is shaded is dictated by α, so the p-value method and reject/retain region method are two sides of the same coin).
+    </p>
+  </div>
+  <div id="newAlpha" class="tabcontent">
+    <h4>Change the alpha level</h4>
+    <p>Alpha is the cutoff value we use to decide if a p-value is significant, and to set the sizes of the rejection regions on the t-distribution.</p>
+      <p>
+        Set the display to reject/retain regions, and then increase the alpha level - you'll see that the rejection region increases in size.
+      </p>
+      <p>
+        We're able to detect smaller differences if we set alpha to a larger value, but this comes at a price - the alpha level is also the probability of makeing a Type I, or false positive, error. If the null hypothesis is true 5% of the random samples we draw from a population with a mean of 98.6 will fall into the rejection regions and cause us to reject the null mistakenly when it's true.
+      </p>
+      <p>
+        So, it is possible to detect smaller differences by increasing alpha, but it also increases our false positive error rate. If we want to detect smaller differences it's better to increase sample size, because doing so doesn't increase our false positive rate.
+      </p>
+  </div>
+    <div id="newS" class="tabcontent">
+			<h4>
+  			Change the standard deviation
+      </h4>
+      <p>
+        If you decrease the standard deviation the observed t-value will increase (assuming the sample mean is something other than 98.6) because smaller standard deviations result in smaller standard errors. We have a better ability to detect small differences if the standard deviation is small.
+      </p>
+      <p>
+        The standard deviation is largely a function of the biological organisms we're working with, and we may not be able to control its size the way we can control other aspects of the study. But, we can minimize s by being careful in our data collection, by using homogeneous subjects, or by accounting for any differences that cause variation in the data we're aware of in our analysis.
+      </p>
+  </div>
+    </div>
+</body></html>
