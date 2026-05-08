@@ -1,3 +1,6 @@
+var theData_reg = {y: [7.79,8.54,7.92,8.88,8.44,8.28,7.91,8.84,8.31,8.38,9.37,8.62,10.17,10.2,10.01,9.43], x: [10,10.1,10.2,10.3,12,12.1,12.2,12.3,14,14.1,14.2,14.3,16,16.1,16.2,16.3], z: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]};
+var reg_colors_array = ["#FF0000", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00",
+"#CAB2D6", "#6A3D9A", "#FFFF99", "#B15928","#1B9E77", "#00CCCC", "#666666", "#BBBBBB"];
 
 var slope_quad = Number(document.getElementById("slope_quad_input").value);
 var int_quad = Number(document.getElementById("int_quad_input").value);
@@ -54,6 +57,12 @@ var regLikeQuadData = [regLikeQuadPt];
 
 
 var regLayoutQuad = {
+          margin: {
+    l: 10, // left
+    r: 10, // right
+    t: 30, // top
+    b: 0  // bottom - set this to a low value
+  },
     title: {
         text: '<b>Regression data</b><br>Model Likelihood: ' + lineLikeQuad.toExponential(2)
     },
@@ -102,6 +111,12 @@ var regLayoutQuad = {
 }
 
 var regQuadLikeLayout = {
+          margin: {
+    l: 10, // left
+    r: 10, // right
+    t: 30, // top
+    b: 0  // bottom - set this to a low value
+  },
     title: {
         text: 'Likelihood given all three parameters'
     },

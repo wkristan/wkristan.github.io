@@ -6,7 +6,7 @@ var theData = {outcome: [0,1], freqs: [5,15]};
 var lk_function_selected = "like";
 var lk_function_type = "Likelihood";
 var like_function_types = {like: "Likelihood", loglike: "Log likelihood", negloglike: "-Log likelihood", negll_min: "-LogLike with min. at 0"};
-var like_function_titles = {like: "Likelihood function of dataset<br><i>individual likelihoods multiplied</i>", loglike: "Likelihood function of dataset<br><i>log of individual likelihoods summed</i>", negloglike: "Likelihood function of dataset<br><i>negative of log likelihood</i>", negll_min: "Likelihood function of dtaset<br><i>negative ll set with minimum at 0</i>"};
+var like_function_titles = {like: "Likelihood function of dataset<br><i>individual likelihoods multiplied</i>", loglike: "Likelihood function of dataset<br><i>log of individual likelihoods summed</i>", negloglike: "Likelihood function of dataset<br><i>negative of log likelihood</i>", negll_min: "Likelihood function of dataset<br><i>negative LL with minimum set to 0</i>"};
 var likefun_ranges = {like: [0,0.000015], loglike: [-85,0], negloglike: [0,85], negll_min: [0,10]};
 
 
@@ -24,13 +24,13 @@ likesel.onclick = function() {
 var nhet = document.getElementById("n_het");
 var nalleles = document.getElementById("n_alleles");
 
-nhet.onchange = function() {
+nhet.oninput = function() {
     theData.freqs[0] = Number(nalleles.value) - Number(nhet.value);
     theData.freqs[1] = Number(nhet.value);
     drawChart();
 }
 
-nalleles.onchange = function() {
+nalleles.oninput = function() {
     theData.freqs[0] = Number(nalleles.value) - Number(nhet.value);
     theData.freqs[1] = Number(nhet.value);
     nhet.max = Number(nalleles.value) - 1;
@@ -84,9 +84,6 @@ function drawChart() {
         showlegend: false,
         hovermode: false,
         xaxis: {
-            title: {
-                text: "Data values"
-            },
             gridcolor: 'lightgray',
             tickvals: [0,1],
             ticktext: ["Homozygotes","Heterozygotes"]
@@ -102,7 +99,8 @@ function drawChart() {
         x: lk_function.p,
         y: lk_function_data,
         type: "scatter",
-        mode: "lines"
+        mode: "lines",
+        hoverinfo: "x+y"
     }
     
     var lk_function_data_at_est = {
@@ -133,7 +131,7 @@ function drawChart() {
         showlegend: false,
         xaxis: {
             title: {
-                text: "Data values"
+                text: "Value of p"
             },
             range: [0, 1]
         },
@@ -236,7 +234,8 @@ function makeProfileCiLines(lk_function){
         mode: 'lines',
         line: {
             color: 'cyan'
-        }
+        },
+        hoverinfo: 'x+y'
     }
     
     var upper = {
@@ -246,7 +245,8 @@ function makeProfileCiLines(lk_function){
         mode: 'lines',
         line: {
             color: 'cyan'
-        }
+        },
+        hoverinfo: 'x+y'
     }
     
     return [horizontal_line, lower, upper];

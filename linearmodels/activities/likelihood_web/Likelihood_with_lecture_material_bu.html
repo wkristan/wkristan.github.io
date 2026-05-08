@@ -1,0 +1,1898 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    <title>Likelihood</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <link href="slider_style.css" rel="stylesheet" type="text/css">
+  </head>
+  <body onload="drawAllGraphs()">
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1>Likelihood</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Introduction</a></p>
+      <p><a href="#analytical">ML analytical solutions</a></p>
+      <p><a href="#numerical">ML numerical solutions</a></p>
+      <p><a href="#mle">Numerical ML estimate of the mean</a></p>
+      <p><a href="#mle_slope">ML estimate of slope</a></p>
+      <p><a href="#hyp_test">Hypothesis testing</a></p>
+      <p><a href="#mle_int_only">Intercept only models</a></p>
+    </div>
+    <div id="content">
+      <p id="intro" class="part">In a couple of weeks we will learn to use the differences in likelihoods of models as the basis for drawing scientific conclusions, using the <strong>method
+          of support</strong>. To prepare you to use this new approach we will
+        spend this week working with likelihoods to better understand how they
+        are calculated, and what they tell us about our models. The examples we
+        use today make use of things you already know how to do in R, like
+        calculating a mean and fitting a regression line to some data, but we will learn now how to interpret those familiar skills in the context of <strong>maximum likelihood estimation</strong>.</p>
+<p class="part">Maximum likelihood estimation is, as the name implies, an estimation method. The estimation method that the statistics we've been using all semester are based on has been <strong>least squares</strong> - that is, estimates of group means and best-fit lines have been the ones that minimize the squared residuals around the estimates. Maximum likelihood is similar, in that it too is a way of finding estimates that are the best possible by some criterion, but the criterion is that maximum likelihood estimates are those that have the highest <strong>likelihood</strong> given the data. What, then, is a likelihood?</p>
+
+<h2 class="part">Likelihood functions and probability distributions</h2>
+<p>A good place to start understanding likelihood is through <strong>probability distributions</strong>. If you recall, a probability distribution gives all the possible values of a variable and their probabilities of occurring. </p>
+<p>Likelihood functions are derived from probability distributions, but they are different in a critical way: </p>
+<ul>
+<li>Probability distributions treat the population parameters of the distribution as known, and calculate the probability of particular outcomes given those known parameters.</li>
+<li>Likelihood functions treat the data as known values, and calculate the likelihood of the unknown population parameters we are estimating given the known data.</li></ul>
+      <p>To understand the difference between them, and the various ways we will see likelihood used, it's useful to refresh memory about what probability distributions are and how they work. Let's start with a <strong>discrete probability distribution</strong>, the Poisson (we will see the Poisson distribution again when we learn about loglinear models, so this is a preview of coming attractions). </p>
+<p>Discrete probability distributions give the probabilities of outcomes that can only take particular values - the Poisson is used to calculate the probability of counts, which can only be nonnegative integer numbers (0, 1, 2, 3, etc.).</p>
+<p>For example, if we have data on numbers of white blood cells (WBC) on slides prepared from blood smears (i.e. microscope slides with a small amount of blood) the data will be in the form of discrete counts. If the WBC on a slide are independent of one another (and if the patients are independent as well) then we can expect the probability of getting x WBC on a slide given a mean count of λ would be:</p>
+<p><math display="block" style="font-size: 14pt">
+  <mrow>
+   <mi>P</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mi>x</mi>
+       <mo stretchy="false">∣</mo>
+       <mi>λ</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mfrac>
+     <mrow>
+      <msup>
+       <mi>e</mi>
+       <mrow>
+        <mo stretchy="false">−</mo>
+        <mi>λ</mi>
+       </mrow>
+      </msup>
+      <msup>
+       <mi>λ</mi>
+       <mi>x</mi>
+      </msup>
+     </mrow>
+     <mrow>
+      <mi>x</mi>
+      <mi>!</mi>
+     </mrow>
+    </mfrac>
+   </mrow>
+  </mrow>
+</math> </p>
+<p>A Poisson distribution has only one parameter, λ, which is both the mean count and the variance in counts (they are the same in Poisson-distributed count data), and we need to know its value to calculate the probability of a WBC count - how do we know λ? If we have a sample of data we can calculate λ by taking the mean of the counts - across 100 blood smears we might find that the mean number of blood smears λ = 2.3. We would then have values for all the terms in the equation, and can calculate the probability of getting x = 0 WBC on a slide given that λ is equal to 2.3 - in other words, P(x = 0 | λ = 2.3) is:</p>
+<p><math display="block" style="font-size: 14pt">
+    <mrow>
+   <mi>P</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mi>x</mi>
+       <mo stretchy="false">∣</mo>
+       <mi>λ</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mfrac>
+     <mrow>
+      <msup>
+       <mi>e</mi>
+       <mrow>
+        <mo stretchy="false">−</mo>
+        <mi>λ</mi>
+       </mrow>
+      </msup>
+      <msup>
+       <mi>λ</mi>
+       <mi>x</mi>
+      </msup>
+     </mrow>
+     <mrow>
+      <mi>x</mi>
+      <mi>!</mi>
+     </mrow>
+    </mfrac>
+    <mo stretchy="false">=</mo>
+    <mfrac>
+     <mrow>
+      <msup>
+       <mi>e</mi>
+       <mrow>
+        <mo stretchy="false">−</mo>
+        <mn>2.3</mn>
+       </mrow>
+      </msup>
+      <msup>
+       <mn>2.3</mn>
+       <mn>0</mn>
+      </msup>
+     </mrow>
+     <mrow>
+      <mn>0</mn>
+      <mi>!</mi>
+     </mrow>
+    </mfrac>
+    <mo stretchy="false">=</mo>
+    <mfrac>
+     <mrow>
+      <mn>0.100</mn>
+      <mrow>
+       <mo fence="true" form="prefix" stretchy="false">(</mo>
+       <mrow>
+        <mn>1</mn>
+       </mrow>
+       <mo fence="true" form="postfix" stretchy="false">)</mo>
+      </mrow>
+     </mrow>
+     <mn>1</mn>
+    </mfrac>
+    <mo stretchy="false">=</mo>
+    <mn>0.100</mn>
+   </mrow>
+  </mrow>
+</math> </p>
+      <p>
+        
+      </p>
+<p>The probability notation, P(x = 0| λ = 2.3) says "the probability that x = 0 given that λ = 2.3", where the vertical line means "given" - anything to the right of the line is treated as a known value. Given a mean number of WBC of 2.3 the probability of getting a slide with 0 WBC is 0.100 - or, equivalently, we can expect 10% of smears to have no WBC.</p>
+<p>Since this is a discrete probability distribution we can get the probability of any of the possible outcomes (x = 1, x = 2, etc.), but we have to do this calculation for each one - we could calculate the probabilities of counts from&nbsp; 0 to 10 by plugging each in for x, and that would give us:</p>
+<p>
+</p>
+<div style="float:left; margin-right: 20px">
+  
+<table class="tableLarge">
+	<tbody>
+<tr>
+		<th>Count</th>
+		<th>Poisson probability</th>
+	</tr>
+	<tr>
+		<td>0</td>
+		<td>0.1003</td>
+	</tr>
+	<tr>
+		<td>1</td>
+		<td>0.2306</td>
+	</tr>
+	<tr>
+		<td>2</td>
+		<td>0.2652</td>
+	</tr>
+	<tr>
+		<td>3</td>
+		<td>0.2033</td>
+	</tr>
+	<tr>
+		<td>4</td>
+		<td>0.1169</td>
+	</tr>
+	<tr>
+		<td>5</td>
+		<td>0.0538</td>
+	</tr>
+	<tr>
+		<td>6</td>
+		<td>0.0206</td>
+	</tr>
+	<tr>
+		<td>7</td>
+		<td>0.0068</td>
+	</tr>
+	<tr>
+		<td>8</td>
+		<td>0.0019</td>
+	</tr>
+	<tr>
+		<td>9</td>
+		<td>0.0005</td>
+	</tr>
+	<tr>
+		<td>10</td>
+		<td>0.0001</td>
+	</tr>
+	<tr>
+		<td>Over 10</td>
+		<td>&lt; 1x10<sup>-16</sup></td>
+	</tr>
+</tbody></table>
+</div>
+      <div>
+      <figure>
+        <figcaption><em>A bar graph is the preferred representation of a discrete probability distribution because the <br>outcomes are discrete - you can get a 0, a 1, a 2, etc. but you can't get a count of 1.3 or 2.6. </em></figcaption>
+        <img src="poisson_distribution_lambda23.png" alt="Poisson distribution">
+      </figure>
+<p>Counts can go up to positive infinity, but by the time we've calculated the probability of 10 WBC for this Poisson distribution the sum of the probabilities is very close to 1 - if we lump the rest of the possible counts into an "over 10" group the sum of the probabilities of every number from 11 to ∞ still collectively has a probability less than 1x10<sup>-16</sup>. </p>
+    </div>
+      <p>The fact that the sum of the probabilities is equal to 1 is an important part of the definition of a probability distribution - probability distributions give probabilities for every possible outcome for a variable, and when you look at a smear the probability of one of the possible counts occurring is equal to 1.</p>
+<p>We can calculate the probabilities of outcomes that are discrete like this and interpret them as the chance that something will happen if we conduct a single trial - in this case a trial would be drawing a blood sample, making a smear, and counting WBC on it. A randomly selected smear has a probability of 0.1003, or a 10.03% chance, of having no WBC, a 23.06% chance of having one WBC, and so on.</p>
+
+  <p>To use the Poisson distribution as a likelihood function we just have to... change nothing at all about the formula. The only thing we have to do is to fundamentally change how we think about it.</p>
+<p>Likelihoods treat the data values as known and calculate the likelihood of <strong>unknown parameters</strong> given the <strong>known</strong> data. To "convert" the Poisson probability distribution into a Poisson likelihood function we just need to change the notation on the left side of the equation:</p>
+<p><math display="block" style="font-size: 14pt">
+<mrow>
+   <mi>L</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mi>λ</mi>
+       <mo stretchy="false">∣</mo>
+       <mi>x</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mfrac>
+     <mrow>
+      <msup>
+       <mi>e</mi>
+       <mrow>
+        <mo stretchy="false">−</mo>
+        <mi>λ</mi>
+       </mrow>
+      </msup>
+      <msup>
+       <mi>λ</mi>
+       <mi>x</mi>
+      </msup>
+     </mrow>
+     <mrow>
+      <mi>x</mi>
+      <mi>!</mi>
+     </mrow>
+    </mfrac>
+   </mrow>
+  </mrow></math> </p>
+      <p>
+        This is seemingly a minor change since the calculation we do will be exactly the same, but it fundamentally changes what the function is doing. In a likelihood function (L) the term that is unknown is the parameter that we wish to estimate (λ), and it's the data that are considered known values. This should make sense to you, because... we know what the data are, right? It's the only thing we do know - the parameter has to be estimated from data, and we almost never know what its value really is.</p>
+
+<p>We can use likelihood to estimate λ, though. To do this, we can try out different values for λ and see which one has the highest likelihood given the data - that is, the <strong>maximum likelihood estimate</strong> is the value for λ that has the highest likelihood given the data.</p>
+<p>If we have just a single blood smear with no WBC in it, the value of λ with the highest likelihood is the data value - if we plug in 0 for λ with an observed data value of x = 0 we get:</p>
+  <math display="block" style="font-size: 14pt">
+      <mrow>
+   <mi>L</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mi>λ</mi>
+       <mo stretchy="false">∣</mo>
+       <mi>x</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mfrac>
+     <mrow>
+      <msup>
+       <mi>e</mi>
+       <mn>0</mn>
+      </msup>
+      <msup>
+       <mn>0</mn>
+       <mn>0</mn>
+      </msup>
+     </mrow>
+     <mrow>
+      <mn>0</mn>
+      <mi>!</mi>
+     </mrow>
+    </mfrac>
+    <mo stretchy="false">=</mo>
+    <mn>1</mn>
+   </mrow>
+  </mrow></math> <p></p>
+      <p>Since the largest value the probability distribution we're using as our likelihood function is capable of producing is a 1 we can be certain that λ = 0 is the maximum likelihood estimate.</p>
+<p>When we have more than one data value we can combine the likelihoods by multiplying them - if we had one smear with a count of 0 and another with a count of 3 we could calculate the likelihood of an estimated value of λ for each and multiply them together to get the likelihood of the estimate of λ given the whole (small) data set:</p>
+<p>
+</p><img src="poisson_likelihood_dataset.png" alt="Poisson likelihood"><br><p>A couple of things to notice:</p>
+<ul>
+<li>The likelihood function using only X = 0 is the blue line, and it maximizes at the data value of 0</li>
+<li>The likelihood function using only X = 3 is the orange line, and it maximizes at its data value of 3</li>
+<li>The yellow line is the likelihood function for both of the data values, and it is calculated by multiplying the two likelihood functions together - that is, a value for lambda is selected and its likelihood for x = 0 and for x = 3 are both calculated, and then their likelihoods are multiplied together to get the likelihood given both of the data values. The yellow line maximizes at 1.5, which is also the average of 0 and 3 - this means that the arithmetic mean of the data is also the maximum likelihood estimate for lambda</li>
+<li>The probability distribution is discrete, but the likelihood function is continuous - the mean of a set of counts can be a decimal number, so the mean isn't constrained to be a discrete integer number the way that counts are. Consequently, the Poisson likelihood function for lambda is a continuous function, even though the probability distribution is discrete</li></ul>
+<p>Another important difference between probabilities and likelihoods is that probabilities have a natural, meaningful interpretation as single values, but likelihoods do not. For example, we saw that a probability of 0.1 for x = 0 when λ = 2.3 told us that we can expect 10% of the smears to have 0 blood cells. But, the maximum likelihood on the graph for the whole data set of 0.028 doesn't mean anything in particular - it <em><strong>is</strong></em> meaningful that it's the maximum likelihood, but whether the maximum of the likelihood function is a large number or a small number doesn't matter at all. Likelihoods are only interpretable in a relative sense, in comparison with other likelihoods, but a single likelihood doesn't tell us anything useful.</p>
+<p>Let's move on to an example with a continuous variable now - the basic idea is exactly the same, but since continuous data are described by continuous probability distributions, such as the normal distribution, we need to use a normal likelihood function to describe them.</p>
+<h3>Using the normal distribution as a likelihood function</h3>
+<p>The normal distribution has been our constant companion (if perhaps not our best friend) all semester long - we know that data are often normally distributed, and we know that GLM assumes normally distributed residuals.</p>
+<p>The normal distribution is a <strong>continuous probability distribution</strong>, and its <strong>probability density function</strong> has the equation:</p>
+  <math display="block" style="font-size: 20pt">
+  <mrow>
+   <mi>p</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mi>x</mi>
+       <mrow>
+        <mrow></mrow>
+        <mo stretchy="false">∣</mo>
+        <mrow></mrow>
+       </mrow>
+       <mi mathvariant="normal">μ</mi>
+       <mi>,</mi>
+       <mi mathvariant="normal">σ</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mfrac>
+     <mn>1</mn>
+     <msqrt>
+      <mrow>
+       <mn>2</mn>
+       <mi mathvariant="normal">π</mi>
+       <msup>
+        <mi mathvariant="normal">σ</mi>
+        <mn>2</mn>
+       </msup>
+      </mrow>
+     </msqrt>
+    </mfrac>
+   </mrow>
+   <msup>
+    <mi>e</mi>
+    <mrow>
+     <mrow>
+      <mo stretchy="false">−</mo>
+      <mfrac>
+       <mn>1</mn>
+       <mn>2</mn>
+      </mfrac>
+     </mrow>
+     <msup>
+      <mrow>
+       <mo fence="true" form="prefix" stretchy="false">[</mo>
+       <mrow>
+        <mfrac>
+         <mrow>
+          <msub>
+           <mi>x</mi>
+           <mi>i</mi>
+          </msub>
+          <mo stretchy="false">−</mo>
+          <mi mathvariant="normal">μ</mi>
+         </mrow>
+         <mi mathvariant="normal">σ</mi>
+        </mfrac>
+       </mrow>
+       <mo fence="true" form="postfix" stretchy="false">]</mo>
+      </mrow>
+      <mn>2</mn>
+     </msup>
+    </mrow>
+   </msup>
+  </mrow>
+</math>
+<p>To use this equation we need to know the mean (μ) and the standard deviation (σ), and then we can plug in any data value (x<sub>i</sub>) to do the calculation - the other terms in the equation are constants (e, π, 1, 2) with known values. What we get, p(x |μ, σ). is a <strong>probability density</strong> for x given known values for μ and&nbsp;σ rather than a probability. Since a continuous variable can take
+ any value on the number line to an infinite level of precision any 
+single value is just a point, with no length or width.  For a continuous variable probability is defined as an <strong>area under the curve</strong> - for example, here's the normal curve for values of x with a mean of μ = 10 and&nbsp;σ = 0.1:</p><img src="normal_pdf.png" alt="Normal" style="float:left; margin-right: 20px">
+<p>If you look at the y-axis values you'll see that these can't possibly be probabilities, because they go above 1, and probabilities have to fall between 0 and 1. The area under the curve can still be 1 even though the height of the curve exceeds 1, because areas are bases multiplied by heights - normal distributions extend from -∞ to ∞ but the height of the curve approaches 0 as you move away from the mean in the middle of the curve, so most of the height of the curve falls in the range that's graphed here. As such, the bulk of the area falls in a narrow range between 9.7 and 10.3, and with a narrow base the area can still be 1 when the height is greater than 1 (right? For example a rectangle with a base of 2 and a height of 0.5 is 2 x 0.5 = 1, but so is a rectangle with a base of 0.5 and a height of 2 - we can get an area of 1 with a height that's greater than 1 if the base is narrow).</p>
+<p>The important point about all this is: continuous probability distributions give us probability <em>densities</em> for single points, not probabilities. Probability for a single point doesn't exist.</p>
+<p style="clear:both">This is not a problem for us when we use the normal distribution as a likelihood function - probability densities work just fine as likelihoods. Converting the normal probability density function to a normal likelihood function is again a simple matter of changing notation, and then completely re-thinking what the equation means - that is:
+      </p>
+      
+<math display="block" style="font-size: 20pt">
+  <mrow>
+   <mi>L</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mi>μ</mi>
+       <mrow>
+        <mrow></mrow>
+        <mo stretchy="false">∣</mo>
+        <mrow></mrow>
+       </mrow>
+       <mi mathvariant="normal">x</mi>
+       <mi>,</mi>
+       <mi mathvariant="normal">σ</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mfrac>
+     <mn>1</mn>
+     <msqrt>
+      <mrow>
+       <mn>2</mn>
+       <mi mathvariant="normal">π</mi>
+       <msup>
+        <mi mathvariant="normal">σ</mi>
+        <mn>2</mn>
+       </msup>
+      </mrow>
+     </msqrt>
+    </mfrac>
+   </mrow>
+   <msup>
+    <mi>e</mi>
+    <mrow>
+     <mrow>
+      <mo stretchy="false">−</mo>
+      <mfrac>
+       <mn>1</mn>
+       <mn>2</mn>
+      </mfrac>
+     </mrow>
+     <msup>
+      <mrow>
+       <mo fence="true" form="prefix" stretchy="false">[</mo>
+       <mrow>
+        <mfrac>
+         <mrow>
+           <mi>x</mi>
+          <mo stretchy="false">−</mo>
+          <mi mathvariant="normal">μ</mi>
+         </mrow>
+         <mi mathvariant="normal">σ</mi>
+        </mfrac>
+       </mrow>
+       <mo fence="true" form="postfix" stretchy="false">]</mo>
+      </mrow>
+      <mn>2</mn>
+     </msup>
+    </mrow>
+   </msup>
+  </mrow>
+</math>
+      
+      <p>
+        The likelihood of any value for the now unknown parameter μ given a known value for x and σ is calculated with the same equation as we used to calculate probability density. The only thing that's different is that we consider the data to be known (because, of course we know the data values, we measured them), and consider μ to be unknown. Considering σ to also be known is not very realistic, but for now we're going to do it anyway as a simplifying assumption - it lets us work with one unknown at a time, which makes the explanations simpler.</p>
+<p>Estimating the unknown value of μ given a data value is just like the procedure used with the Poisson distribution above - the likelihood of a range of values for μ can be calculated, and the one that maximizes the likelihood is the best estimate for μ. The app below puts a likelihood function over a data value (selected from a pick list above the curve) and then allows you to select various possible values for μ with a slider - the dot on the curve shows the likelihood of the currently selected value, and you'll see that the maximum likelihood given a single data value is always located at the data value (just like we saw with the Poisson likelihood function).</p>
+<p>The likelihood calculation is also shown to the right of the curve as an equation - since 1/sqrt(2πσ<sup>2</sup>) is a constant it remains the same (0.1) regardless of the value of&nbsp;μ selected. Once a data value is selected from the list it takes the place of x in the equation and remains the same as well, so only the value of μ changes - for a given selected data point the knowns stay the same while the unknown is varied to find the value that maximizes the likelihood. You can hover over the dot to confirm that its likelihood is the one that is being calculated by the equation. </p>
+<p>Give it a try with a few different data values - no matter which one you pick the maximum likelihood estimate of μ given a single data value is the data value itself.</p>
+<iframe style="width: 1400px; height: 700px" src="Likelihood_onepoint.html">
+  
+      </iframe>
+      
+      <p>It's often convenient to work on a log scale with likelihoods, for...reasons - for the moment take my word for it, you'll see why a little further down. For now though, what we mean by working on a log scale is to take the log of the likelihood function, which converts it to:</p>
+
+<math display="block" style="font-size:25pt">
+  <mrow>
+   <mi>log L</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mrow>
+        <mi mathvariant="normal">μ</mi>
+        <mo stretchy="false">∣</mo>
+        <mi>x</mi>
+       </mrow>
+       <mi>,</mi>
+       <mi mathvariant="normal">σ</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mrow>
+     <mo stretchy="false">−</mo>
+     <mn>0.5</mn>
+    </mrow>
+   </mrow>
+   <mi>ln</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mn>2</mn>
+       <mi mathvariant="normal">π</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">−</mo>
+    <mn>0.5</mn>
+   </mrow>
+   <mi>ln</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <msup>
+       <mi mathvariant="normal">σ</mi>
+       <mn>2</mn>
+      </msup>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">−</mo>
+    <mfrac>
+     <mn>1</mn>
+     <mrow>
+      <mn>2</mn>
+      <msup>
+       <mi mathvariant="normal">σ</mi>
+       <mn>2</mn>
+      </msup>
+     </mrow>
+    </mfrac>
+   </mrow>
+   <msup>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <msub>
+        <mi>x</mi>
+        <mi>i</mi>
+       </msub>
+       <mo stretchy="false">−</mo>
+       <mi mathvariant="normal">μ</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mn>2</mn>
+   </msup>
+  </mrow>
+</math>
+<p>If you drop down the "Choose a likelihood function" menu and select "Log likelihood" you'll see that working on a log scale changes the y-axis scaling but not the x-axis - as such, the shape of the curve changes from bell-shaped to a parabola, but the function is still symmetrical around the data value, and the x-axis location of the maximum is unchanged. Consequently, working on a log scale doesn't change the maximum likelihood estimate for μ.</p>
+<p>Finally, since the log of decimals are negative (that is, since 1/10 is also 10<sup>-1</sup> the log base 10 of 10<sup>-1</sup> is -1), and likelihoods will frequently be decimal numbers, we can make log likelihoods positive values by multiplying by -1. You can see this version of the likelihood function by selecting the "Negative log likelihood" option - this has the effect of flipping the log likelihood vertically around the x-axis, from concave downward to concave upward. The maximum of the likelihood function becomes the minimum of the negative log likelihood, but the location of the best estimate for μ remains at the known data value regardless.<br> </p>
+<h2 id="numerical" class="part">Likelihood with samples of data</h2>
+
+<p>This next app illustrates maximum likelihood estimation of the mean
+        for the entire set of 15 data values from the pick list above. We can use exactly the same likelihood function we used for a single data value, but we just need to multiply the likelihoods given each single data value together - that is, the likelihood of μ given the entire data set in the drop-down menu above is:</p>
+<math display="block" style="font-size:25pt">
+  <mrow>
+   <mi>L</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mrow>
+        <mi mathvariant="normal">μ</mi>
+        <mo stretchy="false">∣</mo>
+        <msub>
+         <mi>x</mi>
+         <mi>i</mi>
+        </msub>
+       </mrow>
+       <mi mathvariant="normal">, σ</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mrow>
+     <mo stretchy="false">∏</mo>
+     <mrow>
+      <mfrac>
+       <mn>1</mn>
+       <msqrt>
+        <mrow>
+         <mn>2</mn>
+         <mi mathvariant="normal">π</mi>
+         <msup>
+          <mi mathvariant="normal">σ</mi>
+          <mn>2</mn>
+         </msup>
+        </mrow>
+       </msqrt>
+      </mfrac>
+      <msup>
+       <mi>e</mi>
+       <mrow>
+        <mrow>
+         <mo stretchy="false">−</mo>
+         <mfrac>
+          <mn>1</mn>
+          <mn>2</mn>
+         </mfrac>
+        </mrow>
+        <msup>
+         <mrow>
+          <mo fence="true" form="prefix" stretchy="false">[</mo>
+          <mrow>
+           <mfrac>
+            <mrow>
+             <msub>
+              <mi>x</mi>
+              <mi>i</mi>
+             </msub>
+             <mo stretchy="false">−</mo>
+             <mi mathvariant="normal">μ</mi>
+            </mrow>
+            <mi mathvariant="normal">σ</mi>
+           </mfrac>
+          </mrow>
+          <mo fence="true" form="postfix" stretchy="false">]</mo>
+         </mrow>
+         <mn>2</mn>
+        </msup>
+       </mrow>
+      </msup>
+     </mrow>
+    </mrow>
+   </mrow>
+  </mrow>
+</math>
+  <p>The only change here is that we have a whole set of x values, so we have x<sub>i</sub> as the known values (to indicate there's more than one), and just like we did with our Poisson likelihoods for two points we are now multiplying our likelihoods together - a capital pi symbol, Π, means "multiply these values together", just like capital sigma, Σ, means "add these values together". <br>
+    </p><p>On a log scale multiplication becomes addition, so the log-likelihood is:
+      </p>
+      <math display="block" style="font-size: 25pt">
+  <mrow>
+   <mi>log L</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mrow>
+        <mi mathvariant="normal">μ</mi>
+        <mo stretchy="false">∣</mo>
+        <mi>x</mi>
+       </mrow>
+       <mi>,</mi>
+       <mi mathvariant="normal">σ</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mrow>
+     <mo stretchy="false">−</mo>
+     <mn>0.5</mn>
+    </mrow>
+   </mrow>
+   <mi>n</mi>
+   <mi>ln</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mn>2</mn>
+       <mi mathvariant="normal">π</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">−</mo>
+    <mn>0.5</mn>
+   </mrow>
+   <mi>n</mi>
+   <mi>ln</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <msup>
+       <mi mathvariant="normal">σ</mi>
+       <mn>2</mn>
+      </msup>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">−</mo>
+    <mfrac>
+     <mn>1</mn>
+     <mrow>
+      <mn>2</mn>
+      <msup>
+       <mi mathvariant="normal">σ</mi>
+       <mn>2</mn>
+      </msup>
+     </mrow>
+    </mfrac>
+   </mrow>
+   <mrow>
+    <mo stretchy="false">∑</mo>
+    <msup>
+     <mrow>
+      <mo fence="true" form="prefix" stretchy="false">(</mo>
+      <mrow>
+       <mrow>
+        <msub>
+         <mi>x</mi>
+         <mi>i</mi>
+        </msub>
+        <mo stretchy="false">−</mo>
+        <mi mathvariant="normal">μ</mi>
+       </mrow>
+      </mrow>
+      <mo fence="true" form="postfix" stretchy="false">)</mo>
+     </mrow>
+     <mn>2</mn>
+    </msup>
+   </mrow>
+  </mrow>
+</math>
+      <p>Since we have n likelihood functions, one for each point, the likelihoods are added together n times. Adding a constant n times is the same as multiplying it by n, so both of the terms with constants are multiplied by n now. The squared differences between data values and the estimate for μ are summed.</p>
+<p>The negative log-likelihood is this log likelihood multiplied by -1.</p>
+<p>This version of the app has every data value in the sample along the x-axis, with their likelihood functions above them. The likelihoods of the currently selected estimate for μ on the slider is indicated by a dot for
+        each individual likelihood function in the graph on the left. The likelihood for the entire data set is the product of these individual likelihoods, and the likelihood function obtained by multiplying all 15 individual likelihood functions together is the graph on the right - the red dot on that graph indicates the likelihood of the current value for μ for the entire data set.</p>
+      <div id="wrapper_div" style="width: 1200px; text-align: center; height: 550px">
+        <div style="float:left; width: 60%; height: 350px; padding-bottom: 25px" id="likelihood_curves"> </div>
+        <div id="likelihood_function" style="float:left; width: 39%; height: 350px; clear: right; padding-bottom: 25px">
+        </div>
+        <div class="range-wrap" style="display: inline-block; width: 400px; border 1px solid yellow; clear: both; margin: 0 auto">
+          <div class="range-value" id="rangeV"></div>
+          <input id="range" min="119" max="136" value="119" step="0.1" type="range">
+        </div>
+        <p><label for="liketype"> Choose a likeliood function: </label>
+          <select id="liketype" name="cars">
+            <option value="like">Likelihood</option>
+            <option value="loglike">Log likelihood</option>
+            <option value="negloglike">Negative log likelihood</option>
+          </select>
+        </p>
+      </div>
+      <p>Go ahead and start a new project (called "likelihood"), and download this <a href="likelihoods.Rmd">Rmd file</a> and this <a href="likelihood_data.xlsx">Excel spreadsheet</a>
+ file into it. We won't need to import the Excel data quite yet, the 
+instructions will let you know when it's time to do so, but you'll start
+ having some questions to answer in the Rmd file shortly. </p>
+<p>1. To get a feeling for how this works, slide the slider to 119.4 -
+        this is the value of the smallest data point. You will see that the
+        likelihood for the data point at 119.42 maximizes, but since 119.4 isn't
+        close to any of the other data values they all decline substantially.</p>
+      <p>Click on the camera icon at the top of the "Likelihood functions for
+        each point" graph (which appears when you hover over the graph, <img src="snapshot_tool.png" alt="Snapshot tool">, and download a picture of your graph to the
+        project folder. It is VERY IMPORTANT to use the right file name so that
+        it will show up in your Rmd file properly - this file should be called <strong>
+          mean_119_individual.png</strong>.</p>
+      <p>If you look at the dataset likelihood function you'll see that 119.4
+        has a very low likelihood given all the data. Maximizing the likelihood
+        with respect to a single data value is resulting in a low likelihood
+        with respect to the entire data set, because the likelihood is low for
+        many of the individual points.</p>
+      <p>Click on the camera icon at the top of the top of the "Likelihood
+        function of dataset", and download the file with the name <strong>
+          mean_119_dataset.png</strong>.</p>
+      <p>This first choice of 119 as the value for the mean is nowhere near the
+        maximum of the likelihood function for the entire data set, so it is not
+        a good choice for our estimate of the mean.</p>
+      <p>2. Now use the slider to find the value for the mean that maximizes the
+        likelihood given the dataset - the red dot on the dataset graph will be
+        at the peak of the blue curve when you find it.</p>
+      <p>Click the camera icon for each graph - call the individual one
+        mean_ml_individual.png, and the dataset one <strong>mean_ml_dataset.png</strong>.</p>
+<ul>
+      </ul>
+      <p>3. Now to see how the likelihood function for the entire data set looks on a log scale, select
+        "Log likelihood" from the drop-down menu below the slider (keep the mean
+        at its maximum likelihood value). You will see that the location of the
+        maximum didn't change, and there is still just one maximum value.</p>
+      <p>Click the camera icon just for the dataset graph (since nothing changed
+        for the individual likelihoods) and save the file as <strong>
+          mean_loglike_dataset.png</strong>.</p>
+<blockquote>
+<h3>Really, likelihood functions are not probability distributions</h3>
+<p>The "conversion" of a probability distribution into a likelihood may have seemed less than convincing... if the working end of the thing is exactly the same isn't it still a probability distribution?</p>
+<p>One more way to demonstrate that likelihood functions are really something different is to drop unnecessary terms from the likelihood function. For the log likelihood function:</p>
+<math display="block" style="font-size: 14pt">
+  <mrow>
+   <mi>log L</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mrow>
+        <mi mathvariant="normal">μ</mi>
+        <mo stretchy="false">∣</mo>
+        <mi>x</mi>
+       </mrow>
+       <mi>,</mi>
+       <mi mathvariant="normal">σ</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mrow>
+     <mo stretchy="false">−</mo>
+     <mn>0.5</mn>
+    </mrow>
+   </mrow>
+   <mi>n</mi>
+   <mi>ln</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mn>2</mn>
+       <mi mathvariant="normal">π</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">−</mo>
+    <mn>0.5</mn>
+   </mrow>
+   <mi>n</mi>
+   <mi>ln</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <msup>
+       <mi mathvariant="normal">σ</mi>
+       <mn>2</mn>
+      </msup>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">−</mo>
+    <mfrac>
+     <mn>1</mn>
+     <mrow>
+      <mn>2</mn>
+      <msup>
+       <mi mathvariant="normal">σ</mi>
+       <mn>2</mn>
+      </msup>
+     </mrow>
+    </mfrac>
+   </mrow>
+   <mrow>
+    <mo stretchy="false">∑</mo>
+    <msup>
+     <mrow>
+      <mo fence="true" form="prefix" stretchy="false">(</mo>
+      <mrow>
+       <mrow>
+        <msub>
+         <mi>x</mi>
+         <mi>i</mi>
+        </msub>
+        <mo stretchy="false">−</mo>
+        <mi mathvariant="normal">μ</mi>
+       </mrow>
+      </mrow>
+      <mo fence="true" form="postfix" stretchy="false">)</mo>
+     </mrow>
+     <mn>2</mn>
+    </msup>
+   </mrow>
+  </mrow>
+</math>      
+      <p>
+        any additive constant can be dropped (that is, constants that are only added to μ). With additive constants dropped the likelihood function becomes:</p>
+  <math display="block" style="font-size: 14pt">
+  <mrow>
+   <mi>log L</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mrow>
+        <mi mathvariant="normal">μ</mi>
+        <mo stretchy="false">∣</mo>
+        <mi>x</mi>
+       </mrow>
+       <mi>,</mi>
+       <mi mathvariant="normal">σ</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+   </mrow>
+   <mrow>
+    <mo stretchy="false">−</mo>
+    <mfrac>
+     <mn>1</mn>
+     <mrow>
+      <mn>2</mn>
+      <msup>
+       <mi mathvariant="normal">σ</mi>
+       <mn>2</mn>
+      </msup>
+     </mrow>
+    </mfrac>
+   </mrow>
+   <mrow>
+    <mo stretchy="false">∑</mo>
+    <msup>
+     <mrow>
+      <mo fence="true" form="prefix" stretchy="false">(</mo>
+      <mrow>
+       <mrow>
+        <msub>
+         <mi>x</mi>
+         <mi>i</mi>
+        </msub>
+        <mo stretchy="false">−</mo>
+        <mi mathvariant="normal">μ</mi>
+       </mrow>
+      </mrow>
+      <mo fence="true" form="postfix" stretchy="false">)</mo>
+     </mrow>
+     <mn>2</mn>
+    </msup>
+   </mrow>
+  </mrow>
+</math>
+<p>The effect of dropping these terms is to shift the curve up along the y-axis, but the curvature isn't affected at all. And, if the curvature is the same then the location of the maximum is the same:</p><img src="loglike_simplified.png" alt="Dropping terms" style="width: 511px; height: 396px;">
+<p>The size of the likelihood doesn't matter, so the upper curve is just as usable as a log likelihood function as the one that retains everything from the normal density function. But, a likelihood function that has terms dropped would not in any way be a probability distribution - those constants are needed to make the area under the curve equal 1, and a function with an area under the curve of any other number can't be a probability distribution.</p>
+<p>So, while likelihood functions are derived from probability distributions they really aren't probability distributions.</p>
+      
+      </blockquote>
+      <p>4. Select
+        "Negative log likelihood" from the menu to see this version of the likelihood function. Take a picture of this graph and download it as <strong>mean_negloglike_dataset.png</strong>.</p>
+<blockquote>
+<h3>Numerical vs. analytical solutions</h3>
+<p>In a manner of speaking, what we have been doing by moving a slider until we get a dot to the top of a curve is a form of <strong>numerical method</strong> of estimating the mean for the data. Numerical methods work by trying out possible values until the correct one is found - our version of this process is very coarse and imprecise compared with the actual numerical analysis methods available (R uses numerical methods for all of its lm() solutions).</p>
+<p>But, it's possible to use maximum likelihood to find exact, <strong>analytical solutions</strong> as well. Analytical solutions are obtained by solving an equation for an unknown, and can be mathematically proven to be the correct solution from the infinite set of possibilities.<strong></strong></p>
+<p>Although analytical solutions have the virtue of being correct where numerical methods can only give approximations, numerical approximations can be very good, such that the difference between analytical and numerical solutions are small enough to safely ignore. R uses numerical methods for its lm() function, and they work very well.</p>
+<p>But just to show you how it's possible to get analytical formulas for maximum likelihood estimates, let's get the maximum likelihood estimator for μ.</p>
+<p>We're going to use some calculus to do this, and since calculus isn't a prerequisite for this class it may seem a little mysterious... that's okay, this is just a demonstration, but let me know if you want a little more explanation.</p>
+<p>We start with the normal log likelihood function:</p><img src="proof_step1.png" alt="Step 1">
+      <p>
+        <img src="norm_likelihood_mu.png" alt="Maximum" style="float:right; margin-left: 20px">Remember, the position of the maximum is the same as the likelihood function, so it using the log likelihood doesn't change the solution, but it makes the math a little simpler. This equation gives us a curve that resembles a concave downward parabola with a single maximum. We find the maximum of a curve by finding the first derivative, which gives us an equation that calculates the slope of the line tangent to the curve at a given value for μ. The slope of the tangent line is 0 at the very top of the curve, because the curve becomes perfectly flat at its maximum value, so setting the first derivative to 0 and solving for μ gives us the estimate of μ at the maximum of the likelihood function (illustrated to the right).</p>
+<p>We actually need a partial first derivative, because we're treating σ as a constant - partial derivatives are used when there is more than one variable in the equation and you want to focus on just one of them - the notation is a little different, but otherwise we just use the polynomial rule to get the first partial derivative of the log likelihood function with respect to μ:</p><img src="proof_step2.png" alt="Step 2">
+<p>Under the polynomial rule we drop constants (the same additive constants we dropped to illustrate the difference between probability distributions and likelihood functions above). We also multiply any term raised to an exponent by the exponent, then reduce the exponent by 1 - that means we multiply the last term by 2 (which cancels with 1/2), and reduce the exponent from 2 to 1.</p>
+<p>This equation calculates the slope of a tangent line to the log likelihood function at selected value of μ, and the place where the log likelihood maximizes will have a tangent line with a slope of 0, so we set this partial derivative to 0:</p><img src="proof_step3.png" alt="Step 3">
+<p>If you look at the equation you can see that there isn't a value of σ that can possibly make the equation equal 0 - the smallest σ can be is 0, but dividing by 0 is undefined, and any other positive value of σ will make the ratio -1/σ<sup>2</sup> non-zero. Given this, the only way to make the equation equal 0 is if the sum of the differences between the x<sub>i</sub> and μ equal 0. We can thus drop the -1/σ<sup>2</sup> term:</p><img src="proof_step4.png" alt="Step 4">
+<p>The x<sub>i</sub> will have different values, but μ will be a single value, so summing x<sub>i</sub> - μ across all the data values entails subtracting the same mean n times - we can thus re-express this as:</p>
+  <p>
+    <img src="proof_step5.png">
+  </p>
+  <p>Now we can solve for μ:</p>
+<p><img src="proof_step6.png" <="" p="">
+  </p><p>
+    This shows that the sum of the data values divided by the sample size is the maximum likelihood estimator for the population mean. This is the old familiar arithmetic mean - it is both the least squares estimator for μ and the maximum likelihood estimator as well (when the data are normally distributed least squares and maximum likelihood give the same estimates). And, you'll see that the value we calculate using the arithmetic mean matches the mean we found by sliding the slider around to get a (sort of, kind of) numerical solution.</p>
+      </blockquote>
+      
+      <p> In your Rmd file, import the worksheet "EstimateMean" from the "likelihood_data.xlsx"
+        Excel spreadsheet, and calculate the mean of the Data column - R's
+        mean() function uses the usual analytical formula for the mean. You
+        should see that it's equal to the maximum likelihood estimate you
+        obtained (to the one decimal place we were able to estimate with the web
+        app, at least).&nbsp; </p>
+      <p> </p>
+      <h2 class="part" id="mle_slope">Likelihoods of linear models given the data</h2>
+      <p>The first example of estimating the mean of a sample of data was
+        (relatively) easy to understand, but doesn't really do much useful work
+        for us. We can take the same approach, however, to finding a linear model that has the highest likelihood given the data, and in finding it we will get maximum likelihood estimates for the slope (β) and intercept (α) in the process. From there the world will be our oyster.</p>
+      <p>Using a straight line, with a slope and an intercept to estimate, seems
+        like it would complicate the likelihood function, but it actually
+        doesn't - the only thing we need to do differently is to replace μ in the likelihood function with the
+        predicted value of the regression model. For example, the log likelihood function looks like
+        this:</p>
+<math display="block" style="font-size: 25pt">
+  <mrow>
+   <mi>log</mi>
+   <mi>L</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mi mathvariant="normal">α</mi>
+       <mi>,</mi>
+       <mi mathvariant="normal">β</mi>
+       
+       <mrow>
+        
+        <mo stretchy="false">∣</mo>
+        <msub>
+         <mi>σ, y</mi>
+         <mi>i</mi>
+        </msub>
+       </mrow>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mrow>
+     <mo stretchy="false">−</mo>
+     <mn>0.5</mn>
+    </mrow>
+   </mrow>
+   <mi>n</mi>
+   <mi>ln</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mn>2</mn>
+       <mi mathvariant="normal">π</mi>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">−</mo>
+    <mn>0.5</mn>
+   </mrow>
+   <mi>n</mi>
+   <mi>ln</mi>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <msup>
+       <mi mathvariant="normal">σ</mi>
+       <mn>2</mn>
+      </msup>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">−</mo>
+    <mfrac>
+     <mn>1</mn>
+     <mrow>
+      <mn>2</mn>
+      <msup>
+       <mi mathvariant="normal">σ</mi>
+       <mn>2</mn>
+      </msup>
+     </mrow>
+    </mfrac>
+   </mrow>
+   <mrow>
+    <mo stretchy="false">∑</mo>
+    <msup>
+     <mrow>
+      <mo fence="true" form="prefix" stretchy="false">(</mo>
+      <mrow>
+       <mrow>
+        <msub>
+         <mi>y</mi>
+         <mi>i</mi>
+        </msub>
+        <mo stretchy="false">−</mo>
+        <mover accent="true">
+         <mi>y</mi>
+         <mo stretchy="false">^</mo>
+        </mover>
+       </mrow>
+      </mrow>
+      <mo fence="true" form="postfix" stretchy="false">)</mo>
+     </mrow>
+     <mn>2</mn>
+    </msup>
+   </mrow>
+  </mrow>
+</math>
+      <p> The unknown parameters we are
+        estimating are on the left side of the vertical line (α,β), and the known data values (y<sub>i</sub>) and standard deviation of the residuals (σ) are on the
+        right side of the vertical line (remember that the data values are actually known, and we're treating σ as though it's known to keep this a little simpler).</p>
+<p>Notice what we're calculating the
+        likelihood of, (y<sub>i</sub> - ŷ)<sup>2</sup> ... if ŷ is the predicted value from a
+        regression line and y<sub>i</sub> are the data values then y<sub>i</sub>
+        - ŷ are the residuals for the regression line. We will find values of
+        the slope and intercept that <em><strong>maximize the likelihood by making the
+        squared residuals as small as possible across the entire data set</strong></em>. This is important: we are estimating the values of α and β but they don't even have to appear in the likelihood function directly to do so. If we were to put in α + βx into the function in place of ŷ we would see them, but expressing the function in this way encourages us to think of what we are doing as using a model to predict values for y, and then finding values for α and β that maximize the likelihood of the <strong>model given the data</strong>.</p>
+      
+      <p>Although the likelihood function is nearly the same as the one we used
+        to estimate the mean of a data set, the app below looks quite different.
+        The graph on the left shows the data points as a scatterplot of y and x
+        values (a response and a predictor variable of some kind) on the base of
+        a 3D graph, but the likelihood functions for each individual data value
+        are plotted as a third dimension, along the z-axis. The graph on the
+        right is the likelihood function (z axis) for ranges of possible values
+        for the slope (x axis) and intercept (y axis). </p>
+      <p>It is the slope and intercept values that you can select - as you pick
+        better values for the slope and intercept the red dot showing the
+        likelihood of the currently selected slope and intercept will climb up
+        the likelihood surface. The height of the surface is still the product
+        of the colored dots that illustrate the likelihoods of the line given
+        each individual data value, but now there are two parameters that need
+        to be estimated.<br>
+      </p>
+      <p> </p>
+      <div id="regression_graph" style="float:left; width: 50%; height: 600px">
+      </div>
+      <div id="reg_like_wrapper" style="float:left; width: 50%; height: 650px">
+        <p><label for="liketype_reg"> Choose a likelihood function: </label>
+          <select id="liketype_reg" onchange="updateOnChange()" style="clear:right">
+            <option value="like">Likelihood</option>
+            <option value="loglike">Log likelihood</option>
+            <option value="negloglike">Negative log likelihood</option>
+          </select>
+          <br>
+        </p>
+        <div id="likelihood_regression" style="float:left; height: 500px"> </div>
+        <div id="reg_controls_div" style="float:left">
+          <table style="width: 291px; height: 73px;">
+            <tbody>
+              <tr style="line-height: 10px">
+                <td>
+                  <p>Slope:</p>
+                  <p>Intercept:</p>
+                </td>
+                <td>
+                  <p><input id="slope_input" value="0" max="1.5" min="-1.5" step="0.01" oninput="updateOnChange()" type="number"></p>
+                  <p><input id="int_input" value="8.82" step="0.1" oninput="updateOnChange()" type="number"></p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p> </p>
+      <p>1. To get started, let's make sure you're clear about what the graph on
+        the left shows. Rotate the graph so that the predictor is horizontal,
+        and the response is vertical, with the likelihood pointing out of the
+        page - it should <span class="tooltip">look more or less<span class="tooltiptext"><img src="scatterplot_view.png" style="width: 400px"></span></span>
+        like the typical 2-dimensional scatterplot, but with colored points.
+        Initially the slope is set to 0 and the intercept is set to the mean of
+        the response data (8.82) - it should be clear that a horizontal
+        line is a pretty terrible fit, as it doesn't go through the middle of
+        the data.</p>
+      <p>Rotate the graph back closer to where it started so you can see the
+        normal likelihood curves from the side, and you'll see the vertical
+        lines connecting the regression line to the curves - these are the
+        individual likelihoods. Just like with the estimation of the mean,
+        above, each of these individual likelihoods is multiplied together to
+        give you the dataset's likelihood. Focus on the individual likelihoods
+        for a moment as you start changing the slope and intercept values.</p>
+      <p>If you start increasing the slope (by clicking the up-arrow in the box
+        next to the Slope box) you'll see the line starts to tilt upward. The
+        intercept is still at the mean for the data, so as you tilt the slope
+        upward it pivots at the y-axis value of 8.82, and quickly starts to
+        leave the data. As you do that the likelihoods get smaller, because the
+        line passes under the low parts of the individual point likelihoods.</p>
+      <p>Once the slope has tilted the line so much that it's above all the data
+        you can bring it down into the data again by reducing the intercept -
+        this will cause the line to move down the y-axis without changing the
+        tilt. As you move it into the data again you'll see the likelihood
+        increases again because the line is passing under the taller parts of
+        the likelihoods.</p>
+      <p>2. Turn your attention to the "Likelihood function" graph to the right.
+        This graph gives the likelihood of combinations of slope and intercept
+        that you could select. If you move your mouse over the surface you'll
+        see a popup that gives the slope, intercept, and likelihood for the
+        model that uses that slope and intercept.</p>
+      <p>If you run your pointer over the top of the 3D surface you'll see that the
+        likelihoods peak at a slope of about 0.27 and an intercept of about 5.3.
+        If you rotate the graph you'll see that the likelihood function is very
+        narrow - this is because the slope and intercept work together to get
+        the line into the data, and if you set the slope to 0.27 while the
+        intercept is different from 5.3 you won't get a high likelihood for the
+        model (or, if you use an intercept of 5.3 with a slope that's different
+        from 0.27 you get the same problem).</p>
+      <p>You can switch to a log likelihood surface by selecting that option
+        from the drop-down menu above the likelihood function graph. You'll see
+        that it's shaped differently, but the maximum is in the same location
+        (it's harder to find because it's pretty flat along the top of the
+        surface the way I plotted it). Just like before, though, there is just
+        one highest point, so there is a single best slope and aspect
+        combination for this model.</p>
+      <p>Switching to a negative log likelihood flips the log likelihood over,
+        and the minimum of the negative log likelihood is the maximum likelihood
+        for the model.</p>
+      <p>3. Now that you know roughly what the maximum likelihood estimates will
+        be for the slope and intercept, enter them into the boxes (0.27 for the
+        slope, 5.3 for the intercept). When you do this you'll see that the
+        regression line gets much thicker and turns bright red to indicate that
+        you're close to the best value. The actual maximum likelihood possible
+        for this straight line is 1.29 x 10<sup>-5</sup>, so fiddle with the
+        slope and intercept to get as close to this model likelihood as you can.</p>
+      <p>When you have the best slope and intercept you can get click on the
+        camera icon and download the graph as "regression_ml.png".</p>
+      <p>You'll see that the best line is perhaps not a very good representation
+        of the data - the straight line isn't picking up the dip in the pattern
+        of the data at around a predictor value of 14, and it over-estimates at
+        that point pretty badly. We might be able to do better with a line that
+        has a quadratic effect included. We'll try that next, and then we'll use
+        the likelihoods of this model and the quadratic model to test whether
+        adding the quadratic has a statistically significant improvement in fit.<br>
+      </p>
+      <p> </p>
+      <h2 class="part" id="hyp_test">Hypothesis testing with likelihood -
+        comparing two nested models with a likelihood ratio test</h2>
+      <p> We are now going to do another maximum likelihood fit for a line to
+        the same data, but this time we'll allow the data to have a quadratic
+        curve in it.</p>
+      <p>The app below has a data graph to the left and a likelihood function
+        graph to the right, just like the other examples. The data graph is
+        identical (for the moment) to the regression data graph, but it is set
+        up to allow you to include a quadratic term in the model. The model
+        we're using is just y = Intercept + Slope (x) + Quad. term (x<sup>2</sup>),
+        which will allow us to account for the upward curve in the data.</p>
+      <p>Because the model likelihood now depends on three different parameters
+        it was necessary to put each one on an axis in the 3D graph of the
+        likelihood. Since that doesn't leave an axis to plot likelihood against,
+        this version has a single point whose size and color is affected by the
+        likelihood. Right now with a slope of 0, intercept of 8.75, and quad
+        term of 0 the point is black and in the lower right corner of the graph.
+        As you get your model closer to the maximum likelihood possible for a
+        quadratic line the dot will get bigger and redder.</p>
+      <p>1. First, find the model that maximizes the likelihood function. This
+        is done just like with the linear regression, but now with three values
+        to fiddle with instead of two. The model is very sensitive to changes in
+        the quad term, and it's a little tricky to find the best set of values.
+        To help you, I put the maximum likelihood values in the middle of the
+        scales for the likelihood graph on the right - the best values will be
+        close to -1.5 for the slope, 16.7 for the intercept, and 0.07 for the
+        quad term. Enter these as your starting values and you'll have a much
+        easier time working your way to the ML values. The likelihood of the
+        model at its ML values is 2.74 e<sup>-4</sup>, get as close as you can
+        to this value by fiddling with the slope, intercept, and quad term.</p>
+      <div id="reg_quad_graph" style="float:left; width: 50%; height: 650px"> </div>
+      <div id="reg_quad_wrapper" style="float:left; width: 49%; height: 650px">
+        <div id="like_quad_regression" style="float:left; height: 500px"> </div>
+        <div id="reg_quad_controls_div" style="float:left">
+          <table>
+            <tbody>
+              <tr>
+                <td>
+                  <p>Slope:</p>
+                  <p>Intercept:</p>
+                  <p>Quad. term:</p>
+                </td>
+                <td>
+                  <p><input id="slope_quad_input" value="0" max="1.5" min="-3" step="0.1" oninput="updateOnChangeQuad()" type="number"></p>
+                  <p> <input id="int_quad_input" value="8.82" step="0.1" oninput="updateOnChangeQuad()" type="number"> </p>
+                  <p> <input id="quad_input" value="0" max="1" ,min="-1" step="0.01" oninput="updateOnChangeQuad()" type="number"> </p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p> I don't give you the choice of switching between likelihood, log
+        likelihood, and negative log likelihood in this version of the app
+        because it wouldn't really change the appearance of the dot on the
+        likelihood function graph. But, if you hover over the point on the graph
+        you'll see that these values are all reported for the currently selected
+        slope, intercept, and quad term.</p>
+      <p>Click on the camera icon and download the graph for your ML quadratic
+        regression model to your project folder - call it
+        regression_quad_ml.png.</p>
+      <p>2. We now have two different models, and the quad model at least
+        appears to fit the data better than the straight line. According to <a href="https://csu-csusm.primo.exlibrisgroup.com/permalink/01CALS_USM/f06ejt/alma997811101672">Edwards, 1992</a>:</p>
+<p><u>“Within the framework of a statistical model, a particular set of data supports one statistical hypothesis better than another if the likelihood of the first hypothesis is greater than the likelihood of the second hypothesis”</u></p>
+<p>We can define a measure of the difference in likelihood of two models called <strong>support</strong> - the degree of support for one model compared to another is calculated as:</p>
+<p><math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mrow>
+   <mrow>
+    <mtext>Support</mtext>
+    <mo stretchy="false">=</mo>
+    <mi>log</mi>
+   </mrow>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="true">(</mo>
+     <mrow>
+      <mfrac>
+       <mrow>
+        <mi>L</mi>
+        <mrow>
+         <mo fence="true" form="prefix" stretchy="false">(</mo>
+         <mrow>
+          <msub>
+           <mi>H</mi>
+           <mn>1</mn>
+          </msub>
+         </mrow>
+         <mo fence="true" form="postfix" stretchy="false">)</mo>
+        </mrow>
+       </mrow>
+       <mrow>
+        <mi>L</mi>
+        <mrow>
+         <mo fence="true" form="prefix" stretchy="false">(</mo>
+         <mrow>
+          <msub>
+           <mi>H</mi>
+           <mn>2</mn>
+          </msub>
+         </mrow>
+         <mo fence="true" form="postfix" stretchy="false">)</mo>
+        </mrow>
+       </mrow>
+      </mfrac>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="true">)</mo>
+    </mrow>
+    <mo stretchy="false">=</mo>
+    <mi>log</mi>
+   </mrow>
+   <mrow>
+    <mrow>
+     <mo fence="true" form="prefix" stretchy="false">(</mo>
+     <mrow>
+      <mrow>
+       <mi>L</mi>
+       <mrow>
+        <mo fence="true" form="prefix" stretchy="false">(</mo>
+        <mrow>
+         <msub>
+          <mi>H</mi>
+          <mn>1</mn>
+         </msub>
+        </mrow>
+        <mo fence="true" form="postfix" stretchy="false">)</mo>
+       </mrow>
+      </mrow>
+     </mrow>
+     <mo fence="true" form="postfix" stretchy="false">)</mo>
+    </mrow>
+    <mo stretchy="false">−</mo>
+    <mi>log</mi>
+   </mrow>
+   <mrow>
+    <mo fence="true" form="prefix" stretchy="false">(</mo>
+    <mrow>
+     <mrow>
+      <mi>L</mi>
+      <mrow>
+       <mo fence="true" form="prefix" stretchy="false">(</mo>
+       <mrow>
+        <msub>
+         <mi>H</mi>
+         <mn>2</mn>
+        </msub>
+       </mrow>
+       <mo fence="true" form="postfix" stretchy="false">)</mo>
+      </mrow>
+     </mrow>
+    </mrow>
+    <mo fence="true" form="postfix" stretchy="false">)</mo>
+   </mrow>
+  </mrow>
+</math></p>
+<p>
+  That is, support is the log of the ratio of the model likelihoods. The log of a ratio is equal to the difference between the log of the numerator and the log of the denominator, so we can calculate the support from our log-likelihoods.      </p>
+      <p>Since we are
+        using the same data set for both models, and the models are <strong>nested</strong>
+        we can test this with a <strong>likelihood ratio test</strong>. Nested
+        models are ones in which all the parameters for the simpler model are
+        also found in the more complex model - that is, the simpler model has a
+        subset of the parameters in the more complex model. This is what we have - the linear regression has everything the quadratic model has except for the quadratic term, so the linear regression is nested within the quadratic regression. </p>
+<p>The likelihood ratio test uses the negative of two times the support as its test statistic - in other words:</p>
+<p>G = -2 (ln(L(H1)) - ln(L(H2)))</p>
+<p>The full model, with all of the terms, is H2, and the simpler model that is a nested subset of the first is H1. </p>
+<p>This G statistic follows
+        the Chi-square distribution, with degrees of freedom is equal to the difference in model degrees of freedom for the two models - there is only one predictor different between them, so the difference in df is also 1. To test for a difference in support for the linear and quadratic models we compare our G value
+        to a Chi-square distribution with 1 degrees of freedom.</p>
+      <p>The calculations are done here - enter the log likelihood for your ML
+        regression model (simpler), and your ML quadratic regression (more
+        complex) in the entry boxes below (include the minus sign!). The p-value
+        is calculated when you enter the values. </p>
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <p> First model log likelihood: </p>
+            </td>
+            <td><input id="linear_log_likelihood" value="0" onchange="calcChisqLinQuad()" style="width: 50px"> </td>
+            <td>
+              <p> (the simpler model) </p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p> Second model log likelihood: </p>
+            </td>
+            <td><input id="quad_log_likelihood" value="0" onchange="calcChisqLinQuad()" style="width: 50px"></td>
+            <td>
+              <p>(the more complex model)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p> Degrees of freedom: </p>
+            </td>
+            <td><input id="df_lin_quad" value="1" onchange="calcChisqLinQuad()" style="width: 50px"> </td>
+            <td>
+              <p>(difference in df for the two models)</p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p> G statistic = </p>
+            </td>
+            <td>
+              <p> <span id="chisq_lin_quad"></span></p>
+              <br>
+            </td>
+            <td>
+              <p> (-2 (log likelihood of first model - log likelihood of second
+                model)) </p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p> p-value = </p>
+            </td>
+            <td>
+              <p><span id="pval_lin_quad"></span></p>
+              <br>
+            </td>
+            <td>
+              <p><br>
+              </p>
+              <p> </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>The more complex model will always fit the data at least a little
+        better when the models are nested, so if p is less than 0.05 we can
+        conclude that adding the quadratic term had a statistically significant
+        improvement in model fit.</p>
+      <h2 class="part" id="mle_int_only">Is the best-supported hypothesis any
+        good at all?</h2>
+      <p>Note that our likelihood ratio test gave us a comparison of two models:
+        simple linear regression and quadratic regression. In this case we found
+        that the quadratic regression fit better than the simple linear
+        regression, but we don't get a test of the linear regression model. As
+        we move into model-based inference we don't want to give up one very
+        nice feature of null hypothesis testing - namely, the null hypothesis. A null hypothesis explicitly hypothesizes a complete lack of effect, and null hypothesis testing uses it as the default that is only rejected if the data gives us reason to. We should still consider a hypothesis of no effect so that we know whether we have any
+        reason to think our predictors have any effect on the response at all.</p>
+<img alt="Intercept only" src="int_only.png" style="float:left; margin-right: 10px">
+      <p>A model-based approach to testing a null hypothesis is to fit an <strong>intercept
+          only</strong> model to the data and compare it to the linear
+        regression model. A model that only has an intercept hypothesizes no
+        relationship between y and x at all - or, if you prefer, it hypothesizes
+        that the relationship is a flat line with a slope of 0 and an intercept at <span class="math">ȳ</span>,
+        like the graph on the left. 
+      </p>
+<p>We can calculate the likelihood of the intercept-only model given the
+        data the same way that we calculated the log likelihood of this model by
+        going back up to the linear regression app and setting the intercept to
+        the mean of the Y data (8.82), and the slope to 0, and selecting log
+        likelihood from the drop-down menu. Since the intercept-only model has a
+        subset of the terms that the regression model has, we can compare them
+        with a likelihood ratio test to see if the regression model has a
+        significantly higher likelihood. Enter the log likelihood of the
+        intercept only model as the simpler model, and the linear regression log
+        likelihood as the more complex model. Since the only difference between
+        them is the slope of the linear regression there is still only 1 DF for
+        the test. You should see that the linear regression fits statistically
+        significantly better than a flat line. </p>
+      <p style="clear:both"> Okay, that was fun - but Doc Kristan's Magic Apps aren't how you do real work. Now we're going to do this set
+        of regressions in R to see how this is really done. We'll come back for
+        one more app at the end, but it's a bit of a departure from what we've
+        been doing, so we'll save it for last, like dessert. </p>
+      <h2> Using R for likelihood ratio testing </h2>
+      <p> Likelihood
+        ratio tests comparing models are simple to do in R, using our familiar
+        lm() model fitting. </p>
+      <p>1. Import the Regression sheet from likelihood_data.xlsx into an object
+        called regression.</p>
+      <p>2. Fit a linear regression of y as the response against x as the
+        predictor, and store the output in linear.lm. To see the coefficients
+        put the name of the object, linear.lm, in the next row after the model
+        is fitted - you should see they are very similar to what you got with
+        the apps (these are of course better estimates, the apps above are
+        pretty crude, but they should be close). Do this step in chunk
+        linear.regression of your <strong>Rmd file</strong>.</p>
+      <p>3. Get the log likelihood for the linear.lm model (in chunk
+        linear.regression.loglike of your <strong>Rmd file</strong>);</p>
+      <p class="rcmd">logLik(linear.lm)</p>
+      <p>You should get a value of -11.24156 with 3 degrees of freedom. This
+        should be close to the value you got in the app. Note that the linear
+        model has 3 degrees of freedom, because it estimated the slope, the
+        intercept, and the standard deviation of the residuals. To simplify the
+        examples I estimated the standard deviation of the residuals separately
+        (cheated a little, forgive me - if we had included the standard
+        deviation in the estimate those normal individual likelihoods could get
+        broader or narrower).</p>
+      <p>4. Now fit the model with the quadratic term. The syntax is a little
+        different, because R gets confused if you use the same predictor twice
+        in a model formula - we need to use the identity function, I(), to get
+        it to actually use the quadratic predictor. Put this in the
+        quad.regression chunk of your <strong>Rmd file</strong>:</p>
+      <p class="rcmd">lm(y ~ x + I(x^2), data = regression) -&gt; quad.lm</p>
+      <p class="rcmd">quad.lm</p>
+      <p>The coefficients should again be fairly close matches with what you got
+        from the app.</p>
+      <p>You can get the log likelihood for this model in chunk
+        quad.regression.loglike of your <strong>Rmd file</strong>. R's log
+        likelihood should be close to what we got with the app. </p>
+      <p>This model has 5 df - one more than the linear regression model because
+        of the quadratic term.</p>
+      <p>5. Fit the intercept only model in chunk intercept.only of your <strong>Rmd
+          file</strong>:</p>
+      <p class="rcmd">lm(y ~ 1, data = regression) -&gt; intercept.lm</p>
+      <p class="rcmd">intercept.lm</p>
+      <p>Using a 1 as a predictor with no variables fits an intercept-only
+        model. You'll see that only an intercept coefficient is reported, and it
+        is equal to the mean of the y data.</p>
+      <p>Get the log likelihood for this intercept only model in chunk
+        int.only.log.likelihood. The log likelihood of the intercept-only model
+        is quite a bit smaller than the other two - having no predictors in the
+        model seems to lead to substantially lower likelihood.</p>
+      <p>6. Now to do the likelihood ratio tests. There is an lrtest() function
+        in the lmtest library that does the test and gives output as we saw it
+        in the app, above. To use it, in chunk likelihood.ratio.tests, enter:</p>
+      <p class="rcmd">library(lmtest)</p>
+      <p class="rcmd">lrtest(intercept.lm, regression.lm, quad.lm)</p>
+      <p>You'll see you get the following output:</p>
+      <p class="rout">Likelihood ratio test<br>
+        <br>
+        Model 1: y ~ 1<br>
+        Model 2: y ~ x<br>
+        Model 3: y ~ x + I(x^2)<br>
+        &nbsp; #Df&nbsp;&nbsp; LogLik Df&nbsp;&nbsp; Chisq
+        Pr(&gt;Chisq)&nbsp;&nbsp;&nbsp; <br>
+        1&nbsp;&nbsp; 2
+        -18.5567&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <br>2&nbsp;&nbsp; 3 -11.2416&nbsp; 1 14.6303&nbsp; 0.0001308 ***<br>
+        3&nbsp;&nbsp; 4&nbsp; -8.1878&nbsp; 1&nbsp; 6.1076&nbsp; 0.0134604
+        *&nbsp; <br>
+        ---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</p>
+      <p>Each row is a model, in the order you entered them into the lrtest()
+        command. Models are compared to the model in the previous row, so the
+        second row compares the linear regression to the intercept only model,
+        and the third row compares the quadratic regression to the linear
+        regression. We get significantly better fits by using x as a predictor
+        than with no predictor at all, and by including a quadratic term over
+        only using a linear regression. The results are very similar to what we
+        got with the app, above.</p>
+      <p>You can also use the anova() command to get a similar test - instead of
+        calculating the log likelihoods directly R calculates the residual sums
+        of squares for each model and then uses those to calculate an
+        approximate Chi-square test statistic for the comparisons. There's
+        nothing wrong with using the lrtest() command, but just to see how the
+        base R function output looks, enter (in the same chunk):</p>
+      <p class="rcmd">anova(intercept.lm, regression.lm, quad.lm, test =
+        "Chisq")</p>
+      <p>and you'll see:</p>
+      <p class="rout">Analysis of Variance Table<br>
+        <br>
+        Model 1: y ~ 1<br>
+        Model 2: y ~ x<br>
+        Model 3: y ~ x + I(x^2)<br>
+        &nbsp; Res.Df&nbsp;&nbsp;&nbsp; RSS Df Sum of Sq&nbsp;
+        Pr(&gt;Chi)&nbsp;&nbsp;&nbsp; <br>
+        1&nbsp;&nbsp;&nbsp;&nbsp; 15
+        9.5286&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <br>2&nbsp;&nbsp;&nbsp;&nbsp; 14 3.8187&nbsp; 1&nbsp;&nbsp;&nbsp; 5.7100
+        9.498e-08 ***<br>
+        3&nbsp;&nbsp;&nbsp;&nbsp; 13 2.6070&nbsp; 1&nbsp;&nbsp;&nbsp;
+        1.2117&nbsp;&nbsp; 0.01397 *&nbsp; <br>
+        ---<br>
+        Signif. codes:&nbsp; 0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1</p>
+      <p>The results are very similar, but I prefer the lrtest() version - it
+        reports the model log likelihoods, and uses those to calculate the G
+        statistics used in the tests.</p>
+      <p>So, as you can see, R has good support for fitting models and comparing
+        them. We'll make good use of this as we learn to use model-based
+        analysis to compare hypotheses that don't include nested sets of
+        predictors.</p>
+      <h2>Likelihood of proportions, and profile likelihood confidence intervals</h2>
+      <p>Proportions are commonly encountered in Biology, and are very simple
+        quantities to calculate. If we had a sample of 20 individuals, of which
+        15 were heterozygous for a trait we were interested in, we could
+        calculate the proportion that are heterozygous by dividing the number of
+        heterozygotes by the total number observed, or p = 15/20 = 0.75 (don't
+        confuse this for a p-value from a hypothesis test, we are using p to
+        represent the proportion of heterozygotes for this example). Expressing
+        the data as a proportion allows us to compare between samples with
+        different numbers of individuals, and they are very simple, common
+        values to work with.</p>
+      <p>But, just like a sample mean, the proportion of heterozygotes in a
+        sample is a sample-based estimate of a population parameter. We might
+        like to know, given that we have 15 heterozygotes out of 20 sampled,
+        what range of possible proportion of heterozygotes in the population is
+        likely given the data we have. In other words, we would like to be able
+        to attach a confidence interval to this value of p.</p>
+      <p>This is a simple enough thing to want, but a surprisingly difficult
+        thing to have. The way we calculate confidence intervals for sample
+        means is to calculate a measure of sampling variation (the standard
+        error), multiply it by a t-value that will capture 95% of the possible
+        sample means from the population, multiply them together to get a
+        measure of uncertainty (t x se), and then add the uncertainty to, and
+        subtract it from, the mean. For a proportion the formulas are a little
+        different, starting with the formula for the variance - with a
+        proportion, p, the variance is:</p>
+      <p>σ<sup>2</sup><sub>p</sub> = p(1-p)</p>
+      <p>The standard error is thus:</p>
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+  <mrow>
+   <mi>s</mi>
+   <mi>.</mi>
+   <mi>e</mi>
+   <mrow>
+    <msub>
+     <mi>.</mi>
+     <mi>p</mi>
+    </msub>
+    <mo stretchy="false">=</mo>
+    <msqrt>
+     <mfrac>
+      <mrow>
+       <mi>p</mi>
+       <mrow>
+        <mo fence="true" form="prefix" stretchy="false">(</mo>
+        <mrow>
+         <mrow>
+          <mn>1</mn>
+          <mo stretchy="false">−</mo>
+          <mi>p</mi>
+         </mrow>
+        </mrow>
+        <mo fence="true" form="postfix" stretchy="false">)</mo>
+       </mrow>
+      </mrow>
+      <mi>n</mi>
+     </mfrac>
+    </msqrt>
+   </mrow>
+  </mrow>
+</math>
+      <p><span style="border-top: 1px solid black"></span>With a proportion of 0.75 and a sample size of 20 the standard error is
+        <math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+  <mrow>
+   <mi>s</mi>
+   <mi>.</mi>
+   <mi>e</mi>
+   <mrow>
+    <msub>
+     <mi>.</mi>
+     <mi>p</mi>
+    </msub>
+    <mo stretchy="false">=</mo>
+    <msqrt>
+     <mfrac>
+      <mrow>
+       <mn>0.75</mn>
+       <mrow>
+        <mo fence="true" form="prefix" stretchy="false">(</mo>
+        <mrow>
+         <mn>0.25</mn>
+        </mrow>
+        <mo fence="true" form="postfix" stretchy="false">)</mo>
+       </mrow>
+      </mrow>
+      <mn>20</mn>
+     </mfrac>
+    </msqrt>
+    <mo stretchy="false">=</mo>
+    <mn>0.097</mn>
+   </mrow>
+  </mrow>
+</math> 
+      </p>
+<p>With proportions we don't need to use the t-distribution, we can use
+        the normal distribution in our confidence interval calculation - since
+        95% of a normal distribution falls between -1.96 and 1.96, we use 1.96
+        as the multiplier to calculate the uncertainty. We then add and subtract
+        the uncertainty from p to get our 95% confidence interval:</p>
+      <p>0.75 ± 1.96 (0.097) = 0.56 to 0.94</p>
+      <p>Seems to work, right? There are some limitations to this approach
+        though. First, the interval is obtained by adding and subtracting the
+        same number to p, which gives us symmetrical confidence intervals. Given
+        that the we can't get proportions lower than 0 or higher than 1 we
+        should have a greater chance of the proportion falling below 0.75 than
+        above it. We can see the problem even more clearly if we calculate the
+        interval for a proportion closer to 1, like 0.9:</p>
+      <p><math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+  <mrow>
+   <mrow>
+    <mn>0.9</mn>
+    <mo stretchy="false">±</mo>
+    <mn>1.96</mn>
+   </mrow>
+   <mrow>
+    <msqrt>
+     <mfrac>
+      <mrow>
+       <mn>0.9</mn>
+       <mrow>
+        <mo fence="true" form="prefix" stretchy="false">(</mo>
+        <mrow>
+         <mn>0.1</mn>
+        </mrow>
+        <mo fence="true" form="postfix" stretchy="false">)</mo>
+       </mrow>
+      </mrow>
+      <mn>20</mn>
+     </mfrac>
+    </msqrt>
+    <mo stretchy="false">=</mo>
+    <mn>0.77</mn>
+   </mrow>
+   <mtext> &nbsp; to &nbsp; </mtext>
+   <mn>1.03</mn>
+  </mrow>
+</math></p>
+      <p>Given that it isn't possible for a proportion to fall above 1 the upper limit is clearly wrong. We're fortunate when the answers we get are transparent nonsense, because we
+        can recognize the error - it is still problematic to have symmetrical
+        confidence intervals with p = 0.75, but the answers are plausible so the
+        problem is less obvious then. </p>
+      <p>There are various ways to solve this problem that use the same basic
+        approach, but with an adjustment to make the intervals asymmetrical and force
+        them to stay between 0 and 1. None of those are very satisfactory.</p>
+      <p>A better solution is to use the likelihood function to obtain our
+        confidence intervals. <strong>It can be shown</strong> that the two values for the
+        parameter whose likelihoods are 1.92 units below the maximum log
+        likelihood are good estimates for the lower and upper 95% confidence
+        interval (this value is 1/2 of the Chi-square critical value of 3.84 with 1 df - again the link between likelihood and the Chi-square distribution is evident). </p>
+<p>This sounds complicated, but here's a graphical illustration of how it works:</p><img src="profile_ci_p.png" alt="Profile CI">
+<p> The upper horizontal line is at the estimate, and has a log likelihood of -11.2467.</p>
+<p>The lower line is 1.92 units below the maximum. The two places where the lower horizontal line intersects the log likelihood curve are the values for the lower and upper 95% CI, which are falling around 0.55 and 0.9 on this illustration. You can try this out for yourself below.</p>
+      <p>The likelihood function for a proportion is simple - it's p<sup>n</sup>(1-p)<sup>K-n</sup>,
+        where p is the proportion of heterozygotes, n is the number of
+        heterozygotes, (1-p) is the proportion of not heterozygotes (i.e. the
+        homozygotes), and K - n is the number of not heterozygotes (K is the
+        total individuals, n is the number of heterozygotes, so K - n is the
+        number of homozygotes). The likelihood function for a range of possible
+        values of p is shown in the graph to the right.</p>
+      <p>1. The app is set to 15 heterozygotes out of 20, which is a proportion
+        of 0.75. The current estimate for the value of p is selected by the
+        slider, which begins at 0.5. It's convenient to think of proportions as
+        the balancing points for count data - the graph on the left shows bars
+        for homozygotes and heterozygotes, and you can think of the x-axis as a
+        teeter-totter. The current value of 0.5 is in the middle of the teeter
+        totter, which makes it unbalanced - the greater number of heterozygotes are
+        weighing down the right side and making the graph tilt. If you move the
+        slider to the right you'll see that you get the graph balanced at p =
+        0.75, which is also the maximum likelihood estimate according to the
+        graph on the right.</p>
+      <div id="wrapper_div_p" style="width: 1200px; text-align: center; height: 500px">
+        <div style="float:left; width: 400px; height: 350px; padding-bottom: 25px; transform: rotate(10deg)" id="obs_data_p"> </div>
+        <div style="float:left; width: 200px">
+          <p>Number sampled:<br>
+            <input id="n_total_p" value="20" min="2" max="100" style="width:40px" type="number"><br>
+            Number of heterozygotes:<br>
+            <input id="n_het_p" value="15" min="1" max="19" style="width: 40px" type="number"> </p>
+        </div>
+        <div id="likelihood_function_p" style="float:left; width: 39%; height: 350px; clear: right; padding-bottom: 25px">
+        </div>
+        <div class="range-wrap" style="display: inline-block; width: 400px; border 1px solid yellow; clear: both; margin: 0 auto">
+          <div class="range-value" id="rangeV_p"></div>
+          <input id="range_p" min="0.01" max="0.99" value="0.5" step="0.01" type="range">
+        </div>
+        <p><label for="liketype_p"> Choose a likeliood function: </label>
+          <select id="liketype_p">
+            <option value="like">Likelihood</option>
+            <option value="loglike">Log likelihood</option>
+            <option value="negloglike">Negative log likelihood</option>
+          </select>
+        </p>
+      </div>
+      <p>2. With the slider set at 0.75 change the type of likelihood to log
+        likelihood. You'll see that the log likelihood has a much flatter top,
+        but it does have a maximum value, and it's the same place as the peak of
+        the likelihood function. </p>
+<p>If you hover over the red dot you'll see that
+        the log likelihood for p = 0.75 is -11.2467. The values that are 1.92
+        units below that will be at a log likelihood of -11.2467 - 1.92 =
+        -13.1667. If you move your mouse along the likelihood function to the
+        left until you find a value of -13.12544 (the closest my app will let
+        you get to -13.1667) at p = 0.54 (you can see the value for p in a
+        little black text box that pops up below the x-axis) - this is the lower
+        limit for the 95% confidence interval.</p>
+      <p>If you do the same thing above 0.75, you will find the value of
+        -13.09333 (which is the closest the app gets to -13.1667 on the upper
+        end of the curve) at p = 0.9, which is the upper limit. </p>
+      <p>So, according to our likelihood function, given our ML estimate of p =
+        0.75 we can have 95% confidence that the true value falls between 0.54
+        and 0.9. Because the likelihood function is not symmetrical this method
+        gives us asymmetrical intervals, which makes sense - there is more space below 0.75 than above, so we can be more wrong below than above as well. And, because the likelihood function is
+        bounded at 0 and 1 we can't get ridiculous values as our limits, like
+        values below 0 or above 1.</p>
+      <p>3. Change the number of heterozygotes to 4, keeping the total at 20,
+        which is a p of 4/20 = 0.2. Set the slider to 0.2, and confirm you're at
+        the maximum likelihood estimate. Then, find the log likelihood at p =
+        0.2, calculate the value that is 1.92 units below this maximum value,
+        and then find the lower and upper limits. Report these in your Rmd file.</p>
+      <p>4. Any method of estimating confidence intervals worth its salt should get narrower the more data we collect. This would clearly be true with our standard error-based method, since N is in the denominator of the standard error calculation. It's not as obvious what larger sample sizes would do to the shape of the likelihood functions, so let's see.</p>
+<p>Set the total
+        to 100 and the number of heterozygotes to 20 - this also gives us a p of
+        20/100 = 0.2. If you do your profile likelihood with this larger data
+        set you'll find the log likelihood is much more curved around the
+        estimate, and it gives us a narrower confidence interval as a result.
+        Report the confidence interval for this larger sample size in your Rmd
+        file.</p>
+      <p>This method of using the likelihood function to find a confidence
+        interval is called profiling the likelihood function, and the interval
+        is a <strong>profile likelihood confidence interval</strong>.</p>
+      <p>That's it! Knit and upload your Word document.<br>
+      </p>
+    </div>
+    <script type="text/javascript" src="likelihood_p_exercise.js"></script>
+    <script type="text/javascript" src="likelihood.js"></script>
+    <script type="text/javascript" src="regression.js"></script>
+    <script type="text/javascript" src="regression_quad.js"></script>
+</body></html>

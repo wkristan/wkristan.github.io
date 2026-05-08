@@ -40,7 +40,7 @@ function drawChart() {
     var lk_function_curves = makeLikeFunctionCurves(lk_function);
     
     //Find the range selected by the slider
-    var est = document.getElementById("range").valueAsNumber;
+    var est = document.getElementById("range_lin").valueAsNumber;
     
     //Get the likelihoods for the estimates for the individual likelihoods
     var likes_of_est_curves = likesEstCurves(est, lk_curves);
@@ -115,7 +115,7 @@ function drawChart() {
         showlegend: false,
         xaxis: {
             title: {
-                text: "Data values"
+                text: "Estimate for μ"
             },
             range: [119, 136]
         },
@@ -246,15 +246,15 @@ function likesEstLkFuns(est, lk_function){
 
 
 const
-	range = document.getElementById('range'),
-	rangeV = document.getElementById('rangeV'),
-	setValue = ()=>{
+	range_lin = document.getElementById('range_lin'),
+	rangeV_lin = document.getElementById('rangeV_lin'),
+	setValue_lin = ()=>{
 		const
-			newValue = Number( (range.value - range.min) * 100 / (range.max - range.min) ),
-			newPosition = 10 - (newValue * 0.2);
-		rangeV.innerHTML = `<span>${range.value}</span>`;
-		rangeV.style.left = `calc(${newValue}% + (${newPosition}px))`;
+			newValue_lin = Number( (range_lin.value - range_lin.min) * 100 / (range_lin.max - range_lin.min) ),
+			newPosition_lin = 10 - (newValue_lin * 0.2);
+		rangeV_lin.innerHTML = `<span>${range_lin.value}</span>`;
+		rangeV_lin.style.left = `calc(${newValue_lin}% + (${newPosition_lin}px))`;
         drawChart();
 	};
-document.addEventListener("DOMContentLoaded", setValue);
-range.addEventListener('input', setValue);
+document.addEventListener("DOMContentLoaded", setValue_lin);
+range_lin.addEventListener('input', setValue_lin);

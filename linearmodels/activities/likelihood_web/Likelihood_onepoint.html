@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Likelihood - single point at a time</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <link href="slider_style.css" rel="stylesheet" type="text/css">
+  </head>
+  <body onload="drawSingleLikeChart()">
+    <div id="content">
+      <div style="display:block; width: 400px">
+        <p><label for="data_value"> Choose the observed data value:
+          </label>
+          <select id="data_value" name="selected_data_value">
+            <option value="0">119.42</option>
+            <option value="1">123.67</option>
+            <option value="2">124.86</option>
+            <option value="3">125.17</option>
+            <option value="4">125.30</option>
+            <option value="5">126.90</option>
+            <option value="6">126.96</option>
+            <option value="7">128.13</option>
+            <option value="8">128.31</option>
+            <option value="9">128.74</option>
+            <option value="10">130.36</option>
+            <option value="11">139.63</option>
+            <option value="12">130.78</option>
+            <option value="13">132.53</option>
+            <option value="14">135.61</option>
+          </select>
+        </p>
+      </div>
+      <div id="wrapper_div" style="width: 1200px; text-align: center; height: 550px">
+        <div style="float:left; width: 60%; height: 350px; padding-bottom: 25px"
+          id="likelihood_curves"> </div>
+        <div style="float:left; width: 39%; height: 350px; clear: right; padding-bottom: 25px">
+          <p><label for="liketype_one"> Choose a likeliood function: </label>
+            <select id="liketype_one" name="cars">
+              <option value="like">Likelihood</option>
+              <option value="loglike">Log likelihood</option>
+              <option value="negloglike">Negative log likelihood</option>
+            </select>
+          </p>
+          <p> <br>
+          </p>
+          <div id="like_fun" style="display:block" class="eqn like">
+            <math display="block" style="font-size: 25pt">
+              <mstyle scriptsizemultiplier="0.7" scriptminsize="8pt">
+                <mrow>
+                  <mn>0.1</mn>
+                  <mrow></mrow>
+                  <mrow>
+                    <msup superscriptshift="2">
+                      <mi>e</mi>
+                      <mrow>
+                        <mrow>
+                          <mo stretchy="false">−</mo>
+                          <mfrac>
+                            <mn>1</mn>
+                            <mn>2</mn> </mfrac> </mrow>
+                        <msup>
+                          <mrow>
+                            <mo fence="true" form="prefix" stretchy="false">(</mo>
+                            <mrow>
+                              <mfrac>
+                                <mrow>
+                                  <mi><span id="data_value_eqn">x</span></mi>
+                                  <mo stretchy="false">−</mo>
+                                  <mi mathvariant="normal"><span id="mu">μ</span></mi>
+                                </mrow>
+                                <mn>3.95</mn> </mfrac> </mrow>
+                            <mo fence="true" form="postfix" stretchy="false">)</mo>
+                          </mrow>
+                          <mn>2</mn> </msup> </mrow> </msup>
+                    <mo stretchy="false">=</mo>
+                    <mrow></mrow> </mrow>
+                  <mi><span id="eqn_like">d</span></mi> </mrow> </mstyle>
+            </math>
+          </div>
+          <div id="loglike_fun" style="display:none" class="eqn loglike">
+            <math display="block" style="font-size: 25pt">
+              <mstyle scriptsizemultiplier="0.7" scriptminsize="8pt">
+                <mrow>
+                  <mrow>
+                    <mrow>
+                      <mo stretchy="false">−</mo>
+                      <mn>2.3</mn> </mrow>
+                    <mo stretchy="false">−</mo>
+                    <mfrac>
+                      <mn>1</mn>
+                      <mn>2</mn> </mfrac> </mrow>
+                  <msup>
+                    <mrow>
+                      <mo fence="true" form="prefix" stretchy="false">(</mo>
+                      <mrow>
+                        <mfrac>
+                          <mrow>
+                            <mi><mi><span id="data_value_loglik_eqn">x</span></mi></mi>
+                            <mo stretchy="false">−</mo>
+                            <mi><span id="mu_loglik">μ</span></mi> </mrow>
+                          <mn>3.95</mn> </mfrac> </mrow>
+                      <mo fence="true" form="postfix" stretchy="false">)</mo> </mrow>
+                    <mn>2</mn> </msup>
+                  <mo stretchy="false">=</mo>
+                  <mrow></mrow> </mrow>
+                <mrow>
+                  <mi><span id="eqn_loglike">d</span></mi> </mrow> </mstyle>
+            </math> </div>
+          <div id="negloglik_fn" style="display:none" class="eqn negloglike">
+            <math display="block" style="font-size: 25pt">
+              <mstyle scriptsizemultiplier="0.7" scriptminsize="8pt">
+                <mrow>
+                  <mrow>
+                    <mn>2.3</mn>
+                    <mo stretchy="false">+</mo>
+                    <mfrac>
+                      <mn>1</mn>
+                      <mn>2</mn> </mfrac> </mrow>
+                  <msup>
+                    <mrow>
+                      <mo fence="true" form="prefix" stretchy="false">(</mo>
+                      <mrow>
+                        <mfrac>
+                          <mrow>
+                            <mi><span id="data_value_negloglik_eqn">x</span></mi>
+                            <mo stretchy="false">−</mo>
+                            <mi><span id="mu_negloglik">μ</span></mi> </mrow>
+                          <mn>3.95</mn> </mfrac> </mrow>
+                      <mo fence="true" form="postfix" stretchy="false">)</mo> </mrow>
+                    <mn>2</mn> </msup>
+                  <mo stretchy="false">=</mo>
+                  <mrow></mrow> </mrow>
+                <mrow>
+                  <mi><span id="eqn_negloglike">d</span></mi> </mrow> </mstyle>
+            </math> </div>
+        </div>
+        <div>
+          <p><strong> Select an estimate for the mean </strong></p>
+          <p> <br>
+          </p>
+          <div class="range-wrap" style="display: inline-block; width: 400px; border 1px solid yellow; clear: both; margin: 0 auto">
+            <div class="range-value" id="rangeV"></div>
+            <input id="range" min="119" max="136" value="119" step="0.1" type="range">
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript" src="likelihood_onepoint.js"></script>
+  </body>
+</html>

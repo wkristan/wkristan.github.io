@@ -69,6 +69,12 @@ if (liketype_selected_reg == 'like') {
 }
 
 var regLayout = {
+      margin: {
+    l: 10, // left
+    r: 10, // right
+    t: 30, // top
+    b: 0  // bottom - set this to a low value
+  },
     title: {
         text: '<b>Regression data</b><br>Model ' + liketype_reg_labels[liketype_selected_reg] + ': ' + likeFormatted
     },
@@ -117,6 +123,12 @@ var regLayout = {
 }
 
 var regLikeLayout = {
+          margin: {
+    l: 10, // left
+    r: 10, // right
+    t: 30, // top
+    b: 0  // bottom - set this to a low value
+  },
     title: {
         text: 'Likelihood function'
     },
@@ -269,15 +281,15 @@ function makeLikeSurface() {
     var negloglikeSurf = {x: [], y: [], z: [], showscale: false, opacity: 0.5, name: '', type: 'surface', hovertemplate: 'Slope: %{x}<br>'+'Intercept: %{y}<br>'+'-Log Likelihood: %{z}'};
     var slope = 0.0668;
     var int = 3.3;
-    for (i = 0; i < 101; i++) {
+    for (i = 0; i < 201; i++) {
         likeSurf.x.push(slope);
         likeSurf.y.push(int);
         loglikeSurf.x.push(slope);
         loglikeSurf.y.push(int);
         negloglikeSurf.x.push(slope);
         negloglikeSurf.y.push(int);
-        slope = slope + 0.4/100;
-        int = int + 4/100;
+        slope = slope + 0.4/200;
+        int = int + 4/200;
     }
     for (i = 0; i < likeSurf.x.length; i++) {
         slope = likeSurf.x[i];
