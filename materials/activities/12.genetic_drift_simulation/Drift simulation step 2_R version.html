@@ -1,0 +1,262 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+
+    
+    <title>Genetic drift simulation in R - step 2</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script src="https://wkristan.github.io/main.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <div style="float: left"><button onmouseover="navToggle()">☰</button></div>
+      <h1 style="text-align: center;">Genetic drift simulation in R - steps 3
+        and 4</h1>
+    </div>
+    <div id="navigation" style="display:none" onclick="navToggle()">
+      <p><a href="#intro">Intro</a></p>
+      <p><a href="#big_pop">Double pop size</a></p>
+      <p><a href="#immigration">Immigration</a></p>
+      <p><a href="#assignment">Assignment</a></p>
+    </div>
+    <div id="content">
+      <h2 class="part" id="intro">Consider how the model is working<br>
+      </h2>
+      <p>As you are working through the models, start thinking about how our
+        modelling decisions are representing the process of a population passing
+        on its genes from parents to offspring over time. Some of the choices we
+        are making are not terribly faithful representations of how a real
+        biological population would work. Ask yourself questions such as:</p>
+      <ul>
+        <li>
+          <p>Is population size really going to stay exactly the same in a real
+            population over 500 generations? If not, why are we keeping it
+            constant in our models?</p>
+        </li>
+        <li>What kind of organism might the simulation best represent? Broadcast
+          spawners are aquatic animals that release sperm and eggs into the
+          water, where fertilization occurs - is this the kind of organism we
+          are simulating? </li>
+        <li>
+          <p>Is the way we are selecting males and females to breed realistic?
+            Are every male and female in a population equally likely to mate
+            with one another?</p>
+        </li>
+        <li>Do most species breed and then die, with no overlap in generations?
+          So all offspring produced usually survive to adulthood?</li>
+        <li>
+          <p>There is no natural selection in these models, only drift. How
+            might the results be different for genes that are subject to natural
+            selection?</p>
+        </li>
+      </ul>
+      <p>But, simulation models have some distinct advantages that justify their
+        use.</p>
+      <ul>
+        <li><strong>Simulation models allow us to run experiments that aren't
+            possible in real populations</strong>. We may be able to do field
+          work that tests whether gene frequencies are varying over time in a
+          population with random mating, but a single population will only have
+          a single pattern of change over time. Our ability to run multiple
+          identical runs to see what happens in general is tremendously
+          beneficial. Additionally, many processes we want to study take a very
+          long time to complete, and we can't study them in real time - a
+          species that takes a year to mature and reproduce can't be followed
+          over 500 generations by any one researcher (and no studies that I'm
+          aware of have been continued for 500 years).</li>
+        <li><strong>Simulation models allow us to isolate variables</strong>.
+          Being able to <strong>isolate</strong> variables by holding
+          everything else constant is a very important principle of experimental
+          design, and we have an unrivaled ability to isolate variables in a
+          simulation model. For example, we're holding population size constant,
+          knowing that in real populations it will usually vary from generation
+          to generation. Although a constant population size may not be very
+          realistic, if we were not able to hold population size constant we
+          wouldn't be able to tell how much of the variation in allele frequency
+          was due to random mating and how much was due to fluctuation in
+          population size over time.</li>
+        <li><strong>We can explore the consequences of the things that we know</strong>.
+          We know that when there is random mating we expect drift, but how does
+          an increase in population size affect the rate of loss of alleles to
+          drift? What happens if instead of a closed population (with no
+          immigration or emigration) there is immigration into the population? </li>
+      </ul>
+      <p>As long as the way the model works is not so completely unrelated to
+        how biological systems work that we will be misled by using them, it can
+        be very useful to use models to help us understand real populations.</p>
+      <p> </p>
+      <p>You can address questions like this in the Discussion of your papers
+        when you're talking about potential problems with the model, or
+        limitations on what we can learn from it.</p>
+      <p> </p>
+      <h2 class="part" id="big_pop">First variation: Double the population size</h2>
+      <p>Download <a href="step3_and_4_bigger_n_and_immigration.rmd">this file</a> into your project folder and open it to continue with the last two simulations.</p>
+<p>The smallest number of each sex we can use while keeping all 5 alleles
+        at their HW equilibrium is 25 apiece.&nbsp; To make it easy to set the
+        population size we can edit the run.sim() function to take an argument
+        that specifies how many sets of 25 males and 25 females to use.</p>
+      <p>Copy and paste the run.sim code from the first version of the model
+        into the siumulation.run.function.popsize code chunk.</p>
+      <p>Then, change the first line to accept an argument called multiple, with
+        a default number of 1, like so:</p>
+      <p class="rcmd">run.sim.popsize &lt;- function(multiple = 1) {</p>
+      <p>When the function is run, we will use run.sim.popsize() as the command,
+        and if we leave the parentheses empty the default value of 1 will be
+        used. If we specify a number (such as 2 to double the number of parents,
+        or 3 to triple it, etc.) the numbers of individuals will be adjusted
+        accordingly.</p>
+      <p>To use the multiple argument, make space for these lines next, and
+        enter them just below the run.sim.popsize function definition line:</p>
+      <p class="rcmd">n.males &lt;- 25 * multiple</p>
+      <p class="rcmd">n.females &lt;- n.males</p>
+      <p class="rcmd">n.parents &lt;- n.males + n.females</p>
+      <p>This calculates the number of males to be used by multiplying 25 by the
+        multiple, then sets the number of females to be the same as the number
+        of males. The number of parents is then just the sum of the number of
+        males and number of females.</p>
+      <p>The next place we need to adjust is making the males from the list of
+        five alleles. We make the vector of alleles as before, and use
+        expand.grid() to make the initial 25 of them. We then need to change the
+        command:</p>
+       <p class="rcmd">males[ rep(1:25, 2), ] -&gt; males</p>
+      <p>to read:</p>
+      <p class="rcmd">males[ rep(1:25, multiple), ] -&gt; males</p>
+      <p>Replacing 2 with the value we've entered for multiple when we run the function allows us to pick different population sizes.</p>
+      <p>The next place we need to update is the part of the loop where we make
+        the male and female offspring from the male and female breeders. Now
+        that the number of males and females can be different from 50, we need
+        to change the hard-coded values to be one of the variables we defined
+        above for n.males, n.females, or n.parents as needed.</p>
+      <p>Find the commands:</p>
+      <p class="rcmd">&nbsp;&nbsp;&nbsp; males[sample(1:50, 100, replace = T),]
+        -&gt; male.breeders<br>
+        &nbsp;&nbsp;&nbsp; females[sample(1:50, 100, replace = T), ] -&gt;
+        female.breeders<br>
+      </p>
+      <p> and change them to: </p>
+      <p class="rcmd">&nbsp;&nbsp;&nbsp; males[sample(1:n.males, n.parents,
+        replace = T),] -&gt; male.breeders<br>
+        &nbsp;&nbsp;&nbsp; females[sample(1:n.females, n.parents, replace = T),
+        ] -&gt; female.breeders</p>
+      <p>Using n.males, n.females, and n.parents like this allows all of these values to
+        change when multiple is set to a different number.</p>
+      <p>Similarly, find the lines:</p>
+      <p class="rcmd">&nbsp;&nbsp;&nbsp; data.frame(Allele1 =
+        offspring.a1[1:50], Allele2 = offspring.a2[1:50]) -&gt; male.offspring<br>
+        &nbsp;&nbsp;&nbsp; data.frame(Allele1 = offspring.a1[51:100], Allele2 =
+        offspring.a2[51:100]) -&gt; female.offspring</p>
+      <p>and change them to:</p>
+      <p class="rcmd">&nbsp;&nbsp;&nbsp; data.frame(Allele1 =
+        offspring.a1[1:n.males], Allele2 = offspring.a2[1:n.males]) -&gt;
+        male.offspring<br>
+        &nbsp;&nbsp;&nbsp; data.frame(Allele1 =
+        offspring.a1[(n.females+1):(n.parents)], Allele2 =
+        offspring.a2[(n.females+1):(n.parents)]) -&gt; female.offspring</p>
+      <p>The rest of the commands are fine the way they are, because they don't
+        use the number of males, females, or parents as an argument.</p>
+      <p>Once you have made these update, run the chunk to get the command into
+        your environment.</p>
+      <p>Then, in chunk lapply.repeat.100.times.popsize, use an lapply() command
+        to run the run.sim.popsize function 100 times. Enter a 4 as an argument (we used 50 of each sex the
+        first time using a multiple of 2, so to get 100 of each sex we need to use a multiple of 4), and assign the output to sim.output.popsize.</p>
+      <p>The method we're using to get the generation of fixation still works,
+        but with a larger population size we will not always have fixation by
+        the 500th generation. The first command, which gets the generation of fixation, is the same as before, but use
+        sim.output.popsize as the first argument in the sapply() function, and
+        assign the output to gen.fixed.n200 (in the
+        sapply.to.get.fixation.gen.popsize chunk).</p>
+      <p>For any run that didn't get an allele going to fixation we'll get a value of "Inf" (for infinite) in the
+        output. We can check for which runs had an Inf value in the output, and assign them a value of 501 as the generation fixed. In the same code chunk (sapply.to.get.fixation.gen.popsize), below
+        your first sapply() command, enter another like so:</p>
+      <p class="rcmd">sapply(gen.fixed.n200, FUN = function(x)
+        if(is.infinite(x)) {x = 501} else {x = x}) -&gt; gen.fixed.n200</p>
+      <p>You'll This uses an if() function to check if an entry in
+        gen.fixed.n200 is infinite, and replace it with a value of 501 if it is.
+        If it is not, the else statement says to replace the generation fixed
+        with itself (this seems to be necessary, as if you don't put something
+        in x it gets deleted).</p>
+      <p>Similarly, our method of finding which allele want to fixation is the
+        same as before, but if one allele never went to fixation we want to
+        detect that and record it properly. In the chunk
+        sapply.to.get.allele.fixed.popsize enter the same command you used
+        before, but use sim.output.popsize as the argument and assign to an
+        object called allele.fixed.n200.</p>
+      <p>Then, on the next line, enter:</p>
+      <p class="rcmd">sapply(allele.fixed.n200, FUN = function(x) if(length(x)
+        == 0) {x = "None"} else {x = x}) -&gt; allele.fixed.n200</p>
+      <p>The idea here is very similar to what we did to assign 501 as the
+        generation fixed when no allele went to fixation, but now the indication
+        that no allele is fixed is that the output for the run in allele.fixed.n200 is empty. An empty
+        element has a length of 0, so we can compare the length of the element
+        to 0 and assign a value of "None" as the allele fixed. Otherwise we
+        retain the allele letter that did actually went to fixation.</p>
+      <p>You can now run through the rest of the steps - combine the generation
+        fixed and allele fixed for each run into a data frame. Get a mean
+        generation fixed, tabulate how often each allele went to fixation (and
+        how often none did), and graph the boxplot for generation fixed.</p>
+      <h2 class="part" id="immigration">Second variation: immigration</h2>
+      <p> When an individual moves to a new population, it brings its genes
+        along with it. Immigrants can thus restore alleles that a population lost to drift, and may be able
+        to prevent alleles from being lost in the first place by increasing the
+        frequencies of rare alleles.</p>
+      <p>Immigration has a smaller effect on big populations than on a small
+        population, because a single pair of alleles is a smaller contribution
+        to a big gene pool than a small one. Big populations also lose alleles
+        to genetic drift more slowly than small populations do (as you should
+        have seen with your n200 model, above). These two factors offset one
+        another perfectly in theory, such that a single immigrant per generation
+        is expected to prevent loss of alleles to drift regardless of the size
+        of the population. This next version of the model will explore whether 1
+        immigrant per generation is enough to avoid loss of alleles in our
+        simulated population.</p>
+      <p> </p>
+      <p> </p>
+      <p> 1. Copy and paste the function from simulation.run.function.popsize
+        into chunk simulation.run.function.immigration. We'll make the needed
+        changes to add immigration to this function.</p>
+      <p>2. Change the first line to:</p>
+      <p class="rcmd">run.sim.final &lt;- function(multiple = 1, immigration =
+        FALSE) {</p>
+      <p>This adds in an argument to our function that allows us to include
+        immigration. The default is to have no immigration, but if we enter TRUE
+        as the second argument we'll get one male immigrant per generation added
+        to the breeding population.</p>
+      <p>3. The only other change we need to make is to replace one of the male
+        breeders with an immigrant each generation. So, in the lines after the
+        males and female breeders are selected, but before they produce
+        offspring, add this if() command (to help you find where to put the if() command I included the lines you're inserting it between, but only the if() part needs to actually be added, the rest is there already):</p>
+      <p class="rcmd">males[sample(1:n.males, n.parents, replace = T),] -&gt;
+        male.breeders<br>
+        females[sample(1:n.females, n.parents, replace = T), ] -&gt;
+        female.breeders<br>
+        <br>
+        if(immigration == TRUE) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp; male.breeders[1,1] &lt;- sample(alleles, 1)<br>
+        &nbsp;&nbsp;&nbsp;&nbsp; male.breeders[1,2] &lt;- sample(alleles, 1)<br>
+        }<br>
+        <br>
+        male.breeders[, sample(1:2,1)] -&gt; offspring.a1<br>
+        female.breeders[, sample(1:2,1)] -&gt; offspring.a2</p>
+      <p>The if() command tests if we have set immigration to equal TRUE when we
+        called the run.sim.final function, and if we did then we replace the
+        alleles for the first male breeder with ones selected at random from the
+        alleles vector. This is like randomly sampling a male from a large,
+        outbred population in which the five alleles have the same frequencies.</p>
+      <p>3. Run the code chunk to get the function added to your environment,
+        and then run it 100 times, using 50 of each sex (multiplier = 2) and
+        with immigration (immigration = TRUE). Assign the output into an object
+        called sim.output.n100.imm.</p>
+      <p>4. Now get the summaries you need, and make the graphs to see how
+        immigration affects heterozygosity, alleleic diversity, and fixation
+        rates.</p>
+      
+      <h2 id="assignment" class="part">Assignment</h2>
+      <p>And with that, you're done with the simulations for the genetic drift
+        project. Now you can write up a report of your results according to the
+        instructions posted on Canvas, and will turn in all four of your
+        simulations (n100, n100_time_to_fixation, n200, and n100_immigration)
+        along with a Word file with your written report.</p>
+    </div>
+</body></html>

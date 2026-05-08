@@ -1,0 +1,234 @@
+---
+title: 'Drift simulation: larger sample size and immigration'
+author: "Your Name"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Genetic drift simulation in R - parts 3 and 4
+
+## Step 1 - update to allow different population sizes
+
+Modify the simulation function to accept multiples of 25 males and females:
+
+```{r simulation.run.function.popsize}
+
+run.sim.popsize <- function(multiple = 1) {
+  n.males <- 25*multiple
+  n.females <- n.males
+  n.parents <- n.males + n.females
+  
+  alleles <- c("A","B","C","D","E")
+  data.frame(expand.grid(alleles, alleles, stringsAsFactors = F)) -> males
+  males[rep(1:25, multiple),] -> males
+  names(males) <- c("Allele1","Allele2")
+
+  males -> females
+
+  data.frame(F.A = numeric(0), F.B = numeric(0), F.C = numeric(0), F.D = numeric(0), F.E = numeric(0), Heterozygosity = numeric(0), Allelic.diversity = numeric(0)) -> results
+
+  for(i in 1:500) {
+    rbind(males, females) -> parents
+    unlist(parents) -> parent.alleles
+    unique(parent.alleles) -> parent.alleles.unique
+    length(parent.alleles.unique) -> allelic
+    sum(parents$Allele1 != parents$Allele2)/nrow(parents) -> hz
+    as.matrix(table(factor(parent.alleles, levels = c("A","B","C","D","E")))/length(parent.alleles)) -> freqs
+    data.frame(t(freqs), hz, allelic) -> current.output
+    names(current.output) <- names(results)
+    rbind(results, current.output) -> results
+    
+    males[sample(1:n.males, n.parents, replace = T),] -> male.breeders
+    females[sample(1:n.females, n.parents, replace = T), ] -> female.breeders
+    
+    
+    male.breeders[, sample(1:2,1)] -> offspring.a1
+    female.breeders[, sample(1:2,1)] -> offspring.a2
+    
+    data.frame(Allele1 = offspring.a1[1:n.males], Allele2 = offspring.a2[1:n.males]) -> male.offspring
+    data.frame(Allele1 = offspring.a1[(n.females+1):(n.parents)], Allele2 = offspring.a2[(n.females+1):(n.parents)]) -> female.offspring
+    males <- male.offspring
+    females <- female.offspring
+  }
+  return(results)
+  }
+
+```
+
+
+Use an lapply() command to run the simulation 100 times:
+
+```{r lapply.repeat.100.times.popsize}
+
+lapply(1:100, FUN = function(x) run.sim.popsize(4)) -> sim.output.popsize
+
+```
+
+Use an sapply() command to get the generation an allele went to fixation for each simulation:
+
+```{r sapply.to.get.fixation.gen.popsize}
+
+sapply(sim.output.popsize, FUN = function(x) min(which(x$Allelic.diversity == 1))) -> gen.fixed.n200
+
+sapply(gen.fixed.n200, FUN = function(x) if(is.infinite(x)) {x = 501} else {x = x}) -> gen.fixed.n200
+
+```
+
+Use another sapply() command to get which allele it was that went to fixation:
+
+```{r sapply.to.get.allele.fixed.popsize}
+
+alleles <- c("A","B","C","D","E")
+
+sapply(sim.output.popsize, FUN = function(x) alleles[x[500,c("F.A","F.B","F.C","F.D","F.E")] == 1]) -> allele.fixed.n200
+
+sapply(allele.fixed.n200, FUN = function(x) if(length(x) == 0) {x = "None"} else {x = x}) -> allele.fixed.n200
+
+```
+
+Combine the gen.fixed and allele.fixed into a data frame:
+
+```{r fixation.data}
+
+data.frame(gen.fixed = gen.fixed.n200, allele.fixed = unlist(allele.fixed.n200)) -> fixation.data.n200
+
+```
+
+Get some statistics on the rate of fixation:
+
+```{r fixation.stats}
+
+mean(fixation.data.n200$gen.fixed)
+
+table(fixation.data.n200$allele.fixed)
+
+```
+
+Plot the generation fixed as a boxplot.
+
+```{r gen.fixed.boxplot}
+
+library(ggplot2)
+ggplot(fixation.data.n200, aes(y = gen.fixed)) + geom_boxplot()
+
+```
+
+
+## Step 2 - add immigration
+
+Edit the function to allow immigration.
+
+```{r simulation.run.function.immigration}
+
+run.sim.final <- function(multiple = 1, immigration = FALSE) {
+  n.males <- 25*multiple
+  n.females <- n.males
+  n.parents <- n.males + n.females
+  
+  alleles <- c("A","B","C","D","E")
+  data.frame(expand.grid(alleles, alleles, stringsAsFactors = F)) -> males
+  males[rep(seq(1,25), multiple),] -> males
+  names(males) <- c("Allele1","Allele2")
+
+  males -> females
+
+  data.frame(F.A = numeric(0), F.B = numeric(0), F.C = numeric(0), F.D = numeric(0), F.E = numeric(0), Heterozygosity = numeric(0), Allelic.diversity = numeric(0)) -> results
+
+  for(i in 1:500) {
+    rbind(males, females) -> parents
+    unlist(parents) -> parent.alleles
+    unique(parent.alleles) -> parent.alleles.unique
+    length(parent.alleles.unique) -> allelic
+    sum(parents$Allele1 != parents$Allele2)/nrow(parents) -> hz
+    as.matrix(table(factor(parent.alleles, levels = c("A","B","C","D","E")))/length(parent.alleles)) -> freqs
+    data.frame(t(freqs), hz, allelic) -> current.output
+    names(current.output) <- names(results)
+    rbind(results, current.output) -> results
+    
+    males[sample(1:n.males, n.parents, replace = T),] -> male.breeders
+    females[sample(1:n.females, n.parents, replace = T), ] -> female.breeders
+    
+    if(immigration == TRUE) {
+      male.breeders[1,1] <- sample(alleles, 1)
+      male.breeders[1,2] <- sample(alleles, 1)
+    }
+    
+    male.breeders[, sample(1:2,1)] -> offspring.a1
+    female.breeders[, sample(1:2,1)] -> offspring.a2
+    
+    data.frame(Allele1 = offspring.a1[1:n.males], Allele2 = offspring.a2[1:n.males]) -> male.offspring
+    data.frame(Allele1 = offspring.a1[(n.females+1):(n.parents)], Allele2 = offspring.a2[(n.females+1):(n.parents)]) -> female.offspring
+    males <- male.offspring
+    females <- female.offspring
+  }
+  return(results)
+  }
+
+```
+
+Run the simulation 100 times, using 50 of each sex (multiplier of 2), and with immigration (immigration = TRUE)):
+
+```{r run.100.times.with.immigration}
+
+lapply(1:100, FUN = function(x) run.sim.final(2, TRUE)) -> sim.output.n100.imm
+lapply(1:100, FUN = function(x) run.sim.final(4, TRUE)) -> sim.output.n200.imm
+
+```
+
+Use an sapply() command to find if allele was fixed at the final generation, and if so which allele it was:
+
+```{r sapply.to.get.allele.fixed.imm}
+
+alleles <- c("A","B","C","D","E")
+
+sapply(sim.output.n100.imm, FUN = function(x) alleles[x[500,c("F.A","F.B","F.C","F.D","F.E")] == 1]) -> allele.fixed.n100.imm
+
+sapply(allele.fixed.n100.imm, FUN = function(x) if(length(x) == 0) {x = "None"} else {x = x}) -> allele.fixed.n100.imm
+
+```
+
+
+Put allele.fixed into a data frame:
+
+```{r fixation.data.imm}
+
+data.frame(allele.fixed = unlist(allele.fixed.n100.imm)) -> fixation.data.n100.imm
+
+```
+
+Count up how often the alleles went to fixation:
+
+```{r fixation.stats.imm}
+
+table(fixation.data.n100.imm$allele.fixed)
+
+```
+
+Plot a line graph of the allele frequencies in the first run to see how immigration affected them: 
+
+```{r allele.freq.immigration.graph}
+
+library(ggplot2)
+ggplot(sim.output.n100.imm[[1]], aes(x = 1:500)) + geom_line(aes(y = F.A, color = "F.A")) + geom_line(aes(y = F.B, color = "F.B")) + geom_line(aes(y=F.C, color = "F.C")) + geom_line(aes(y=F.D, color="F.D")) + geom_line(aes(y=F.E, color = "F.E")) + labs(x = "Generation", y = "Allele frequency")
+
+```
+
+Make a graph of heterozygosity:
+
+```{r hz.immigration.graph}
+
+ggplot(sim.output.n100.imm[[1]], aes(x = 1:500, y = Heterozygosity)) + geom_line() + labs(x = "Generation", y = "Heterozygosity")
+
+```
+
+Make a graph of allelic diversity:
+
+```{r allelic.immigration.graph}
+
+ggplot(sim.output.n100.imm[[1]], aes(x = 1:500)) + geom_line(aes(y = Allelic.diversity)) + labs(x = "Generation", y = "Allelic diversity")
+
+```
