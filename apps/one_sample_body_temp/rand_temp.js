@@ -19,6 +19,8 @@ function drawChart() {
         margin: {
             b: 10
         },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
         xaxis: {
             range: [0.9,1.1],
             showticklabels: false
