@@ -15,7 +15,9 @@ function drawChart() {
     }
     
     var layout = {
-        title: "A sample of<br>20 body temperatures",
+        title: {
+            text: "A sample of<br>20 body temperatures"
+        },
         margin: {
             b: 10
         },
@@ -41,7 +43,7 @@ function randData(){
        var dat = {x: [], y: []};
        var j = 0;
        for(var i=0; i<20; i++){
-            j = jStat.normal.sample(37, 0.3);
+            j = jStat.normal.sample(37, 0.7);
             dat.x.push(1);
             dat.y.push(j);
        }
