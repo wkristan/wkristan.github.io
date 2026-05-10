@@ -17,7 +17,7 @@ function drawChart() {
     var layout = {
         title: "A sample of<br>20 body temperatures",
         margin: {
-            b: 5
+            b: 10
         },
         xaxis: {
             range: [0.9,1.1],
