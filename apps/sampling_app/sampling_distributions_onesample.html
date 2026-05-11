@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Random sampling - one sample design</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script type="text/javascript" src="sampling_onesample.js"></script>
+  </head>
+  <body onload="drawCharts()">
+    <div class="tab"> 
+      <button id="app1" class="tablinks" onclick="openApp(this, 'app1_div')">Selecting samples</button> 
+      <button id="sampling_dist" class="tablinks" onclick="openApp(this, 'sampling_dist_div')">Sampling distributions</button> 
+      <button id="tdist" class="tablinks" onclick="openApp(this, 'tdist_div')"> The t-distribution</button> 
+      <button id="error_power" class="tablinks" onclick="openApp(this, 'error_power_div')">Error and power</button> </div>
+    <div id="app1_div" class="tabcontent">
+      <h2>Body temperatures of randomly selected people</h2>
+      <p> Click the "draw a sample" button repeatedly - sometimes the sample mean is equal to 37℃, most of the time it's at least a little different.</p>
+      <div id="onesample_wrapper" style="width: 600px; height: 401px; clear: right">
+        <div id="onesample_experiment_div" style="width: 400px; height: 400px; float: left"> </div>
+        <div id="onesample_controls" style="width: 200px; height: 250px; float: left">
+          <p>What is the actual population mean?<input id="popmean" value=37 style="width: 40px" type="number"> </p>
+          <p><button id="drawSampleTemp" onclick="drawChart1()">Draw a sample</button> </p>
+        </div>
+      </div>
+    </div>
+    <div id="sampling_dist_div" class="tabcontent">
+      <h2> What to expect from random sampling </h2>
+      <p>To understand what random chance looks like, we can simulate selection of many samples from a population with a mean of 37℃.</p>
+      <div id="repeated_sampling_wrapper" style="width: 1201px; height: 601px; clear: right">
+        <div id="popdist" style="width: 400px; height: 400px; float: left"> </div>
+        <div id="one_repeat" style="width: 400px; height: 400px; float: left"> </div>
+        <div id="many_repeats" style="width: 400px; height: 400px; float: left"> </div>
+        <div id="repeated_controls" style="width: 400px; height: 250px; float: left">
+          <p>Sample size: <input id="sample_size" style="width:60px" value="20" type="number"></p>
+          <p> <button onclick="drawChart2()"> Sample once </button> <button onclick="run1k()"> Sample 1000 times </button></p>
+          <button onclick="reset()"> Reset </button> </div>
+      </div>
+    </div>
+    <div id="tdist_div" class="tabcontent">
+      <h2> Using the t-distribution </h2>
+      <p> The t-distribution can be used as a model of random sampling. Its shape depends on degrees of freedom. The x-axis is standard errors, and the number of standard errors to encompass 95% of
+        the curve around the middle is called the critical value. </p>
+      <div id="tdist_wrapper_div" style="float: left; border: solid black 4px; margin-left: 10px; width: 805px;">
+        <div id="tchart_div" style="width: 800px; height: 400px;"></div>
+        <p id="critval" align="center">Mean of sample means</p>
+        <p align="center">Enter a sample size (n = 2 or more) <input id="n_tdist" min="2" value="5" oninput="drawChart3()" style="width: 75px" type="number"></p>
+      </div>
+      <p style="clear:both"></p>
+    </div>
+    <div id="error_power_div" class="tabcontent">
+      <h2> Statistical errors and power </h2>
+      <p>All of the sample mean temperatures we've generated have come from a population with a mean of 37℃, and all of the variation is just random sampling. But, when we get sample means that occur by chance less than 5% of the time we 
+      reject the null, and conclude that body temperature is not the null value of 37℃. This is an error when the null is actually true, and it happens 5% of the time when we test with an &alpha; level of 0.05. This is the false positive, or 
+      Type I error, and we choose how big it is when we pick the &alpha; level.</p>
+      <p>
+        When the null hypothesis is actually false, and the mean is something other than exactly 37℃, then getting a p-value over 0.05 causes us to retain the null in error. This is the false negative, or Type II error, or &beta;. We don't
+        pick the value of &beta;, but we have some control over how big it is likely to be.
+      </p>
+      <p>This app shows the relationship between the status of the null hypothesis (whether it is true or false in reality) and statistical errors. It also allows you to change the sample size so that
+        you can see how sample size affects error rates (or not!). Finally, you can switch between the x-axis displaying t-values, or displaying body temperatures in ℃ (that is, the data units) so that
+        you can explore the process from either perspective.</p>
+      <div id="wrapper_div_errpow" style="float: left; border: solid black 4px; margin-bottom: 20px; width: 900px; padding: 10px">
+        <div id="ep_chart_div" style="width: 450px; height: 300px; float: left;"></div>
+        <div id="output_div" style="width: 400px; float: right"> <span id="alpha_error" style="display: none">
+            <p>If the null is true, only Type I error is possible. The probability of a Type I error is the alpha level, which is set to<br>
+              <span id="alpha_level" style="background: rgb(204,229,255);">0.05</span></p>
+          </span> <span id="beta_power">
+            <p>If the null is false, only Type II (β) error is possible. We can only measure β error for a specific alternative. In reality we don't know what the alternative is, but setting the
+              difference between the 37℃ we hypothesize and the actual population mean shows how β and power are affected by the size of difference, the alpha level, and the sample size.</p>
+            <p><span style="background: rgb(255,255,0);">β error = <span id="beta_error">0.0004</span></span>, <span style="background: rgb(180,180,255);">power = <span id="power">0.0006</span> </span></p>
+          </span></div>
+        <div id="controls_div" style="clear:both; padding: 10px; width: 70%">
+          <div id="diff_div" style="padding: 5px; float: left; margin-right: 20px">
+            <p>Difference between the actual and hypothesized population mean = <input id="diff_means" min="0" max="40" value="0" step="0.1" oninput="drawChart4()" style="width: 50px" type="number"></p>
+              <p>(Difference is <span id="amt_diff">0</span>, so H<sub>0</sub> is <span id="null_tf" style="color: red">true</span>)</p>
+            <p><button id="switchChart" onclick="switchChart()" style="width: 150px">Switch to <span id="ct">Temperature</span></button><button id="reset_t_dists" onclick="resetToObs()">Reset</button></p>
+          </div>
+          <div id="alpha_div" style="padding: 5px; float: left">
+            <p>Alpha level = <input id="alpha" min="0.01" max="0.75" value="0.05" step="0.01" oninput="drawChart4()" style="width: 50px" type="number"></p>
+            <p>n = <input id="n_t_comp" min="2" value="10" oninput="drawChart4()" style="width: 50px" type="number"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
