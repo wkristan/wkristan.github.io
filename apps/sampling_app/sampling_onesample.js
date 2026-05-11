@@ -50,7 +50,7 @@ function drawCharts() {
 
 function drawChart1() {
     var popmean = Number(document.getElementById("popmean").value);
-    var data = randData(popmean);
+    var data = randData(popmean, 20);
     var mean = meanDat(data);
     var limits = [popmean - 2, popmean + 2];
 
@@ -89,10 +89,10 @@ function drawChart1() {
 
 }
 
-function randData(popmean){
+function randData(popmean, n){
        var dat = {x: [], y: []};
        var j = 0;
-       for(var i=0; i<20; i++){
+       for(var i=0; i<n; i++){
             j = jStat.normal.sample(popmean, 0.7);
             dat.x.push(1);
             dat.y.push(j);
@@ -102,10 +102,11 @@ function randData(popmean){
 
 function meanDat(dat) {
     var tot = 0;
-    for(var i = 0;i<20;i++){
+    var n = dat.x.length;
+    for(var i = 0;i<n;i++){
         tot = tot + dat.y[i];
     }
-    var mean = tot/20;
+    var mean = tot/n;
     return mean;
 }
 
@@ -182,7 +183,7 @@ function drawChart2() {
             title: {
                 text: "Mean temperature"
             },
-            range: [popmean - 2, popmean + 2]
+            range: [popmean - 1, popmean + 1]
             
         },
         yaxis: {
@@ -255,7 +256,7 @@ function run1k() {
     var n = Number(document.getElementById("sample_size").value);
     var popmean = Number(document.getElementById("popmean").value);
     for (i = 0; i < 1000; i++) {
-        var data_object = randData(popmean);
+        var data_object = randData(popmean, n);
         var sample_mean = meanDat(data_object);
         countMeans(sample_mean);
     }
