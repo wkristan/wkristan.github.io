@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Error and power</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script type="text/javascript" src="sampling.js"></script>
+  </head>
+  <body>
+      <div id="error_power_div">
+        <p>This app shows the relationship between the status of the null hypothesis (whether it is true or false in reality) and statistical errors. Power, the probability of detecting a real difference, is 1-β, and adopting methods that maximize power will also minimize β.</p>
+        <div id="wrapper_div_errpow" style="float: left; border: solid black 4px; margin-bottom: 20px; width: 900px; padding: 10px">
+          <div id="ep_chart_div" style="width: 450px; height: 300px; float: left;"></div>
+          <div id="output_div" style="width: 400px; float: right"> <span id="alpha_error" style="display: none">
+              <p>If the null is true, only Type I error is possible. The probability of a Type I error is the alpha level, which is set to<br>
+                <span id="alpha_level" style="background: rgb(204,229,255);">0.05</span></p>
+            </span> <span id="beta_power">
+              <p>If the null is false, only Type II (β) error is possible. We can only measure β error for a specific alternative. In reality we don't know what the alternative is, but setting the
+                amount of difference between the population means shows how β and power are affected by the size of difference, the alpha level, and the sample size.</p>
+              <p><span style="background: rgb(255,255,0);">β error = <span id="beta_error">0.0004</span></span>, <span style="background: rgb(180,180,255);">power = <span id="power">0.0006</span> </span></p>
+            </span></div>
+          <div id="controls_div" style="clear:both; padding: 10px; width: 70%">
+            <div id="diff_div" style="padding: 5px; float: left; margin-right: 20px">
+              <p>Difference between population means<br>
+                (Difference is <span id="amt_diff">0</span>, so H<sub>0</sub> is <span id="null_tf" style="color: red">true</span>)</p>
+              <p>μ<sub>Control</sub>&nbsp;-&nbsp;μ<sub>Fertilizer</sub> = <input id="diff_means" min="0" max="40" value="0" step="1" onchange="drawChart4()" style="width: 50px" type="number"></p>
+              <p><button id="switchChart" onclick="switchChart()" style="width: 150px">Switch to <span id="ct">Yield</span></button><button id="reset_t_dists" onclick="resetToObs()">Reset</button></p>
+            </div>
+            <div id="alpha_div" style="padding: 5px; float: left">
+              <p>Alpha level = <input id="alpha" min="0.01" max="0.75" value="0.05" step="0.01" oninput="drawChart4()" style="width: 50px" type="number"></p>
+              <p>n per group = <input id="n_t_comp" min="2" value="10" oninput="drawChart4()" style="width: 50px" type="number"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+  </body>
+</html>
