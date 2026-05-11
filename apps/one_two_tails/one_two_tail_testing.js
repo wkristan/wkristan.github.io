@@ -144,7 +144,7 @@ function drawChart() {
             },
             yaxis: {
                 title: 'Body temp.',
-                range: [85,115]
+                range: [mu - 3, mu + 3]
             },
         annotations: [{
                 x: 1,
