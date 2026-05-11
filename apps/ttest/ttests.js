@@ -11,16 +11,16 @@ function drawOneSample() {
     var sd = Number(document.getElementById("sd_onesample").value);
     var null_diff = 0;
     if (document.getElementById("alt_true").checked) {
-        null_diff = alt_mean - 98.6;
+        null_diff = alt_mean - 37;
     };
-    var null_curve = getNormCurve(98.6, sd);
+    var null_curve = getNormCurve(37, sd);
     var alt_curve = getNormCurve(alt_mean, sd);
     var ss = Number(document.getElementById("n_onesample").value);
-    var data = randData(98.6, sd, null_diff, ss, 0);
+    var data = randData(37, sd, null_diff, ss, 0);
     var mean = jStat.mean(data.x);
     var sd = jStat.stdev(data.x);
     var stderror = sd/Math.sqrt(ss);
-    var t_obs = (mean - 98.6)/stderror;
+    var t_obs = (mean - 37)/stderror;
     var alt = document.getElementById("alt").value;
     var t_distribution = tDist(ss-1, t_obs);
     var tdist_shaded = pShaded(ss-1, t_obs, alt);
@@ -127,16 +127,16 @@ function drawOneSample() {
         title: 'The population disribution if the null is true<br>x̄ = ' + mean.toFixed(2),
         shapes: [{
             type: 'line',
-            x0: 98.6,
+            x0: 37,
             y0: 0,
-            x1: 98.6,
+            x1: 37,
             y1: line_ht_mean
         }],
         xaxis: {
             title: {
                 text: 'Body temperature'
             },
-            range: [96,101]
+            range: [34,40]
         }
     }
     
@@ -147,9 +147,9 @@ function drawOneSample() {
         title: 'The population distribution if the null is false<br>x̄ = ' + mean.toFixed(2),
         shapes: [{
             type: 'line',
-            x0: 98.6,
+            x0: 37,
             y0: 0,
-            x1: 98.6,
+            x1: 37,
             y1: line_ht_mean
         },
         {
@@ -168,7 +168,7 @@ function drawOneSample() {
             title: {
                 text: 'Body temperature'
             },
-            range: [96,101]
+            range: [34,40]
         }
     }
     
