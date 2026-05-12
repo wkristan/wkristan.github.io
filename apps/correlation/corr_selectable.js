@@ -1,12 +1,8 @@
 var rand_x = randDataOneVar(1000, 0, 1);
 var rand_y = randDataOneVar(1000, 0, 1);
 
-function drawCharts() {
-    drawHeritabilityChart();
-}
-              
 
-function drawHeritabilityChart() {
+function drawChart() {
 
     var h2 = Number(document.getElementById("h2_val").value);
     var chol = [h2, Math.sqrt(1-(h2*h2))];
