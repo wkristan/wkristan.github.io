@@ -36,7 +36,7 @@ function drawChart(df, cl) {
         
         var layout = {
             showlegend: false,
-            title: 'To have ' + cl * 100 +'% confidence of including &mu; with df = ' + df + ' go <br>' + critval.toFixed(3) + ' se above and below x&#772;',
+            title: 'To have ' + cl * 100 +'% chance of containing &mu; with df = ' + df + ' go <br>' + critval.toFixed(3) + ' se above and below x&#772;',
             xaxis: {
                 title: 't-value'
             },
@@ -240,7 +240,7 @@ function curves(df, cl) {
 function setTDist(cellclicked) {
     var rowofclicked = cellclicked.parentNode;
     var df = Number(rowofclicked.cells[0].innerHTML);
-    var clevels = [null, 0.8, 0.9, 0.95, 0.98, 0.99];
+    var clevels = [null, 0.9, 0.95, 0.99];
     var cl = clevels[cellclicked.cellIndex];
     drawChart(df, cl);
 }
