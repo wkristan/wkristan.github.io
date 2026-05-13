@@ -119,6 +119,9 @@ function drawFdist() {
     }
     
     var layout = {
+        title: {
+            text: "F distribution"
+        },
         xaxis: {
             title: "F value"
         },
