@@ -23,11 +23,11 @@ function drawChart() {
         title: '1,000 parent/offspring measurements',
         xaxis: {
             title: 'Parent length',
-            range: [60,140]
+            range: [60,145]
         },
         yaxis: {
             title: 'Offspring length',
-            range: [60, 140]
+            range: [60, 145]
         }
     }
     
