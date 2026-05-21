@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>Mahalanobis distance</title>
+    <link href="https://wkristan.github.io/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="https://wkristan.github.io/main.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/mathjs@11.2.1/lib/browser/math.js"></script>
+    <script type="text/javascript" src="mahalanobis.js"></script>
+    <style>
+      .vertical_slider {
+      	-webkit-appearance: slider-vertical
+      }
+    </style>
+  </head>
+  <body onload="drawScatterplot()">
+    <h2> Mahalanobis distances </h2>
+    <p>Mahalanobis distances, D<sup>2</sup>, measure the distance of
+      multivariate data points from where they would be expected to fall given
+      the correlations between variables. Below you can set the value of the
+      data point on two variables, set the correlation coefficient between the
+      variables, and then see how D<sup>2</sup> changes in response.</p>
+    <ul>
+    </ul>
+    <div id="correlation_wrapper_div" style="float: left; border: solid black 4px; margin-right: 20px; margin-bottom: 20px; padding: 5px; width: 550px;">
+      <p>Slide to set r: <input id="r_val" min="-0.99" max="0.99" value="0.686"
+          step="0.01" oninput="drawScatterplot()" style="width: 200px;" type="range"></p>
+      <input class="vertical_slider" id="wingspan_pt" min="227" max="263" value="262.348"
+        step="0.1" oninput="drawScatterplot()" orient="vertical" style="float:left; height: 300px; margin-top: 40px"
+        type="range">
+      <div id="chart_div" style="width: 400px; height: 400px; float:left"></div>
+      <p> <input id="tot_length_pt" min="150" max="170" value="169.8" step="0.1"
+          oninput="drawScatterplot()" style="width:250px; margin-left:200px" type="range">
+      </p>
+      <div id="histo" style="width: 500px; height: 250px"> </div>
+    </div>
+    <div id="mahal_div" style="float: left; border: solid black 4px; margin-right: 20px; margin-bottom: 20px; width: 700px; padding: 10px">
+      <p> The Mahalanobis distance formula is:</p>
+      <img src="mahalanobis.png" alt="Formula" style="width: 220px; height: 39px;">
+      <p>D<sup>2</sup> is calculated using a vector of differences between the
+        data values and the means of the variables, which for this example are:</p>
+      <p><math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+          <semantics>
+            <mrow>
+              <mstyle mathvariant="bold">
+                <mrow>
+                  <mi>v</mi>
+                  <mo stretchy="false">−</mo>
+                  <mi>μ</mi> </mrow> </mstyle>
+              <mo stretchy="false">=</mo>
+              <mrow>
+                <mrow>
+                  <mo fence="true" form="prefix" stretchy="true">[</mo>
+                  <mrow>
+                    <mtable>
+                      <mtr>
+                        <mtd>
+                          <mn><span id="pt_v1">170</span></mn> </mtd> </mtr>
+                      <mtr>
+                        <mtd>
+                          <mn><span id="pt_v2">260</span></mn> </mtd> </mtr> </mtable>
+                  </mrow>
+                  <mo fence="true" form="postfix" stretchy="true">]</mo> </mrow>
+                <mo stretchy="false">−</mo>
+                <mrow>
+                  <mo fence="true" form="prefix" stretchy="true">[</mo>
+                  <mrow>
+                    <mtable>
+                      <mtr>
+                        <mtd>
+                          <mn>159.79</mn> </mtd> </mtr>
+                      <mtr>
+                        <mtd>
+                          <mn>244.64</mn> </mtd> </mtr> </mtable> </mrow>
+                  <mo fence="true" form="postfix" stretchy="true">]</mo> </mrow>
+              </mrow>
+              <mo stretchy="false">=</mo>
+              <mrow>
+                <mo fence="true" form="prefix" stretchy="true">[</mo>
+                <mrow>
+                  <mtable>
+                    <mtr>
+                      <mtd>
+                        <mn><span class="v1_resid">10.21</span></mn> </mtd> </mtr>
+                    <mtr>
+                      <mtd>
+                        <mn><span class="v2_resid">15.36</span></mn> </mtd> </mtr>
+                  </mtable> </mrow>
+                <mo fence="true" form="postfix" stretchy="true">]</mo> </mrow>
+            </mrow> </semantics> </math> </p>
+      <p> The covariance matrix for the variables is <strong>S</strong>, which
+        is:</p>
+      <p><math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+          <semantics>
+            <mrow>
+              <mstyle mathvariant="bold">
+                <mi>S</mi> </mstyle>
+              <mo stretchy="false">=</mo>
+              <mrow>
+                <mo fence="true" form="prefix" stretchy="true">[</mo>
+                <mrow>
+                  <mtable>
+                    <mtr>
+                      <mtd>
+                        <msubsup>
+                          <mi>s</mi>
+                          <mn>1</mn>
+                          <mn>2</mn> </msubsup> </mtd>
+                      <mtd>
+                        <msub>
+                          <mi mathvariant="italic">cov</mi>
+                          <mrow>
+                            <mn>1</mn>
+                            <mi>,</mi>
+                            <mn>2</mn> </mrow> </msub> </mtd> </mtr>
+                    <mtr>
+                      <mtd>
+                        <msub>
+                          <mi mathvariant="italic">cov</mi>
+                          <mrow>
+                            <mn>1</mn>
+                            <mi>,</mi>
+                            <mn>2</mn> </mrow> </msub> </mtd>
+                      <mtd>
+                        <msubsup>
+                          <mi>s</mi>
+                          <mn>2</mn>
+                          <mn>2</mn> </msubsup> </mtd> </mtr> </mtable> </mrow>
+                <mo fence="true" form="postfix" stretchy="true">]</mo> </mrow>
+              <mo stretchy="false">=</mo>
+              <mrow>
+                <mo fence="true" form="prefix" stretchy="true">[</mo>
+                <mrow>
+                  <mtable>
+                    <mtr>
+                      <mtd>
+                        <mn>11.90</mn> </mtd>
+                      <mtd>
+                        <mn><span class="covar">14.31</span></mn> </mtd> </mtr>
+                    <mtr>
+                      <mtd>
+                        <mn><span class="covar">14.31</span></mn> </mtd>
+                      <mtd>
+                        <mn>37.21</mn> </mtd> </mtr> </mtable> </mrow>
+                <mo fence="true" form="postfix" stretchy="true">]</mo> </mrow>
+            </mrow> </semantics> </math> </p>
+      <p>Inverting <strong>S</strong> gives us <strong>S</strong><sup>-1</sup>,
+        which is:</p>
+      <p><math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+          <semantics>
+            <mrow>
+              <mstyle mathvariant="bold">
+                <msup>
+                  <mi>S</mi>
+                  <mrow>
+                    <mo stretchy="false">−</mo>
+                    <mn>1</mn> </mrow> </msup> </mstyle>
+              <mo stretchy="false">=</mo>
+              <mrow>
+                <mo fence="true" form="prefix" stretchy="true">[</mo>
+                <mrow>
+                  <mtable>
+                    <mtr>
+                      <mtd>
+                        <mn><span class="v1_inv">0.156</span></mn> </mtd>
+                      <mtd>
+                        <mrow>
+                          <mn><span class="covar_inv">-0.06</span></mn> </mrow>
+                      </mtd> </mtr>
+                    <mtr>
+                      <mtd>
+                        <mrow>
+                          <mn><span class="covar_inv">-0.06</span></mn> </mrow>
+                      </mtd>
+                      <mtd>
+                        <mn><span class="v2_inv">0.05</span></mn> </mtd> </mtr>
+                  </mtable> </mrow>
+                <mo fence="true" form="postfix" stretchy="true">]</mo> </mrow>
+            </mrow> </semantics> </math> </p>
+      <p>D<sup>2</sup> is then:</p>
+      <p><math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+          <semantics>
+            <mrow>
+              <mrow>
+                <msup>
+                  <mi>D</mi>
+                  <mn>2</mn> </msup>
+                <mo stretchy="false">=</mo>
+                <mrow>
+                  <mo fence="true" form="prefix" stretchy="true">[</mo>
+                  <mrow>
+                    <mtable>
+                      <mtr>
+                        <mtd>
+                          <mn><span class="v1_resid">10.21</span></mn> </mtd>
+                        <mtd>
+                          <mn><span class="v2_resid">15.36</span></mn> </mtd> </mtr>
+                    </mtable> </mrow>
+                  <mo fence="true" form="postfix" stretchy="true">]</mo> </mrow>
+              </mrow>
+              <mrow>
+                <mo fence="true" form="prefix" stretchy="true">[</mo>
+                <mrow>
+                  <mtable>
+                    <mtr>
+                      <mtd>
+                        <mn><span class="v1_inv">0.156</span></mn> </mtd>
+                      <mtd>
+                        <mrow>
+                          <mn><span class="covar_inv">-0.06</span></mn> </mrow>
+                      </mtd> </mtr>
+                    <mtr>
+                      <mtd>
+                        <mrow>
+                          <mn><span class="covar_inv">-0.06</span></mn> </mrow>
+                      </mtd>
+                      <mtd>
+                        <mn><span class="v2_inv">0.05</span></mn> </mtd> </mtr>
+                  </mtable> </mrow>
+                <mo fence="true" form="postfix" stretchy="true">]</mo> </mrow>
+              <mrow>
+                <mrow>
+                  <mo fence="true" form="prefix" stretchy="true">[</mo>
+                  <mrow>
+                    <mtable>
+                      <mtr>
+                        <mtd>
+                          <mn><span class="v1_resid">10.21</span></mn> </mtd> </mtr>
+                      <mtr>
+                        <mtd>
+                          <mn><span class="v2_resid">15.36</span></mn> </mtd> </mtr>
+                    </mtable> </mrow>
+                  <mo fence="true" form="postfix" stretchy="true">]</mo> </mrow>
+                <mo stretchy="false">=</mo>
+                <mn><span id="d2">9.21</span></mn> </mrow> </mrow> </semantics>
+        </math> </p>
+      <p>In this example the means of the variables and their variances are
+        always the same, and only the data point and correlation between the
+        variables can change the Mahalanobis distance.</p>
+    </div>
+  </body>
+</html>
