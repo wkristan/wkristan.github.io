@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Scatterplot with Draggable Means</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f7f6;
+            margin-top: 20px;
+        }
+        canvas {
+            border: 2px solid #333;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            cursor: crosshair;
+        }
+        .controls {
+            margin-top: 15px;
+            text-align: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Interactive Scatterplot</h2>
+    <canvas id="canvas" width="1200" height="800"></canvas>
+
+    <div class="controls">
+        <p><strong>Instructions:</strong> Click and drag the large <strong>red point</strong> to change the dataset means. Data regenerates when you release the mouse.</p>
+        <button onclick="generateData()">Regenerate Data with Current Means</button>
+    </div>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Chart Dimensions and Bounds
+    const padding = 50;
+    const width = canvas.width;
+    const height = canvas.height;
+    const minVal = 0;
+    const maxVal = 100;
+
+    let points = [];
+    // Initial Mean Values
+    let meanX = 50;
+    let meanY = 50;
+
+    let isDraggingMean = false;
+    const meanRadius = 12;
+
+    // Convert data coordinate to canvas pixel coordinate
+    function getCanvasX(val) {
+        return padding + (val / maxVal) * (width - 2 * padding);
+    }
+
+    function getCanvasY(val) {
+        return height - padding - (val / maxVal) * (height - 2 * padding);
+    }
+
+    // Convert canvas pixel to data coordinate
+    function getDataX(pixelX) {
+        return ((pixelX - padding) / (width - 2 * padding)) * maxVal;
+    }
+
+    function getDataY(pixelY) {
+        return ((height - padding - pixelY) / (height - 2 * padding)) * maxVal;
+    }
+
+    // Standard Normal Distribution (Box-Muller transform)
+    function boxMullerRandom() {
+        let u = 0, v = 0;
+        while(u === 0) u = Math.random(); // Converting [0,1) to (0,1)
+        while(v === 0) v = Math.random();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    // Generate random data based on current mean and standard deviation
+    function generateData() {
+        points = [];
+        const numPoints = 100;
+        const stdDev = 12; // Standard deviation
+
+        for (let i = 0; i < numPoints; i++) {
+            let x = boxMullerRandom() * stdDev + meanX;
+            let y = boxMullerRandom() * stdDev + meanY;
+
+            // Clamp points to stay within visual grid boundaries
+            x = Math.max(minVal, Math.min(maxVal, x));
+            y = Math.max(minVal, Math.min(maxVal, y));
+
+            points.push({ x: x, y: y });
+        }
+        draw();
+    }
+
+    // Draw the entire scene
+    function draw() {
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+
+        // Draw Axes
+        ctx.beginPath();
+        ctx.moveTo(padding, height - padding);
+        ctx.lineTo(width - padding, height - padding); // X-Axis
+        ctx.moveTo(padding, padding);
+        ctx.lineTo(padding, height - padding); // Y-Axis
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw Labels & Grid lines
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#666';
+        ctx.textAlign = 'center';
+
+        // X-axis steps
+        for (let i = 0; i <= maxVal; i += 25) {
+            let cx = getCanvasX(i);
+            ctx.fillText(i, cx, height - padding + 20);
+            ctx.beginPath();
+            ctx.moveTo(cx, padding);
+            ctx.lineTo(cx, height - padding);
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.stroke();
+        }
+
+        // Y-axis steps
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= maxVal; i += 25) {
+            let cy = getCanvasY(i);
+            ctx.fillText(i, padding - 10, cy + 4);
+            ctx.beginPath();
+            ctx.moveTo(padding, cy);
+            ctx.lineTo(width - padding, cy);
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.stroke();
+        }
+
+        // Draw scatter points
+        ctx.fillStyle = 'rgba(70, 130, 180, 0.7)'; // Steel blue
+        points.forEach(p => {
+            let cx = getCanvasX(p.x);
+            let cy = getCanvasY(p.y);
+            ctx.beginPath();
+            ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+            ctx.fill();
+        });
+
+        // Draw mean indicators (Dotted lines from the axes)
+        const meanCx = getCanvasX(meanX);
+        const meanCy = getCanvasY(meanY);
+
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(padding, meanCy); ctx.lineTo(meanCx, meanCy); // Mean Y line
+        ctx.moveTo(meanCx, height - padding); ctx.lineTo(meanCx, meanCy); // Mean X line
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset line dash
+
+        // Draw Mean handle (the draggable red dot)
+        ctx.beginPath();
+        ctx.arc(meanCx, meanCy, meanRadius, 0, Math.PI * 2);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+        ctx.strokeStyle = 'darkred';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Mean value text
+        ctx.fillStyle = 'black';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(`Mean: (${meanX.toFixed(1)}, ${meanY.toFixed(1)})`, meanCx, meanCy - 20);
+    }
+
+    // --- Drag and Drop Event Listeners ---
+
+    canvas.addEventListener('mousedown', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const meanCx = getCanvasX(meanX);
+        const meanCy = getCanvasY(meanY);
+
+        // Calculate distance from mouse to the mean center point
+        const dist = Math.sqrt((mouseX - meanCx) ** 2 + (mouseY - meanCy) ** 2);
+
+        // If clicked on or very close to the mean point, start dragging
+        if (dist <= meanRadius + 5) {
+            isDraggingMean = true;
+        }
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (!isDraggingMean) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // Convert pixel to data, ensure bounds
+        let newX = getDataX(mouseX);
+        let newY = getDataY(mouseY);
+
+        // Keep mean within the chart bounds
+        meanX = Math.max(minVal, Math.min(maxVal, newX));
+        meanY = Math.max(minVal, Math.min(maxVal, newY));
+
+        draw(); // Update visuals immediately while dragging
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        if (isDraggingMean) {
+            isDraggingMean = false;
+            generateData(); // Regenerate random data once drag is complete
+        }
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+        if (isDraggingMean) {
+            isDraggingMean = false;
+            generateData();
+        }
+    });
+
+    // Initialize
+    generateData();
+</script>
+
+</body>
+</html>
