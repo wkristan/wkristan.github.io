@@ -26,6 +26,7 @@ var pca1 = {
     mode: 'lines',
     name: 'PCA1',
     type: 'scatter3d',
+    visible: 'legendonly',
     line: {
         width: 12
     },
@@ -39,6 +40,7 @@ var pca2 = {
     mode: 'lines',
     name: 'PCA2',
     type: 'scatter3d',
+    visible: 'legendonly',
     line: {
         width: 8
     },
@@ -52,6 +54,7 @@ var pca3 = {
     mode: 'lines',
     name: 'PCA3',
     type: 'scatter3d',
+    visible: 'legendonly',
     line: {
         width: 4
     },
