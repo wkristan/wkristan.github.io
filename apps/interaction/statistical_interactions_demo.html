@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Statistical Interaction Demo</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label { display:block; margin-top:10px; }
+    table { border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 6px 10px; border: 1px solid #ccc; text-align: right; }
+    th:first-child, td:first-child { text-align: left;}
+    input[type="number"] {width:50px;}
+  </style>
+  </head>
+  <body>
+    <h2>Alcohol × Opioid Interaction</h2>
+    <div id="plot" style="width:800px;height:450px;"></div>
+    <div>
+      <p>Baseline HR: <input id="baseline" value="80" type="number"></p>
+      <p>Alcohol effect: <input id="alcohol" value="-5" step="0.1" type="number">,
+      Opioid effect: <input id="opioid" value="-10" step="0.1" type="number">,
+      Interaction: <input id="interaction" value="-10" step="0.1" type="number">
+      </p>
+    </div>
+    <h3>ANOVA Table</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th>SS</th>
+          <th>df</th>
+          <th>MS</th>
+          <th>F</th>
+          <th>p</th>
+        </tr>
+      </thead>
+      <tbody id="anova">
+      </tbody>
+    </table>
+    <script>
+function erf(x) {
+  const sign = x >= 0 ? 1 : -1;
+  x = Math.abs(x);
+  const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741,
+        a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+  const t = 1.0 / (1.0 + p * x);
+  const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  return sign * y;
+}
+
+function normalCDF(x) {
+  return 0.5 * (1 + erf(x / Math.sqrt(2)));
+}
+
+function pFromFApprox(F) {
+  if (F <= 0) return 1;
+  const z = Math.sqrt(F);
+  return Math.max(0, Math.min(1, 2 * (1 - normalCDF(z))));
+}
+
+function update(){
+  const b=+baseline.value;
+  const a=+alcohol.value;
+  const o=+opioid.value;
+  const i=+interaction.value;
+
+  const m00=b;
+  const m10=b+a;
+  const m01=b+o;
+  const m11=b+a+o+i;
+
+  const alcoholMarg=[(m00+m01)/2,(m10+m11)/2];
+  const opioidNo=(m00+m10)/2;
+  const opioidYes=(m01+m11)/2;
+
+  const traces=[
+    {x:[0.5,1], y:[m00,m10], mode:"lines+markers", name:"No opioid", marker: {size:10}},
+    {x:[0.5,1], y:[m01,m11], mode:"lines+markers", name:"Opioid", marker: {size:10}},
+    {x:[0.5,1], y:alcoholMarg, mode:"markers", name:"Alcohol marginal",
+     marker:{symbol:"diamond-open",size:12}, visible: "legendonly"},
+    {x:[0.75,0.75], y:[opioidNo,opioidYes], mode:"markers", name:"Opioid marginal",
+     marker:{symbol:"diamond-open-dot",size:12}, visible: "legendonly"}
+  ];
+
+  const layout={
+    xaxis:{tickvals:[0.5,1], ticktext:["No Alcohol","Alcohol"], title: "Alcohol treatment", range:[0.3,1.3]},
+    yaxis:{title: "Heart rate", range:[50,85]},
+    title:"Interaction Plot"
+  };
+
+  Plotly.react("plot",traces,layout);
+
+  // ANOVA calculations (balanced 2x2)
+  const n=20;
+  const mse=200;
+
+  const ssA = n*Math.pow((m10+m11-m00-m01),2);
+  const ssO = n*Math.pow((m01+m11-m00-m10),2);
+  const ssI = n*Math.pow((m11-m10-m01+m00),2);
+
+  const dfE = 4*(n-1);
+
+  function fmt(x){return x.toFixed(3);}
+  function row(name,ss){
+    const ms=ss;
+    const F=ms/mse;
+    const p=pFromFApprox(F);
+    return [name,fmt(ss),1,fmt(ms),fmt(F),p<0.001?"<0.001":fmt(p)];
+  }
+
+  const rows=[
+    row("Alcohol",ssA),
+    row("Opioid",ssO),
+    row("Alcohol × Opioid",ssI),
+    ["Error",fmt(mse*dfE),dfE,fmt(mse),"",""]
+  ];
+
+  const tbody=document.getElementById("anova");
+  tbody.innerHTML="";
+  rows.forEach(r=>{
+    const tr=document.createElement("tr");
+    r.forEach(c=>{
+      const td=document.createElement("td");
+      td.innerHTML=c;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+document.querySelectorAll("input").forEach(e=>e.oninput=update);
+update();
+</script>
+  </body>
+</html>
