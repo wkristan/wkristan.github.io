@@ -3,8 +3,8 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
     <title>Interactive Hotelling's T²</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jstat@latest/dist/jstat.min.js"></script>
     <style>
     :root {
       --bg: #f8fafc;
@@ -159,7 +159,7 @@
 
     .stats-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
       margin-top: 16px;
     }
@@ -246,27 +246,30 @@
               <input id="rho2" min="-0.95" max="0.95" step="0.01" value="-0.35" type="range"> </div>
           </div>
           <div class="card panel">
+            <div class="metric-header">
+              <div class="metric-title">Hotelling’s T²</div>
+              <span class="badge primary" id="t2Badge">T² = —</span> </div>
             <div class="stats-grid">
               <div class="stat blue">
-                <div class="stat-name">Group 1 centroid</div>
+                <div class="stat-name">Group 1 mean</div>
                 <div class="stat-value" id="mean1">—</div>
               </div>
               <div class="stat red">
-                <div class="stat-name">Group 2 centroid</div>
+                <div class="stat-name">Group 2 mean</div>
                 <div class="stat-value" id="mean2">—</div>
               </div>
               <div class="stat">
-                <div class="stat-name">Difference in centroids</div>
+                <div class="stat-name">Mean difference</div>
                 <div class="stat-value" id="meanDiff">—</div>
               </div>
-            </div>
-            <div class="formula" id="covarianceText">Sₚ = —</div>
-            <div class="stat">
+              <div class="stat">
                 <div class="stat-name">Equivalent F</div>
                 <div class="stat-value" id="fValue">—</div>
                 <div class="stat-name">p-value</div>
-                <div class="stat-value" id="pval">—</div>
+                <div class="stat-value" id="pvalue">-</div>
+              </div>
             </div>
+            <div class="formula" id="covarianceText">Sₚ = —</div>
           </div>
         </aside>
       </section>
@@ -433,7 +436,7 @@
       const d = [m1[0] - m2[0], m1[1] - m2[1]];
       const sp = pooledCov(a, b);
       const inv = inv2(sp);
-      if (!inv) return { t2: NaN, f: NaN, sp, d, m1, m2 };
+      if (!inv) return { t2: NaN, f: NaN, pval: NaN, sp, d, m1, m2 };
 
       const q =
         d[0] * (inv[0][0] * d[0] + inv[0][1] * d[1]) +
@@ -442,8 +445,9 @@
       const t2 = (n1 * n2) / (n1 + n2) * q;
       const p = 2;
       const f = ((n1 + n2 - p - 1) / ((n1 + n2 - 2) * p)) * t2;
-      const pval = 1-jStat.centralF.cdf(f, p, 60-p);
-      return { t2, f, sp, d, m1, m2 , pval};
+      const pval = 1-jStat.centralF.cdf(f, p, n1+n2-p-1);
+
+      return { t2, f, pval, sp, d, m1, m2 };
     }
 
     function fmt(x, digits = 3) {
@@ -525,14 +529,16 @@
     }
 
     function updateStats(stats) {
+      document.getElementById("t2Badge").textContent = `T² = ${fmt(stats.t2, 3)}`;
       document.getElementById("mean1").textContent = pairFmt(stats.m1, 2);
       document.getElementById("mean2").textContent = pairFmt(stats.m2, 2);
       document.getElementById("meanDiff").textContent = pairFmt(stats.d, 2);
       document.getElementById("fValue").textContent = fmt(stats.f, 3);
+      document.getElementById("pvalue").textContent = fmt(stats.pval, 6);
       document.getElementById("covarianceText").innerHTML =
-        `Sₚ =  ` + arrayToMathML(stats.sp) + `<br><br>` +
-        `T² = n₁n₂/(n₁+n₂) · d′Sₚ⁻¹d = ` + stats.t2.toFixed(3);
-      document.getElementById("pval").innerHTML = stats.pval.toFixed(4);
+        `Sₚ = [[${fmt(stats.sp[0][0])}, ${fmt(stats.sp[0][1])}],<br>` +
+        `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[${fmt(stats.sp[1][0])}, ${fmt(stats.sp[1][1])}]]<br><br>` +
+        `T² = n₁n₂/(n₁+n₂) · d′Sₚ⁻¹d`;
     }
 
     function update() {
@@ -557,25 +563,6 @@
       renderCentroid(centroid1El, centroid1, "#1d4ed8", "Group 1 centroid", 1);
       renderCentroid(centroid2El, centroid2, "#b91c1c", "Group 2 centroid", 2);
       updateStats(stats);
-    }
-
-    function arrayToMathML(array) {
-      // Start the MathML structure
-      let mathML = '<math xmlns="http://w3.org" display="inline">';
-      mathML += '<mrow><mo fence="true" form="prefix" stretchy="true">[</mo><mrow><mtable>';
-
-      // Map each row to an <mtr> element
-      array.forEach(row => {
-      mathML += '<mtr>';
-      // Map each cell to an <mtd> element with an <mn> for the number
-      row.forEach(cell => {
-        mathML += `<mtd><mn>${cell.toFixed(2)}</mn></mtd>`;
-        });
-        mathML += '</mtr>';
-      });
-
-      mathML += '</mtable></mrow><mo fence="true" form="postfix" stretchy="true">]</mo></mrow></semantics></math>';
-      return mathML;
     }
 
     plot.addEventListener("pointermove", (event) => {
