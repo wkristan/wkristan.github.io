@@ -21,6 +21,8 @@ function drawChart() {
 
     var layout = {
         title: '1,000 parent/offspring measurements',
+        width: 325,
+        height: 350,
         xaxis: {
             title: 'Parent length',
             range: [60,145]
@@ -30,7 +32,7 @@ function drawChart() {
             range: [60, 145]
         }
     }
-    
+
     Plotly.newPlot('chart_div', [scatter], layout);
        
 
