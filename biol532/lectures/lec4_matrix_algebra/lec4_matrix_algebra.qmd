@@ -1,0 +1,941 @@
+---
+title: "Matrix algebra"
+engine: knitr
+output-dir: output
+format:
+  live-revealjs:
+    slide-number: c/t
+    title-slide-attributes:
+      data-background-iframe: "matrix_bg/matrix.html"
+    embed-resources: true
+    theme: [serif, custom.scss]
+    navigation-mode: vertical
+    controls-layout: bottom-right
+    controls-tutorial: true
+    header-includes: |
+      <style>
+        .reveal .redact { 
+          color: black; 
+          text-decoration: underline; 
+          text-decoration-color: transparent;
+        }
+      </style>
+---
+
+{{< include ./_extensions/r-wasm/live/_knitr.qmd >}}
+
+# Matrix algebra and multivariate analysis
+
+- Multivariate analysis will be either:
+
+  - Analysis of the structure of [measured variables]{.redact}
+
+  - Extensions of univariate methods to [multivariate]{.redact} responses
+
+- Matrix algebra is needed for both
+
+  - Matrix algebra = methods for algebraic operations on matrices of numbers
+
+  - Multivariate response variables are a matrix of numbers
+
+- You should know a little about how it works
+
+# Example: calculating a correlation matrix
+
+:::::: columns
+::: {.column width="50%"}
+- Matrix of correlations between pairs of variables
+
+  - Variables in both rows and columns
+
+  - Diagonal = variables correlated with themselves
+:::
+
+:::: {.column width="50%"}
+::: {style="font-size:0.6em"}
+```{webr}
+
+data(iris)
+subset(iris, Species == "versicolor")[1:10,1:4] -> versicolor
+cor(versicolor)
+
+```
+:::
+::::
+::::::
+
+- Every correlation appears twice
+
+- Why?
+
+## Correlations one at a time
+
+<br>
+
+::: {style="font-size:0.75em"}
++---------------------------------------------+-----------------------------------+--------------------------------------+
+| Calculation                                 | Same variable                     | Different variables                  |
++=============================================+:=================================:+:====================================:+
+| Sums of Squares (SS) or cross-products (CP) | $SS=\sum(x_i-\bar{x})^2$          | $SCP=\sum(x_i-\bar{x})(y_i-\bar{y})$ |
+|                                             |                                   |                                      |
+|                                             | $=\sum(x_i-\bar{x})(x_i-\bar{x})$ |                                      |
++---------------------------------------------+-----------------------------------+--------------------------------------+
+| Variance or covariance                      | $s^2=\frac{SS}{n-1}$              | $cov(x,y)=\frac{SCP}{n-1}$           |
++---------------------------------------------+-----------------------------------+--------------------------------------+
+| Divide by product of standard deviations    | $r=\frac{s^2}{s_x s_x} = 1$       | $r = \frac{cov(x,y)}{s_x s_y}$       |
++---------------------------------------------+-----------------------------------+--------------------------------------+
+:::
+
+[These calculations done for each]{.asides}[pair of variables]{.asides .redact}
+
+## Correlations all at once
+
+- Calculate matrix of SS and CP
+
+  - Means subtracted from data points [⟵ matrix subtraction]{.asides}
+
+  - Multiply transposed differences [⟵ matrix transpose, multiplication]{.asides}\
+    by differences
+
+- Calculate matrix of variances and covariances (**S**)
+
+  - Divide SSCP matrix by df [⟵ scalar division]{.asides}
+
+- Divide **S** by product of [⟵ matrix multiply by inverse of S]{.asides}\
+  standard deviations
+
+- Need some matrix algebra
+
+# Matrices
+
+:::::: columns
+::: {.column width="68%"}
+- A **matrix** = numbers arranged in rows and columns
+
+- Symbolized by bold capital letters (**A**)
+:::
+
+::: {.column width="2%"}
+:::
+
+::: {.column width="30%"}
+$$\textbf A = 
+\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix}$$
+:::
+::::::
+
+- Dimensions of a matrix = number of rows x number of columns
+
+  - **A** is a [2x2 matrix]{.redact}
+
+- Individual numbers are **elements** of the matrix
+
+  - Referred to by r,c index
+
+  - Element 2,1 of **A** is [c]{.redact}
+
+## Vectors, scalars
+
+::::: columns
+::: {.column width="50%"}
+- A vector = matrix with only one row or column
+
+  - One row = row vector (**r** is 1x2)
+
+  - One column = column vector (**c** is 2x1)
+:::
+
+::: {.column width="50%"}
+$$\textbf r=\begin{bmatrix}
+a & b \\
+\end{bmatrix}$$
+
+$$\textbf c=\begin{bmatrix}
+a \\
+b \\
+\end{bmatrix}$$
+:::
+:::::
+
+- Symbolized with bold, lower-case letters
+
+- **Scalar** is a single value, like s = 5
+
+## Matrix addition or subtraction
+
+::::::: {style="font-size:0.65em; text-align:center"}
+:::::: columns
+::: {.column width="50%"}
+*Add a scalar to a matrix*
+
+$$1+\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix} = \begin{bmatrix}
+1+a & 1+b \\
+1+c & 1+d \\
+\end{bmatrix}$$
+:::
+
+::: {.column width="50%"}
+*Subtract a scalar from a matrix*
+
+$$\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix} - 1 = \begin{bmatrix}
+a-1 & b-1 \\
+c-1 & d-1 \\
+\end{bmatrix}$$
+:::
+
+::: {.column width="100%"}
+*Add two matrices*
+
+$$\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix} + 
+\begin{bmatrix}
+e & f \\
+g & h \\
+\end{bmatrix} = \begin{bmatrix}
+a+e & b+f \\
+c+g & d+h \\
+\end{bmatrix}$$
+
+<br> *Subtract two matrices*
+
+$$\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix} - 
+\begin{bmatrix}
+e & f \\
+g & h \\
+\end{bmatrix} = \begin{bmatrix}
+a-e & b-f \\
+c-g & d-h \\
+\end{bmatrix}$$
+:::
+::::::
+:::::::
+
+[*Let's get started with the iris data*]{.asides}
+
+# Correlations all at once: steps
+
+- [Calculate matrix of SS and CP]{style="color:red"}
+
+- Calculate matrix of variances and covariances (**Σ**)
+
+- Divide **Σ** by product of standard deviations
+
+## Subtract means from data
+
+::::::::: {style="font-size:0.6em"}
+:::::::: columns
+::: {.column width="30%"}
+| $SL$ | $SW$ | $PL$ | $PW$ |
+|:----:|:----:|:----:|:----:|
+| 7.0  | 3.2  | 4.7  | 1.4  |
+| 6.4  | 3.2  | 4.5  | 1.5  |
+| 6.9  | 3.1  | 4.9  | 1.5  |
+| 5.5  | 2.3  | 4.0  | 1.3  |
+| 6.5  | 2.8  | 4.6  | 1.5  |
+| 5.7  | 2.8  | 4.5  | 1.3  |
+| 6.3  | 3.3  | 4.7  | 1.6  |
+| 4.9  | 2.4  | 3.3  | 1.0  |
+| 6.6  | 2.9  | 4.6  | 1.3  |
+| 5.2  | 2.7  | 3.9  | 1.4  |
+
+***Matrix of data***
+:::
+
+::: {.column width="5%"}
+[-]{style="font-size:2em; display: flex; align-items: center; height: 500px;"}
+:::
+
+::: {.column width="30%"}
++-----------------+-----------------+-----------------+-----------------+
+| $\overline{SL}$ | $\overline{SW}$ | $\overline{PL}$ | $\overline{PW}$ |
++:===============:+:===============:+:===============:+:===============:+
+| 6.1             | 2.87            | 4.37            | 1.38            |
++-----------------+-----------------+-----------------+-----------------+
+| 6.1             | 2.87            | 4.37            | 1.38            |
++-----------------+-----------------+-----------------+-----------------+
+| 6.1             | 2.87            | 4.37            | 1.38            |
++-----------------+-----------------+-----------------+-----------------+
+| 6.1             | 2.87            | 4.37            | 1.38            |
++-----------------+-----------------+-----------------+-----------------+
+| 6.1             | 2.87            | 4.37            | 1.38            |
++-----------------+-----------------+-----------------+-----------------+
+| 6.1             | 2.87            | 4.37            | 1.38            |
++-----------------+-----------------+-----------------+-----------------+
+| 6.1             | 2.87            | 4.37            | 1.38            |
++-----------------+-----------------+-----------------+-----------------+
+| 6.1             | 2.87            | 4.37            | 1.38            |
++-----------------+-----------------+-----------------+-----------------+
+| 6.1             | 2.87            | 4.37            | 1.38            |
++-----------------+-----------------+-----------------+-----------------+
+| 6.1             | 2.87            | 4.37            | 1.38            |
++-----------------+-----------------+-----------------+-----------------+
+
+***Matrix of means***
+:::
+
+::: {.column width="5%"}
+[=]{style="font-size:2em; display: flex; align-items: center; height: 500px;"}
+:::
+
+::: {.column width="30%"}
+| $R_{SL}$ | $R_{SW}$ | $R_{PL}$ | $R_{PW}$ |
+|:--------:|:--------:|:--------:|:--------:|
+|   0.9    |   0.33   |   0.33   |   0.02   |
+|   0.3    |   0.33   |   0.13   |   0.12   |
+|   0.8    |   0.23   |   0.53   |   0.12   |
+|   -0.6   |  -0.57   |  -0.37   |  -0.08   |
+|   0.4    |  -0.07   |   0.23   |   0.12   |
+|   -0.4   |  -0.07   |   0.13   |  -0.08   |
+|   0.2    |   0.43   |   0.33   |   0.22   |
+|   -1.2   |  -0.47   |  -1.07   |  -0.38   |
+|   0.5    |   0.03   |   0.23   |  -0.08   |
+|   -0.9   |  -0.17   |  -0.47   |   0.02   |
+
+***Matrix of residuals***
+:::
+::::::::
+:::::::::
+
+[Now need to multiply residuals by themselves, and all the others]{.asides}
+
+## Matrix multiplication
+
+::: {style="font-size:0.85em"}
+*A scalar is multiplied by every element in the matrix*
+
+$$2\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix} = \begin{bmatrix}
+2a & 2b \\
+2c & 2d \\
+\end{bmatrix}$$
+
+<br>
+
+*Matrix multiplication is [not]{style="font-style:bold; color: read"} done by multiplying matching elements*
+
+$$\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix} \times 
+\begin{bmatrix}
+e & f \\
+g & h \\
+\end{bmatrix}
+\ne \begin{bmatrix}
+ae & bf \\
+cg & dh \\
+\end{bmatrix}$$
+:::
+
+## Matrix multiplication the right way
+
+- Multiply matching elements, across a row and down a column
+
+- For element 1,1 of output, multiply row 1 of left matrix by column 1 of right matrix
+
+$$\begin{bmatrix}
+a & b \\
+\dots & \dots \\
+\end{bmatrix} \times 
+\begin{bmatrix}
+e & \dots \\
+g & \dots \\
+\end{bmatrix}
+= \begin{bmatrix}
+ae + bg & \dots \\
+\dots & \dots \\
+\end{bmatrix}$$
+
+## 
+
+[element 1,2 →]{.asides} $\begin{bmatrix}
+a & b \\
+\dots & \dots \\
+\end{bmatrix} \times
+\begin{bmatrix}
+\dots & f \\
+\dots & g \\
+\end{bmatrix}
+= \begin{bmatrix}
+\dots & af+bg \\
+\dots & \dots \\
+\end{bmatrix}$
+
+<br> <br>
+
+[element 2,1 →]{.asides} $\begin{bmatrix}
+\dots & \dots \\
+c & d \\
+\end{bmatrix} \times
+\begin{bmatrix}
+e & \dots \\
+g & \dots \\
+\end{bmatrix}
+= \begin{bmatrix}
+\dots & \dots \\
+ce+dg & \dots \\
+\end{bmatrix}$
+
+## 
+
+[element 2,2 →]{.asides} $\begin{bmatrix}
+\dots & \dots \\
+c & d \\
+\end{bmatrix} \times
+\begin{bmatrix}
+\dots & f \\
+\dots & h \\
+\end{bmatrix}
+= \begin{bmatrix}
+\dots & \dots \\
+\dots & cf+dh \\
+\end{bmatrix}$
+
+<br>
+
+Complete!
+
+$$\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix} \times 
+\begin{bmatrix}
+e & f \\
+g & h \\
+\end{bmatrix}
+= \begin{bmatrix}
+ae+bg & af+bh \\
+ce+dg & cf+dh \\
+\end{bmatrix}$$
+
+## Is matrix multiplication commutative?
+
+*Is this multiplicaton:*
+
+$$\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix} \times 
+\begin{bmatrix}
+e & f \\
+g & h \\
+\end{bmatrix}
+= \begin{bmatrix}
+ae+bg & af+bh \\
+ce+dg & cf+dh \\
+\end{bmatrix}$$
+
+*the same as this one?*
+
+$$\begin{bmatrix}
+e & f \\
+g & h \\
+\end{bmatrix}\times
+\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix} 
+= \begin{bmatrix}
+ea+fc & eb+fd \\
+ga+hc & gb+hd \\
+\end{bmatrix}$$
+
+## We need SSCP
+
+- Products of residuals for SS and CP
+
+- This matrix multiplication [won't work]{.redact}...why?
+
+::::::::: columns
+:::: {.column .table-small width="47.5%"}
+::: center
+| R~SL~ | R~SW~ | R~PL~ | R~PW~ |
+|:-----:|:-----:|:-----:|:-----:|
+|  0.9  | 0.33  | 0.33  | 0.02  |
+|  0.3  | 0.33  | 0.13  | 0.12  |
+|  0.8  | 0.23  | 0.53  | 0.12  |
+| -0.6  | -0.57 | -0.37 | -0.08 |
+|  0.4  | -0.07 | 0.23  | 0.12  |
+| -0.4  | -0.07 | 0.13  | -0.08 |
+|  0.2  | 0.43  | 0.33  | 0.22  |
+| -1.2  | -0.47 | -1.07 | -0.38 |
+|  0.5  | 0.03  | 0.23  | -0.08 |
+| -0.9  | -0.17 | -0.47 | 0.02  |
+:::
+::::
+
+:::: {.column .center width="5%"}
+::: center
+[×]{style="font-size:1.5em"}
+:::
+::::
+
+:::: {.column .table-small width="47.5%"}
+::: center
+| R~SL~ | R~SW~ | R~PL~ | R~PW~ |
+|:-----:|:-----:|:-----:|:-----:|
+|  0.9  | 0.33  | 0.33  | 0.02  |
+|  0.3  | 0.33  | 0.13  | 0.12  |
+|  0.8  | 0.23  | 0.53  | 0.12  |
+| -0.6  | -0.57 | -0.37 | -0.08 |
+|  0.4  | -0.07 | 0.23  | 0.12  |
+| -0.4  | -0.07 | 0.13  | -0.08 |
+|  0.2  | 0.43  | 0.33  | 0.22  |
+| -1.2  | -0.47 | -1.07 | -0.38 |
+|  0.5  | 0.03  | 0.23  | -0.08 |
+| -0.9  | -0.17 | -0.47 | 0.02  |
+:::
+::::
+:::::::::
+
+## Transposing a matrix
+
+:::: {.absolute top="300px" left="300px"}
+::: {style="font-size:0.5em"}
+$$\xrightarrow{transpose}$$
+:::
+::::
+
+::::::::: columns
+:::: {.column width="25%"}
+::: {style="font-size:0.5em"}
+| R~SL~ | R~SW~ | R~PL~ | R~PW~ |
+|:-----:|:-----:|:-----:|:-----:|
+|  0.9  | 0.33  | 0.33  | 0.02  |
+|  0.3  | 0.33  | 0.13  | 0.12  |
+|  0.8  | 0.23  | 0.53  | 0.12  |
+| -0.6  | -0.57 | -0.37 | -0.08 |
+|  0.4  | -0.07 | 0.23  | 0.12  |
+| -0.4  | -0.07 | 0.13  | -0.08 |
+|  0.2  | 0.43  | 0.33  | 0.22  |
+| -1.2  | -0.47 | -1.07 | -0.38 |
+|  0.5  | 0.03  | 0.23  | -0.08 |
+| -0.9  | -0.17 | -0.47 | 0.02  |
+:::
+::::
+
+::: {.column width="15%"}
+:::
+
+::::: {.column width="60%"}
+::: {style="font-size:0.5em"}
+<br> <br>
+
+$\textbf A = \begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix}
+\xrightarrow{transpose}
+\textbf A^{\prime} =
+\begin{bmatrix}
+a & c \\
+b & d \\
+\end{bmatrix}$
+:::
+
+::: {style="font-size:0.5em"}
+<br> <br>
+
+|       |      |      |      |       |       |       |      |       |       |       |
+|:------|:----:|:----:|:----:|:-----:|:-----:|:-----:|:----:|:-----:|:-----:|:-----:|
+| R~SL~ | 0.90 | 0.30 | 0.80 | -0.60 | 0.40  | -0.40 | 0.20 | -1.20 | 0.50  | -0.90 |
+| R~SW~ | 0.33 | 0.33 | 0.23 | -0.57 | -0.07 | -0.07 | 0.43 | -0.47 | 0.03  | -0.17 |
+| R~PL~ | 0.33 | 0.13 | 0.53 | -0.37 | 0.23  | 0.13  | 0.33 | -1.07 | 0.23  | -0.47 |
+| R~PW~ | 0.02 | 0.12 | 0.12 | -0.08 | 0.12  | -0.08 | 0.22 | -0.38 | -0.08 | 0.02  |
+:::
+:::::
+:::::::::
+
+## Multiplying A′A looks promising...
+
+<br> *Pre-multiplying A by its transpose:* <br> <br>
+
+$\textbf A^{\prime} \textbf A =
+\begin{bmatrix}
+a & c \\
+b & d \\
+\end{bmatrix} \times
+\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix} =
+\begin{bmatrix}
+aa + cc & ab+cd \\
+ba + dc & bb + dd \\
+\end{bmatrix}$
+
+\
+Looks like some squares and some cross-products...
+
+##  {.centered-bg data-background-iframe="matrix_mult/mmult.html" background-interactive="true" data-external="1"}
+
+# Correlations all at once: steps
+
+- Calculate matrix of SS and CP
+
+- [Calculate matrix of variances and covariances (**Σ**)]{style="color:red"}
+
+- Divide **Σ** by product of standard deviations
+
+## Covariance matrix
+
+- Variance is just $\frac{SS}{df}$, and covariance is $\frac{SCP}{df}$
+- Multiplying each SSCP element by $\frac{1}{df}$ divides by df
+
+::: {style="font-size:0.5em"}
+$\begin{bmatrix}
+4.76 & 1.740 & 2.910 & 0.720\\
+1.74 & 1.041 & 1.191 & 0.384\\
+2.91 & 1.191 & 2.141 & 0.584\\
+0.72 & 0.384 & 0.584 & 0.256\\
+\end{bmatrix} \times \frac{1}{9} =
+\begin{array}{cc}
+& \text{SL} \quad \text{SW} \quad \text{PL} \quad \text{PW} \\
+\begin{array}{r}
+\text{SL} \\
+\text{SW} \\
+\text{PL} \\
+\text{PW}
+\end{array} &
+\left[
+\begin{array}{cc}
+0.53 & 0.19 & 0.32 & 0.08\\
+0.19 & 0.12 & 0.13 & 0.04\\
+0.32 & 0.13 & 0.24 & 0.06\\
+0.08 & 0.04 & 0.06 & 0.03\\
+\end{array}
+\right]
+\end{array}$
+:::
+
+- Result is the covariance matrix
+  - Variances on main diagonal, covariances on off-diagonals
+  - Symbolized as **Σ**
+
+# Correlations all at once: steps
+
+- Calculate matrix of SS and CP
+
+- Calculate matrix of variances and covariances (**Σ**)
+
+- [Divide **Σ** by product of standard deviations]{style="color:red"}
+
+## Division = multiplication by inverse
+
+- Multiplying by $\frac{1}{s}$ = dividing by s
+- Matrix equivalent:
+  - Inverting a matrix of standard deviations
+  - Pre-multiplying **Σ** by it
+  - Post-multiplying the product by it
+  - S^-1^**Σ**S^-1^
+
+## Matrix inverse
+
+- Inverse matrix = when multiplied by the original returns the identity matrix:
+
+  $$\begin{bmatrix}
+  1&0\\
+  0&1\\
+  \end{bmatrix} $$
+
+- Any matrix multiplied by the identity matrix equals itself
+  
+  - Scalar inverse: $\frac{1}{2}$ is the inverse of 2 because $\frac{1}{2}$ × 2 = 1
+  - Scalar identity: any value x 1 = itself
+
+- Finding inverses can be hard, but this one's easy
+
+## The matrix we need to invert: **C**
+
+<br>
+
+|     |  SL  |  SW  |  PL  |  PW  |
+|:----|:----:|:----:|:----:|:----:|
+| SL  | 0.73 | 0.00 | 0.00 | 0.00 |
+| SW  | 0.00 | 0.34 | 0.00 | 0.00 |
+| PL  | 0.00 | 0.00 | 0.49 | 0.00 |
+| PW  | 0.00 | 0.00 | 0.00 | 0.17 |
+
+- Standard deviations on the diagonal
+- 0 everywhere else
+
+## Using Gauss-Jordan elimination
+
+:::::::: columns
+:::: {.column width="40%"}
+::: {style="font-size:0.7em"}
+- Goal: do row operations that convert the matrix to the identity matrix
+- Repeat those operations on the identity matrix to produce the inverse
+- Dividing row elements by a constant is legal
+:::
+::::
+
+::::: {.column width="60%"}
+::: {style="font-size: 0.5em"}
+$\begin{bmatrix}
+0.73 & 0.00 & 0.00 & 0.00\\
+0.00 & 0.34 & 0.00 & 0.00\\
+0.00 & 0.00 & 0.49 & 0.00\\
+0.00 & 0.00 & 0.00 & 0.17\\
+\end{bmatrix}
+\begin{bmatrix}
+1 & 0 & 0 & 0\\
+0 & 1 & 0 & 0\\
+0 & 0 & 1 & 0\\
+0 & 0 & 0 & 1\\
+\end{bmatrix}
+\begin{matrix}
+\textit{divide row by 0.73}\\
+\textit{divide row by 0.34}\\
+\textit{divide row by 0.49}\\
+\textit{divide row by 0.17}\\
+\end{matrix}$
+:::
+
+::: {style="font-size: 0.5em"}
+<br> <br> $\begin{bmatrix}
+1 & 0 & 0 & 0\\
+0 & 1 & 0 & 0\\
+0 & 0 & 1 & 0\\
+0 & 0 & 0 & 1\\
+\end{bmatrix}
+\begin{bmatrix}
+\frac{1}{0.73} & 0.00 & 0.00 & 0.00\\
+0.00 & \frac{1}{0.34} & 0.00 & 0.00\\
+0.00 & 0.00 & \frac{1}{0.49} & 0.00\\
+0.00 & 0.00 & 0.00 & \frac{1}{0.17}\\
+\end{bmatrix}
+\begin{matrix}
+\textit{divide row by 0.73}\\
+\textit{divide row by 0.34}\\
+\textit{divide row by 0.49}\\
+\textit{divide row by 0.17}\\
+\end{matrix}$
+:::
+:::::
+::::::::
+
+[We'll call this inverse matrix C^-1^]{.asides}
+
+## Confirm that **C^-1^** is the inverse of **C**
+
+- Pre-multiply the matrix of inverses by the matrix of [standard deviations]{.redact}:
+
+::: {style="font-size:0.5em"}
+$\begin{bmatrix}
+0.73 & 0.00 & 0.00 & 0.00\\
+0.00 & 0.34 & 0.00 & 0.00\\
+0.00 & 0.00 & 0.49 & 0.00\\
+0.00 & 0.00 & 0.00 & 0.17\\
+\end{bmatrix}\times
+\begin{bmatrix}
+\frac{1}{0.73} & 0.00 & 0.00 & 0.00\\
+0.00 & \frac{1}{0.34} & 0.00 & 0.00\\
+0.00 & 0.00 & \frac{1}{0.49} & 0.00\\
+0.00 & 0.00 & 0.00 & \frac{1}{0.17}\\
+\end{bmatrix} =
+\begin{bmatrix}
+1 & 0 & 0 & 0\\
+0 & 1 & 0 & 0\\
+0 & 0 & 1 & 0\\
+0 & 0 & 0 & 1\\
+\end{bmatrix}$
+:::
+
+- It worked!
+
+## **C^-1^** **Σ** **C^-1^**
+
+<br> Pre-multiply Σ by **C^-1^** <br>
+
+::: {style="font-size:0.35em"}
+$$\begin{bmatrix}
+\color{red}{\frac{1}{0.73}} & 0.00 & 0.00 & 0.00\\
+0.00 & \color{blue}{\frac{1}{0.34}} & 0.00 & 0.00\\
+0.00 & 0.00 & \color{green}{\frac{1}{0.49}} & 0.00\\
+0.00 & 0.00 & 0.00 & \color{orange}{\frac{1}{0.17}}\\
+\end{bmatrix}\times
+\begin{bmatrix}
+0.53 & 0.19 & 0.32 & 0.08\\
+0.19 & 0.12 & 0.13 & 0.04\\
+0.32 & 0.13 & 0.24 & 0.06\\
+0.08 & 0.04 & 0.06 & 0.03\\
+\end{bmatrix} = 
+\begin{bmatrix}
+\color{red}{\frac{1}{0.73}}0.53 & \color{red}{\frac{1}{0.73}}0.19 & \color{red}{\frac{1}{0.73}}0.32 & \color{red}{\frac{1}{0.73}}0.08\\
+\color{blue}{\frac{1}{0.34}}0.19 & \color{blue}{\frac{1}{0.34}}0.12 & \color{blue}{\frac{1}{0.34}}0.13 & \color{blue}{\frac{1}{0.34}}0.04\\
+\color{green}{\frac{1}{0.49}}0.32 & \color{green}{\frac{1}{0.49}}0.13 & \color{green}{\frac{1}{0.49}}0.24 & \color{green}{\frac{1}{0.49}}0.06\\
+\color{orange}{\frac{1}{0.17}}0.08 & \color{orange}{\frac{1}{0.17}}0.04 & \color{orange}{\frac{1}{0.17}}0.06 & \color{orange}{\frac{1}{0.17}}0.03\\
+\end{bmatrix}$$
+:::
+
+<br> Post-multiply **C^-1^**Σ by **C^-1^** <br>
+
+::: {style="font-size:0.35em"}
+$$\begin{bmatrix}
+\color{red}{\frac{1}{0.73}}0.53 & \color{red}{\frac{1}{0.73}}0.19 & \color{red}{\frac{1}{0.73}}0.32 & \color{red}{\frac{1}{0.73}}0.08\\
+\color{blue}{\frac{1}{0.34}}0.19 & \color{blue}{\frac{1}{0.34}}0.12 & \color{blue}{\frac{1}{0.34}}0.13 & \color{blue}{\frac{1}{0.34}}0.04\\
+\color{green}{\frac{1}{0.49}}0.32 & \color{green}{\frac{1}{0.49}}0.13 & \color{green}{\frac{1}{0.49}}0.24 & \color{green}{\frac{1}{0.49}}0.06\\
+\color{orange}{\frac{1}{0.17}}0.08 & \color{orange}{\frac{1}{0.17}}0.04 & \color{orange}{\frac{1}{0.17}}0.06 & \color{orange}{\frac{1}{0.17}}0.03\\
+\end{bmatrix} \times
+\begin{bmatrix}
+\color{red}{\frac{1}{0.73}} & 0.00 & 0.00 & 0.00\\
+0.00 & \color{blue}{\frac{1}{0.34}} & 0.00 & 0.00\\
+0.00 & 0.00 & \color{green}{\frac{1}{0.49}} & 0.00\\
+0.00 & 0.00 & 0.00 & \color{orange}{\frac{1}{0.17}}\\
+\end{bmatrix} =
+\begin{bmatrix}
+\color{red}{\frac{1}{0.73}}0.53\color{red}{\frac{1}{0.73}} & \color{red}{\frac{1}{0.73}}0.19\color{blue}{\frac{1}{0.34}} & \color{red}{\frac{1}{0.73}}0.32\color{green}{\frac{1}{0.49}} & \color{red}{\frac{1}{0.73}}0.08\color{orange}{\frac{1}{0.17}}\\
+\color{blue}{\frac{1}{0.34}}0.19\color{red}{\frac{1}{0.73}} & \color{blue}{\frac{1}{0.34}}0.12\color{blue}{\frac{1}{0.34}} & \color{blue}{\frac{1}{0.34}}0.13\color{green}{\frac{1}{0.49}} & \color{blue}{\frac{1}{0.34}}0.04\color{orange}{\frac{1}{0.17}}\\
+\color{green}{\frac{1}{0.49}}0.32\color{red}{\frac{1}{0.73}} & \color{green}{\frac{1}{0.49}}0.13\color{blue}{\frac{1}{0.34}} & \color{green}{\frac{1}{0.49}}0.24\color{green}{\frac{1}{0.49}} & \color{green}{\frac{1}{0.49}}0.06\color{orange}{\frac{1}{0.17}}\\
+\color{orange}{\frac{1}{0.17}}0.08\color{red}{\frac{1}{0.73}} & \color{orange}{\frac{1}{0.17}}0.04\color{blue}{\frac{1}{0.34}} & \color{orange}{\frac{1}{0.17}}0.06\color{green}{\frac{1}{0.49}} & \color{orange}{\frac{1}{0.17}}0.03\color{orange}{\frac{1}{0.17}}\\
+\end{bmatrix}$$
+:::
+
+## The result is the correlation matrix
+
+<br> <br>
+
+::: {style="font-size:0.5em"}
+$$\begin{bmatrix}
+\color{red}{\frac{1}{0.73}}0.53\color{red}{\frac{1}{0.73}} & \color{red}{\frac{1}{0.73}}0.19\color{blue}{\frac{1}{0.34}} & \color{red}{\frac{1}{0.73}}0.32\color{green}{\frac{1}{0.49}} & \color{red}{\frac{1}{0.73}}0.08\color{orange}{\frac{1}{0.17}}\\
+\color{blue}{\frac{1}{0.34}}0.19\color{red}{\frac{1}{0.73}} & \color{blue}{\frac{1}{0.34}}0.12\color{blue}{\frac{1}{0.34}} & \color{blue}{\frac{1}{0.34}}0.13\color{green}{\frac{1}{0.49}} & \color{blue}{\frac{1}{0.34}}0.04\color{orange}{\frac{1}{0.17}}\\
+\color{green}{\frac{1}{0.49}}0.32\color{red}{\frac{1}{0.73}} & \color{green}{\frac{1}{0.49}}0.13\color{blue}{\frac{1}{0.34}} & \color{green}{\frac{1}{0.49}}0.24\color{green}{\frac{1}{0.49}} & \color{green}{\frac{1}{0.49}}0.06\color{orange}{\frac{1}{0.17}}\\
+\color{orange}{\frac{1}{0.17}}0.08\color{red}{\frac{1}{0.73}} & \color{orange}{\frac{1}{0.17}}0.04\color{blue}{\frac{1}{0.34}} & \color{orange}{\frac{1}{0.17}}0.06\color{green}{\frac{1}{0.49}} & \color{orange}{\frac{1}{0.17}}0.03\color{orange}{\frac{1}{0.17}}\\
+\end{bmatrix} =
+\begin{array}{cc} 
+& \text{SL} \quad \text{SW} \quad \text{PL} \quad \text{PW} \\
+\begin{array}{r}
+\text{SL} \\
+\text{SW} \\
+\text{PL} \\
+\text{PW}
+\end{array} &
+\left[
+\begin{array}{cc}
+1.00 & 0.78 & 0.91 & 0.65\\
+0.78 & 1.00 & 0.80 & 0.74\\
+0.91 & 0.80 & 1.00 & 0.79\\
+0.65 & 0.74 & 0.79 & 1.00\\
+\end{array}
+\right]
+\end{array}$$
+:::
+
+[So, mystery solved - you get a diagonal of 1s and duplicate correlations for every pair of variables because that's what comes of matrix operations]{.asides}
+
+# But why bother?
+
+- Good question! A few reasons
+  - It's an efficient way of doing calculations on many variables, especially when computers help out
+  - There is [additional information]{.redact} we can get from matrices, such as...
+
+## Generalized variance
+
+::::::: {width="100%"}
+:::::: columns
+::: {.column width="50%"}
+- **Σ** is the covariance matrix for our data
+- How much variation in flower morphology is there?
+:::
+
+:::: {.column width="50%"}
+::: {style="font-size:0.5em"}
+$$\begin{array}{cc} 
+& \text{SL} \quad \text{SW} \quad \text{PL} \quad \text{PW} \\
+\begin{array}{r}
+\text{SL} \\
+\text{SW} \\
+\text{PL} \\
+\text{PW}
+\end{array} &
+\left[
+\begin{array}{cc}
+0.53 & 0.19 & 0.32 & 0.08\\
+0.19 & 0.12 & 0.13 & 0.04\\
+0.32 & 0.13 & 0.24 & 0.06\\
+0.08 & 0.04 & 0.06 & 0.03\\
+\end{array}
+\right]
+\end{array}$$
+:::
+::::
+::::::
+:::::::
+
+- Variances on the diagonal, but covariances are \> 0, so some [shared variation]{.redact}
+- Can do a matrix operation to isolate variation that's unique to each
+
+## Matrix determinant
+
+:::::: columns
+::: {.column width="60%"}
+- Symbolized with vertical lines, \|**A**\|
+- Combines main diagonal elements, subtracts [off-diagonal]{.redact}
+- If **A** was a covariance matrix:
+  - Multiplies variances
+  - Subtracts produces of covariances
+:::
+
+::: {.column width="40%"}
+$$\textbf A = 
+\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix}$$
+
+$$ \vert A\vert = ad - bc$$
+:::
+
+::: {.column width="100%"}
+- Useful as a measure of variance across multivariate data
+:::
+::::::
+
+## Generalized variance for PL, PW
+
+::: {style="font-size:0.8em"}
+$$\Sigma = 
+\begin{array}{cc} 
+& \text{PL} \quad \text{PW} \\
+\begin{array}{r}
+\text{PL} \\
+\text{PW}
+\end{array} &
+\left[
+\begin{array}{cc}
+0.237 & 0.065\\
+0.065 & 0.028\\
+\end{array}
+\right]
+\end{array}$$
+
+$$ \vert \Sigma\vert = 0.237 \times 0.028 - 0.065 \times 0.065 = 0.0026$$
+:::
+
+- Product of variances is 0.0068, subtracting covariances reduces it to 0.0026
+- Avoids "double counting" variation shared by PL and PW
+
+# Wrap-up
+
+- Matrix algebra is fundamental to multivariate analysis
+- Used to:
+  - Make calculations on multiple variables at once
+  - Account for covariation between variables
+- We learned matrix addition/subtraction, multiplication, inversion, transposition, determinant
