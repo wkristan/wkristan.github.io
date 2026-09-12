@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Matrix multiplication</title>
+    <style>
+     .container {
+      width:800px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+      grid-template-rows: 90px 90px;
+      font-size: 1.5em;
+      text-align: center;
+		}
+      .item-1 {
+      grid-column-start:0;
+      grid-column:span 3.5;
+      grid-row-start:0;
+      grid-row:span 1;
+      padding:10px;
+		}
+		.item-2 {
+      font-size: 1.5em;
+      font-weight:bold;
+      grid-column-start:3;
+      grid-column-end:4;
+      grid-row-start:0;
+      grid-row-end:1;
+    }
+    .item-3 {
+      padding: 10px;
+      grid-column-start:4;
+      grid-column-end:5;
+      grid-row-start:0;
+      grid-row: span 2;
+    }
+    .item-4 {
+      font-size: 1.5em;
+      font-weight: bold;
+      grid-column-start:5;
+      grid-column-end:6;
+      grid-row-start:0;
+      grid-row-end:1;
+    }
+    .item-5 {
+      padding:10px;
+      grid-column-start:6;
+      grid-column-end:7;
+      grid-row-start:0;
+      grid-row-end:1;
+    }
+    .item-6 {
+      grid-column-start:6;
+      grid-column-end:7;
+      grid-row-start:1;
+      grid-row-end:2;
+    }
+    .item-7 {
+      grid.column-start:0;
+      grid-column-end:1;
+      grid-row-start:1;
+      grid-row-end:2;
+    }
+      table {
+        border-collapse: collapse;
+        border: 1px solid gray;
+      }
+      
+      th, td {
+        border: 1px dotted gray;
+        padding: 4px;
+      }
+      
+</style> </head>
+  <body>
+    <h1>Matrix multiplication of R′R</h1>
+    <div class="container">
+      <div class="item-1">
+        <h3> R′ </h3>
+        <table id="left-matrix" style="border:1px dotted gray">
+          <tbody>
+            <tr>
+              <td style="text-align:left;"> <strong>SL</strong></td>
+              <td style="text-align:center;"> 0.90 </td>
+              <td style="text-align:center;"> 0.30 </td>
+              <td style="text-align:center;"> 0.80 </td>
+              <td style="text-align:center;"> -0.60 </td>
+              <td style="text-align:center;"> 0.40 </td>
+              <td style="text-align:center;"> -0.40 </td>
+              <td style="text-align:center;"> 0.20 </td>
+              <td style="text-align:center;"> -1.20 </td>
+              <td style="text-align:center;"> 0.50 </td>
+              <td style="text-align:center;"> -0.90 </td>
+            </tr>
+            <tr>
+              <td style="text-align:left;"><strong>SW</strong></td>
+              <td style="text-align:center;"> 0.33 </td>
+              <td style="text-align:center;"> 0.33 </td>
+              <td style="text-align:center;"> 0.23 </td>
+              <td style="text-align:center;"> -0.57 </td>
+              <td style="text-align:center;"> -0.07 </td>
+              <td style="text-align:center;"> -0.07 </td>
+              <td style="text-align:center;"> 0.43 </td>
+              <td style="text-align:center;"> -0.47 </td>
+              <td style="text-align:center;"> 0.03 </td>
+              <td style="text-align:center;"> -0.17 </td>
+            </tr>
+            <tr>
+              <td style="text-align:left;"> <strong>PL</strong></td>
+              <td style="text-align:center;"> 0.33 </td>
+              <td style="text-align:center;"> 0.13 </td>
+              <td style="text-align:center;"> 0.53 </td>
+              <td style="text-align:center;"> -0.37 </td>
+              <td style="text-align:center;"> 0.23 </td>
+              <td style="text-align:center;"> 0.13 </td>
+              <td style="text-align:center;"> 0.33 </td>
+              <td style="text-align:center;"> -1.07 </td>
+              <td style="text-align:center;"> 0.23 </td>
+              <td style="text-align:center;"> -0.47 </td>
+            </tr>
+            <tr>
+              <td style="text-align:left;"><strong>PW</strong></td>
+              <td style="text-align:center;"> 0.02 </td>
+              <td style="text-align:center;"> 0.12 </td>
+              <td style="text-align:center;"> 0.12 </td>
+              <td style="text-align:center;"> -0.08 </td>
+              <td style="text-align:center;"> 0.12 </td>
+              <td style="text-align:center;"> -0.08 </td>
+              <td style="text-align:center;"> 0.22 </td>
+              <td style="text-align:center;"> -0.38 </td>
+              <td style="text-align:center;"> -0.08 </td>
+              <td style="text-align:center;"> 0.02 </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="item-2">
+        <p><br>
+          <br>
+          ×</p>
+      </div>
+      <div class="item-3">
+        <h3> R </h3>
+        <table id="right-matrix">
+          <thead>
+            <tr>
+              <th style="text-align:center;"> SL </th>
+              <th style="text-align:center;"> SW </th>
+              <th style="text-align:center;"> PL </th>
+              <th style="text-align:center;"> PW </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="text-align:center;"> 0.9 </td>
+              <td style="text-align:center;"> 0.33 </td>
+              <td style="text-align:center;"> 0.33 </td>
+              <td style="text-align:center;"> 0.02 </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;"> 0.3 </td>
+              <td style="text-align:center;"> 0.33 </td>
+              <td style="text-align:center;"> 0.13 </td>
+              <td style="text-align:center;"> 0.12 </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;"> 0.8 </td>
+              <td style="text-align:center;"> 0.23 </td>
+              <td style="text-align:center;"> 0.53 </td>
+              <td style="text-align:center;"> 0.12 </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;"> -0.6 </td>
+              <td style="text-align:center;"> -0.57 </td>
+              <td style="text-align:center;"> -0.37 </td>
+              <td style="text-align:center;"> -0.08 </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;"> 0.4 </td>
+              <td style="text-align:center;"> -0.07 </td>
+              <td style="text-align:center;"> 0.23 </td>
+              <td style="text-align:center;"> 0.12 </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;"> -0.4 </td>
+              <td style="text-align:center;"> -0.07 </td>
+              <td style="text-align:center;"> 0.13 </td>
+              <td style="text-align:center;"> -0.08 </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;"> 0.2 </td>
+              <td style="text-align:center;"> 0.43 </td>
+              <td style="text-align:center;"> 0.33 </td>
+              <td style="text-align:center;"> 0.22 </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;"> -1.2 </td>
+              <td style="text-align:center;"> -0.47 </td>
+              <td style="text-align:center;"> -1.07 </td>
+              <td style="text-align:center;"> -0.38 </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;"> 0.5 </td>
+              <td style="text-align:center;"> 0.03 </td>
+              <td style="text-align:center;"> 0.23 </td>
+              <td style="text-align:center;"> -0.08 </td>
+            </tr>
+            <tr>
+              <td style="text-align:center;"> -0.9 </td>
+              <td style="text-align:center;"> -0.17 </td>
+              <td style="text-align:center;"> -0.47 </td>
+              <td style="text-align:center;"> 0.02 </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="item-4">
+        <p> <br>
+          <br>
+          = </p>
+      </div>
+      <div class="item-5">
+        <h3> SSCP matrix </h3>
+        <table id="result-matrix" style="width:400px">
+          <tbody>
+            <tr>
+              <td style="text-align:left;"> <br>
+              </td>
+              <td style="text-align:center;">SL</td>
+              <td style="text-align:center;">SW</td>
+              <td style="text-align:center;">PL</td>
+              <td style="text-align:center;">PW</td>
+            </tr>
+            <tr>
+              <td style="text-align:left;">SL</td>
+              <td style="text-align:center;">SS<sub>SL</sub><br>
+              </td>
+              <td style="text-align:center;">SCP<sub>SL,SW</sub><br>
+              </td>
+              <td style="text-align:center;">SCP<sub>SL,PL</sub><br>
+              </td>
+              <td style="text-align:center;">SCP<sub>SL,PW</sub><br>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align:left;">SW</td>
+              <td style="text-align:center;">SCP<sub>SW,SL</sub><br>
+              </td>
+              <td style="text-align:center;">SS<sub>SW</sub><br>
+              </td>
+              <td style="text-align:center;">SCP<sub>SW,PL</sub><br>
+              </td>
+              <td style="text-align:center;">SCP<sub>SW,PW</sub><br>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align:left;">PL</td>
+              <td style="text-align:center;">SCP<sub>PL,SL</sub><br>
+              </td>
+              <td style="text-align:center;">SCP<sub>PL,SW</sub><br>
+              </td>
+              <td style="text-align:center;">SS<sub>PL</sub><br>
+              </td>
+              <td style="text-align:center;">SCP<sub>PL,PW</sub><br>
+              </td>
+            </tr>
+            <tr>
+              <td style="text-align:left;">PW</td>
+              <td style="text-align:center;">SCP<sub>PW,SL</sub><br>
+              </td>
+              <td style="text-align:center;">SCP<sub>PW,SW</sub><br>
+              </td>
+              <td style="text-align:center;">SCP<sub>PW,PL</sub><br>
+              </td>
+              <td style="text-align:center;">SS<sub>PW</sub><br>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="item-6">
+        <p> <span id="calculation"></span> </p>
+      </div>
+      <div class="item-7">
+        <p>
+          Pre-multiplying R by R&prime; gives us the SSCP matrix.
+        </p>
+      </div>
+    </div>
+    <p><br>
+    </p>
+    <script src="mmult.js"></script>
+  </body>
+</html>
