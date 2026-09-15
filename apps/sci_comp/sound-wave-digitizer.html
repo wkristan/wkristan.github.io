@@ -36,6 +36,7 @@
     .swatch { width:22px; height:3px; border-radius:5px; display:inline-block; }
     .swatch.wave { background:var(--blue); }
     .swatch.sample { background:var(--orange); }
+    .swatch.approximation { background:var(--teal); }
     .swatch.level { height:0; border-top:2px dashed #9fb1c5; }
     .tip { margin:17px 3px 0; padding:12px 14px; color:#3d536b; background:#f1f8ff; border-radius:12px; font-size:14px; }
     @media (max-width:740px) { main { margin:22px auto; } .layout { grid-template-columns:1fr; } .controls { display:grid; grid-template-columns:1fr 1fr; gap:0 20px; } .reset { grid-column:1/-1; } }
@@ -64,7 +65,7 @@
       <section class="panel visual" aria-label="Interactive graph">
         <div class="visual-head"><div class="visual-title">Continuous signal → discrete samples</div><div class="status" id="status" aria-live="polite">Drag an orange handle</div></div>
         <canvas id="graph" role="img" aria-label="A continuous sound wave with draggable, quantized sample lines"></canvas>
-        <div class="legend" aria-hidden="true"><span class="key"><i class="swatch wave"></i> continuous wave</span><span class="key"><i class="swatch sample"></i> sampled value</span><span class="key"><i class="swatch level"></i> quantization levels</span></div>
+        <div class="legend" aria-hidden="true"><span class="key"><i class="swatch wave"></i> continuous wave</span><span class="key"><i class="swatch sample"></i> sampled value</span><span class="key"><i class="swatch approximation"></i> connected approximation</span><span class="key"><i class="swatch level"></i> quantization levels</span></div>
         <div class="tip">Try reducing the bit depth or sampling rate. What kind of detail gets lost?</div>
       </section>
     </section>
@@ -85,7 +86,13 @@
     let height = 0;
     const pad = { left:48, right:20, top:26, bottom:38 };
 
-    function wave(t) { return 0.72 * Math.sin(t * Math.PI * 2 * 1.12 - 0.4) + 0.13 * Math.sin(t * Math.PI * 2 * 3.1 + 1.2); }
+    // A few harmonics make the source signal more lifelike and expose quantization error.
+    function wave(t) {
+      return 1.18 * (0.54 * Math.sin(t * Math.PI * 2 * 1.05 - 0.4)
+        + 0.20 * Math.sin(t * Math.PI * 2 * 2.8 + 1.2)
+        + 0.12 * Math.sin(t * Math.PI * 2 * 5.4 - 0.8)
+        + 0.08 * Math.sin(t * Math.PI * 2 * 9.5 + 0.3));
+    }
     function quantize(v) { const levels = 2 ** Number(bits.value); const step = 2 / (levels - 1); return Math.max(-1, Math.min(1, Math.round((v + 1) / step) * step - 1)); }
     function geometry() { const yBottom=height-pad.bottom, yTop=pad.top; return { x0:pad.left, x1:width-pad.right, y0:(yTop+yBottom)/2, yTop, yBottom, innerW:width-pad.left-pad.right, innerH:yBottom-yTop }; }
     function sx(t,g) { return g.x0 + t * g.innerW; }
@@ -106,7 +113,11 @@
       ctx.strokeStyle='#2a73d6'; ctx.lineWidth=3; ctx.beginPath();
       for(let i=0;i<=240;i++){ const t=i/240, x=sx(t,g), y=sy(wave(t),g); i?ctx.lineTo(x,y):ctx.moveTo(x,y); } ctx.stroke();
       const count=values.length;
-      for(let i=0;i<count;i++){ const x=sx(i/(count-1),g), y=sy(values[i],g); ctx.strokeStyle='#ee8b37'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x,g.y0); ctx.lineTo(x,y); ctx.stroke(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#ee8b37'; ctx.lineWidth=3; ctx.stroke(); }
+      for(let i=0;i<count;i++){ const x=sx(i/(count-1),g), y=sy(values[i],g); ctx.strokeStyle='#ee8b37'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x,g.y0); ctx.lineTo(x,y); ctx.stroke(); }
+      ctx.strokeStyle='#13a6a0'; ctx.lineWidth=3; ctx.beginPath();
+      for(let i=0;i<count;i++){ const x=sx(i/(count-1),g), y=sy(values[i],g); i ? ctx.lineTo(x,y) : ctx.moveTo(x,y); }
+      ctx.stroke();
+      for(let i=0;i<count;i++){ const x=sx(i/(count-1),g), y=sy(values[i],g); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#ee8b37'; ctx.lineWidth=3; ctx.stroke(); }
     }
     function updateLabels(){ bitsOut.textContent=`${bits.value} bits`; levelsOut.textContent=2**Number(bits.value); samplesOut.textContent=`${rate.value} samples`; }
     function pointerIndex(e){ const r=canvas.getBoundingClientRect(), g=geometry(), x=e.clientX-r.left, count=values.length; let best=-1, dist=Infinity; for(let i=0;i<count;i++){ const d=Math.abs(x-sx(i/(count-1),g)); if(d<dist){dist=d;best=i;} } return dist<Math.max(22,width/count*.65)?best:-1; }
