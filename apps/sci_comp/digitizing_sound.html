@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sound Wave Digitizer</title>
+  <style>
+    :root { --ink:#102033; --muted:#5d7188; --paper:#f7fbff; --panel:#ffffff; --line:#dbe6f1; --blue:#2a73d6; --teal:#13a6a0; --orange:#ee8b37; --shadow:0 16px 40px rgba(21,55,91,.12); }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:linear-gradient(145deg,#eaf5ff 0%,#fbfdff 52%,#eefbf8 100%); color:var(--ink); font:16px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(1050px,calc(100% - 32px)); margin:32px auto; }
+    .eyebrow { color:var(--teal); text-transform:uppercase; letter-spacing:.14em; font-size:12px; font-weight:800; }
+    h1 { margin:5px 0 8px; font-size:clamp(28px,5vw,48px); line-height:1.05; letter-spacing:-.04em; }
+    .intro { max-width:700px; color:var(--muted); margin:0 0 24px; }
+    .layout { display:grid; grid-template-columns:260px minmax(0,1fr); gap:18px; align-items:start; }
+    .panel { background:rgba(255,255,255,.9); border:1px solid rgba(219,230,241,.9); border-radius:20px; box-shadow:var(--shadow); }
+    .controls { padding:22px; }
+    .control { margin-bottom:24px; }
+    .control:last-child { margin-bottom:0; }
+    .label-row { display:flex; justify-content:space-between; gap:12px; align-items:baseline; margin-bottom:9px; }
+    label { font-weight:750; }
+    output { color:var(--blue); font-weight:800; font-variant-numeric:tabular-nums; }
+    input[type=range] { width:100%; accent-color:var(--blue); cursor:grab; }
+    input[type=range]:active { cursor:grabbing; }
+    .hint { color:var(--muted); font-size:13px; margin:8px 0 0; }
+    button { border:0; border-radius:10px; padding:10px 13px; font:inherit; font-weight:750; color:var(--ink); background:#edf4fb; cursor:pointer; }
+    button:hover { background:#e1edf9; }
+    .reset { width:100%; margin-top:23px; }
+    .visual { padding:18px 18px 14px; }
+    .visual-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:0 3px 10px; }
+    .visual-title { font-weight:800; }
+    .status { color:var(--muted); font-size:13px; font-variant-numeric:tabular-nums; }
+    canvas { display:block; width:100%; height:auto; border-radius:13px; background:#fbfdff; touch-action:none; }
+    .legend { display:flex; flex-wrap:wrap; gap:12px 20px; padding:13px 3px 0; color:var(--muted); font-size:13px; }
+    .key { display:inline-flex; align-items:center; gap:7px; }
+    .swatch { width:22px; height:3px; border-radius:5px; display:inline-block; }
+    .swatch.wave { background:var(--blue); }
+    .swatch.sample { background:var(--orange); }
+    .swatch.level { height:0; border-top:2px dashed #9fb1c5; }
+    .tip { margin:17px 3px 0; padding:12px 14px; color:#3d536b; background:#f1f8ff; border-radius:12px; font-size:14px; }
+    @media (max-width:740px) { main { margin:22px auto; } .layout { grid-template-columns:1fr; } .controls { display:grid; grid-template-columns:1fr 1fr; gap:0 20px; } .reset { grid-column:1/-1; } }
+    @media (max-width:480px) { .controls { display:block; } .visual { padding:12px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Digital audio lab</div>
+    <h1>How sound becomes numbers</h1>
+    <p class="intro">A microphone produces a continuous signal. Drag each orange handle to sample the blue wave, then see how bit depth limits the amplitude values that can be stored.</p>
+    <section class="layout" aria-label="Sound wave digitizer">
+      <aside class="panel controls" aria-label="Digitizer controls">
+        <div class="control">
+          <div class="label-row"><label for="bits">Bit depth</label><output id="bits-value" for="bits">3 bits</output></div>
+          <input id="bits" type="range" min="2" max="8" value="3" />
+          <p class="hint"><span id="levels-value">8</span> discrete amplitude levels</p>
+        </div>
+        <div class="control">
+          <div class="label-row"><label for="rate">Sampling rate</label><output id="rate-value" for="rate">12 samples</output></div>
+          <input id="rate" type="range" min="4" max="24" value="12" />
+          <p class="hint">More samples capture more detail</p>
+        </div>
+        <button class="reset" id="reset" type="button">Reset samples</button>
+      </aside>
+      <section class="panel visual" aria-label="Interactive graph">
+        <div class="visual-head"><div class="visual-title">Continuous signal → discrete samples</div><div class="status" id="status" aria-live="polite">Drag an orange handle</div></div>
+        <canvas id="graph" role="img" aria-label="A continuous sound wave with draggable, quantized sample lines"></canvas>
+        <div class="legend" aria-hidden="true"><span class="key"><i class="swatch wave"></i> continuous wave</span><span class="key"><i class="swatch sample"></i> sampled value</span><span class="key"><i class="swatch level"></i> quantization levels</span></div>
+        <div class="tip">Try reducing the bit depth or sampling rate. What kind of detail gets lost?</div>
+      </section>
+    </section>
+  </main>
+  <script>
+    const canvas = document.getElementById('graph');
+    const ctx = canvas.getContext('2d');
+    const bits = document.getElementById('bits');
+    const rate = document.getElementById('rate');
+    const samplesOut = document.getElementById('rate-value');
+    const bitsOut = document.getElementById('bits-value');
+    const levelsOut = document.getElementById('levels-value');
+    const status = document.getElementById('status');
+    const reset = document.getElementById('reset');
+    let values = [];
+    let active = -1;
+    let width = 0;
+    let height = 0;
+    const pad = { left:48, right:20, top:26, bottom:38 };
+
+    function wave(t) { return 0.72 * Math.sin(t * Math.PI * 2 * 1.12 - 0.4) + 0.13 * Math.sin(t * Math.PI * 2 * 3.1 + 1.2); }
+    function quantize(v) { const levels = 2 ** Number(bits.value); const step = 2 / (levels - 1); return Math.max(-1, Math.min(1, Math.round((v + 1) / step) * step - 1)); }
+    function geometry() { const yBottom=height-pad.bottom, yTop=pad.top; return { x0:pad.left, x1:width-pad.right, y0:(yTop+yBottom)/2, yTop, yBottom, innerW:width-pad.left-pad.right, innerH:yBottom-yTop }; }
+    function sx(t,g) { return g.x0 + t * g.innerW; }
+    function sy(v,g) { return g.y0 - v * g.innerH / 2; }
+    function setupSamples() { values = Array.from({length:Number(rate.value)}, (_,i) => quantize(wave(i / (Number(rate.value)-1)))); }
+    function resize() { const dpr=window.devicePixelRatio||1; width=canvas.clientWidth; height=Math.max(330, Math.min(500, width*.52)); canvas.width=width*dpr; canvas.height=height*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); draw(); }
+    function draw() {
+      if (!width) return;
+      const g=geometry(); ctx.clearRect(0,0,width,height); ctx.lineJoin='round';
+      ctx.fillStyle='#fbfdff'; ctx.fillRect(0,0,width,height);
+      ctx.font='12px Inter, system-ui, sans-serif';
+      ctx.strokeStyle='#e5edf5'; ctx.lineWidth=1;
+      for(let i=0;i<=4;i++){ const v=1-i*.5, y=sy(v,g); ctx.beginPath(); ctx.moveTo(g.x0,y); ctx.lineTo(g.x1,y); ctx.stroke(); ctx.fillStyle='#7890a8'; ctx.textAlign='right'; ctx.fillText(v.toFixed(1),g.x0-10,y+4); }
+      const n=2**Number(bits.value); ctx.setLineDash([4,5]); ctx.strokeStyle='#b9c9d9';
+      for(let i=0;i<n;i++){ const v=1-i*2/(n-1), y=sy(v,g); ctx.beginPath(); ctx.moveTo(g.x0,y); ctx.lineTo(g.x1,y); ctx.stroke(); }
+      ctx.setLineDash([]); ctx.strokeStyle='#728aa1'; ctx.beginPath(); ctx.moveTo(g.x0,g.yTop); ctx.lineTo(g.x0,g.yBottom); ctx.moveTo(g.x0,g.y0); ctx.lineTo(g.x1,g.y0); ctx.stroke();
+      ctx.fillStyle='#7890a8'; ctx.textAlign='center'; ctx.fillText('time', (g.x0+g.x1)/2, height-9); ctx.textAlign='left'; ctx.fillText('amplitude', 7, g.yTop-8);
+      ctx.strokeStyle='#2a73d6'; ctx.lineWidth=3; ctx.beginPath();
+      for(let i=0;i<=240;i++){ const t=i/240, x=sx(t,g), y=sy(wave(t),g); i?ctx.lineTo(x,y):ctx.moveTo(x,y); } ctx.stroke();
+      const count=values.length;
+      for(let i=0;i<count;i++){ const x=sx(i/(count-1),g), y=sy(values[i],g); ctx.strokeStyle='#ee8b37'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x,g.y0); ctx.lineTo(x,y); ctx.stroke(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(x,y,7,0,Math.PI*2); ctx.fill(); ctx.strokeStyle='#ee8b37'; ctx.lineWidth=3; ctx.stroke(); }
+    }
+    function updateLabels(){ bitsOut.textContent=`${bits.value} bits`; levelsOut.textContent=2**Number(bits.value); samplesOut.textContent=`${rate.value} samples`; }
+    function pointerIndex(e){ const r=canvas.getBoundingClientRect(), g=geometry(), x=e.clientX-r.left, count=values.length; let best=-1, dist=Infinity; for(let i=0;i<count;i++){ const d=Math.abs(x-sx(i/(count-1),g)); if(d<dist){dist=d;best=i;} } return dist<Math.max(22,width/count*.65)?best:-1; }
+    function drag(e){ if(active<0)return; const r=canvas.getBoundingClientRect(),g=geometry(); const raw=((g.y0-(e.clientY-r.top))/(g.innerH/2)); values[active]=quantize(raw); status.textContent=`Sample ${active+1} of ${values.length}: ${values[active].toFixed(2)}`; draw(); }
+    canvas.addEventListener('pointerdown',e=>{ const i=pointerIndex(e); if(i>=0){active=i;canvas.setPointerCapture(e.pointerId);drag(e);} });
+    canvas.addEventListener('pointermove',drag); canvas.addEventListener('pointerup',()=>{active=-1;}); canvas.addEventListener('pointercancel',()=>{active=-1;});
+    bits.addEventListener('input',()=>{ values=values.map(quantize); updateLabels(); draw(); });
+    rate.addEventListener('input',()=>{ setupSamples(); updateLabels(); draw(); });
+    reset.addEventListener('click',()=>{ setupSamples(); status.textContent='Drag an orange handle'; draw(); });
+    window.addEventListener('resize',resize); setupSamples(); updateLabels(); resize();
+  </script>
+</body>
+</html>
