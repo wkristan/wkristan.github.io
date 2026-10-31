@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PCA and Discriminant Axis Apps</title>
-    <style>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shell Data: Correlation PCA and Discriminant Axis</title>
+<style>
   :root {
     --ink: #18212b;
     --muted: #637083;
@@ -36,10 +36,10 @@
   .tabs {
     display: flex;
     gap: 7px;
-    margin-bottom: 14px;
-    padding: 5px;
     width: fit-content;
     max-width: 100%;
+    margin-bottom: 14px;
+    padding: 5px;
     border: 1px solid #d5dce5;
     border-radius: 12px;
     background: #e9edf2;
@@ -112,9 +112,7 @@
     box-shadow: 0 8px 28px #21304412;
   }
 
-  .plot-wrap {
-    padding: 10px 12px 2px;
-  }
+  .plot-wrap { padding: 10px 12px 2px; }
 
   svg {
     display: block;
@@ -148,26 +146,26 @@
 
   .point {
     stroke: white;
-    stroke-width: 1.25;
+    stroke-width: 1;
     cursor: grab;
+    opacity: 0.9;
     transition: r 100ms ease, filter 100ms ease;
   }
 
   .point:hover {
-    r: 6.3;
-    filter: drop-shadow(0 2px 2px #0004);
+    r: 6.2;
+    opacity: 1;
+    filter: drop-shadow(0 2px 2px #0005);
   }
 
   .point:active,
-  .centroid:active {
-    cursor: grabbing;
-  }
+  .centroid:active { cursor: grabbing; }
 
   .centroid { cursor: grab; }
 
   .centroid-ring {
     fill: white;
-    stroke-width: 2.2;
+    stroke-width: 2.4;
   }
 
   .centroid-cross {
@@ -176,9 +174,7 @@
     stroke-linecap: round;
   }
 
-  .analysis-overlay {
-    pointer-events: none;
-  }
+  .analysis-overlay { pointer-events: none; }
 
   .analysis-label {
     font-size: 13px;
@@ -282,121 +278,167 @@
     .hint { width: 100%; margin-left: 0; }
   }
 </style>
-  </head>
-  <body>
-    <main class="app-shell">
-      <nav class="tabs" aria-label="Choose analysis"> <button class="tab active"
-          data-target="pca-panel" type="button"> Principal components </button>
-        <button class="tab" data-target="lda-panel" type="button"> Discriminant
-          axis </button> </nav>
-      <section id="pca-panel" class="app-panel">
-        <header>
-          <div>
-            <h1>Interactive PCA Scatterplot</h1>
+</head>
+<body>
+<main class="app-shell">
+  <nav class="tabs" aria-label="Choose analysis">
+    <button class="tab active" data-target="pca-panel" type="button">
+      Principal components
+    </button>
+    <button class="tab" data-target="lda-panel" type="button">
+      Discriminant axis
+    </button>
+  </nav>
 
-          </div>
-          <button id="pca-reset" class="reset" type="button">Reset groups</button>
-        </header>
-        <div class="card">
-          <div class="plot-wrap">
-            <svg id="pca-plot" viewBox="0 0 960 590" aria-label="Interactive PCA scatterplot"></svg>
-          </div>
-          <div class="status">
-            <div class="stat">
-              <div class="stat-name">white shell centroid</div>
-              <div class="stat-value" id="pca-centroid-0">—</div>
-            </div>
-            <div class="stat">
-              <div class="stat-name">calico shell centroid</div>
-              <div class="stat-value" id="pca-centroid-1">—</div>
-            </div>
-            <div class="stat">
-              <div class="stat-name">Within-group r</div>
-              <div class="stat-value" id="pca-correlation">—</div>
-            </div>
-            <div class="stat">
-              <div class="stat-name">PC1 variance</div>
-              <div class="stat-value" id="pca-summary">—</div>
-            </div>
-          </div>
-          <div class="legend"> <span class="key"><span class="dot"></span>White shells</span> <span class="key"><span class="dot red">
-            </span>Calico shells</span> <span class="key"><span class="line-key pc1"></span>PC1</span>
-            <span class="key"><span class="line-key pc2"></span>PC2</span> <span
-              class="hint">Drag any dot or centroid to move its group.</span> </div>
+  <section id="pca-panel" class="app-panel">
+    <header>
+      <div>
+        <h1>Shell Data: Principal Components</h1>
+        <p class="subtitle">
+          PCA uses the correlation matrix: Minor axis and Height are standardized before analysis.
+        </p>
+      </div>
+      <button id="pca-reset" class="reset" type="button">Reset data</button>
+    </header>
+
+    <div class="card">
+      <div class="plot-wrap">
+        <svg id="pca-plot" viewBox="0 0 960 590"
+             aria-label="Interactive correlation-matrix PCA scatterplot"></svg>
+      </div>
+
+      <div class="status">
+        <div class="stat">
+          <div class="stat-name">White centroid</div>
+          <div class="stat-value" id="pca-centroid-0">—</div>
         </div>
-      </section>
-      <section id="lda-panel" class="app-panel" hidden="">
-        <header>
-          <div>
-            <h1>Interactive Linear Discriminant Axis</h1>
-          </div>
-          <button id="lda-reset" class="reset" type="button">Reset groups</button>
-        </header>
-        <div class="card">
-          <div class="plot-wrap">
-            <svg id="lda-plot" viewBox="0 0 960 590" aria-label="Interactive discriminant-axis scatterplot"></svg>
-          </div>
-          <div class="status">
-            <div class="stat">
-              <div class="stat-name">Black centroid</div>
-              <div class="stat-value" id="lda-centroid-0">—</div>
-            </div>
-            <div class="stat">
-              <div class="stat-name">Red centroid</div>
-              <div class="stat-value" id="lda-centroid-1">—</div>
-            </div>
-            <div class="stat">
-              <div class="stat-name">Within-group r</div>
-              <div class="stat-value" id="lda-correlation">—</div>
-            </div>
-            <div class="stat">
-              <div class="stat-name">Centroid separation</div>
-              <div class="stat-value" id="lda-summary">—</div>
-            </div>
-          </div>
-          <div class="legend"> <span class="key"><span class="dot"></span>White shells</span> <span class="key"><span class="dot red"></span>Calico shells</span>
-            <span class="key"><span class="line-key lda"></span>Discriminant
-              axis</span> <span class="hint">Drag any dot or centroid to move
-              its group.</span> </div>
+        <div class="stat">
+          <div class="stat-name">Calico centroid</div>
+          <div class="stat-value" id="pca-centroid-1">—</div>
         </div>
-      </section>
-    </main>
-    <script>
+        <div class="stat">
+          <div class="stat-name">Overall correlation</div>
+          <div class="stat-value" id="pca-correlation">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-name">PC1 variance</div>
+          <div class="stat-value" id="pca-summary">—</div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span class="key"><span class="dot"></span>White, n = 60</span>
+        <span class="key"><span class="dot red"></span>Calico, n = 60</span>
+        <span class="key"><span class="line-key pc1"></span>PC1</span>
+        <span class="key"><span class="line-key pc2"></span>PC2</span>
+        <span class="hint">Drag a dot or centroid to move its entire group.</span>
+      </div>
+    </div>
+  </section>
+
+  <section id="lda-panel" class="app-panel" hidden>
+    <header>
+      <div>
+        <h1>Shell Data: Discriminant Axis</h1>
+        <p class="subtitle">
+          The axis follows the line connecting the White and Calico centroids.
+        </p>
+      </div>
+      <button id="lda-reset" class="reset" type="button">Reset data</button>
+    </header>
+
+    <div class="card">
+      <div class="plot-wrap">
+        <svg id="lda-plot" viewBox="0 0 960 590"
+             aria-label="Interactive discriminant-axis scatterplot"></svg>
+      </div>
+
+      <div class="status">
+        <div class="stat">
+          <div class="stat-name">White centroid</div>
+          <div class="stat-value" id="lda-centroid-0">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-name">Calico centroid</div>
+          <div class="stat-value" id="lda-centroid-1">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-name">Within-group r</div>
+          <div class="stat-value" id="lda-correlation">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-name">Centroid separation</div>
+          <div class="stat-value" id="lda-summary">—</div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span class="key"><span class="dot"></span>White, n = 60</span>
+        <span class="key"><span class="dot red"></span>Calico, n = 60</span>
+        <span class="key"><span class="line-key lda"></span>Discriminant axis</span>
+        <span class="hint">Drag a dot or centroid to move its entire group.</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
 (() => {
   const NS = "http://www.w3.org/2000/svg";
   const colors = ["#111111", "#d82828"];
+  const groupNames = ["White", "Calico"];
 
-  const initialCenters = [
-    { x: 20, y: 9 },
-    { x: 24, y: 7 }
+  const sourceData = [
+    [
+      [20.3,8.4],[17.17,7.2],[23.55,10.03],[19.2,8.43],
+      [21.82,9.78],[23.22,9.81],[21.07,9.99],[21.59,9.22],
+      [23.55,10.77],[22.47,10.48],[18.8,8.28],[20.1,9.08],
+      [23.3,10.15],[18.88,8.13],[18.33,7.94],[22.38,9.97],
+      [21.36,9.37],[23.35,10.2],[18.53,7.97],[19.8,8.67],
+      [21.46,9.58],[21.44,9.7],[26.44,11.75],[21.47,9.18],
+      [18.83,7.8],[20.81,9.27],[16.99,6.77],[17.62,7.92],
+      [19.31,8.42],[17.9,7.47],[19.09,7.63],[22.22,8.82],
+      [22.11,9.94],[21.2,9.3],[21.82,11.02],[20.58,9.02],
+      [20.42,8.61],[19.78,8.2],[23.24,9.98],[24.78,11.26],
+      [18.85,8.24],[20.78,9.43],[20.02,8.91],[23.25,10.08],
+      [17.7,8.1],[22.91,9.8],[19.37,8.12],[19.87,8.76],
+      [24.71,10.46],[17.69,7.25],[23.78,10.21],[18.2,8.5],
+      [18.59,8.55],[21.55,9.71],[20,8.7],[21.37,9.61],
+      [20.92,9.34],[26.75,11.89],[17.9,8.6],[21.2,9.55]
+    ],
+    [
+      [23.25,6.74],[26.97,8.18],[26.11,7.84],[27,8.51],
+      [21.2,6.7],[24.56,7.68],[23.8,6.52],[22.23,7.18],
+      [16.95,4.98],[21.54,6.9],[24.64,7.41],[20.76,6.01],
+      [22.9,7.3],[19.55,5.72],[25.88,7.66],[21.69,6.33],
+      [21.4,7],[22.9,6.6],[26.72,8.1],[26.29,7.63],
+      [25.77,7.15],[28.86,8.87],[25.52,6.98],[24.38,7.82],
+      [24.48,6.89],[24.44,7.66],[22.62,6.45],[25.94,7.41],
+      [23.2,6.45],[23.3,6.21],[23.58,6.19],[23.54,6.47],
+      [26.44,8.7],[26.95,8.24],[21.76,5.87],[29.55,9.2],
+      [21.26,5.67],[26.9,9.63],[22.66,6.88],[27.64,8.75],
+      [23.58,7.72],[24,7.39],[22.69,6.57],[21.94,6.68],
+      [22.23,6.29],[27.17,9.08],[24.19,6.91],[23.25,6.95],
+      [25.93,7.14],[22.92,6.34],[23.53,7.25],[24.84,7.02],
+      [21.77,5.85],[23.24,6.48],[24.44,6.5],[20.89,5.46],
+      [22.37,6.35],[22.3,6.18],[25.99,8.12],[22.4,6.59]
+    ]
   ];
 
-  const bounds = {
-    left: 76,
-    top: 24,
-    width: 856,
-    height: 500
-  };
+  const bounds = { left: 76, top: 24, width: 856, height: 500 };
+  const domain = { xMin: 15, xMax: 32, yMin: 4, yMax: 13 };
 
-  const domain = {
-    xMin: 10,
-    xMax: 35,
-    yMin: 0,
-    yMax: 18
-  };
-
-  function el(name, attributes = {}, parent) {
+  function el(name, attrs = {}, parent) {
     const node = document.createElementNS(NS, name);
-    for (const [key, value] of Object.entries(attributes)) {
+    for (const [key, value] of Object.entries(attrs)) {
       node.setAttribute(key, value);
     }
     if (parent) parent.appendChild(node);
     return node;
   }
 
-  function mean(values) {
-    return values.reduce((sum, value) => sum + value, 0) / values.length;
-  }
+  const mean = values =>
+    values.reduce((sum, value) => sum + value, 0) / values.length;
 
   function centroid(points) {
     return {
@@ -406,61 +448,20 @@
   }
 
   function correlation(points) {
-    const c = centroid(points);
+    const center = centroid(points);
     let xx = 0;
     let yy = 0;
     let xy = 0;
 
     for (const point of points) {
-      const dx = point.x - c.x;
-      const dy = point.y - c.y;
+      const dx = point.x - center.x;
+      const dy = point.y - center.y;
       xx += dx * dx;
       yy += dy * dy;
       xy += dx * dy;
     }
 
     return xy / Math.sqrt(xx * yy);
-  }
-
-  function makeCorrelatedPoints(center, phase) {
-    const count = 24;
-
-    let u = Array.from(
-      { length: count },
-      (_, index) => index - (count - 1) / 2
-    );
-
-    let v = Array.from(
-      { length: count },
-      (_, index) =>
-        Math.sin((index + 1) * 2.17 + phase) +
-        0.45 * Math.cos((index + 1) * 0.91 + phase)
-    );
-
-    const centerVector = values => {
-      const average = mean(values);
-      return values.map(value => value - average);
-    };
-
-    u = centerVector(u);
-    v = centerVector(v);
-
-    const projection =
-      u.reduce((sum, value, index) => sum + value * v[index], 0) /
-      u.reduce((sum, value) => sum + value * value, 0);
-
-    v = v.map((value, index) => value - projection * u[index]);
-
-    const normU = Math.sqrt(mean(u.map(value => value * value)));
-    const normV = Math.sqrt(mean(v.map(value => value * value)));
-
-    u = u.map(value => value / normU);
-    v = v.map(value => value / normV);
-
-    return u.map((value, index) => ({
-      x: center.x + 2.6 * value,
-      y: center.y + 2.1 * (0.8 * value + 0.6 * v[index])
-    }));
   }
 
   class ScatterApp {
@@ -475,19 +476,18 @@
         ((x - domain.xMin) / (domain.xMax - domain.xMin)) * bounds.width;
 
       this.sy = y =>
-        bounds.top +
-        bounds.height -
+        bounds.top + bounds.height -
         ((y - domain.yMin) / (domain.yMax - domain.yMin)) * bounds.height;
 
       this.ix = px =>
         domain.xMin +
         ((px - bounds.left) / bounds.width) *
-          (domain.xMax - domain.xMin);
+        (domain.xMax - domain.xMin);
 
       this.iy = py =>
         domain.yMin +
         ((bounds.top + bounds.height - py) / bounds.height) *
-          (domain.yMax - domain.yMin);
+        (domain.yMax - domain.yMin);
 
       this.buildScaffold();
       this.attachEvents();
@@ -495,41 +495,28 @@
     }
 
     buildScaffold() {
-      const markerId1 = `${this.prefix}-arrow-1`;
-      const markerId2 = `${this.prefix}-arrow-2`;
       const clipId = `${this.prefix}-clip`;
-
       const defs = el("defs", {}, this.svg);
 
-      const marker1 = el("marker", {
-        id: markerId1,
-        viewBox: "0 0 10 10",
-        refX: 8,
-        refY: 5,
-        markerWidth: 6,
-        markerHeight: 6,
-        orient: "auto-start-reverse"
-      }, defs);
+      [
+        ["arrow-1", this.mode === "pca" ? "#6554c0" : "#1769aa"],
+        ["arrow-2", "#d58a00"]
+      ].forEach(([suffix, color]) => {
+        const marker = el("marker", {
+          id: `${this.prefix}-${suffix}`,
+          viewBox: "0 0 10 10",
+          refX: 8,
+          refY: 5,
+          markerWidth: 6,
+          markerHeight: 6,
+          orient: "auto-start-reverse"
+        }, defs);
 
-      el("path", {
-        d: "M 0 0 L 10 5 L 0 10 z",
-        fill: this.mode === "pca" ? "#6554c0" : "#1769aa"
-      }, marker1);
-
-      const marker2 = el("marker", {
-        id: markerId2,
-        viewBox: "0 0 10 10",
-        refX: 8,
-        refY: 5,
-        markerWidth: 6,
-        markerHeight: 6,
-        orient: "auto-start-reverse"
-      }, defs);
-
-      el("path", {
-        d: "M 0 0 L 10 5 L 0 10 z",
-        fill: "#d58a00"
-      }, marker2);
+        el("path", {
+          d: "M 0 0 L 10 5 L 0 10 z",
+          fill: color
+        }, marker);
+      });
 
       const clip = el("clipPath", { id: clipId }, defs);
       el("rect", {
@@ -542,12 +529,10 @@
       const grid = el("g", {}, this.svg);
       const axes = el("g", {}, this.svg);
 
-      for (let x = 10; x <= 35; x += 5) {
+      for (let x = 16; x <= 32; x += 2) {
         el("line", {
-          x1: this.sx(x),
-          y1: bounds.top,
-          x2: this.sx(x),
-          y2: bounds.top + bounds.height,
+          x1: this.sx(x), y1: bounds.top,
+          x2: this.sx(x), y2: bounds.top + bounds.height,
           class: "grid-line"
         }, grid);
 
@@ -560,12 +545,10 @@
         label.textContent = x;
       }
 
-      for (let y = 0; y <= 18; y += 3) {
+      for (let y = 4; y <= 13; y += 1) {
         el("line", {
-          x1: bounds.left,
-          y1: this.sy(y),
-          x2: bounds.left + bounds.width,
-          y2: this.sy(y),
+          x1: bounds.left, y1: this.sy(y),
+          x2: bounds.left + bounds.width, y2: this.sy(y),
           class: "grid-line"
         }, grid);
 
@@ -633,8 +616,8 @@
         const current = this.pointerData(event);
         let dx = current.x - this.drag.start.x;
         let dy = current.y - this.drag.start.y;
-
         const original = this.drag.original;
+
         const minX = Math.min(...original.map(point => point.x));
         const maxX = Math.max(...original.map(point => point.x));
         const minY = Math.min(...original.map(point => point.y));
@@ -660,7 +643,6 @@
 
       const finish = event => {
         if (!this.drag || event.pointerId !== this.drag.pointerId) return;
-
         this.drag = null;
 
         if (this.svg.hasPointerCapture(event.pointerId)) {
@@ -704,68 +686,82 @@
     }
 
     reset() {
-      this.groups = [
-        makeCorrelatedPoints(initialCenters[0], 0.25),
-        makeCorrelatedPoints(initialCenters[1], 1.4)
-      ];
+      this.groups = sourceData.map(group =>
+        group.map(([x, y]) => ({ x, y }))
+      );
       this.render();
     }
 
-    calculatePCA() {
+    /*
+      Correlation-matrix PCA:
+
+      1. Calculate the pooled means and standard deviations.
+      2. Standardize both variables.
+      3. Perform PCA on [[1, r], [r, 1]].
+      4. Transform each eigenvector back to the original graph units by
+         multiplying its components by the corresponding standard deviations.
+    */
+    calculateCorrelationPCA() {
       const points = this.groups.flat();
       const center = centroid(points);
-      let a = 0;
-      let b = 0;
-      let d = 0;
+      let sumXX = 0;
+      let sumYY = 0;
+      let sumXY = 0;
 
       for (const point of points) {
         const dx = point.x - center.x;
         const dy = point.y - center.y;
-        a += dx * dx;
-        b += dx * dy;
-        d += dy * dy;
+        sumXX += dx * dx;
+        sumYY += dy * dy;
+        sumXY += dx * dy;
       }
 
-      a /= points.length;
-      b /= points.length;
-      d /= points.length;
+      const sdX = Math.sqrt(sumXX / points.length);
+      const sdY = Math.sqrt(sumYY / points.length);
+      const r = sumXY / Math.sqrt(sumXX * sumYY);
 
-      const trace = a + d;
-      const root = Math.sqrt((a - d) ** 2 + 4 * b * b);
-      const lambda1 = (trace + root) / 2;
-      const lambda2 = (trace - root) / 2;
+      /*
+        For a two-variable correlation matrix, the eigenvectors are
+        (1, sign(r)) and (-sign(r), 1).
+      */
+      const sign = r >= 0 ? 1 : -1;
 
-      let vector1;
+      const standardizedVectors = [
+        { x: 1 / Math.sqrt(2), y: sign / Math.sqrt(2) },
+        { x: -sign / Math.sqrt(2), y: 1 / Math.sqrt(2) }
+      ];
 
-      if (Math.abs(b) > 1e-10) {
-        vector1 = { x: lambda1 - d, y: b };
-      } else {
-        vector1 = a >= d ? { x: 1, y: 0 } : { x: 0, y: 1 };
-      }
+      const rawVectors = standardizedVectors.map(vector => {
+        const mapped = {
+          x: vector.x * sdX,
+          y: vector.y * sdY
+        };
 
-      const length = Math.hypot(vector1.x, vector1.y);
-      vector1.x /= length;
-      vector1.y /= length;
+        const length = Math.hypot(mapped.x, mapped.y);
+        mapped.x /= length;
+        mapped.y /= length;
 
-      if (vector1.x < 0) {
-        vector1.x *= -1;
-        vector1.y *= -1;
-      }
+        if (mapped.x < 0) {
+          mapped.x *= -1;
+          mapped.y *= -1;
+        }
+
+        return mapped;
+      });
+
+      const lambda1 = 1 + Math.abs(r);
 
       return {
         center,
-        vectors: [
-          vector1,
-          { x: -vector1.y, y: vector1.x }
-        ],
-        values: [lambda1, lambda2],
-        explained: trace ? lambda1 / trace : 0
+        vectors: rawVectors,
+        correlation: r,
+        explained: lambda1 / 2
       };
     }
 
     extendLine(center, vector) {
-      const marginX = 0.3;
-      const marginY = 0.25;
+      const marginX = 0.15;
+      const marginY = 0.08;
       const candidates = [];
 
       if (Math.abs(vector.x) > 1e-10) {
@@ -794,7 +790,7 @@
             y <= domain.yMax - marginY + 0.01
           );
         })
-        .sort((first, second) => first - second);
+        .sort((a, b) => a - b);
 
       return {
         start: {
@@ -809,7 +805,8 @@
     }
 
     renderPCA() {
-      const pca = this.calculatePCA();
+      const pca = this.calculateCorrelationPCA();
+
       const styles = [
         { color: "#6554c0", dash: "none" },
         { color: "#d58a00", dash: "9 7" }
@@ -844,6 +841,7 @@
           fill: style.color,
           class: "analysis-label"
         }, this.labelsLayer);
+
         label.textContent = `PC${index + 1}`;
       });
 
@@ -854,7 +852,10 @@
         class: "all-centroid"
       }, this.analysisLayer);
 
-      document.getElementById(`${this.prefix}-summary`).textContent =
+      document.getElementById("pca-correlation").textContent =
+        pca.correlation.toFixed(3);
+
+      document.getElementById("pca-summary").textContent =
         `${(pca.explained * 100).toFixed(1)}%`;
     }
 
@@ -918,9 +919,10 @@
         fill: "#1769aa",
         class: "analysis-label"
       }, this.labelsLayer);
+
       label.textContent = "Discriminant axis";
 
-      document.getElementById(`${this.prefix}-summary`).textContent =
+      document.getElementById("lda-summary").textContent =
         Math.hypot(
           center2.x - center1.x,
           center2.y - center1.y
@@ -929,22 +931,20 @@
 
     renderGroups() {
       this.groups.forEach((points, groupIndex) => {
-        points.forEach((point, pointIndex) => {
+        points.forEach(point => {
           const circle = el("circle", {
             cx: this.sx(point.x),
             cy: this.sy(point.y),
-            r: 5.1,
+            r: 4.7,
             fill: colors[groupIndex],
             class: "point",
-            tabindex: 0,
-            "aria-label":
-              `Group ${groupIndex + 1}, point ${pointIndex + 1}`
+            tabindex: 0
           }, this.pointsLayer);
 
           const title = el("title", {}, circle);
           title.textContent =
-            `Group ${groupIndex + 1}: ` +
-            `(${point.x.toFixed(2)}, ${point.y.toFixed(2)})`;
+            `${groupNames[groupIndex]}: Minor axis ${point.x.toFixed(2)}, ` +
+            `Height ${point.y.toFixed(2)}`;
 
           circle.addEventListener(
             "pointerdown",
@@ -956,7 +956,7 @@
         const centroidGroup = el("g", {
           class: "centroid",
           tabindex: 0,
-          "aria-label": `Drag Group ${groupIndex + 1} centroid`
+          "aria-label": `Drag ${groupNames[groupIndex]} centroid`
         }, this.centroidsLayer);
 
         el("circle", {
@@ -992,12 +992,15 @@
 
         document.getElementById(
           `${this.prefix}-centroid-${groupIndex}`
-        ).textContent = `(${center.x.toFixed(2)}, ${center.y.toFixed(2)})`;
+        ).textContent =
+          `(${center.x.toFixed(2)}, ${center.y.toFixed(2)})`;
       });
 
-      document.getElementById(`${this.prefix}-correlation`).textContent =
-        `${correlation(this.groups[0]).toFixed(2)} / ` +
-        `${correlation(this.groups[1]).toFixed(2)}`;
+      if (this.mode === "lda") {
+        document.getElementById("lda-correlation").textContent =
+          `${correlation(this.groups[0]).toFixed(2)} / ` +
+          `${correlation(this.groups[1]).toFixed(2)}`;
+      }
     }
 
     render() {
@@ -1016,8 +1019,8 @@
     }
   }
 
-  const pcaApp = new ScatterApp("pca", "pca");
-  const ldaApp = new ScatterApp("lda", "lda");
+  new ScatterApp("pca", "pca");
+  new ScatterApp("lda", "lda");
 
   document.querySelectorAll(".tab").forEach(tab => {
     tab.addEventListener("click", () => {
@@ -1032,5 +1035,5 @@
   });
 })();
 </script>
-  </body>
+</body>
 </html>
